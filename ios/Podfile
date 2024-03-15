@@ -1,0 +1,52 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '14.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  pod 'GowalkDevHelper', :git => 'https://x-token-auth:ATCTT3xFfGN0dI6LR_X3V6fXko7ZX3CUrT1wqbY4qTiwFD6t99Bhmk08GWhc5GXe8xm6A4-KR47pTDDXq7c35HbziOXw6ESufgE9uZUEgLSAFRzEb-BwQwI2-Rxs63WOO2cIxvqtEXicNTFZ8oxHZ89MMs0faRz_NcGp84JA-3hvk7-g6uIa5gY=A4B0DC69@bitbucket.org/gowalk/gowalkdevhelper.git'
+  pod 'NXKit', :git => 'https://x-token-auth:ATCTT3xFfGN0r2Ph9QHj3ThXlQJGUVqqyYBolncnDU2tAnKK7sluTTDU0URS3_a53kDLltSYLGoMYgHRIxsZGghOW62f6_EHhPiz7tPOUgPe7pTng4ezDuCqB9shvmnMiFxSw-O06W5Vt8LyE9jrUI8zMyesjn_Lj4woctLJicQVKAcAQwbmE3c=4127C0F7@bitbucket.org/gowalk/nxkit.git'
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    if target.name == 'GowalkDevHelper'
+        target.build_configurations.each do |config|
+            config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) TARGET_PLATFORM_FLUTTER'
+        end
+    end
+  end
+end
