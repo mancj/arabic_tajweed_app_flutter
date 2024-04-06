@@ -33,6 +33,7 @@ target 'Runner' do
 
   pod 'GowalkDevHelper', :git => 'https://x-token-auth:ATCTT3xFfGN0dI6LR_X3V6fXko7ZX3CUrT1wqbY4qTiwFD6t99Bhmk08GWhc5GXe8xm6A4-KR47pTDDXq7c35HbziOXw6ESufgE9uZUEgLSAFRzEb-BwQwI2-Rxs63WOO2cIxvqtEXicNTFZ8oxHZ89MMs0faRz_NcGp84JA-3hvk7-g6uIa5gY=A4B0DC69@bitbucket.org/gowalk/gowalkdevhelper.git'
   pod 'NXKit', :git => 'https://x-token-auth:ATCTT3xFfGN0r2Ph9QHj3ThXlQJGUVqqyYBolncnDU2tAnKK7sluTTDU0URS3_a53kDLltSYLGoMYgHRIxsZGghOW62f6_EHhPiz7tPOUgPe7pTng4ezDuCqB9shvmnMiFxSw-O06W5Vt8LyE9jrUI8zMyesjn_Lj4woctLJicQVKAcAQwbmE3c=4127C0F7@bitbucket.org/gowalk/nxkit.git'
+  pod 'GowalkOnboardingSDK', :git => 'https://x-token-auth:ATCTT3xFfGN0-26Vfuq98wBQJ92YVi6OC0j3WLHFkEXeL0Rvs6naTOdnM-RFpmHDd4Y9aTyN11U2TD2bfElqgVWPf9wFdYgMmxowf-NNvVBoE7LlenZPMFCHL6s5pbj_qMVyQwT6ibk00nHVfSKB5FHPttaoXEg0bpTJSgNvWod-03iivWY3qkg=FFDB5183@bitbucket.org/gowalk/onboardingsdk.git'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do

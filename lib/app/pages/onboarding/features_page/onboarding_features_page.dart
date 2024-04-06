@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:gowalk_flutter_app/app/widgets/margin.dart';
-import 'package:gowalk_flutter_app/app/widgets/transparent_gesture_detector.dart';
+import 'package:resume_app/presentation/ui/widgets/app_widgets.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:video_player/video_player.dart';
 
@@ -31,15 +30,13 @@ class OnboardingFeaturesPage extends GetView<OnboardingFeaturesController> {
             : Stack(
           alignment: Alignment.center,
           children: [
-            Expanded(
-              child: PageView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                controller: controller.pageController,
-                itemBuilder: (context, index) {
-                  return _page(index);
-                },
-                itemCount: controller.features.length,
-              ),
+            PageView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              controller: controller.pageController,
+              itemBuilder: (context, index) {
+                return _page(index);
+              },
+              itemCount: controller.features.length,
             ),
             _indicator(),
           ],
@@ -103,7 +100,7 @@ class OnboardingFeaturesPage extends GetView<OnboardingFeaturesController> {
           count: controller.features.length,
           effect: const ExpandingDotsEffect(
             activeDotColor: OnboardingColors.primary,
-            dotColor: OnboardingColors.white,
+            dotColor: OnboardingColors.onboardingProgressBg,
             expansionFactor: 2,
             dotHeight: 8,
           ),
