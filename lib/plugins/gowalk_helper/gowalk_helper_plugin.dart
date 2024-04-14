@@ -43,6 +43,7 @@ class GowalkHelperPlugin {
     bool shouldShowRatingAfterATTView = true,
     String? oneSignalApiKey,
     String? oneSignalAppGroupId,
+    String? qonversionKey,
   }) async {
     if (_isInitialized) return;
     final bool result = await _channel.invokeMethod(
@@ -55,6 +56,7 @@ class GowalkHelperPlugin {
         "shouldShowRatingAfterATTView": shouldShowRatingAfterATTView,
         "oneSignalApiKey": oneSignalApiKey,
         "oneSignalAppGroupId": oneSignalAppGroupId,
+        "qonversionKey": qonversionKey,
       },
     );
     _isInitialized = true;

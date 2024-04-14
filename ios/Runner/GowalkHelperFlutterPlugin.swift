@@ -36,8 +36,7 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
                 let appleId = dict!["appleAppID"] as! String
                 
                 let mixpanelKey = dict!["mixpanelKey"] as? String
-                let amplitudeKey = dict!["amplitudeKey"] as? String
-                let adaptyKey = dict!["adaptyKey"] as? String
+                let qonversionKey = dict!["qonversionKey"] as? String
                 let shouldShowRatingAfterATTView = dict!["shouldShowRatingAfterATTView"] as? Bool
                 let oneSignalApiKey = dict!["oneSignalApiKey"] as? String
                 let oneSignalAppGroupId = dict!["oneSignalAppGroupId"] as? String
@@ -45,8 +44,7 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
                 initGowalkDevHelper(
                     appleAppId: appleId,
                     mixpanelKey: mixpanelKey,
-                    amplitudeKey: amplitudeKey,
-                    adaptyKey: adaptyKey,
+                    qonversionKey: qonversionKey,
                     shouldShowRatingAfterATTView: shouldShowRatingAfterATTView ?? false,
                     oneSignalApiKey: oneSignalApiKey,
                     oneSignalAppGroupId: oneSignalAppGroupId
@@ -109,7 +107,7 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
       return "Pong"
     }
     
-    private func initGowalkDevHelper(appleAppId: String, mixpanelKey: String?, amplitudeKey: String?, adaptyKey: String?, shouldShowRatingAfterATTView: Bool = false, oneSignalApiKey: String?, oneSignalAppGroupId: String?, _ onComplete: @escaping () -> Void) {
+    private func initGowalkDevHelper(appleAppId: String, mixpanelKey: String?, qonversionKey: String?, shouldShowRatingAfterATTView: Bool = false, oneSignalApiKey: String?, oneSignalAppGroupId: String?, _ onComplete: @escaping () -> Void) {
         if(isInitialized) {
             onComplete()
             return
@@ -131,8 +129,7 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
                 isPrintToConsole: true,
                 shouldShowRatingAfterATTView: shouldShowRatingAfterATTView,
                 mixpanelKey: mixpanelKey,
-                amplitudeKey: amplitudeKey,
-                adaptyKey: adaptyKey,
+                QonversionProjectKey: qonversionKey,
                 oneSignalConfiguration: oneSignalConfiguration
             )
             onComplete()
