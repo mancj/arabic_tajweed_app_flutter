@@ -74,6 +74,12 @@ class GowalkHelperPlugin {
     }
   }
 
+  Future<bool> initializeOnboarding({bool forceShowOnboarding = false}) async {
+    bool didShownOnboarding = await _channel.invokeMethod(
+        'initializeOnboarding', forceShowOnboarding);
+    return didShownOnboarding;
+  }
+
   Future<void> showAppRatingPopup() async {
     await _channel.invokeMethod('showAppRatingPopup');
     logger.d("Gowalk showAppRatingPopup called");
@@ -121,7 +127,8 @@ class GowalkHelperPlugin {
   }
 
   Future<String?> getRemoteConfigStringValue(String key) async {
-    String? result = await _channel.invokeMethod('getRemoteConfigStringValue', key);
+    String? result =
+        await _channel.invokeMethod('getRemoteConfigStringValue', key);
     logger.d("Gowalk getRemoteConfigStringValue called with result: $result");
     return result;
   }

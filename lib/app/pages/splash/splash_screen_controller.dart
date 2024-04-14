@@ -28,6 +28,7 @@ class SplashScreenController extends GetxController {
 
       );
       await _gowalkHelper.prepareHelper();
+      await _gowalkHelper.initializeOnboarding(forceShowOnboarding: false);
     }
     if (_preferenceManager.isOnboardingShown) {
 

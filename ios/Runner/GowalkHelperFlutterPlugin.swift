@@ -90,6 +90,12 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
             parse(args: call.arguments, result: result) { key in
                 result(getRemoteConfigStringValue(key))
             }
+        case "initializeOnboarding":
+            parse(args: call.arguments, result: result) { (forceShowOnboarding: Bool) in
+                initializeOnboarding(forceShowOnboarding: forceShowOnboarding, didClose: { (didShowOnbiarding: Bool) in
+                    result(didShowOnbiarding)
+                })
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
