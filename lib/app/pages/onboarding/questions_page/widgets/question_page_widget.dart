@@ -104,7 +104,7 @@ class QuestionPageWidget extends StatelessWidget {
               child: Text(
                 title,
                 style: OnboardingTextStyles.buttonTitle.copyWith(
-                  color: OnboardingColors.black,
+                  color: OnboardingColors.textColor,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),

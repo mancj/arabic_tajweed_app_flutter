@@ -28,7 +28,7 @@ class OnboardingAnalyzingController extends GetxController {
     if (Platform.isIOS) {
       await _gowalkHelper.setOnboardingPassed(true);
       await _preferenceManager.setIsOnboardingShown(true);
-      if (!kDebugMode) await _gowalkHelper.showPaywall("onboarding");
+      if (!false) await _gowalkHelper.showPaywall("onboarding");
     }
     Future.delayed(300.milliseconds, () {
       throw Exception("You should handle navigation at this point");

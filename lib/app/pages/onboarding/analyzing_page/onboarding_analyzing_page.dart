@@ -2,7 +2,6 @@ import 'package:gowalk_flutter_app/app/pages/onboarding/resources/onboarding_ima
 import 'package:gowalk_flutter_app/app/widgets/margin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 
 import '../resources/onboarding_colors.dart';

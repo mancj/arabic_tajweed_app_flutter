@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:resume_app/presentation/ui/widgets/app_widgets.dart';
+import 'package:gowalk_flutter_app/app/widgets/margin.dart';
+import 'package:gowalk_flutter_app/app/widgets/transparent_gesture_detector.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:video_player/video_player.dart';
 
@@ -21,26 +22,26 @@ class OnboardingFeaturesPage extends GetView<OnboardingFeaturesController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OnboardingColors.pageBackground,
+      backgroundColor: OnboardingColors.featuresPageBg,
       body: Obx(
-            () => controller.isLoading
+        () => controller.isLoading
             ? const Center(
-          child: CircularProgressIndicator.adaptive(),
-        )
+                child: CircularProgressIndicator.adaptive(),
+              )
             : Stack(
-          alignment: Alignment.center,
-          children: [
-            PageView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              controller: controller.pageController,
-              itemBuilder: (context, index) {
-                return _page(index);
-              },
-              itemCount: controller.features.length,
-            ),
-            _indicator(),
-          ],
-        ),
+                alignment: Alignment.center,
+                children: [
+                  PageView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    controller: controller.pageController,
+                    itemBuilder: (context, index) {
+                      return _page(index);
+                    },
+                    itemCount: controller.features.length,
+                  ),
+                  _indicator(),
+                ],
+              ),
       ),
     );
   }
@@ -55,13 +56,19 @@ class OnboardingFeaturesPage extends GetView<OnboardingFeaturesController> {
           ),
         if (feature.imageAssetUrl != null)
           Expanded(
-            child: Image.asset(feature.imageAssetUrl!),
+            child: SizedBox(
+              width: double.infinity,
+              child: Image.asset(
+                feature.imageAssetUrl!,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
         Container(
           constraints: const BoxConstraints(maxHeight: textContainerHeight),
           padding: const EdgeInsets.all(16),
           alignment: Alignment.center,
-          color: OnboardingColors.primary,
+          color: OnboardingColors.featuresPageBg,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -114,32 +121,32 @@ class OnboardingFeaturesPage extends GetView<OnboardingFeaturesController> {
     final playerController = controller.videoPlayerController;
     return playerController?.value.isInitialized ?? false
         ? LayoutBuilder(
-      builder: (context, constraints) {
-        var d =
-            constraints.maxHeight / playerController!.value.size.height;
-        var w = playerController.value.size.width * d;
-        return Container(
-          color: OnboardingColors.primary,
-          alignment: Alignment.bottomCenter,
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: OverflowBox(
-              maxWidth: w,
-              maxHeight: playerController.value.size.height * d,
-              // maxHeight: a,
-              child: VideoPlayer(
-                playerController,
-              )
-                  .animate(
-                key: ValueKey(index),
-                delay: 200.milliseconds,
-              )
-                  .fadeIn(),
-            ),
-          ),
-        );
-      },
-    )
+            builder: (context, constraints) {
+              var d =
+                  constraints.maxHeight / playerController!.value.size.height;
+              var w = playerController.value.size.width * d;
+              return Container(
+                color: OnboardingColors.primary,
+                alignment: Alignment.bottomCenter,
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: OverflowBox(
+                    maxWidth: w,
+                    maxHeight: playerController.value.size.height * d,
+                    // maxHeight: a,
+                    child: VideoPlayer(
+                      playerController,
+                    )
+                        .animate(
+                          key: ValueKey(index),
+                          delay: 200.milliseconds,
+                        )
+                        .fadeIn(),
+                  ),
+                ),
+              );
+            },
+          )
         : const ColoredBox(color: OnboardingColors.primary);
   }
 

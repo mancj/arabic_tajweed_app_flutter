@@ -15,7 +15,7 @@ class OnboardingTextStyles {
     fontSize: 26,
     fontWeight: FontWeight.bold,
     height: 1.1,
-    color: OnboardingColors.black,
+    color: OnboardingColors.textColor,
   );
 
   static const buttonTitle = TextStyle(
@@ -31,7 +31,7 @@ class OnboardingTextStyles {
 
   static const normalSemibold = TextStyle(
     fontSize: 17,
-    color: OnboardingColors.black,
+    color: OnboardingColors.textColor,
     fontWeight: FontWeight.w600,
   );
 

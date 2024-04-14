@@ -1,4 +1,3 @@
-
 import 'onboarding_question.dart';
 
 class OnboardingStepsProvider {
@@ -20,96 +19,79 @@ class OnboardingStepsProvider {
     if (_isInitialized) return;
     _steps = [
       OnboardingQuestionStep(
-        id: "usage_purpose",
-        question: "What are you hoping to detect with our app? 🕵️‍♂️",
+        id: "tv_brand",
+        question: "Which TV brand do you own? 📺",
+        variants: ["Samsung", "LG", "Sony", "Panasonic", "Other"],
+      ),
+      OnboardingQuestionStep(
+        id: "usage_frequency",
+        question: "How often do you plan to use this remote app? ⌚",
+        variants: ["Daily", "A few times a week", "Occasionally", "Rarely"],
+      ),
+      OnboardingQuestionStep(
+        id: "feature_importance",
+        question: "Which feature is most important to you? 🎚️",
         variants: [
-          "Gold 💰",
-          "Lost metal items 🔍",
-          "Finding buried treasure ⛏️",
-          "Locating metal pipes or wires 🔧",
+          "Universal remote capabilities",
+          "Volume control and mute",
+          "Power on/off",
+          "Voice commands"
         ],
       ),
       OnboardingQuestionStep(
-        id: "app_interests",
-        question: "Which feature interests you the most? 🤔",
+        id: "connect_devices",
+        question: "Do you want to control other devices besides your TV? 🔌",
         variants: [
-          "Adjustable sensitivity settings ⚙️",
-          "Visual and audio feedback when metal is detected 🔊👀",
-          "GPS integration for marking found items 🗺️",
+          "Yes, all my smart home devices",
+          "Just audio devices like speakers",
+          "Only my TV",
+          "Not sure yet"
         ],
       ),
       OnboardingQuestionStep(
-        id: "location_type",
+        id: "customization_preference",
         question:
-            "Do you plan to use the app primarily indoors or outdoors? 🏠🌳",
+            "Do you prefer a personalized or standard layout for your remote? 🎨",
         variants: [
-          "Indoors 🏢",
-          "Outdoors 🌄",
-          "Both 🏠🌳",
+          "Personalized layout",
+          "Standard layout",
+          "Decide after trying the standard"
         ],
       ),
       OnboardingQuestionStep(
-        id: "join_community",
-        question: "Are you interested in joining our community? 🤝",
+        id: "notification_preference",
+        question:
+            "Would you like to receive notifications about app updates or offers? 🔔",
         variants: [
-          "Yes, I'd love to connect with other users! 👥",
-          "Maybe later, I prefer exploring the app first. 🤷‍♂️",
-          "No, I prefer using the app independently. 🚶‍♂️",
+          "Yes, keep me updated",
+          "No, I'll check manually",
+          "Only critical updates"
         ],
       ),
       OnboardingQuestionStep(
-        id: "use_frequency",
-        question: "How frequently do you plan to use the app? ⌚",
+        id: "help_tutorials",
+        question: "Do you want to watch tutorials on how to use the app? 🎥",
         variants: [
-          "Occasionally, for recreational purposes 🎣",
-          "Regularly, for professional or hobbyist projects 🛠️",
-          "Rarely, just for specific occasions 📅",
-        ],
-      ),
-      OnboardingQuestionStep(
-        id: "notifications",
-        question: "Would you like to receive notification for updates? 🔔",
-        variants: [
-          "Yes, I want to stay informed. 📲",
-          "No, I prefer to check for updates manually. 📡",
-          "Maybe later, I'm undecided. 🤔",
-        ],
-      ),
-      OnboardingQuestionStep(
-        id: "usage_experience",
-        question: "How familiar are you with metal detection? 🤖",
-        variants: [
-          "Beginner 🚸",
-          "Intermediate 🎓",
-          "Advanced 🏆",
-        ],
-      ),
-      OnboardingQuestionStep(
-        id: "app_customization",
-        question: "Would you like to customize your app? 🎨",
-        variants: [
-          "Yes, I'd like to customize it. 🖌️",
-          "No, I'm fine with default settings. 🛑",
-          "Maybe later, I want to explore the app first. 🤷",
+          "Yes, show me the tutorials",
+          "No, I can figure it out myself",
+          "Only for advanced features"
         ],
       ),
     ];
     _features = [
       OnboardingFeature(
-          title: "Strong Sensors",
-          videoAssetUrl: "assets/video/onboarding_feature_1.mp4",
-          subtitle: "The app uses special algorithms and has strong sensors "
-              "able to detect metal anywhere!"),
+          title: "Master All Android TV Devices",
+          imageAssetUrl: "assets/img/png/onboarding_feature_1.jpg",
+          subtitle: "Gain complete control over every Android TV in your home with a single app."),
       OnboardingFeature(
-          title: "Fun Experience",
-          videoAssetUrl: "assets/video/onboarding_feature_2.mp4",
-          subtitle:
-              "Vibrates to inform you once you find your treasures!"),
+          title: "Instant Connection Setup",
+          imageAssetUrl: "assets/img/png/onboarding_feature_2.jpg",
+          subtitle: "Connect to your devices quickly with our straightforward pairing process"),
       OnboardingFeature(
-          title: "Find Metals Easily",
-          videoAssetUrl: "assets/video/onboarding_feature_3.mp4",
+          title: "Optimized for Android Compatibility",
+          imageAssetUrl: "assets/img/png/onboarding_feature_3.jpg",
           subtitle:
-              "The app can be used to find metal, precious metals, and lost devices"),
+              "Designed to work perfectly with all your Android-based devices"),
     ];
     _isInitialized = true;
   }
