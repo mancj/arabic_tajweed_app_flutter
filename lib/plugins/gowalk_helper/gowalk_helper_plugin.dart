@@ -86,12 +86,12 @@ class GowalkHelperPlugin {
   }
 
   Future<void> showPaidContentOrPaywall(
-    Function() presentPaidContent,
-    Function(PaywallDownloadStatus status)?
-        didChangePaywallDownloadStatusStream, {
-    bool skipDebug = false,
-    String? placementId,
-  }) async {
+      Function() presentPaidContent,
+      Function(PaywallDownloadStatus status)?
+      didChangePaywallDownloadStatusStream, {
+        bool skipDebug = false,
+        String? placementId,
+      }) async {
     if (kDebugMode && skipDebug) {
       presentPaidContent();
       return;
@@ -128,8 +128,12 @@ class GowalkHelperPlugin {
 
   Future<String?> getRemoteConfigStringValue(String key) async {
     String? result =
-        await _channel.invokeMethod('getRemoteConfigStringValue', key);
-    logger.d("Gowalk getRemoteConfigStringValue called with result: $result");
+    await _channel.invokeMethod('getRemoteConfigStringValue', key);
+    return result;
+  }
+
+  Future<bool?> getRemoteConfigBoolValue(String key) async {
+    bool? result = await _channel.invokeMethod('getRemoteConfigBoolValue', key);
     return result;
   }
 }

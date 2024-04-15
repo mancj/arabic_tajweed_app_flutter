@@ -14,6 +14,9 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		998AD40E2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 998AD40C2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin.swift */; };
+		998AD40F2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin+Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 998AD40D2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin+Onboarding.swift */; };
+		998AD4112BCD0C7100360DA7 /* GowalkHelperFlutterPlugin+RemoteConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 998AD4102BCD0C7100360DA7 /* GowalkHelperFlutterPlugin+RemoteConfig.swift */; };
 		99D6695D2BCC2C2900C2D759 /* AdServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99D6695B2BCC2C2800C2D759 /* AdServices.framework */; };
 		99D6695E2BCC2C2900C2D759 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99D6695C2BCC2C2900C2D759 /* AdSupport.framework */; };
 /* End PBXBuildFile section */
@@ -57,6 +60,9 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		998AD40C2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GowalkHelperFlutterPlugin.swift; sourceTree = "<group>"; };
+		998AD40D2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin+Onboarding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "GowalkHelperFlutterPlugin+Onboarding.swift"; sourceTree = "<group>"; };
+		998AD4102BCD0C7100360DA7 /* GowalkHelperFlutterPlugin+RemoteConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "GowalkHelperFlutterPlugin+RemoteConfig.swift"; sourceTree = "<group>"; };
 		99D6695B2BCC2C2800C2D759 /* AdServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdServices.framework; path = System/Library/Frameworks/AdServices.framework; sourceTree = SDKROOT; };
 		99D6695C2BCC2C2900C2D759 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -116,6 +122,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				998AD40B2BCD0C3100360DA7 /* Gowalk */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -126,6 +133,16 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		998AD40B2BCD0C3100360DA7 /* Gowalk */ = {
+			isa = PBXGroup;
+			children = (
+				998AD4102BCD0C7100360DA7 /* GowalkHelperFlutterPlugin+RemoteConfig.swift */,
+				998AD40C2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin.swift */,
+				998AD40D2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin+Onboarding.swift */,
+			);
+			path = Gowalk;
 			sourceTree = "<group>";
 		};
 		99D6695A2BCC2C2800C2D759 /* Frameworks */ = {
@@ -285,7 +302,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				998AD40F2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin+Onboarding.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				998AD4112BCD0C7100360DA7 /* GowalkHelperFlutterPlugin+RemoteConfig.swift in Sources */,
+				998AD40E2BCD0C5000360DA7 /* GowalkHelperFlutterPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -90,6 +90,10 @@ class GowalkHelperFlutterPlugin : NSObject, FlutterPlugin {
             parse(args: call.arguments, result: result) { key in
                 result(getRemoteConfigStringValue(key))
             }
+        case "getRemoteConfigBoolValue":
+            parse(args: call.arguments, result: result) { key in
+                result(getRemoteConfigBoolValue(key))
+            }
         case "initializeOnboarding":
             parse(args: call.arguments, result: result) { (forceShowOnboarding: Bool) in
                 initializeOnboarding(forceShowOnboarding: forceShowOnboarding, didClose: { (didShowOnbiarding: Bool) in
@@ -217,10 +221,7 @@ extension GowalkHelperFlutterPlugin {
           completion(dict)
     }
     
-    private func getRemoteConfigStringValue(_ key: String) -> String? {
-        let value = GowalkServices.remoteConfigService.getConfigValue(key)
-        return value.stringValue
-    }
+
     
 }
 
