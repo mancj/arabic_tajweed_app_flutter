@@ -1,4 +1,4 @@
-import 'package:gowalk_flutter_app/app/resources/ui_resources.dart';
+import 'package:my_app_template/app/resources/ui_resources.dart';
 import 'package:flutter/widgets.dart';
 
 class PageTitle extends StatelessWidget {

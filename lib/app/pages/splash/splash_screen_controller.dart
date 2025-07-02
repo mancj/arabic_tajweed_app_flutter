@@ -1,14 +1,9 @@
-import 'dart:io';
-
-import 'package:gowalk_flutter_app/app/pages/onboarding/features_page/onboarding_features_page.dart';
-import 'package:gowalk_flutter_app/data/shared_preference_manager.dart';
-import 'package:gowalk_flutter_app/plugins/gowalk_helper/gowalk_helper.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:my_app_template/app/pages/home/home_page.dart';
+import 'package:my_app_template/data/shared_preference_manager.dart';
 
 class SplashScreenController extends GetxController {
   final _preferenceManager = Get.find<SharedPreferenceManager>();
-  final _gowalkHelper = Get.find<GowalkHelperPlugin>();
 
   @override
   void onReady() {
@@ -20,20 +15,10 @@ class SplashScreenController extends GetxController {
   }
 
   Future<void> _init() async {
-    if (Platform.isIOS) {
-      await _gowalkHelper.initPlugin(
-        appleAppID: "",
-        adaptyKey: "",
-        oneSignalApiKey: "",
-
-      );
-      await _gowalkHelper.prepareHelper();
-      await _gowalkHelper.initializeOnboarding(forceShowOnboarding: false);
-    }
-    if (_preferenceManager.isOnboardingShown) {
-
+    if (_preferenceManager.isOnboardingShown.get() ?? false) {
+      Get.offNamed(HomePage.routeName);
     } else {
-      Get.offNamed(OnboardingFeaturesPage.routeName);
+      Get.offNamed(HomePage.routeName);
     }
   }
 }

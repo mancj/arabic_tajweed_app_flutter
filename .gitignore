@@ -393,8 +393,6 @@ hs_err_pid*
 
 # End of https://www.gitignore.io/api/xcode,swift,gradle,android,intellij,androidstudio
 
-
-
 # Created by https://www.gitignore.io/api/dart,flutter
 # Edit at https://www.gitignore.io/?templates=dart,flutter
 
@@ -475,3 +473,6 @@ doc/api/
 
 lib/generated
 ios/fastlane/report.xml
+
+# FVM Version Cache
+.fvm/

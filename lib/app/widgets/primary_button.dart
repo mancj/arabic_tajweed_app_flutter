@@ -1,7 +1,7 @@
-import 'package:gowalk_flutter_app/app/resources/ui_resources.dart';
+import 'package:my_app_template/app/resources/ui_resources.dart';
 import 'package:flutter/widgets.dart';
 
-import 'transparent_gesture_detector.dart';
+import 'app_gesture_detector.dart';
 
 class PrimaryButton extends StatelessWidget {
   final Function? onTap;
@@ -15,7 +15,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TransparentGestureDetector(
+    return AppGestureDetector(
       onTap: () => onTap?.call(),
       child: Container(
         width: double.infinity,

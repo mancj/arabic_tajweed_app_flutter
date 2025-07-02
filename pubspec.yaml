@@ -1,5 +1,5 @@
-name: gowalk_flutter_app
-description: "Baby cry analyzer Flutter App"
+name: my_app_template
+description: "Your app description here"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
@@ -16,33 +16,28 @@ dependencies:
   flutter_svg: ^2.0.9
   flutter_animate: ^4.5.0
   shared_preferences: ^2.2.2
-  flutter_vibrate: ^1.3.0
-  video_player: ^2.8.2
-  smooth_page_indicator: ^1.1.0
   cupertino_icons: ^1.0.2
+  figma_squircle: ^0.5.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^2.0.0
 
 flutter:
-
   uses-material-design: true
   assets:
-    - assets/img/png/
-    - assets/img/svg/
-    - assets/video/
+    - assets/svg/
+    - assets/fonts/Gilroy/
 
   fonts:
-    - family: PlusJakartaSans
+    - family: Gilroy
       fonts:
-        - asset: assets/fonts/Plus_Jakarta_Sans/PlusJakartaSans-Regular.ttf
+        - asset: assets/fonts/Gilroy/Gilroy-Regular.ttf
           weight: 400
-        - asset: assets/fonts/Plus_Jakarta_Sans/PlusJakartaSans-Medium.ttf
+        - asset: assets/fonts/Gilroy/Gilroy-Medium.ttf
           weight: 600
-        - asset: assets/fonts/Plus_Jakarta_Sans/PlusJakartaSans-SemiBold.ttf
+        - asset: assets/fonts/Gilroy/Gilroy-Semibold.ttf
           weight: 700
-        - asset: assets/fonts/Plus_Jakarta_Sans/PlusJakartaSans-Bold.ttf
+        - asset: assets/fonts/Gilroy/Gilroy-Bold.ttf
           weight: 800
