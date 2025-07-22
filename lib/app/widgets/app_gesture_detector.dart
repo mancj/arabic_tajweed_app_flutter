@@ -24,6 +24,7 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
+      onPanDown: (d) => _tapDownState(),
       onTapDown: (d) => _tapDownState(),
       onTapUp: (d) => _tapUpState(),
       onTapCancel: () => _tapUpState(),
