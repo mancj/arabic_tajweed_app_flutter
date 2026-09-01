@@ -9,7 +9,7 @@ class AppGestureDetector extends StatefulWidget {
     Key? key,
     this.onTap,
     required this.child,
-    this.pressedOpacity = 0.6,
+    this.pressedOpacity = .95,
   }) : super(key: key);
 
   @override
@@ -28,10 +28,12 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
       onTapDown: (d) => _tapDownState(),
       onTapUp: (d) => _tapUpState(),
       onTapCancel: () => _tapUpState(),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 100),
-        opacity: !_isPressed ? 1.0 : widget.pressedOpacity,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        scale: !_isPressed ? 1.0 : widget.pressedOpacity,
         child: widget.child,
+      
+        curve: Curves.easeInOut,
       ),
     );
   }

@@ -1,4 +1,4 @@
-# baby_cry_analyzer_flutter
+# arabic_tajweed_app
 
 Baby cry analyzer Flutter App
 

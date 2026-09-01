@@ -1,4 +1,4 @@
-import 'package:my_app_template/data/utils/shared_pref.dart';
+import 'package:arabic_tajweed_app/data/utils/shared_pref.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferenceManager {

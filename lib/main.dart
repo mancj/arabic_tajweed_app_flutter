@@ -1,44 +1,26 @@
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_app_template/app/app_binding.dart';
-import 'package:my_app_template/app/pages/home/home_page.dart';
-import 'package:my_app_template/app/pages/splash/splash_screen_page.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:arabic_tajweed_app/app/app_binding.dart';
+import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
+import 'package:arabic_tajweed_app/app/pages/splash/splash_screen_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   const fatalError = true;
 
-  if (!kDebugMode) {
-    // Firebase Crashlytics
-    // Non-async exceptions
-    FlutterError.onError = (errorDetails) {
-      if (fatalError) {
-        // If you want to record a "fatal" exception
-        FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-        // ignore: dead_code
-      } else {
-        // If you want to record a "non-fatal" exception
-        FirebaseCrashlytics.instance.recordFlutterError(errorDetails);
-      }
-    };
-    // Async exceptions
-    PlatformDispatcher.instance.onError = (error, stack) {
-      if (fatalError) {
-        // If you want to record a "fatal" exception
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        // ignore: dead_code
-      } else {
-        // If you want to record a "non-fatal" exception
-        FirebaseCrashlytics.instance.recordError(error, stack);
-      }
-      return true;
-    };
-  }
 
   await AppBinding().asyncDependencies();
-  runApp(const MyApp());
+  await LiquidGlassWidgets.initialize();
+  runApp(
+    LiquidGlassWidgets.wrap(
+      brightnessResolver: Theme.maybeBrightnessOf,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -51,7 +33,6 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: "Gilroy",
         useMaterial3: true,
       ),
       initialRoute: SplashScreenPage.routeName,
@@ -61,6 +42,16 @@ class MyApp extends StatelessWidget {
           name: SplashScreenPage.routeName,
           page: () => const SplashScreenPage(),
           binding: SplashScreenBinding(),
+        ),
+        GetPage(
+          name: DebugPage.routeName,
+          page: () => const DebugPage(),
+          binding: DebugPageBinding(),
+        ),
+        GetPage(
+          name: AlphabetLetterPage.routeName,
+          page: () => const AlphabetLetterPage(),
+          binding: AlphabetLetterBinding(),
         ),
         GetPage(
           name: HomePage.routeName,

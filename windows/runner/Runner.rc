@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "io.arabic.app" "\0"
-            VALUE "FileDescription", "gowalkflutterapptempalte" "\0"
+            VALUE "FileDescription", "arabic_tajweed_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "gowalkflutterapptempalte" "\0"
+            VALUE "InternalName", "arabic_tajweed_app" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 io.arabic.app. All rights reserved." "\0"
-            VALUE "OriginalFilename", "gowalkflutterapptempalte.exe" "\0"
-            VALUE "ProductName", "gowalkflutterapptempalte" "\0"
+            VALUE "OriginalFilename", "arabic_tajweed_app.exe" "\0"
+            VALUE "ProductName", "arabic_tajweed_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
