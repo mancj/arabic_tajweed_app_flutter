@@ -12,9 +12,9 @@ void main() {
   const matcher = TracingMatcher();
 
   ResolvedTracingPart sinBase() => TracingShapeSvg.parse(
-        File('assets/svg/alphabet/sin_base.svg').readAsStringSync(),
-        id: 'sin_base',
-      ).resolve(canvasSize, padding: padding).parts.first;
+    File('assets/svg/alphabet/sin_base.svg').readAsStringSync(),
+    id: 'sin_base',
+  ).resolve(canvasSize, padding: padding).parts.first;
 
   /// Рука, ведущая по букве: точки вдоль линии с дрожью поперёк неё и общим
   /// сдвигом — так обводят на самом деле, и именно так соседние ветки зубца
@@ -80,13 +80,13 @@ void main() {
 
     final naive = [
       for (final point in hand.points)
-        samples.reduce((a, b) =>
-            (point - a).distanceSquared <= (point - b).distanceSquared ? a : b),
+        samples.reduce(
+          (a, b) => (point - a).distanceSquared <= (point - b).distanceSquared
+              ? a
+              : b,
+        ),
     ];
 
-    expect(
-      worstChordOf(naive, samples),
-      greaterThan(part.strokeWidth * 0.25),
-    );
+    expect(worstChordOf(naive, samples), greaterThan(part.strokeWidth * 0.25));
   });
 }

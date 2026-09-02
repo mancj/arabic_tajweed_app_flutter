@@ -8,11 +8,8 @@ class LessonProgressBar extends StatelessWidget {
 
   final double height;
 
-  const LessonProgressBar({
-    required this.value,
-    this.height = 12,
-    Key? key,
-  }) : super(key: key);
+  const LessonProgressBar({required this.value, this.height = 12, Key? key})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {

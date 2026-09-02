@@ -7,19 +7,21 @@ void main() {
     final controller = DrawingController(strokeWidth: 16);
     const canvasSize = Size(360, 480);
 
-    await tester.pumpWidget(MaterialApp(
-      home: Center(
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: DrawingCanvas(
-            controller: controller,
-            placeholder: TracingShapes.arabicBa,
-            placeholderPadding: 48,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: canvasSize.width,
+            height: canvasSize.height,
+            child: DrawingCanvas(
+              controller: controller,
+              placeholder: TracingShapes.arabicBa,
+              placeholderPadding: 48,
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     final topLeft = tester.getTopLeft(find.byType(DrawingCanvas));
     final shape = TracingShapes.arabicBa.resolve(canvasSize, padding: 48);
@@ -54,16 +56,19 @@ void main() {
     expect(controller.check().isMatch, isTrue);
   });
 
-  testWidgets('пустой холст отвечает noInput, а не нулевым результатом',
-      (tester) async {
+  testWidgets('пустой холст отвечает noInput, а не нулевым результатом', (
+    tester,
+  ) async {
     final controller = DrawingController();
 
-    await tester.pumpWidget(MaterialApp(
-      home: DrawingCanvas(
-        controller: controller,
-        placeholder: TracingShapes.arabicBa,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DrawingCanvas(
+          controller: controller,
+          placeholder: TracingShapes.arabicBa,
+        ),
       ),
-    ));
+    );
 
     final result = controller.check();
     expect(result.status, TracingMatchStatus.noInput);

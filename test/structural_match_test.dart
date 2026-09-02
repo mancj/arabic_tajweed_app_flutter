@@ -10,7 +10,9 @@ import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 void main() {
   const matcher = TracingMatcher();
   final shape = TracingShapeSvg.parse(
-      File('assets/svg/alphabet/ba_base.svg').readAsStringSync(), id: 'ba');
+    File('assets/svg/alphabet/ba_base.svg').readAsStringSync(),
+    id: 'ba',
+  );
   final base = shape.resolve(const Size(328, 700), padding: 48).parts.first;
   final metric = base.paths.first.computeMetrics().first;
   final bounds = base.paths.first.getBounds();
@@ -33,27 +35,33 @@ void main() {
         () {
           final t = d / metric.length;
           final p = metric.getTangentForOffset(d)!.position;
-          final spiked =
-              Offset(p.dx, p.dy - exp(-pow((t - .5) / .13, 2)) * bounds.height * bump);
+          final spiked = Offset(
+            p.dx,
+            p.dy - exp(-pow((t - .5) / .13, 2)) * bounds.height * bump,
+          );
           return Offset(
-                bounds.center.dx + (spiked.dx - bounds.center.dx) * stretchX * scale,
-                bounds.center.dy + (spiked.dy - bounds.center.dy) * stretchY * scale,
+                bounds.center.dx +
+                    (spiked.dx - bounds.center.dx) * stretchX * scale,
+                bounds.center.dy +
+                    (spiked.dy - bounds.center.dy) * stretchY * scale,
               ) +
               shift +
-              Offset((random.nextDouble() - .5) * jitter,
-                  (random.nextDouble() - .5) * jitter);
+              Offset(
+                (random.nextDouble() - .5) * jitter,
+                (random.nextDouble() - .5) * jitter,
+              );
         }(),
     ];
   }
 
   TracingMatchResult match(List<Offset> points) => matcher.match(
-        target: base,
-        strokes: [
-          DrawingStroke(points: points, color: const Color(0xFF000000), width: 24),
-        ],
-        penWidth: 24,
-        structural: true,
-      );
+    target: base,
+    strokes: [
+      DrawingStroke(points: points, color: const Color(0xFF000000), width: 24),
+    ],
+    penWidth: 24,
+    structural: true,
+  );
 
   test('форма важнее пропорций', () {
     final cases = {
@@ -79,7 +87,10 @@ void main() {
       'прямая линия': [for (var i = 0; i < 60; i++) Offset(60.0 + i * 3, 300)],
       'круг': [
         for (var i = 0; i <= 60; i++)
-          Offset(160 + 80 * cos(i / 60 * 2 * pi), 300 + 80 * sin(i / 60 * 2 * pi)),
+          Offset(
+            160 + 80 * cos(i / 60 * 2 * pi),
+            300 + 80 * sin(i / 60 * 2 * pi),
+          ),
       ],
     };
 
@@ -98,7 +109,10 @@ void main() {
     final forward = draw();
     final backward = forward.reversed.toList();
     expect(match(backward).isMatch, isTrue);
-    expect(match(backward).shapeError, closeTo(match(forward).shapeError, 0.001));
+    expect(
+      match(backward).shapeError,
+      closeTo(match(forward).shapeError, 0.001),
+    );
   });
 
   test('основу можно нарисовать двумя штрихами в любом порядке', () {

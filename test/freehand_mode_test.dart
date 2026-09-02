@@ -7,25 +7,27 @@ void main() {
   const padding = 48.0;
 
   Future<(DrawingController, Rect, ResolvedTracingShape, List<TracingProgress>)>
-      pumpCanvas(WidgetTester tester) async {
+  pumpCanvas(WidgetTester tester) async {
     final controller = DrawingController(strokeWidth: 16);
     final progress = <TracingProgress>[];
 
-    await tester.pumpWidget(MaterialApp(
-      home: Center(
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: DrawingCanvas(
-            controller: controller,
-            mode: TracingMode.freehand,
-            placeholder: TracingShapes.arabicBa,
-            placeholderPadding: padding,
-            onProgress: progress.add,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: canvasSize.width,
+            height: canvasSize.height,
+            child: DrawingCanvas(
+              controller: controller,
+              mode: TracingMode.freehand,
+              placeholder: TracingShapes.arabicBa,
+              placeholderPadding: padding,
+              onProgress: progress.add,
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     final box = tester.getRect(find.byType(DrawingCanvas));
     final shape = TracingShapes.arabicBa.resolve(box.size, padding: padding);
@@ -53,8 +55,12 @@ void main() {
     final metric = shape.parts.first.paths.first.computeMetrics().first;
     final points = [
       for (var d = 0.0; d < metric.length; d += 6)
-        place(shape, metric.getTangentForOffset(d)!.position,
-                shift: shift, scale: scale) +
+        place(
+              shape,
+              metric.getTangentForOffset(d)!.position,
+              shift: shift,
+              scale: scale,
+            ) +
             origin,
     ];
 
@@ -66,11 +72,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('части засчитываются по очереди: основа, затем точка', (tester) async {
+  testWidgets('части засчитываются по очереди: основа, затем точка', (
+    tester,
+  ) async {
     final (controller, box, shape, progress) = await pumpCanvas(tester);
 
     await traceBase(tester, shape, box.topLeft);
-    expect(progress.last.completed, 1, reason: 'основа должна засчитаться сразу');
+    expect(
+      progress.last.completed,
+      1,
+      reason: 'основа должна засчитаться сразу',
+    );
     expect(progress.last.nextLabel, 'точка');
 
     await tester.tapAt(shape.parts.last.dots.first + box.topLeft);
@@ -90,10 +102,16 @@ void main() {
     await tester.tapAt(box.topLeft + const Offset(30, 30));
     await tester.pumpAndSettle();
 
-    expect(progress.last.completed, 1, reason: 'мимо точки — прогресс не растёт');
+    expect(
+      progress.last.completed,
+      1,
+      reason: 'мимо точки — прогресс не растёт',
+    );
   });
 
-  testWidgets('порядок частей соблюдается: точка до основы не проходит', (tester) async {
+  testWidgets('порядок частей соблюдается: точка до основы не проходит', (
+    tester,
+  ) async {
     final (_, box, shape, progress) = await pumpCanvas(tester);
 
     await tester.tapAt(shape.parts.last.dots.first + box.topLeft);
@@ -102,16 +120,23 @@ void main() {
     expect(progress, isEmpty, reason: 'первой ждём основу, а не точку');
   });
 
-  testWidgets('форма засчитывается, даже если нарисована в другом месте и мельче',
-      (tester) async {
-    final (_, box, shape, progress) = await pumpCanvas(tester);
+  testWidgets(
+    'форма засчитывается, даже если нарисована в другом месте и мельче',
+    (tester) async {
+      final (_, box, shape, progress) = await pumpCanvas(tester);
 
-    await traceBase(tester, shape, box.topLeft,
-        shift: const Offset(-70, 90), scale: 0.65);
+      await traceBase(
+        tester,
+        shape,
+        box.topLeft,
+        shift: const Offset(-70, 90),
+        scale: 0.65,
+      );
 
-    expect(progress.last.completed, 1);
-    expect(progress.last.nextLabel, 'точка');
-  });
+      expect(progress.last.completed, 1);
+      expect(progress.last.nextLabel, 'точка');
+    },
+  );
 
   testWidgets('слишком мелкая каракуля не засчитывается', (tester) async {
     final (_, box, shape, progress) = await pumpCanvas(tester);
@@ -121,8 +146,9 @@ void main() {
     expect(progress, isEmpty);
   });
 
-  testWidgets('точка ставится к своей букве, а не к центру холста',
-      (tester) async {
+  testWidgets('точка ставится к своей букве, а не к центру холста', (
+    tester,
+  ) async {
     final (_, box, shape, progress) = await pumpCanvas(tester);
     const shift = Offset(-70, 90);
     const scale = 0.65;
@@ -143,8 +169,9 @@ void main() {
     expect(progress.last.isComplete, isTrue);
   });
 
-  testWidgets('точку можно поставить неточно, но с той же стороны',
-      (tester) async {
+  testWidgets('точку можно поставить неточно, но с той же стороны', (
+    tester,
+  ) async {
     final (_, box, shape, progress) = await pumpCanvas(tester);
 
     await traceBase(tester, shape, box.topLeft);
@@ -204,11 +231,19 @@ void main() {
     await tester.tapAt(box.topLeft + const Offset(30, 30));
     await tester.pumpAndSettle();
 
-    expect(controller.strokes.length, 1, reason: 'промах не остаётся на холсте');
+    expect(
+      controller.strokes.length,
+      1,
+      reason: 'промах не остаётся на холсте',
+    );
 
     await tester.tapAt(shape.parts.last.dots.first + box.topLeft);
     await tester.pumpAndSettle();
-    expect(progress.last.isComplete, isTrue, reason: 'промах не мешает повтору');
+    expect(
+      progress.last.isComplete,
+      isTrue,
+      reason: 'промах не мешает повтору',
+    );
   });
 
   testWidgets('отмена откатывает собранную часть', (tester) async {

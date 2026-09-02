@@ -1,16 +1,19 @@
+import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class   AppBinding extends Bindings {
+class AppBinding extends Bindings {
   @override
-  void dependencies() {
-  }
+  void dependencies() {}
 
   Future<void> asyncDependencies() async {
     await Get.putAsync(() async {
       var prefs = await SharedPreferences.getInstance();
       return SharedPreferenceManager(prefs);
     });
+
+    // Одна база на всё приложение: лог событий append-only.
+    Get.put(ProgressDatabase(), permanent: true);
   }
 }

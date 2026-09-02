@@ -5,21 +5,18 @@ class Margin extends StatelessWidget {
   final double vertical;
 
   const Margin({Key? key, required this.horizontal, required this.vertical})
-      : super(key: key);
+    : super(key: key);
 
   const Margin.vertical(this.vertical, {Key? key})
-      : horizontal = 0,
-        super(key: key);
+    : horizontal = 0,
+      super(key: key);
 
   const Margin.horizontal(this.horizontal, {Key? key})
-      : vertical = 0,
-        super(key: key);
+    : vertical = 0,
+      super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: horizontal,
-      height: vertical,
-    );
+    return SizedBox(width: horizontal, height: vertical);
   }
 }

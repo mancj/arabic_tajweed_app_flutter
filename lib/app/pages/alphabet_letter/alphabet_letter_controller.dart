@@ -30,7 +30,8 @@ class AlphabetLetterController extends GetxController {
   ];
 
   final tajweedTitle = 'Таджвид · Калькаля';
-  final tajweedText = 'Если буква ج стоит с сукуном, она произносится '
+  final tajweedText =
+      'Если буква ج стоит с сукуном, она произносится '
       'с лёгким «отскоком» — калькалей. Звук короткий и упругий, '
       'без гласного призвука.';
 

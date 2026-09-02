@@ -19,10 +19,10 @@ class DrawingController extends ChangeNotifier {
     double strokeWidth = 26,
     double smoothing = 0.35,
     double minDistance = 3,
-  })  : _color = color,
-        _strokeWidth = strokeWidth,
-        _smoothing = smoothing.clamp(0.05, 1.0),
-        _minDistance = minDistance;
+  }) : _color = color,
+       _strokeWidth = strokeWidth,
+       _smoothing = smoothing.clamp(0.05, 1.0),
+       _minDistance = minDistance;
 
   final double _smoothing;
   final double _minDistance;
@@ -37,7 +37,9 @@ class DrawingController extends ChangeNotifier {
   TracingChecker? _checker;
 
   late final List<DrawingStroke> _strokesView = UnmodifiableListView(_strokes);
-  late final List<Offset> _currentPointsView = UnmodifiableListView(_currentPoints);
+  late final List<Offset> _currentPointsView = UnmodifiableListView(
+    _currentPoints,
+  );
 
   /// Завершённые штрихи.
   List<DrawingStroke> get strokes => _strokesView;
@@ -117,11 +119,13 @@ class DrawingController extends ChangeNotifier {
 
     _catchUp();
 
-    _strokes.add(DrawingStroke(
-      points: List.of(_currentPoints),
-      color: _color,
-      width: _strokeWidth,
-    ));
+    _strokes.add(
+      DrawingStroke(
+        points: List.of(_currentPoints),
+        color: _color,
+        width: _strokeWidth,
+      ),
+    );
     _currentPoints.clear();
     _filtered = null;
     _raw = null;
@@ -142,7 +146,8 @@ class DrawingController extends ChangeNotifier {
     var point = _filtered ?? _currentPoints.last;
     for (var i = 0; i < 64 && (point - target).distance > 0.5; i++) {
       point = _step(point, target);
-      if ((point - _currentPoints.last).distance >= math.max(_minDistance, 0.5)) {
+      if ((point - _currentPoints.last).distance >=
+          math.max(_minDistance, 0.5)) {
         _currentPoints.add(point);
       }
     }
@@ -153,9 +158,9 @@ class DrawingController extends ChangeNotifier {
   }
 
   Offset _step(Offset from, Offset to) => Offset(
-        from.dx + (to.dx - from.dx) * _smoothing,
-        from.dy + (to.dy - from.dy) * _smoothing,
-      );
+    from.dx + (to.dx - from.dx) * _smoothing,
+    from.dy + (to.dy - from.dy) * _smoothing,
+  );
 
   void cancelStroke() {
     if (_currentPoints.isEmpty) return;

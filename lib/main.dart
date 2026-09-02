@@ -5,13 +5,14 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/app_binding.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
+import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/splash/splash_screen_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   const fatalError = true;
-
 
   await AppBinding().asyncDependencies();
   await LiquidGlassWidgets.initialize();
@@ -32,12 +33,20 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: ThemeData(useMaterial3: true),
       initialRoute: SplashScreenPage.routeName,
       initialBinding: AppBinding(),
       getPages: [
+        GetPage(
+          name: CoursePage.routeName,
+          page: () => const CoursePage(),
+          binding: CourseBinding(),
+        ),
+        GetPage(
+          name: LessonPage.routeName,
+          page: () => const LessonPage(),
+          binding: LessonBinding(),
+        ),
         GetPage(
           name: SplashScreenPage.routeName,
           page: () => const SplashScreenPage(),

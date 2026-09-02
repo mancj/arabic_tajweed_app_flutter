@@ -19,7 +19,10 @@ void main() {
 
     final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
     final box = tester.getRect(find.byType(DrawingCanvas));
-    final shape = canvas.placeholder!.resolve(box.size, padding: canvas.placeholderPadding);
+    final shape = canvas.placeholder!.resolve(
+      box.size,
+      padding: canvas.placeholderPadding,
+    );
 
     final metric = shape.paths.first.computeMetrics().first;
     final points = [

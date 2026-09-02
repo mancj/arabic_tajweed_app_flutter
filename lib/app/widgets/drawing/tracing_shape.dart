@@ -104,14 +104,20 @@ class TracingShape {
   /// Вписывает фигуру в [size] с сохранением пропорций и центрированием.
   ResolvedTracingShape resolve(Size size, {double padding = 24}) {
     final raw = frame;
-    final availableWidth = (size.width - padding * 2).clamp(1.0, double.infinity);
-    final availableHeight = (size.height - padding * 2).clamp(1.0, double.infinity);
+    final availableWidth = (size.width - padding * 2).clamp(
+      1.0,
+      double.infinity,
+    );
+    final availableHeight = (size.height - padding * 2).clamp(
+      1.0,
+      double.infinity,
+    );
 
     final scale = raw.isEmpty
         ? 1.0
         : (availableWidth / raw.width) < (availableHeight / raw.height)
-            ? availableWidth / raw.width
-            : availableHeight / raw.height;
+        ? availableWidth / raw.width
+        : availableHeight / raw.height;
 
     final offset = Offset(
       (size.width - raw.width * scale) / 2 - raw.left * scale,
@@ -277,11 +283,11 @@ class ResolvedTracingShape {
 
   /// Кадр фигуры в координатах холста.
   Rect get frame => Rect.fromLTWH(
-        shape.frame.left * scale + offset.dx,
-        shape.frame.top * scale + offset.dy,
-        shape.frame.width * scale,
-        shape.frame.height * scale,
-      );
+    shape.frame.left * scale + offset.dx,
+    shape.frame.top * scale + offset.dy,
+    shape.frame.width * scale,
+    shape.frame.height * scale,
+  );
 
   List<Path> get paths => [for (final part in parts) ...part.paths];
 
@@ -295,13 +301,13 @@ class ResolvedTracingShape {
 
   /// Вся фигура как одна часть — для проверки целиком.
   ResolvedTracingPart get whole => _whole ??= ResolvedTracingPart(
-        id: shape.id,
-        label: shape.label,
-        paths: paths,
-        dots: dots,
-        strokeWidth: strokeWidth,
-        dotRadius: dotRadius,
-      );
+    id: shape.id,
+    label: shape.label,
+    paths: paths,
+    dots: dots,
+    strokeWidth: strokeWidth,
+    dotRadius: dotRadius,
+  );
 
   /// Вся фигура, перенесённая на новое место: масштаб и сдвиг применяются
   /// поверх уже вычисленных.
@@ -355,25 +361,25 @@ class TracingShapes {
 
   /// Арабская буква «ба» (ب) — чаша с точкой снизу.
   static TracingShape get arabicBa => TracingShape(
-        id: 'ba',
-        label: 'ب',
-        strokeWidth: 112,
-        parts: [
-          TracingShapePart(
-            id: 'base',
-            label: 'основа',
-            paths: [
-              Path()
-                ..moveTo(232, 200)
-                ..cubicTo(212, 450, 320, 505, 500, 505)
-                ..cubicTo(700, 505, 792, 450, 772, 205),
-            ],
-          ),
-          const TracingShapePart(
-            id: 'dot',
-            label: 'точка',
-            dots: [Offset(507, 700)],
-          ),
+    id: 'ba',
+    label: 'ب',
+    strokeWidth: 112,
+    parts: [
+      TracingShapePart(
+        id: 'base',
+        label: 'основа',
+        paths: [
+          Path()
+            ..moveTo(232, 200)
+            ..cubicTo(212, 450, 320, 505, 500, 505)
+            ..cubicTo(700, 505, 792, 450, 772, 205),
         ],
-      );
+      ),
+      const TracingShapePart(
+        id: 'dot',
+        label: 'точка',
+        dots: [Offset(507, 700)],
+      ),
+    ],
+  );
 }

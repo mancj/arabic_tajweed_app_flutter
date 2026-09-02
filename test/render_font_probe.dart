@@ -8,9 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> loadAppFonts() async {
-  final manifest = json.decode(
-    await rootBundle.loadString('FontManifest.json'),
-  ) as List<dynamic>;
+  final manifest =
+      json.decode(await rootBundle.loadString('FontManifest.json'))
+          as List<dynamic>;
   for (final family in manifest.cast<Map<String, dynamic>>()) {
     // ignore: avoid_print
     print('FAMILY: ${family['family']} -> ${(family['fonts'] as List).length}');
@@ -36,22 +36,45 @@ void main() {
           textDirection: TextDirection.ltr,
           child: RepaintBoundary(
             child: ColoredBox(
-            color: Color(0xFFFFFFFF),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text('ج', style: TextStyle(fontFamily: 'Rubik', fontSize: 90, color: Color(0xFF000000))),
-                Text('ج',
+              color: Color(0xFFFFFFFF),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    'ج',
                     style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontVariations: [FontVariation('wght', 500)],
-                        fontSize: 90, color: Color(0xFF000000))),
-                Text('ج',
+                      fontFamily: 'Rubik',
+                      fontSize: 90,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                  Text(
+                    'ج',
                     style: TextStyle(
-                        fontFamily: 'ScheherazadeNew', fontSize: 90, color: Color(0xFF000000))),
-                Text('Rq', style: TextStyle(fontFamily: 'Rubik', fontSize: 90, color: Color(0xFF000000))),
-              ],
-            ),
+                      fontFamily: 'Rubik',
+                      fontVariations: [FontVariation('wght', 500)],
+                      fontSize: 90,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                  Text(
+                    'ج',
+                    style: TextStyle(
+                      fontFamily: 'ScheherazadeNew',
+                      fontSize: 90,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                  Text(
+                    'Rq',
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontSize: 90,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -63,7 +86,8 @@ void main() {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('${Platform.environment['OUT'] ?? '/tmp'}/font_probe.png')
-        .writeAsBytesSync(bytes!.buffer.asUint8List());
+    File(
+      '${Platform.environment['OUT'] ?? '/tmp'}/font_probe.png',
+    ).writeAsBytesSync(bytes!.buffer.asUint8List());
   });
 }

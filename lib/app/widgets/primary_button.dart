@@ -7,11 +7,8 @@ class PrimaryButton extends StatelessWidget {
   final Function? onTap;
   final String title;
 
-  const PrimaryButton({
-    Key? key,
-    this.onTap,
-    required this.title,
-  }) : super(key: key);
+  const PrimaryButton({Key? key, this.onTap, required this.title})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +24,7 @@ class PrimaryButton extends StatelessWidget {
             colors: UIColors.primaryButtonGradient,
           ),
         ),
-        child: Text(
-          title,
-          style: UITextStyles.buttonTitle,
-        ),
+        child: Text(title, style: UITextStyles.buttonTitle),
       ),
     );
   }

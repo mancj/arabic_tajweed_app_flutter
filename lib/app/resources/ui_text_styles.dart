@@ -24,11 +24,14 @@ class UITextStyles {
     FontVariation('wdth', 100),
   ];
 
-  static List<FontVariation> playfair(double weight) =>
-      [..._playfairAxes, FontVariation('wght', weight)];
+  static List<FontVariation> playfair(double weight) => [
+    ..._playfairAxes,
+    FontVariation('wght', weight),
+  ];
 
-  static List<FontVariation> rubik(double weight) =>
-      [FontVariation('wght', weight)];
+  static List<FontVariation> rubik(double weight) => [
+    FontVariation('wght', weight),
+  ];
 
   static const pageTitle = TextStyle(
     color: UIColors.text,
@@ -46,12 +49,12 @@ class UITextStyles {
   static const buttonTitle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: UIColors.white,
+    color: UIColors.ink,
     fontFamily: fontOnest,
   );
 
   static const regularText = TextStyle(
-    color: UIColors.white,
+    color: UIColors.ink,
     fontSize: 17,
     fontFamily: fontOnest,
   );
@@ -62,7 +65,7 @@ class UITextStyles {
     fontFamily: fontOnest,
   );
   static const semiboldText = TextStyle(
-    color: UIColors.white,
+    color: UIColors.ink,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
@@ -86,10 +89,34 @@ class UITextStyles {
   );
 
   static const tabSelected = TextStyle(
-    color: UIColors.white,
+    color: UIColors.ink,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
+  );
+
+  /// Плашка «Новая тема» на карточке правила.
+  static const badge = TextStyle(
+    color: UIColors.white,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    fontFamily: fontOnest,
+  );
+
+  /// Заголовок карточки с правилом.
+  static const cardTitle = TextStyle(
+    color: UIColors.ink,
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    fontFamily: fontOnest,
+  );
+
+  /// Тело правила: в макете набрано засечками, кегль и интерлиньяж оттуда же.
+  static const ruleBody = TextStyle(
+    color: UIColors.black,
+    fontSize: 16,
+    height: 1.5,
+    fontFamily: fontPrata,
   );
 
   static const semibold17 = TextStyle(

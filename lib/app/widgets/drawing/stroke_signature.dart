@@ -72,7 +72,10 @@ class StrokeSignature {
     final last = points.length - 1;
     final backwards = [for (var i = last; i >= 0; i--) points[i]];
 
-    return math.min(_align(points, other.points), _align(backwards, other.points));
+    return math.min(
+      _align(points, other.points),
+      _align(backwards, other.points),
+    );
   }
 
   /// Среднее расстояние по лучшему соответствию точек в пределах полосы.
@@ -92,7 +95,8 @@ class StrokeSignature {
 
       for (var j = from; j <= to; j++) {
         final cost = (a[i - 1] - b[j - 1]).distance;
-        current[j] = cost +
+        current[j] =
+            cost +
             math.min(previous[j], math.min(current[j - 1], previous[j - 1]));
       }
 
@@ -161,8 +165,8 @@ class StrokeSignature {
     }
 
     final shortest = math.min(width, height);
-    final uniform = forceUniform ??
-        (shortest <= 0 || longest / shortest > extremeAspect);
+    final uniform =
+        forceUniform ?? (shortest <= 0 || longest / shortest > extremeAspect);
 
     final scaleX = uniform ? 1 / longest : (width > 0 ? 1 / width : 0.0);
     final scaleY = uniform ? 1 / longest : (height > 0 ? 1 / height : 0.0);
@@ -177,9 +181,8 @@ class StrokeSignature {
     }
     centroid = centroid / scaled.length.toDouble();
 
-    return StrokeSignature(
-      [for (final point in scaled) point - centroid],
-      uniform: uniform,
-    );
+    return StrokeSignature([
+      for (final point in scaled) point - centroid,
+    ], uniform: uniform);
   }
 }

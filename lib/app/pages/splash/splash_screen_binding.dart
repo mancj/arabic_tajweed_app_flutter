@@ -7,5 +7,4 @@ class SplashScreenBinding extends Bindings {
   void dependencies() {
     Get.put(SplashScreenController());
   }
-
 }

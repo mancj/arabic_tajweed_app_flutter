@@ -31,6 +31,21 @@ class DebugPage extends GetView<DebugController> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: [
                   _DebugTile(
+                    title: 'Сбросить прогресс',
+                    subtitle: 'Стереть лог и начать курс заново',
+                    onTap: controller.resetProgress,
+                  ),
+                  _DebugTile(
+                    title: 'Курс',
+                    subtitle: 'Главный экран с темами',
+                    onTap: controller.openCourse,
+                  ),
+                  _DebugTile(
+                    title: 'Урок',
+                    subtitle: 'Точка входа в курс',
+                    onTap: controller.openLesson,
+                  ),
+                  _DebugTile(
                     title: 'Алфавит · буква',
                     subtitle: 'Экран знакомства с буквой',
                     onTap: controller.openAlphabetLetter,
@@ -55,11 +70,7 @@ class _DebugTile extends StatelessWidget {
   final String? subtitle;
   final VoidCallback onTap;
 
-  const _DebugTile({
-    required this.title,
-    required this.onTap,
-    this.subtitle,
-  });
+  const _DebugTile({required this.title, required this.onTap, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -87,10 +98,7 @@ class _DebugTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: UIColors.secondary3,
-              ),
+              const Icon(Icons.chevron_right, color: UIColors.secondary3),
             ],
           ),
         ),

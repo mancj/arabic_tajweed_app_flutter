@@ -191,8 +191,10 @@ class _FormCard extends StatelessWidget {
           decoration: SquircleBorders.squircleBorder(
             color: UIColors.white,
             borderRadius: 16,
-            borderSide:
-                const BorderSide(color: UIColors.cardBorder, width: 0.6),
+            borderSide: const BorderSide(
+              color: UIColors.cardBorder,
+              width: 0.6,
+            ),
             shadows: const [
               BoxShadow(
                 color: UIColors.cardShadowMedium,
@@ -294,8 +296,11 @@ class _PronunciationCard extends StatelessWidget {
         children: [
           const AppGestureDetector(
             child: CircleButton(
-              child: Icon(Icons.play_arrow_rounded,
-                  color: UIColors.white, size: 24),
+              child: Icon(
+                Icons.play_arrow_rounded,
+                color: UIColors.white,
+                size: 24,
+              ),
             ),
           ),
           const Margin.horizontal(10),

@@ -8,7 +8,10 @@ import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape.dart';
 
 void main() {
   const matcher = TracingMatcher();
-  final shape = TracingShapes.arabicBa.resolve(const Size(360, 480), padding: 48);
+  final shape = TracingShapes.arabicBa.resolve(
+    const Size(360, 480),
+    padding: 48,
+  );
   final base = shape.parts.first;
   final metric = base.paths.first.computeMetrics().first;
   final random = Random(3);
@@ -17,11 +20,13 @@ void main() {
       DrawingStroke(points: points, color: const Color(0xFF000000), width: 16);
 
   List<Offset> trace(double jitter) => [
-        for (var d = 0.0; d < metric.length; d += 4)
-          metric.getTangentForOffset(d)!.position +
-              Offset((random.nextDouble() - .5) * jitter,
-                  (random.nextDouble() - .5) * jitter),
-      ];
+    for (var d = 0.0; d < metric.length; d += 4)
+      metric.getTangentForOffset(d)!.position +
+          Offset(
+            (random.nextDouble() - .5) * jitter,
+            (random.nextDouble() - .5) * jitter,
+          ),
+  ];
 
   /// Чаша с пиком вверх посередине — та самая «W» вместо «ба».
   /// [amount] — высота пика в долях высоты буквы.

@@ -6,23 +6,28 @@ void main() {
   const canvasSize = Size(360, 480);
   const padding = 48.0;
 
-  Future<DrawingController> pumpCanvas(WidgetTester tester, {double? strokeWidth}) async {
+  Future<DrawingController> pumpCanvas(
+    WidgetTester tester, {
+    double? strokeWidth,
+  }) async {
     final controller = DrawingController(strokeWidth: 1);
 
-    await tester.pumpWidget(MaterialApp(
-      home: Center(
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: DrawingCanvas(
-            controller: controller,
-            strokeWidth: strokeWidth,
-            placeholder: TracingShapes.arabicBa,
-            placeholderPadding: padding,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: canvasSize.width,
+            height: canvasSize.height,
+            child: DrawingCanvas(
+              controller: controller,
+              strokeWidth: strokeWidth,
+              placeholder: TracingShapes.arabicBa,
+              placeholderPadding: padding,
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.pump();
     return controller;
   }

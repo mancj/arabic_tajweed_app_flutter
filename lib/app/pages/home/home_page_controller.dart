@@ -17,10 +17,7 @@ class LessonLetter {
 }
 
 class HomeController extends GetxController {
-  final drawing = DrawingController(
-    smoothing: .4,
-    minDistance: 8,
-  );
+  final drawing = DrawingController(smoothing: .4, minDistance: 8);
 
   /// Буквы лежат в assets как SVG с осевыми линиями.
   static const letters = [

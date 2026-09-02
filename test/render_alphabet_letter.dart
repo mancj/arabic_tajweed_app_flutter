@@ -11,9 +11,9 @@ import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 
 Future<void> loadAppFonts() async {
-  final manifest = json.decode(
-    await rootBundle.loadString('FontManifest.json'),
-  ) as List<dynamic>;
+  final manifest =
+      json.decode(await rootBundle.loadString('FontManifest.json'))
+          as List<dynamic>;
 
   for (final family in manifest.cast<Map<String, dynamic>>()) {
     final loader = FontLoader(family['family'] as String);
@@ -53,7 +53,8 @@ void main() {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('${Platform.environment['OUT'] ?? '/tmp'}/alphabet_letter.png')
-        .writeAsBytesSync(bytes!.buffer.asUint8List());
+    File(
+      '${Platform.environment['OUT'] ?? '/tmp'}/alphabet_letter.png',
+    ).writeAsBytesSync(bytes!.buffer.asUint8List());
   });
 }

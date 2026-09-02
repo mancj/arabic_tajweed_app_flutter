@@ -70,9 +70,7 @@ class SegmentedTabs extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: i == selected ? UIColors.teal : null,
-                    borderRadius: BorderRadius.circular(
-                      16 - _trackPadding * 2,
-                    ),
+                    borderRadius: BorderRadius.circular(16 - _trackPadding * 2),
                   ),
                   child: Text(
                     labels[i],

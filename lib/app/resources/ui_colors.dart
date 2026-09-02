@@ -4,6 +4,7 @@ class UIColors {
   static const white = Color(0xFFFFFFFF);
   static const whiteHalf = Color(0x80FFFFFF);
   static const black = Color(0xFF000000);
+  static const transparent = Color(0x00000000);
 
   static const pageBackground = Color(0xFFEEF0F9);
   static const itemBackground = Color(0xFFEAEDF8);
@@ -17,9 +18,8 @@ class UIColors {
   static const text = Color(0xFF0C233E);
   static const cardShadow = Color(0x73D1D9F5);
 
-
   // Палитра экранов алфавита (макет Tajweed).
-  static const sand = Color(0xFFFAF6F1);
+  static const lightGray = Color(0xFFECECEC);
   static const iceBlue = Color(0xFFDCEAEF);
   static const teal = Color(0xFF3F9DB5);
   static const tealDark = Color(0xFF156072);
@@ -28,6 +28,35 @@ class UIColors {
   static const steel = Color(0xFF749DA8);
   static const steelLight = Color(0xFF7CA3AD);
   static const cardBorder = Color(0x4D518997);
+
+  static const orange = Color(0xFFEE7740);
+  static const orangeDark = Color(0xFFD8571C);
+
+  /// Градиент кнопки «Далее»: в макете нижний стоп уходит за границу (146%),
+  /// поэтому здесь цвет, в который градиент реально приходит к низу кнопки.
+  static const orangeButtonBottom = Color(0xFFE36024);
+
+  /// Светлая подсветка внутренней тени по нижнему краю кнопки.
+  static const orangeInnerHighlight = Color(0xFFE66E37);
+
+  /// Основа мягких теней под кнопкой (в макете rgba(106, 47, 22, a)).
+  static const buttonShadow = Color.fromARGB(255, 160, 72, 35);
+
+  /// Плашка «Новая тема» на карточке правила.
+  static const orangeBadge = Color(0xFFE66E37);
+
+  /// Фон карточки с правилом.
+  static const ruleCardBackground = Color(0xFFF4F4F4);
+
+  /// Карточка с вопросом и варианты ответа.
+  static const questionCardBackground = Color(0xFFF3F3F3);
+  static const questionCardShadow = Color(0x1AB1B1B1);
+  static const optionBackground = Color(0xFFF8F8F8);
+  static const optionDivider = Color(0xFFDDDDDD);
+
+  /// Бледные формы буквы на фоне карточки с вопросом.
+  static const glyphGhost = Color(0xFFE3E3E3);
+
   /// Бледная буква-подсказка под обводкой.
   static const letterGhost = Color(0xFFADD3DE);
   static const cardShadowSoft = Color(0x1A7CA3AD);
@@ -37,9 +66,5 @@ class UIColors {
   static const patternDot = Color.fromARGB(56, 147, 180, 189);
   static const patternNode = Color.fromARGB(88, 147, 180, 189);
 
-  static const primaryButtonGradient = [
-    Color(0xFFFDCEB4),
-    Color(0xFFFD8C8C),
-  ];
-
+  static const primaryButtonGradient = [Color(0xFFFDCEB4), Color(0xFFFD8C8C)];
 }

@@ -69,8 +69,7 @@ class _ModeTabs extends GetView<HomeController> {
       () => SegmentedTabs(
         labels: HomeController.modeTitles,
         selected: HomeController.modes.indexOf(controller.mode.value),
-        onChanged: (index) =>
-            controller.setMode(HomeController.modes[index]),
+        onChanged: (index) => controller.setMode(HomeController.modes[index]),
       ),
     );
   }
@@ -196,11 +195,7 @@ class _Hint extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(
-          UISVGAssets.handDraw,
-          width: 16 * k,
-          height: 16 * k,
-        ),
+        SvgPicture.asset(UISVGAssets.handDraw, width: 16 * k, height: 16 * k),
         Margin.horizontal(4 * k),
         Flexible(
           child: Text(

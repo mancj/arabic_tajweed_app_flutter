@@ -11,38 +11,40 @@ void main() {
   const padding = 32.0;
 
   TracingShape letter(String name) => TracingShapeSvg.parse(
-        File('assets/svg/alphabet/$name.svg').readAsStringSync(),
-        id: name,
-      );
+    File('assets/svg/alphabet/$name.svg').readAsStringSync(),
+    id: name,
+  );
 
   Future<(DrawingController, Rect, ResolvedTracingShape, List<TracingProgress>)>
-      pumpLetter(WidgetTester tester, String name) async {
+  pumpLetter(WidgetTester tester, String name) async {
     final controller = DrawingController();
     final progress = <TracingProgress>[];
     final shape = letter(name);
 
-    await tester.pumpWidget(MaterialApp(
-      home: Center(
-        child: SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: DrawingCanvas(
-            controller: controller,
-            mode: TracingMode.freehand,
-            placeholder: shape,
-            placeholderPadding: padding,
-            onProgress: progress.add,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: canvasSize.width,
+            height: canvasSize.height,
+            child: DrawingCanvas(
+              controller: controller,
+              mode: TracingMode.freehand,
+              placeholder: shape,
+              placeholderPadding: padding,
+              onProgress: progress.add,
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     final box = tester.getRect(find.byType(DrawingCanvas));
     return (
       controller,
       box,
       shape.resolve(box.size, padding: padding),
-      progress
+      progress,
     );
   }
 
@@ -98,8 +100,9 @@ void main() {
     expect(progress.last.isComplete, isTrue);
   });
 
-  testWidgets('букву можно нарисовать где угодно, точку — примерно',
-      (tester) async {
+  testWidgets('букву можно нарисовать где угодно, точку — примерно', (
+    tester,
+  ) async {
     final (_, box, shape, progress) = await pumpLetter(tester, 'ba_base');
     final base = shape.parts.first.paths.first;
     final center = base.getBounds().center;
@@ -113,8 +116,10 @@ void main() {
     final points = [
       for (var d = 0.0; d < metric.length; d += 2)
         place(metric.getTangentForOffset(d)!.position) +
-            Offset((random.nextDouble() - .5) * 5,
-                (random.nextDouble() - .5) * 5) +
+            Offset(
+              (random.nextDouble() - .5) * 5,
+              (random.nextDouble() - .5) * 5,
+            ) +
             box.topLeft,
     ];
 
@@ -136,8 +141,9 @@ void main() {
     expect(progress.last.isComplete, isTrue);
   });
 
-  testWidgets('то собирается одной основой, зо — основой и точкой',
-      (tester) async {
+  testWidgets('то собирается одной основой, зо — основой и точкой', (
+    tester,
+  ) async {
     final to = letter('to_base');
     expect(to.parts.length, 1);
     expect(to.parts.single.dots, isEmpty);
@@ -178,8 +184,9 @@ void main() {
 
   testWidgets('точку ба нельзя поставить сверху, как у та', (tester) async {
     final (_, box, shape, progress) = await pumpLetter(tester, 'ba_base');
-    final taDots =
-        letter('ta_base').resolve(box.size, padding: padding).parts.last.dots;
+    final taDots = letter(
+      'ta_base',
+    ).resolve(box.size, padding: padding).parts.last.dots;
 
     await tracePart(tester, shape.parts.first, box.topLeft);
     await tester.tapAt(taDots.first + box.topLeft);

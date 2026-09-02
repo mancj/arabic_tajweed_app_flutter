@@ -10,8 +10,6 @@ class SplashScreenPage extends GetView<SplashScreenController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(),
-    );
+    return Scaffold(body: Center());
   }
 }

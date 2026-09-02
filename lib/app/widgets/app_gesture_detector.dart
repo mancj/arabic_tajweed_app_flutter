@@ -5,11 +5,13 @@ class AppGestureDetector extends StatefulWidget {
   final Widget child;
   final double pressedOpacity;
 
+  static const _minPressedDuration = Duration(milliseconds: 200);
+
   const AppGestureDetector({
     Key? key,
     this.onTap,
     required this.child,
-    this.pressedOpacity = .95,
+    this.pressedOpacity = .98,
   }) : super(key: key);
 
   @override
@@ -18,6 +20,7 @@ class AppGestureDetector extends StatefulWidget {
 
 class _AppGestureDetectorState extends State<AppGestureDetector> {
   bool _isPressed = false;
+  DateTime? _pressedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +35,7 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
         duration: const Duration(milliseconds: 200),
         scale: !_isPressed ? 1.0 : widget.pressedOpacity,
         child: widget.child,
-      
+
         curve: Curves.easeInOut,
       ),
     );
@@ -43,15 +46,28 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
       // call vibration here if you want haptic feedback
       setState(() {
         _isPressed = true;
+        _pressedAt = DateTime.now();
       });
     }
   }
 
   void _tapUpState() {
-    if (_isPressed) {
-      setState(() {
-        _isPressed = false;
-      });
+    if (!_isPressed) return;
+
+    final held = DateTime.now().difference(_pressedAt ?? DateTime.now());
+    final remaining = AppGestureDetector._minPressedDuration - held;
+    if (remaining > Duration.zero) {
+      Future.delayed(remaining, _release);
+    } else {
+      _release();
     }
+  }
+
+  void _release() {
+    if (!mounted || !_isPressed) return;
+    setState(() {
+      _isPressed = false;
+      _pressedAt = null;
+    });
   }
 }

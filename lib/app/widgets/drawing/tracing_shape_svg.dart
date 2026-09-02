@@ -36,7 +36,11 @@ class TracingShapeSvg {
     );
   }
 
-  static TracingShape parse(String source, {required String id, String? label}) {
+  static TracingShape parse(
+    String source, {
+    required String id,
+    String? label,
+  }) {
     final document = XmlDocument.parse(source);
     final svg = document.findAllElements('svg').first;
 
@@ -92,10 +96,7 @@ class TracingShapeSvg {
 
     switch (element.localName) {
       case 'circle':
-        final center = Offset(
-          _number(element, 'cx'),
-          _number(element, 'cy'),
-        );
+        final center = Offset(_number(element, 'cx'), _number(element, 'cy'));
         return _Entry(order: order, role: id, dot: center);
 
       case 'line':
@@ -112,7 +113,9 @@ class TracingShapeSvg {
       default:
         final data = element.getAttribute('d');
         if (data == null || data.isEmpty) {
-          throw FormatException('У элемента ${element.localName} нет атрибута d');
+          throw FormatException(
+            'У элемента ${element.localName} нет атрибута d',
+          );
         }
 
         final path = parseSvgPathData(data);
@@ -179,12 +182,14 @@ class TracingShapeSvg {
         continue;
       }
 
-      parts.add(TracingShapePart(
-        id: role,
-        label: entry.isDot ? 'точка' : 'основа',
-        paths: [if (entry.path != null) entry.path!],
-        dots: [if (entry.dot != null) entry.dot!],
-      ));
+      parts.add(
+        TracingShapePart(
+          id: role,
+          label: entry.isDot ? 'точка' : 'основа',
+          paths: [if (entry.path != null) entry.path!],
+          dots: [if (entry.dot != null) entry.dot!],
+        ),
+      );
     }
 
     return parts;

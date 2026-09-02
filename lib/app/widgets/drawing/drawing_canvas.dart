@@ -196,7 +196,8 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   }
 
   void _initController() {
-    _controller = widget.controller ?? (_internalController = DrawingController());
+    _controller =
+        widget.controller ?? (_internalController = DrawingController());
     _applyOverrides();
     _finishedRepaint.value = _controller.strokes.length;
     _controller.addListener(_onControllerChanged);
@@ -255,13 +256,15 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
   void _publishProgress() {
     final parts = _activeShape?.parts;
-    widget.onProgress?.call(TracingProgress(
-      completed: _filled.length,
-      total: _partCount,
-      nextLabel: parts != null && _filled.length < parts.length
-          ? parts[_filled.length].label
-          : null,
-    ));
+    widget.onProgress?.call(
+      TracingProgress(
+        completed: _filled.length,
+        total: _partCount,
+        nextLabel: parts != null && _filled.length < parts.length
+            ? parts[_filled.length].label
+            : null,
+      ),
+    );
   }
 
   @override
@@ -321,16 +324,16 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     final alignment = !freehand
         ? const TracingAlignment.identity()
         : anchoring
-            // Первую часть рисуют где угодно и любого размера.
-            ? widget.matcher.align(target: target, strokes: strokes)
-            // Дальше буква стоит на своём месте, но точки всё равно ставят
-            // на глаз — им разрешён небольшой общий сдвиг.
-            : widget.matcher.alignDots(
-                target: target,
-                strokes: strokes,
-                penWidth: _penWidth,
-                reference: _filledBounds,
-              );
+        // Первую часть рисуют где угодно и любого размера.
+        ? widget.matcher.align(target: target, strokes: strokes)
+        // Дальше буква стоит на своём месте, но точки всё равно ставят
+        // на глаз — им разрешён небольшой общий сдвиг.
+        : widget.matcher.alignDots(
+            target: target,
+            strokes: strokes,
+            penWidth: _penWidth,
+            reference: _filledBounds,
+          );
 
     final result = widget.matcher.match(
       target: target,
@@ -363,7 +366,8 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   void _discardIfMiss(TracingMatchResult result) {
     if (!result.isChecked) return;
 
-    final helped = result.coverage > _bestCoverage + 0.001 &&
+    final helped =
+        result.coverage > _bestCoverage + 0.001 &&
         result.accuracy >= widget.matcher.keepAccuracy;
 
     if (helped) {
@@ -425,7 +429,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   /// Слияние доиграло: часть окончательно залита, её штрихи «съедены».
   void _completeMerge(_MergeState merge) {
     setState(() {
-      _filled.add(_FilledPart(part: merge.part, strokeCount: merge.strokeCount));
+      _filled.add(
+        _FilledPart(part: merge.part, strokeCount: merge.strokeCount),
+      );
       _merge = null;
       _bestCoverage = 0;
     });
@@ -517,7 +523,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _controller.extendStroke(event.localPosition);
     _controller.endStroke();
 
-    final stroke = _controller.strokes.isEmpty ? null : _controller.strokes.last;
+    final stroke = _controller.strokes.isEmpty
+        ? null
+        : _controller.strokes.last;
     if (stroke != null) widget.onStrokeEnd?.call(stroke);
 
     // По памяти рисуют без кнопки: часть засчитывается сразу, как только
@@ -617,10 +625,16 @@ class _BackgroundPainter extends CustomPainter {
 
     final t = mergeProgress.value;
 
-    DrawingPainter(strokes: [
-      for (var i = 0; i < merge.targets.length && i < merge.sources.length; i++)
-        DrawingStroke.lerp(merge.sources[i], merge.targets[i], t),
-    ]).paint(canvas, size);
+    DrawingPainter(
+      strokes: [
+        for (
+          var i = 0;
+          i < merge.targets.length && i < merge.sources.length;
+          i++
+        )
+          DrawingStroke.lerp(merge.sources[i], merge.targets[i], t),
+      ],
+    ).paint(canvas, size);
 
     // Во второй половине проявляем часть целиком: она дорисовывает то,
     // чего пользователь чуть-чуть не дотянул, — без рывка в конце.

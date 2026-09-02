@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
-import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
+import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 
 class SplashScreenController extends GetxController {
@@ -17,16 +15,12 @@ class SplashScreenController extends GetxController {
   }
 
   Future<void> _init() async {
-    // В дебажных сборках стартуем с меню отладки, в релизе — сразу на главную.
-    if (kDebugMode) {
-      Get.offNamed(DebugPage.routeName);
-      return;
-    }
+    // TODO(onboarding): пока все идут одним путём. Когда появится онбординг,
+    // новичка спрашиваем о знакомстве с письмом и разводим по трекам,
+    // см. SPEC.md §8.
+    _preferenceManager.isOnboardingShown.get();
 
-    if (_preferenceManager.isOnboardingShown.get() ?? false) {
-      Get.offNamed(HomePage.routeName);
-    } else {
-      Get.offNamed(HomePage.routeName);
-    }
+    // Точка входа — главный экран курса: темы и кнопка «Продолжить».
+    Get.offNamed(CoursePage.routeName);
   }
 }

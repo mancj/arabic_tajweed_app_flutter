@@ -35,7 +35,11 @@ void main() {
 
     final dots = shape.parts.last.dots;
     expect(dots.length, 2, reason: 'обе точки — одна часть, ставят их подряд');
-    expect(dots.every((dot) => dot.dy < 100), isTrue, reason: 'точки та — сверху');
+    expect(
+      dots.every((dot) => dot.dy < 100),
+      isTrue,
+      reason: 'точки та — сверху',
+    );
   });
 
   test('обе буквы стоят в одном кадре и делят одну основу', () {
@@ -48,8 +52,11 @@ void main() {
     final resolvedBa = ba.resolve(canvas, padding: 24);
     final resolvedTa = ta.resolve(canvas, padding: 24);
 
-    expect(resolvedBa.scale, closeTo(resolvedTa.scale, 0.0001),
-        reason: 'одинаковый масштаб');
+    expect(
+      resolvedBa.scale,
+      closeTo(resolvedTa.scale, 0.0001),
+      reason: 'одинаковый масштаб',
+    );
     expect(resolvedBa.offset, resolvedTa.offset, reason: 'одинаковое место');
 
     // Чаша должна лечь ровно там же — иначе при смене буквы она прыгает.

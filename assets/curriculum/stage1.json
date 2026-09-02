@@ -1,0 +1,298 @@
+{
+  "nodes": [
+    {
+      "atom": {
+        "id": "concept.letter",
+        "kind": "concept",
+        "display": "Буква, её имя и вид",
+        "label": "Буква, её имя и вид",
+        "note": "В арабском алфавите 28 букв. Пишут и читают справа налево, а одна и та же буква выглядит по-разному в зависимости от того, где она стоит в слове."
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "alif.isolated",
+        "kind": "letterForm",
+        "display": "ا",
+        "letterId": "alif",
+        "form": "isolated",
+        "label": "Алиф",
+        "note": "Алиф — первая буква алфавита. Простая вертикальная черта, без точек."
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "alif.finalForm",
+        "kind": "letterForm",
+        "display": "ـا",
+        "letterId": "alif",
+        "form": "finalForm",
+        "label": "Алиф в конце"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "alif.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ba.isolated",
+        "kind": "letterForm",
+        "display": "ب",
+        "letterId": "ba",
+        "form": "isolated",
+        "confusableWith": [
+          "ta",
+          "tha"
+        ],
+        "label": "Ба",
+        "note": "Ба. Форма другая — чаша, лежащая на строке. И одна точка снизу."
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "ba.finalForm",
+        "kind": "letterForm",
+        "display": "ـب",
+        "letterId": "ba",
+        "form": "finalForm",
+        "confusableWith": [
+          "ta",
+          "tha"
+        ],
+        "label": "Ба в конце"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ba.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ba.initial",
+        "kind": "letterForm",
+        "display": "بـ",
+        "letterId": "ba",
+        "form": "initial",
+        "confusableWith": [
+          "ta",
+          "tha"
+        ],
+        "label": "Ба в начале"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ba.finalForm"
+      }
+    },
+    {
+      "atom": {
+        "id": "ba.medial",
+        "kind": "letterForm",
+        "display": "ـبـ",
+        "letterId": "ba",
+        "form": "medial",
+        "confusableWith": [
+          "ta",
+          "tha"
+        ],
+        "label": "Ба в середине"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ba.initial"
+      }
+    },
+    {
+      "atom": {
+        "id": "ta.isolated",
+        "kind": "letterForm",
+        "display": "ت",
+        "letterId": "ta",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "tha"
+        ],
+        "label": "Та",
+        "note": "Та. Форма такая же, как у ба, но точек больше: две, и стоят сверху."
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "ta.finalForm",
+        "kind": "letterForm",
+        "display": "ـت",
+        "letterId": "ta",
+        "form": "finalForm",
+        "confusableWith": [
+          "ba",
+          "tha"
+        ],
+        "label": "Та в конце"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ta.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ta.initial",
+        "kind": "letterForm",
+        "display": "تـ",
+        "letterId": "ta",
+        "form": "initial",
+        "confusableWith": [
+          "ba",
+          "tha"
+        ],
+        "label": "Та в начале"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ta.finalForm"
+      }
+    },
+    {
+      "atom": {
+        "id": "ta.medial",
+        "kind": "letterForm",
+        "display": "ـتـ",
+        "letterId": "ta",
+        "form": "medial",
+        "confusableWith": [
+          "ba",
+          "tha"
+        ],
+        "label": "Та в середине"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ta.initial"
+      }
+    },
+    {
+      "atom": {
+        "id": "tha.isolated",
+        "kind": "letterForm",
+        "display": "ث",
+        "letterId": "tha",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "ta"
+        ],
+        "label": "Са",
+        "note": "Са. Та же чаша, а точек на одну больше — три, тоже сверху."
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "tha.finalForm",
+        "kind": "letterForm",
+        "display": "ـث",
+        "letterId": "tha",
+        "form": "finalForm",
+        "confusableWith": [
+          "ba",
+          "ta"
+        ],
+        "label": "Са в конце"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "tha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "tha.initial",
+        "kind": "letterForm",
+        "display": "ثـ",
+        "letterId": "tha",
+        "form": "initial",
+        "confusableWith": [
+          "ba",
+          "ta"
+        ],
+        "label": "Са в начале"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "tha.finalForm"
+      }
+    },
+    {
+      "atom": {
+        "id": "tha.medial",
+        "kind": "letterForm",
+        "display": "ـثـ",
+        "letterId": "tha",
+        "form": "medial",
+        "confusableWith": [
+          "ba",
+          "ta"
+        ],
+        "label": "Са в середине"
+      },
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "tha.initial"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "id": "m.first",
+      "stage": 1,
+      "title": "Первые буквы: ا ب ت ث",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "concept.letter",
+        "alif.isolated",
+        "ba.isolated",
+        "ta.isolated",
+        "tha.isolated"
+      ]
+    },
+    {
+      "id": "m.forms",
+      "stage": 1,
+      "title": "Разные формы одной буквы",
+      "requirement": {
+        "type": "atomKnown",
+        "atomId": "ba.isolated"
+      },
+      "counterOf": [
+        "alif.finalForm",
+        "ba.finalForm",
+        "ba.initial",
+        "ba.medial",
+        "ta.finalForm",
+        "ta.initial",
+        "ta.medial",
+        "tha.finalForm",
+        "tha.initial",
+        "tha.medial"
+      ]
+    }
+  ]
+}

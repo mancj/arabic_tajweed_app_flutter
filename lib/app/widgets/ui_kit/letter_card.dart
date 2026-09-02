@@ -7,10 +7,8 @@ import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 ///
 /// Возвращает детей [Stack]: содержимое карточек разложено по макетным
 /// координатам через [Positioned].
-typedef LetterCardBuilder = List<Widget> Function(
-  BuildContext context,
-  double k,
-);
+typedef LetterCardBuilder =
+    List<Widget> Function(BuildContext context, double k);
 
 /// Крупная карточка буквы с прописной сеткой: общий каркас экранов
 /// «знакомство с буквой» и «обводка».

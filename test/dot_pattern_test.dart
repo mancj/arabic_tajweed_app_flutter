@@ -44,45 +44,67 @@ void main() {
   }
 
   test('треугольник крупнее и мельче эталонного засчитывается', () {
-    expect(accepts(const [Offset(150, 230), Offset(210, 230), Offset(180, 170)]),
-        isTrue, reason: 'крупнее');
-    expect(accepts(const [Offset(167, 213), Offset(193, 213), Offset(180, 187)]),
-        isTrue, reason: 'мельче');
+    expect(
+      accepts(const [Offset(150, 230), Offset(210, 230), Offset(180, 170)]),
+      isTrue,
+      reason: 'крупнее',
+    );
+    expect(
+      accepts(const [Offset(167, 213), Offset(193, 213), Offset(180, 187)]),
+      isTrue,
+      reason: 'мельче',
+    );
   });
 
   test('кривоватый треугольник и сдвинутая группа засчитываются', () {
-    expect(accepts(const [Offset(157, 226), Offset(204, 216), Offset(183, 174)]),
-        isTrue, reason: 'неровный');
-    expect(accepts(const [Offset(178, 238), Offset(218, 238), Offset(198, 198)]),
-        isTrue, reason: 'вся группа сдвинута');
+    expect(
+      accepts(const [Offset(157, 226), Offset(204, 216), Offset(183, 174)]),
+      isTrue,
+      reason: 'неровный',
+    );
+    expect(
+      accepts(const [Offset(178, 238), Offset(218, 238), Offset(198, 198)]),
+      isTrue,
+      reason: 'вся группа сдвинута',
+    );
   });
 
   test('ряд вместо треугольника не проходит', () {
-    expect(accepts(const [Offset(150, 200), Offset(180, 200), Offset(210, 200)]),
-        isFalse);
+    expect(
+      accepts(const [Offset(150, 200), Offset(180, 200), Offset(210, 200)]),
+      isFalse,
+    );
   });
 
   test('перевёрнутый треугольник не проходит', () {
-    expect(accepts(const [Offset(160, 180), Offset(200, 180), Offset(180, 220)]),
-        isFalse);
+    expect(
+      accepts(const [Offset(160, 180), Offset(200, 180), Offset(180, 220)]),
+      isFalse,
+    );
   });
 
   test('количество точек решающее', () {
-    expect(accepts(const [Offset(160, 220), Offset(200, 220)]), isFalse,
-        reason: 'две вместо трёх');
     expect(
-        accepts(const [
-          Offset(160, 220),
-          Offset(200, 220),
-          Offset(180, 180),
-          Offset(180, 205),
-        ]),
-        isFalse,
-        reason: 'четыре вместо трёх');
+      accepts(const [Offset(160, 220), Offset(200, 220)]),
+      isFalse,
+      reason: 'две вместо трёх',
+    );
+    expect(
+      accepts(const [
+        Offset(160, 220),
+        Offset(200, 220),
+        Offset(180, 180),
+        Offset(180, 205),
+      ]),
+      isFalse,
+      reason: 'четыре вместо трёх',
+    );
   });
 
   test('группа далеко от буквы не проходит', () {
-    expect(accepts(const [Offset(160, 500), Offset(200, 500), Offset(180, 460)]),
-        isFalse);
+    expect(
+      accepts(const [Offset(160, 500), Offset(200, 500), Offset(180, 460)]),
+      isFalse,
+    );
   });
 }

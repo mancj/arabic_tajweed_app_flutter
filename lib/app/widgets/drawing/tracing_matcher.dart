@@ -54,12 +54,12 @@ class TracingMatchResult {
   }) : status = TracingMatchStatus.checked;
 
   const TracingMatchResult.empty(this.status)
-      : coverage = 0,
-        accuracy = 0,
-        deviation = 0,
-        shapeError = double.infinity,
-        dotsTraced = false,
-        isMatch = false;
+    : coverage = 0,
+      accuracy = 0,
+      deviation = 0,
+      shapeError = double.infinity,
+      dotsTraced = false,
+      isMatch = false;
 
   /// Проверка вообще состоялась (есть и фигура, и ввод).
   bool get isChecked => status == TracingMatchStatus.checked;
@@ -67,10 +67,10 @@ class TracingMatchResult {
   @override
   String toString() => status == TracingMatchStatus.checked
       ? 'TracingMatchResult(coverage: ${(coverage * 100).round()}%, '
-          'accuracy: ${(accuracy * 100).round()}%, '
-          'deviation: ${deviation.toStringAsFixed(2)}, '
-          'shape: ${shapeError.isFinite ? shapeError.toStringAsFixed(3) : '—'}, '
-          'dotsTraced: $dotsTraced, isMatch: $isMatch)'
+            'accuracy: ${(accuracy * 100).round()}%, '
+            'deviation: ${deviation.toStringAsFixed(2)}, '
+            'shape: ${shapeError.isFinite ? shapeError.toStringAsFixed(3) : '—'}, '
+            'dotsTraced: $dotsTraced, isMatch: $isMatch)'
       : 'TracingMatchResult(${status.name})';
 }
 
@@ -90,9 +90,9 @@ class TracingAlignment {
   });
 
   const TracingAlignment.identity()
-      : scale = 1,
-        inputCenter = Offset.zero,
-        targetCenter = Offset.zero;
+    : scale = 1,
+      inputCenter = Offset.zero,
+      targetCenter = Offset.zero;
 
   bool get isIdentity => scale == 1 && inputCenter == targetCenter;
 
@@ -124,8 +124,9 @@ class TracingAlignment {
     if (from.longestSide < minSize || to.longestSide < minSize) return null;
 
     final byWidth = from.width < 1 ? double.infinity : to.width / from.width;
-    final byHeight =
-        from.height < 1 ? double.infinity : to.height / from.height;
+    final byHeight = from.height < 1
+        ? double.infinity
+        : to.height / from.height;
 
     // Среднее геометрическое, а не «вписать внутрь»: пропорции нарисованного
     // могут отличаться от эталонных, и min() схлопнул бы широкую букву до
@@ -244,8 +245,9 @@ class TracingMatcher {
   }
 
   /// Опорные точки части фигуры: линии + центры диакритических точек.
-  List<Offset> sample(ResolvedTracingPart target) =>
-      [for (final track in tracks(target)) ...track];
+  List<Offset> sample(ResolvedTracingPart target) => [
+    for (final track in tracks(target)) ...track,
+  ];
 
   /// Опорные точки, разложенные по дорожкам: каждая линия части — своя
   /// дорожка с точками по порядку вдоль неё, каждая диакритическая точка —
@@ -409,7 +411,8 @@ class TracingMatcher {
     if (target.paths.isEmpty) {
       // Части из точек: количество и взаимное расположение. Неточность руки
       // уже поглощена общей подгонкой группы в alignDots.
-      holds = countHolds &&
+      holds =
+          countHolds &&
           (dotsTraced || !requireDots) &&
           (structural || (coverage >= minCoverage && accuracy >= minAccuracy));
     } else if (structural) {
@@ -417,7 +420,8 @@ class TracingMatcher {
       // эталона это каракуля, а не «другие пропорции».
       holds = shapeError <= maxShapeError && _sizeIsSane(target, points);
     } else {
-      holds = coverage >= minCoverage &&
+      holds =
+          coverage >= minCoverage &&
           accuracy >= minAccuracy &&
           shapeHolds &&
           (dotsTraced || !requireDots);
@@ -557,10 +561,9 @@ class TracingMatcher {
 
     var best = double.infinity;
     for (final order in _orders(strokes)) {
-      final signature = StrokeSignature.ofPoints(
-        [for (final stroke in order) ...stroke.points],
-        uniform: template.uniform,
-      );
+      final signature = StrokeSignature.ofPoints([
+        for (final stroke in order) ...stroke.points,
+      ], uniform: template.uniform);
       if (signature == null) continue;
       best = math.min(best, signature.distanceTo(template));
     }

@@ -5,7 +5,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
-import 'package:arabic_tajweed_app/app/widgets/pattern_background.dart';
 
 /// Строит содержимое экрана [AppScaffold].
 ///
@@ -14,10 +13,8 @@ import 'package:arabic_tajweed_app/app/widgets/pattern_background.dart';
 /// панелью. Скроллящееся содержимое кладёт их в `padding` вьюпорта — тогда
 /// контент проезжает под стеклом, а не обрывается на его границе;
 /// нескроллящееся оборачивает себя в [Padding] с теми же полями.
-typedef AppScaffoldContentBuilder = Widget Function(
-  BuildContext context,
-  EdgeInsets contentInsets,
-);
+typedef AppScaffoldContentBuilder =
+    Widget Function(BuildContext context, EdgeInsets contentInsets);
 
 /// Каркас экрана приложения: фоновый паттерн, плавающая шапка со стеклянной
 /// кнопкой «назад» и опциональная закреплённая снизу панель.
@@ -67,7 +64,7 @@ class AppScaffold extends StatefulWidget {
     this.bottomBar,
     this.onBack,
     this.showBackButton = true,
-    this.backgroundColor = UIColors.sand,
+    this.backgroundColor = UIColors.lightGray,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.edgeBlurSigma = 4,
     Key? key,
@@ -98,7 +95,8 @@ class _AppScaffoldState extends State<AppScaffold> {
   Widget build(BuildContext context) {
     final insets = MediaQuery.paddingOf(context);
 
-    final headerZone = insets.top +
+    final headerZone =
+        insets.top +
         AppScaffold._headerTopGap +
         AppScaffold._headerHeight +
         AppScaffold._headerBottomGap;
@@ -122,7 +120,12 @@ class _AppScaffoldState extends State<AppScaffold> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Positioned.fill(child: PatternBackground()),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/img/background_grid_pattern.png',
+              fit: BoxFit.cover,
+            ),
+          ),
           Positioned.fill(
             child: GlassScrollEdgeEffect(
               // Живой контент под шапкой размывается прогрессивно, а не
@@ -144,8 +147,9 @@ class _AppScaffoldState extends State<AppScaffold> {
             right: 0,
             child: _Header(
               title: widget.title,
-              onBack:
-                  widget.showBackButton ? (widget.onBack ?? Get.back) : null,
+              onBack: widget.showBackButton
+                  ? (widget.onBack ?? Get.back)
+                  : null,
             ),
           ),
           if (widget.bottomBar != null)
@@ -238,7 +242,7 @@ class _MeasureHeight extends SingleChildRenderObjectWidget {
   final ValueChanged<double> onChange;
 
   const _MeasureHeight({required this.onChange, required Widget child})
-      : super(child: child);
+    : super(child: child);
 
   @override
   _RenderMeasureHeight createRenderObject(BuildContext context) =>

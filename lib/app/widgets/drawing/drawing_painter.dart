@@ -7,10 +7,8 @@ class DrawingPainter extends CustomPainter {
   final List<DrawingStroke> strokes;
   final Listenable? repaint;
 
-  DrawingPainter({
-    required this.strokes,
-    this.repaint,
-  }) : super(repaint: repaint);
+  DrawingPainter({required this.strokes, this.repaint})
+    : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -26,7 +24,11 @@ class DrawingPainter extends CustomPainter {
         ..isAntiAlias = true;
 
       if (stroke.isDot) {
-        canvas.drawCircle(stroke.points.first, stroke.width / 2, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(
+          stroke.points.first,
+          stroke.width / 2,
+          paint..style = PaintingStyle.fill,
+        );
         continue;
       }
 
@@ -35,5 +37,6 @@ class DrawingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(DrawingPainter oldDelegate) => !identical(oldDelegate.strokes, strokes);
+  bool shouldRepaint(DrawingPainter oldDelegate) =>
+      !identical(oldDelegate.strokes, strokes);
 }
