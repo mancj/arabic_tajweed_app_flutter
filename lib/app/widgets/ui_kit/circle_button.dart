@@ -1,3 +1,4 @@
+import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:flutter/widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 
@@ -26,30 +27,34 @@ class CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      padding: showBorder ? EdgeInsets.all(borderWidth) : EdgeInsets.zero,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [UIColors.orange, UIColors.orangeLight],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        border: showBorder
-            ? Border.all(color: UIColors.orangeLight, width: borderWidth)
-            : null,
-        boxShadow: const [
-          BoxShadow(
-            color: UIColors.cardShadow,
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return AppGestureDetector(
+      pressedOpacity: .94,
+      child: Container(
+        width: size,
+        height: size,
+        padding: showBorder ? EdgeInsets.all(borderWidth) : EdgeInsets.zero,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [UIColors.orange, UIColors.orangeLight],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
+          border: showBorder
+              ? Border.all(color: UIColors.orangeLight, width: borderWidth)
+              : null,
+          boxShadow: const [
+            BoxShadow(
+              color: UIColors.cardShadow,
+              spreadRadius: 1,
+              blurRadius: 8,
+              
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }

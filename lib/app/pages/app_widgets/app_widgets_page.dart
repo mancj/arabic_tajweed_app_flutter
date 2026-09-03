@@ -22,7 +22,7 @@ class AppWidgetsPage extends GetView<AppWidgetsController> {
       builder: (context, insets) => ListView(
         padding: insets,
         children: const [
-          LetterWidgetCard(letter: 'ب',),
+          LetterWidgetCard(letter: 'ق',),
         ],
       ),
     );

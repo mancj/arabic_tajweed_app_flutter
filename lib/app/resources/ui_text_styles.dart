@@ -75,6 +75,19 @@ class UITextStyles {
     fontSize: 17,
     fontFamily: fontOnest,
   );
+
+  static const regular12 = TextStyle(
+    color: UIColors.text,
+    fontSize: 12,
+    fontFamily: fontOnest,
+  );
+
+  static const regular10 = TextStyle(
+    color: UIColors.text,
+    fontSize: 10,
+    fontFamily: fontOnest,
+  );
+
   static const hint = TextStyle(
     color: UIColors.secondary3,
     fontSize: 15,

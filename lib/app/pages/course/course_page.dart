@@ -62,7 +62,7 @@ class CoursePage extends GetView<CourseController> {
               // Меню отладки достижимо только из debug-сборки: сплэш ведёт
               // сразу на курс, а сбрасывать прогресс при проверке контента
               // приходится постоянно.
-              if (kDebugMode) ...[
+              if (true || kDebugMode) ...[
                 const Margin.vertical(12),
                 const _DebugLink(),
               ],

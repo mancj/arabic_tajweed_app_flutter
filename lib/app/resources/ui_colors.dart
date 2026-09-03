@@ -16,7 +16,7 @@ class UIColors {
   static const accent = Color(0xFFA5EB17);
   static const cardBackground = Color(0xFFF3F3F3);
   static const text = Color(0xFF0C233E);
-  static const cardShadow = Color.fromARGB(71, 177, 177, 177);
+  static const cardShadow = Color.fromARGB(55, 177, 177, 177);
 
   // Палитра экранов алфавита (макет Tajweed).
   static const lightGray = Color(0xFFECECEC);
@@ -68,6 +68,9 @@ class UIColors {
   // Фоновый паттерн экранов алфавита.
   static const patternDot = Color.fromARGB(56, 147, 180, 189);
   static const patternNode = Color.fromARGB(88, 147, 180, 189);
+
+  /// Холмы декоративной волны (будущий waveform аудио).
+  static const waveform = Color.fromARGB(255, 112, 112, 112);
 
   static const primaryButtonGradient = [Color(0xFFFDCEB4), Color(0xFFFD8C8C)];
 }

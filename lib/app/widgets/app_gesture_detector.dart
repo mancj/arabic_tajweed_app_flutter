@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:gaimon/gaimon.dart';
 
 class AppGestureDetector extends StatefulWidget {
   final GestureTapCallback? onTap;
   final Widget child;
   final double pressedOpacity;
 
-  static const _minPressedDuration = Duration(milliseconds: 200);
+  static const _minPressedDuration = Duration(milliseconds: 100);
 
   const AppGestureDetector({
     Key? key,
@@ -26,7 +27,10 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
+      onTap: () {
+        Gaimon.soft();
+        widget.onTap?.call();
+      },
       onPanDown: (d) => _tapDownState(),
       onTapDown: (d) => _tapDownState(),
       onTapUp: (d) => _tapUpState(),
