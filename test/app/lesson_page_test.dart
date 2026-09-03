@@ -5,8 +5,17 @@ import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+
+/// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
+/// отвечает только первому тесту файла, а остальные вешает.
+Future<TracingShape> shapeFromDisk(String asset) async => TracingShapeSvg.parse(
+  File('assets/svg/alphabet/$asset.svg').readAsStringSync(),
+  id: asset,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +51,12 @@ void main() {
     // Граф отдаём готовым: rootBundle в тестах отвечает только первому
     // тесту файла, дальше запрос повисает.
     Get.put(
-      LessonController(database: db, curriculum: curriculum, topicId: topicId),
+      LessonController(
+        database: db,
+        curriculum: curriculum,
+        topicId: topicId,
+        shapeLoader: shapeFromDisk,
+      ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
     await settle(tester);

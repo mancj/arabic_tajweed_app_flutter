@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/app_binding.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
+import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
@@ -61,6 +62,11 @@ class MyApp extends StatelessWidget {
           name: AlphabetLetterPage.routeName,
           page: () => const AlphabetLetterPage(),
           binding: AlphabetLetterBinding(),
+        ),
+        GetPage(
+          name: AppWidgetsPage.routeName,
+          page: () => const AppWidgetsPage(),
+          binding: AppWidgetsBinding(),
         ),
         GetPage(
           name: HomePage.routeName,

@@ -10,8 +10,6 @@ class UISVGAssets {
   static final backButton = _path("back_button");
 
   // Экран с заданием.
-  static final questionDecorRing = _path("question_decor_ring");
-  static final questionDecorArc = _path("question_decor_arc");
   static final dashedDivider = _path("dashed_divider");
 
   // Экран обводки буквы.

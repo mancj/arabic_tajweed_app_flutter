@@ -270,7 +270,6 @@ class _IconAction extends StatelessWidget {
         child: CircleButton(
           size: 44,
           color: UIColors.white,
-          borderColor: UIColors.cardBorder,
           child: Icon(icon, size: 20, color: UIColors.tealDark),
         ),
       ),

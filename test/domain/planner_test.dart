@@ -62,7 +62,7 @@ void main() {
       sessionId: 1,
       sessionsWithoutNew: 0,
     );
-    expect(plan.template, LessonTemplate.consolidation);
+    expect(plan.template, LessonTemplate.review);
     expect(plan.newAtoms, isEmpty);
   });
 

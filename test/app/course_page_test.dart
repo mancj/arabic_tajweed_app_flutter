@@ -59,7 +59,7 @@ void main() {
 
   testWidgets('закрытая тема объясняет условие', (tester) async {
     await pumpCourse(tester);
-    expect(find.textContaining('нужно освоить'), findsWidgets);
+    expect(find.textContaining('сначала пройдите'), findsNothing);
   });
 
   testWidgets('нажимаются только открытые темы', (tester) async {
@@ -147,9 +147,7 @@ void main() {
     expect(find.text('пройден'), findsNothing);
   });
 
-  testWidgets('когда впереди замок, кнопка предлагает повторить', (
-    tester,
-  ) async {
+  testWidgets('пройденный урок открывает следующий', (tester) async {
     await pumpCourse(tester);
     final controller = Get.find<CourseController>();
     final first = controller.currentTopic!.topic.id;
@@ -160,14 +158,14 @@ void main() {
     await controller.refreshBoard();
     await settle(tester);
 
-    // Тема пройдена, следующая закрыта: повторять есть что, но темы
-    // впереди нет — занятие соберёт планировщик.
-    expect(controller.continueLabel, 'Повторить');
-    expect(controller.continueTarget, isNull);
-    expect(controller.nextLocked, isNotNull);
-    expect(first, isNotEmpty);
-    expect(find.text('Повторить'), findsOneWidget);
-    expect(find.textContaining('нужно освоить'), findsWidgets);
+    // Пройденный урок открывает следующий — тупика «пройден, но заперто»
+    // больше нет.
+    expect(controller.nextLocked, isNull);
+    expect(controller.continueTarget, isNotNull);
+    expect(controller.continueTarget!.topic.id, isNot(first));
+    expect(controller.continueLabel, 'Начать');
+    expect(find.text('Начать'), findsOneWidget);
+    expect(find.textContaining('сначала пройдите'), findsNothing);
   });
 
   testWidgets('когда всё пройдено, кнопка ведёт в повторение', (tester) async {

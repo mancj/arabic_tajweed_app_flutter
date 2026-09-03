@@ -1,11 +1,13 @@
 import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
+import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 
 class DebugController extends GetxController {
+
   /// Сбросить прогресс: лог стирается, курс начинается с первого урока.
   /// Нужно, чтобы проверять правки в контенте — иначе пройденные уроки
   /// заново не показываются.
@@ -25,4 +27,7 @@ class DebugController extends GetxController {
   void openHome() => Get.toNamed(HomePage.routeName);
 
   void openAlphabetLetter() => Get.toNamed(AlphabetLetterPage.routeName);
+
+  void openAppWidgetsPage() => Get.toNamed(AppWidgetsPage.routeName);
+
 }

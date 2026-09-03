@@ -235,4 +235,21 @@ void main() {
     );
     expect(ex.length, lessThanOrEqualTo(12));
   });
+
+  test('в задании всегда три варианта ответа', () {
+    final ex = gen().build(
+      plan: planOf(newAtoms: [ba], review: [ta.id, tha.id, siin.id]),
+      ctx: ctxOf({
+        for (final a in [ba, ta, tha, siin, miim]) a.id: introduced,
+      }),
+      sessionId: 1,
+    );
+
+    final choices = ex.where((e) => e.isChoice);
+    expect(choices, isNotEmpty);
+    for (final e in choices) {
+      expect(e.options, hasLength(3));
+      expect(e.options.toSet(), hasLength(3), reason: 'без повторов');
+    }
+  });
 }

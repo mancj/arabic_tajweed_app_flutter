@@ -5,11 +5,20 @@ import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 /// Урок считается пройденным только когда человек дошёл до конца сессии.
 /// Открыть и выйти — не прохождение.
+/// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
+/// отвечает только первому тесту файла, а остальные вешает.
+Future<TracingShape> shapeFromDisk(String asset) async => TracingShapeSvg.parse(
+  File('assets/svg/alphabet/$asset.svg').readAsStringSync(),
+  id: asset,
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -39,6 +48,7 @@ void main() {
   Future<LessonController> open(WidgetTester tester) async {
     Get.put(
       LessonController(
+        shapeLoader: shapeFromDisk,
         database: db,
         curriculum: curriculum,
         topicId: 'm.first',
@@ -49,12 +59,25 @@ void main() {
     return Get.find<LessonController>();
   }
 
-  Future<void> answerAll(WidgetTester tester, LessonController c) async {
-    while (c.stage.value == LessonStage.exercise) {
-      final ex = c.current!;
+  /// Отвечает на текущее задание верно.
+  ///
+  /// Обводку здесь не рисуем: холст проверен своими тестами, а этим важна
+  /// только бухгалтерия прохождения. Задание на письмо закрываем через
+  /// контроллер — ровно так же, как это делает холст, узнав букву.
+  Future<void> answerOne(WidgetTester tester, LessonController c) async {
+    final ex = c.current!;
+    if (c.isTracingTask) {
+      await c.submit(directOutcome: true);
+    } else {
       c.select(ex.isChoice ? ex.answerIndex : 0);
       await tester.tap(find.text('Ответить'));
-      await settle(tester);
+    }
+    await settle(tester);
+  }
+
+  Future<void> answerAll(WidgetTester tester, LessonController c) async {
+    while (c.stage.value == LessonStage.exercise) {
+      await answerOne(tester, c);
     }
   }
 
@@ -80,10 +103,7 @@ void main() {
       await settle(tester);
     }
     for (var i = 0; i < 3; i++) {
-      final ex = c.current!;
-      c.select(ex.isChoice ? ex.answerIndex : 0);
-      await tester.tap(find.text('Ответить'));
-      await settle(tester);
+      await answerOne(tester, c);
     }
     expect(c.stage.value, LessonStage.exercise);
     expect(await db.readCompletions(), isEmpty);
@@ -222,5 +242,37 @@ void main() {
       (e) => e.atomId == atomId,
     );
     expect(after.last.correct, isTrue);
+  });
+
+  testWidgets('пропуск не пишет ответ в лог', (tester) async {
+    final c = await open(tester);
+    while (c.stage.value == LessonStage.intro) {
+      await c.nextIntro();
+      await settle(tester);
+    }
+
+    final skipped = c.current!.atom.id;
+    final before = (await db.readAll()).whereType<ProgressEvent>().length;
+
+    await c.skipExercise();
+    await settle(tester);
+
+    // Пропуск — отладочный ход: атом не двигается ни вперёд, ни назад.
+    final after = (await db.readAll()).whereType<ProgressEvent>().toList();
+    expect(after, hasLength(before));
+    expect(c.current?.atom.id, isNot(skipped));
+  });
+
+  testWidgets('пропустив все задания, доходим до итога', (tester) async {
+    final c = await open(tester);
+    while (c.stage.value == LessonStage.intro) {
+      await c.nextIntro();
+      await settle(tester);
+    }
+    while (c.stage.value == LessonStage.exercise) {
+      await c.skipExercise();
+      await settle(tester);
+    }
+    expect(c.stage.value, LessonStage.finished);
   });
 }

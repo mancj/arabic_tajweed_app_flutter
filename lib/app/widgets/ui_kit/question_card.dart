@@ -68,8 +68,8 @@ class QuestionCard extends StatelessWidget {
         clipper: const ShapeBorderClipper(shape: shape),
         child: Stack(
           children: [
-            _decorArc(),
-            _decorRing(),
+            //  _decorArc(), todo add image
+            //  _decorRing(), todo add image
             if (ghost != null) ..._ghosts(),
             _subject(),
             _header(),
@@ -78,41 +78,6 @@ class QuestionCard extends StatelessWidget {
       ),
     );
   }
-
-  /// Дуга у левого верхнего угла. Экспортирована обрезанной, поэтому лежит
-  /// в квадрате со своими полями — иначе поворот придётся не вокруг центра.
-  Widget _decorArc() => Positioned(
-    left: -222.26,
-    top: -224.26,
-    width: _decorSide,
-    height: _decorSide,
-    child: Transform.rotate(
-      angle: 135 * math.pi / 180,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 37, top: 37.1),
-        child: SizedBox(
-          width: 376.553,
-          height: 339.719,
-          child: SvgPicture.asset(
-            UISVGAssets.questionDecorArc,
-            fit: BoxFit.fill,
-          ),
-        ),
-      ),
-    ),
-  );
-
-  /// Тот же чертёж целиком — уходит за правый край карточки.
-  Widget _decorRing() => Positioned(
-    right: -185,
-    top: 30,
-    width: _decorSide,
-    height: _decorSide,
-    child: RotatedBox(
-      quarterTurns: 3,
-      child: SvgPicture.asset(UISVGAssets.questionDecorRing, fit: BoxFit.fill),
-    ),
-  );
 
   /// Бледные формы буквы у правого края: крупная уходит за обрез.
   List<Widget> _ghosts() {

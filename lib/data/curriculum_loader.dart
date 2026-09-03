@@ -11,7 +11,10 @@ import '../domain/curriculum.dart';
 class CurriculumLoader {
   const CurriculumLoader({this.stageAssets = defaultStageAssets});
 
-  static const defaultStageAssets = ['assets/curriculum/stage1.json'];
+  static const defaultStageAssets = [
+    'assets/curriculum/stage1.json',
+    'assets/curriculum/stage2.json',
+  ];
 
   final List<String> stageAssets;
 

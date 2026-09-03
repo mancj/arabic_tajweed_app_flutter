@@ -294,9 +294,9 @@ class _PronunciationCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const AppGestureDetector(
+          AppGestureDetector(
             child: CircleButton(
-              child: Icon(
+              child: const Icon(
                 Icons.play_arrow_rounded,
                 color: UIColors.white,
                 size: 24,

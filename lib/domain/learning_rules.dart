@@ -18,6 +18,7 @@ class LearningRules {
     this.defersBeforeLenient = 2,
     this.maxDeferred = 4,
     this.reviewQueueCap = 25,
+    this.reviewPerSession = 4,
     this.sessionsWithoutNewBeforeForcing = 2,
     this.tasksPerSession = 12,
     this.maxTasksPerSession = 16,
@@ -50,6 +51,10 @@ class LearningRules {
   final int maxDeferred;
 
   final int reviewQueueCap;
+
+  /// Сколько заданий в уроке отдаётся старым буквам из очереди повторений.
+  /// Из двенадцати: четыре на возврат, остальные — на тему урока.
+  final int reviewPerSession;
   final int sessionsWithoutNewBeforeForcing;
   final int tasksPerSession;
   final int maxTasksPerSession;

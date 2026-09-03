@@ -19,8 +19,9 @@ void main() {
   );
 
   test('граф этапа 1 читается из ассета', () {
-    expect(curriculum.nodes, hasLength(15));
-    expect(curriculum.topics, hasLength(2));
+    // 28 букв × их формы + понятия + пять начертаний хамзы.
+    expect(curriculum.nodes, hasLength(109));
+    expect(curriculum.topics, hasLength(23));
   });
 
   test('первый урок знакомит со всем набором ا ب ت ث', () {
@@ -59,16 +60,17 @@ void main() {
     expect(ids, isNot(contains('ba.finalForm')));
   });
 
-  test('вторая форма буквы ждёт, пока освоена первая', () {
-    final introduced = ctxWith({'ba.isolated': AtomState.introduced});
+  test('вторая форма буквы ждёт знакомства с первой', () {
+    // Раньше порог был по освоенности, и второй урок оказывался открыт,
+    // но вводить в нём было нечего: цепочка форм оставалась запертой.
     expect(
-      curriculum.availableAtoms(introduced).map((a) => a.id),
+      curriculum.availableAtoms(ctxWith({})).map((a) => a.id),
       isNot(contains('ba.finalForm')),
     );
 
-    final known = ctxWith({'ba.isolated': AtomState.known});
+    final introduced = ctxWith({'ba.isolated': AtomState.introduced});
     expect(
-      curriculum.availableAtoms(known).map((a) => a.id),
+      curriculum.availableAtoms(introduced).map((a) => a.id),
       contains('ba.finalForm'),
     );
   });

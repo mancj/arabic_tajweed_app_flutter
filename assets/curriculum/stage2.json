@@ -1,0 +1,274 @@
+{
+  "nodes": [
+    {
+      "atom": {
+        "id": "concept.join",
+        "kind": "concept",
+        "display": "Как буквы соединяются",
+        "label": "Как буквы соединяются",
+        "note": "В слове буквы слипаются. Первая берёт начальную форму, последняя — конечную, а те, что между ними, — среднюю. Пока читаем молча: только смотрим, как буквы соединились."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.ba_ta",
+        "kind": "syllable",
+        "display": "بت",
+        "label": "Ба и та"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ta.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.ta_ba",
+        "kind": "syllable",
+        "display": "تب",
+        "label": "Та и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "ta.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.na_ba",
+        "kind": "syllable",
+        "display": "نب",
+        "label": "Нун и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "nun.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.sa_ba",
+        "kind": "syllable",
+        "display": "سب",
+        "label": "Син и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "sin.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.mi_na",
+        "kind": "syllable",
+        "display": "من",
+        "label": "Мим и нун"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "mim.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "nun.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.la_ba",
+        "kind": "syllable",
+        "display": "لب",
+        "label": "Лям и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "lam.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "concept.break",
+        "kind": "concept",
+        "display": "Разрыв в слове",
+        "label": "Разрыв в слове",
+        "note": "После ا د ذ ر ز و соединения нет. Следующая буква начинается заново — как будто с начала слова, хотя слово продолжается."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.dal_ba",
+        "kind": "syllable",
+        "display": "دب",
+        "label": "Даль и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "dal.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.ra_ba",
+        "kind": "syllable",
+        "display": "رب",
+        "label": "Ро и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "ra.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.alif_ba",
+        "kind": "syllable",
+        "display": "اب",
+        "label": "Алиф и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "alif.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "syl.waw_ba",
+        "kind": "syllable",
+        "display": "وب",
+        "label": "Вав и ба"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "waw.isolated"
+          },
+          {
+            "type": "atomIntroduced",
+            "atomId": "ba.isolated"
+          }
+        ]
+      }
+    }
+  ],
+  "topics": [
+    {
+      "id": "m.join",
+      "stage": 2,
+      "title": "Как буквы соединяются",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "concept.join",
+        "syl.ba_ta",
+        "syl.ta_ba",
+        "syl.na_ba",
+        "syl.sa_ba",
+        "syl.mi_na",
+        "syl.la_ba"
+      ]
+    },
+    {
+      "id": "m.break",
+      "stage": 2,
+      "title": "Разрыв в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "concept.break",
+        "syl.dal_ba",
+        "syl.ra_ba",
+        "syl.alif_ba",
+        "syl.waw_ba"
+      ]
+    }
+  ]
+}

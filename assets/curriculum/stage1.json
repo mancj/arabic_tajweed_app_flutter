@@ -20,24 +20,11 @@
         "letterId": "alif",
         "form": "isolated",
         "label": "Алиф",
-        "note": "Алиф — первая буква алфавита. Простая вертикальная черта, без точек."
+        "note": "Алиф — первая буква алфавита. Простая вертикальная черта, без точек.",
+        "tracing": "alif_base"
       },
       "requirement": {
         "type": "always"
-      }
-    },
-    {
-      "atom": {
-        "id": "alif.finalForm",
-        "kind": "letterForm",
-        "display": "ـا",
-        "letterId": "alif",
-        "form": "finalForm",
-        "label": "Алиф в конце"
-      },
-      "requirement": {
-        "type": "atomKnown",
-        "atomId": "alif.isolated"
       }
     },
     {
@@ -49,13 +36,83 @@
         "form": "isolated",
         "confusableWith": [
           "ta",
-          "tha"
+          "tha",
+          "nun"
         ],
         "label": "Ба",
-        "note": "Ба. Форма другая — чаша, лежащая на строке. И одна точка снизу."
+        "note": "Ба. Форма другая — чаша, лежащая на строке. И одна точка снизу.",
+        "tracing": "ba_base"
       },
       "requirement": {
         "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "ta.isolated",
+        "kind": "letterForm",
+        "display": "ت",
+        "letterId": "ta",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "tha",
+          "nun"
+        ],
+        "label": "Та",
+        "note": "Та. Форма такая же, как у ба, но точек больше: две, и стоят сверху.",
+        "tracing": "ta_base"
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "tha.isolated",
+        "kind": "letterForm",
+        "display": "ث",
+        "letterId": "tha",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "nun"
+        ],
+        "label": "Са",
+        "note": "Са. Та же чаша, а точек на одну больше — три, тоже сверху.",
+        "tracing": "tha_base"
+      },
+      "requirement": {
+        "type": "always"
+      }
+    },
+    {
+      "atom": {
+        "id": "concept.forms",
+        "kind": "concept",
+        "display": "Разные формы одной буквы",
+        "label": "Разные формы одной буквы",
+        "note": "Одна буква пишется по-разному в зависимости от места в слове: отдельно, в начале, в середине и в конце. Это не разные буквы — это одна буква с разными хвостами."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ba.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "alif.finalForm",
+        "kind": "letterForm",
+        "display": "ـا",
+        "letterId": "alif",
+        "form": "finalForm",
+        "label": "Алиф в конце",
+        "note": "Алиф в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "alif.isolated"
       }
     },
     {
@@ -67,12 +124,14 @@
         "form": "finalForm",
         "confusableWith": [
           "ta",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Ба в конце"
+        "label": "Ба в конце",
+        "note": "Ба в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с точкой снизу."
       },
       "requirement": {
-        "type": "atomKnown",
+        "type": "atomIntroduced",
         "atomId": "ba.isolated"
       }
     },
@@ -85,13 +144,15 @@
         "form": "initial",
         "confusableWith": [
           "ta",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Ба в начале"
+        "label": "Ба в начале",
+        "note": "Ба в начале слова: остаётся зубчик с точкой снизу. Хвост убирается, вместо него связка к следующей букве."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "ba.finalForm"
+        "type": "atomIntroduced",
+        "atomId": "ba.isolated"
       }
     },
     {
@@ -103,31 +164,15 @@
         "form": "medial",
         "confusableWith": [
           "ta",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Ба в середине"
+        "label": "Ба в середине",
+        "note": "Ба в середине слова: зубчик с точкой снизу со связками с обеих сторон. Это самая короткая её форма."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "ba.initial"
-      }
-    },
-    {
-      "atom": {
-        "id": "ta.isolated",
-        "kind": "letterForm",
-        "display": "ت",
-        "letterId": "ta",
-        "form": "isolated",
-        "confusableWith": [
-          "ba",
-          "tha"
-        ],
-        "label": "Та",
-        "note": "Та. Форма такая же, как у ба, но точек больше: две, и стоят сверху."
-      },
-      "requirement": {
-        "type": "always"
+        "type": "atomIntroduced",
+        "atomId": "ba.isolated"
       }
     },
     {
@@ -139,12 +184,14 @@
         "form": "finalForm",
         "confusableWith": [
           "ba",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Та в конце"
+        "label": "Та в конце",
+        "note": "Та в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками."
       },
       "requirement": {
-        "type": "atomKnown",
+        "type": "atomIntroduced",
         "atomId": "ta.isolated"
       }
     },
@@ -157,13 +204,15 @@
         "form": "initial",
         "confusableWith": [
           "ba",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Та в начале"
+        "label": "Та в начале",
+        "note": "Та в начале слова: остаётся зубчик с двумя точками. Хвост убирается, вместо него связка к следующей букве."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "ta.finalForm"
+        "type": "atomIntroduced",
+        "atomId": "ta.isolated"
       }
     },
     {
@@ -175,31 +224,15 @@
         "form": "medial",
         "confusableWith": [
           "ba",
-          "tha"
+          "tha",
+          "nun"
         ],
-        "label": "Та в середине"
+        "label": "Та в середине",
+        "note": "Та в середине слова: зубчик с двумя точками со связками с обеих сторон. Это самая короткая её форма."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "ta.initial"
-      }
-    },
-    {
-      "atom": {
-        "id": "tha.isolated",
-        "kind": "letterForm",
-        "display": "ث",
-        "letterId": "tha",
-        "form": "isolated",
-        "confusableWith": [
-          "ba",
-          "ta"
-        ],
-        "label": "Са",
-        "note": "Са. Та же чаша, а точек на одну больше — три, тоже сверху."
-      },
-      "requirement": {
-        "type": "always"
+        "type": "atomIntroduced",
+        "atomId": "ta.isolated"
       }
     },
     {
@@ -211,12 +244,14 @@
         "form": "finalForm",
         "confusableWith": [
           "ba",
-          "ta"
+          "ta",
+          "nun"
         ],
-        "label": "Са в конце"
+        "label": "Са в конце",
+        "note": "Са в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с тремя точками."
       },
       "requirement": {
-        "type": "atomKnown",
+        "type": "atomIntroduced",
         "atomId": "tha.isolated"
       }
     },
@@ -229,13 +264,15 @@
         "form": "initial",
         "confusableWith": [
           "ba",
-          "ta"
+          "ta",
+          "nun"
         ],
-        "label": "Са в начале"
+        "label": "Са в начале",
+        "note": "Са в начале слова: остаётся зубчик с тремя точками. Хвост убирается, вместо него связка к следующей букве."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "tha.finalForm"
+        "type": "atomIntroduced",
+        "atomId": "tha.isolated"
       }
     },
     {
@@ -247,13 +284,1636 @@
         "form": "medial",
         "confusableWith": [
           "ba",
-          "ta"
+          "ta",
+          "nun"
         ],
-        "label": "Са в середине"
+        "label": "Са в середине",
+        "note": "Са в середине слова: зубчик с тремя точками со связками с обеих сторон. Это самая короткая её форма."
       },
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "tha.initial"
+        "type": "atomIntroduced",
+        "atomId": "tha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "jim.isolated",
+        "kind": "letterForm",
+        "display": "ج",
+        "letterId": "jim",
+        "form": "isolated",
+        "confusableWith": [
+          "hha",
+          "kha"
+        ],
+        "label": "Джим",
+        "note": "Джим. Крючок с животиком, который свисает ниже строки. Внутри одна точка."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "tha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hha.isolated",
+        "kind": "letterForm",
+        "display": "ح",
+        "letterId": "hha",
+        "form": "isolated",
+        "confusableWith": [
+          "jim",
+          "kha"
+        ],
+        "label": "Ха",
+        "note": "Ха. Тот же крючок, что у джима, но пустой — точек нет вовсе."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "tha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kha.isolated",
+        "kind": "letterForm",
+        "display": "خ",
+        "letterId": "kha",
+        "form": "isolated",
+        "confusableWith": [
+          "jim",
+          "hha"
+        ],
+        "label": "Хо",
+        "note": "Хо. Тот же крючок, а точка одна и стоит сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "tha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "jim.finalForm",
+        "kind": "letterForm",
+        "display": "ـج",
+        "letterId": "jim",
+        "form": "finalForm",
+        "confusableWith": [
+          "hha",
+          "kha"
+        ],
+        "label": "Джим в конце",
+        "note": "Джим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "jim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "jim.initial",
+        "kind": "letterForm",
+        "display": "جـ",
+        "letterId": "jim",
+        "form": "initial",
+        "confusableWith": [
+          "hha",
+          "kha"
+        ],
+        "label": "Джим в начале",
+        "note": "Джим в начале слова: остаётся крючок с точкой внутри. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "jim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "jim.medial",
+        "kind": "letterForm",
+        "display": "ـجـ",
+        "letterId": "jim",
+        "form": "medial",
+        "confusableWith": [
+          "hha",
+          "kha"
+        ],
+        "label": "Джим в середине",
+        "note": "Джим в середине слова: крючок с точкой внутри со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "jim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hha.finalForm",
+        "kind": "letterForm",
+        "display": "ـح",
+        "letterId": "hha",
+        "form": "finalForm",
+        "confusableWith": [
+          "jim",
+          "kha"
+        ],
+        "label": "Ха в конце",
+        "note": "Ха в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "hha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hha.initial",
+        "kind": "letterForm",
+        "display": "حـ",
+        "letterId": "hha",
+        "form": "initial",
+        "confusableWith": [
+          "jim",
+          "kha"
+        ],
+        "label": "Ха в начале",
+        "note": "Ха в начале слова: остаётся крючок без точек. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "hha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hha.medial",
+        "kind": "letterForm",
+        "display": "ـحـ",
+        "letterId": "hha",
+        "form": "medial",
+        "confusableWith": [
+          "jim",
+          "kha"
+        ],
+        "label": "Ха в середине",
+        "note": "Ха в середине слова: крючок без точек со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "hha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kha.finalForm",
+        "kind": "letterForm",
+        "display": "ـخ",
+        "letterId": "kha",
+        "form": "finalForm",
+        "confusableWith": [
+          "jim",
+          "hha"
+        ],
+        "label": "Хо в конце",
+        "note": "Хо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kha.initial",
+        "kind": "letterForm",
+        "display": "خـ",
+        "letterId": "kha",
+        "form": "initial",
+        "confusableWith": [
+          "jim",
+          "hha"
+        ],
+        "label": "Хо в начале",
+        "note": "Хо в начале слова: остаётся крючок с точкой сверху. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kha.medial",
+        "kind": "letterForm",
+        "display": "ـخـ",
+        "letterId": "kha",
+        "form": "medial",
+        "confusableWith": [
+          "jim",
+          "hha"
+        ],
+        "label": "Хо в середине",
+        "note": "Хо в середине слова: крючок с точкой сверху со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "concept.nojoin",
+        "kind": "concept",
+        "display": "Буквы, которые не соединяются слева",
+        "label": "Буквы, которые не соединяются слева",
+        "note": "Шесть букв — ا د ذ ر ز و — не соединяются со следующей. У них всего две формы вместо четырёх: отдельная и конечная."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dal.isolated",
+        "kind": "letterForm",
+        "display": "د",
+        "letterId": "dal",
+        "form": "isolated",
+        "confusableWith": [
+          "dhal"
+        ],
+        "label": "Даль",
+        "note": "Даль. Короткий уголок на строке, без точек. Слева ни с чем не соединяется."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dhal.isolated",
+        "kind": "letterForm",
+        "display": "ذ",
+        "letterId": "dhal",
+        "form": "isolated",
+        "confusableWith": [
+          "dal"
+        ],
+        "label": "Заль",
+        "note": "Заль. Тот же уголок, что у даля, и одна точка сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ra.isolated",
+        "kind": "letterForm",
+        "display": "ر",
+        "letterId": "ra",
+        "form": "isolated",
+        "confusableWith": [
+          "zay"
+        ],
+        "label": "Ро",
+        "note": "Ро. Хвостик, уходящий под строку. Точек нет."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zay.isolated",
+        "kind": "letterForm",
+        "display": "ز",
+        "letterId": "zay",
+        "form": "isolated",
+        "confusableWith": [
+          "ra"
+        ],
+        "label": "Зай",
+        "note": "Зай. Тот же хвостик, что у ро, с одной точкой сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dal.finalForm",
+        "kind": "letterForm",
+        "display": "ـد",
+        "letterId": "dal",
+        "form": "finalForm",
+        "confusableWith": [
+          "dhal"
+        ],
+        "label": "Даль в конце",
+        "note": "Даль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dal.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dhal.finalForm",
+        "kind": "letterForm",
+        "display": "ـذ",
+        "letterId": "dhal",
+        "form": "finalForm",
+        "confusableWith": [
+          "dal"
+        ],
+        "label": "Заль в конце",
+        "note": "Заль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dhal.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ra.finalForm",
+        "kind": "letterForm",
+        "display": "ـر",
+        "letterId": "ra",
+        "form": "finalForm",
+        "confusableWith": [
+          "zay"
+        ],
+        "label": "Ро в конце",
+        "note": "Ро в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ra.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zay.finalForm",
+        "kind": "letterForm",
+        "display": "ـز",
+        "letterId": "zay",
+        "form": "finalForm",
+        "confusableWith": [
+          "ra"
+        ],
+        "label": "Зай в конце",
+        "note": "Зай в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zay.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sin.isolated",
+        "kind": "letterForm",
+        "display": "س",
+        "letterId": "sin",
+        "form": "isolated",
+        "confusableWith": [
+          "shin"
+        ],
+        "label": "Син",
+        "note": "Син. Три зубчика на строке и чаша за ними. Точек нет.",
+        "tracing": "sin_base"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zay.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "shin.isolated",
+        "kind": "letterForm",
+        "display": "ش",
+        "letterId": "shin",
+        "form": "isolated",
+        "confusableWith": [
+          "sin"
+        ],
+        "label": "Шин",
+        "note": "Шин. Те же три зубчика, а сверху три точки.",
+        "tracing": "shin_base"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zay.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sin.finalForm",
+        "kind": "letterForm",
+        "display": "ـس",
+        "letterId": "sin",
+        "form": "finalForm",
+        "confusableWith": [
+          "shin"
+        ],
+        "label": "Син в конце",
+        "note": "Син в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sin.initial",
+        "kind": "letterForm",
+        "display": "سـ",
+        "letterId": "sin",
+        "form": "initial",
+        "confusableWith": [
+          "shin"
+        ],
+        "label": "Син в начале",
+        "note": "Син в начале слова: остаётся три зубчика. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sin.medial",
+        "kind": "letterForm",
+        "display": "ـسـ",
+        "letterId": "sin",
+        "form": "medial",
+        "confusableWith": [
+          "shin"
+        ],
+        "label": "Син в середине",
+        "note": "Син в середине слова: три зубчика со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "shin.finalForm",
+        "kind": "letterForm",
+        "display": "ـش",
+        "letterId": "shin",
+        "form": "finalForm",
+        "confusableWith": [
+          "sin"
+        ],
+        "label": "Шин в конце",
+        "note": "Шин в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "shin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "shin.initial",
+        "kind": "letterForm",
+        "display": "شـ",
+        "letterId": "shin",
+        "form": "initial",
+        "confusableWith": [
+          "sin"
+        ],
+        "label": "Шин в начале",
+        "note": "Шин в начале слова: остаётся три зубчика с точками сверху. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "shin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "shin.medial",
+        "kind": "letterForm",
+        "display": "ـشـ",
+        "letterId": "shin",
+        "form": "medial",
+        "confusableWith": [
+          "sin"
+        ],
+        "label": "Шин в середине",
+        "note": "Шин в середине слова: три зубчика с точками сверху со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "shin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sod.isolated",
+        "kind": "letterForm",
+        "display": "ص",
+        "letterId": "sod",
+        "form": "isolated",
+        "confusableWith": [
+          "dod"
+        ],
+        "label": "Сод",
+        "note": "Сод. Петля на строке и чаша за ней. Точек нет."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "shin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dod.isolated",
+        "kind": "letterForm",
+        "display": "ض",
+        "letterId": "dod",
+        "form": "isolated",
+        "confusableWith": [
+          "sod"
+        ],
+        "label": "Дод",
+        "note": "Дод. Та же петля с чашей, и одна точка сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "shin.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sod.finalForm",
+        "kind": "letterForm",
+        "display": "ـص",
+        "letterId": "sod",
+        "form": "finalForm",
+        "confusableWith": [
+          "dod"
+        ],
+        "label": "Сод в конце",
+        "note": "Сод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sod.initial",
+        "kind": "letterForm",
+        "display": "صـ",
+        "letterId": "sod",
+        "form": "initial",
+        "confusableWith": [
+          "dod"
+        ],
+        "label": "Сод в начале",
+        "note": "Сод в начале слова: остаётся петля. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "sod.medial",
+        "kind": "letterForm",
+        "display": "ـصـ",
+        "letterId": "sod",
+        "form": "medial",
+        "confusableWith": [
+          "dod"
+        ],
+        "label": "Сод в середине",
+        "note": "Сод в середине слова: петля со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "sod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dod.finalForm",
+        "kind": "letterForm",
+        "display": "ـض",
+        "letterId": "dod",
+        "form": "finalForm",
+        "confusableWith": [
+          "sod"
+        ],
+        "label": "Дод в конце",
+        "note": "Дод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dod.initial",
+        "kind": "letterForm",
+        "display": "ضـ",
+        "letterId": "dod",
+        "form": "initial",
+        "confusableWith": [
+          "sod"
+        ],
+        "label": "Дод в начале",
+        "note": "Дод в начале слова: остаётся петля с точкой сверху. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "dod.medial",
+        "kind": "letterForm",
+        "display": "ـضـ",
+        "letterId": "dod",
+        "form": "medial",
+        "confusableWith": [
+          "sod"
+        ],
+        "label": "Дод в середине",
+        "note": "Дод в середине слова: петля с точкой сверху со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "to.isolated",
+        "kind": "letterForm",
+        "display": "ط",
+        "letterId": "to",
+        "form": "isolated",
+        "confusableWith": [
+          "zho"
+        ],
+        "label": "То",
+        "note": "То. Петля на строке, а из неё вверх торчит прямая палочка.",
+        "tracing": "to_base"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zho.isolated",
+        "kind": "letterForm",
+        "display": "ظ",
+        "letterId": "zho",
+        "form": "isolated",
+        "confusableWith": [
+          "to"
+        ],
+        "label": "Зо",
+        "note": "Зо. Та же петля с палочкой, и одна точка сверху.",
+        "tracing": "zho_base"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "dod.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "to.finalForm",
+        "kind": "letterForm",
+        "display": "ـط",
+        "letterId": "to",
+        "form": "finalForm",
+        "confusableWith": [
+          "zho"
+        ],
+        "label": "То в конце",
+        "note": "То в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "to.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "to.initial",
+        "kind": "letterForm",
+        "display": "طـ",
+        "letterId": "to",
+        "form": "initial",
+        "confusableWith": [
+          "zho"
+        ],
+        "label": "То в начале",
+        "note": "То в начале слова: остаётся петля с прямой палочкой. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "to.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "to.medial",
+        "kind": "letterForm",
+        "display": "ـطـ",
+        "letterId": "to",
+        "form": "medial",
+        "confusableWith": [
+          "zho"
+        ],
+        "label": "То в середине",
+        "note": "То в середине слова: петля с прямой палочкой со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "to.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zho.finalForm",
+        "kind": "letterForm",
+        "display": "ـظ",
+        "letterId": "zho",
+        "form": "finalForm",
+        "confusableWith": [
+          "to"
+        ],
+        "label": "Зо в конце",
+        "note": "Зо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zho.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zho.initial",
+        "kind": "letterForm",
+        "display": "ظـ",
+        "letterId": "zho",
+        "form": "initial",
+        "confusableWith": [
+          "to"
+        ],
+        "label": "Зо в начале",
+        "note": "Зо в начале слова: остаётся петля с палочкой и точкой. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zho.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "zho.medial",
+        "kind": "letterForm",
+        "display": "ـظـ",
+        "letterId": "zho",
+        "form": "medial",
+        "confusableWith": [
+          "to"
+        ],
+        "label": "Зо в середине",
+        "note": "Зо в середине слова: петля с палочкой и точкой со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zho.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ayn.isolated",
+        "kind": "letterForm",
+        "display": "ع",
+        "letterId": "ayn",
+        "form": "isolated",
+        "confusableWith": [
+          "ghayn"
+        ],
+        "label": "Айн",
+        "note": "Айн. Открытый крючок сверху и чаша снизу. Точек нет."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zho.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ghayn.isolated",
+        "kind": "letterForm",
+        "display": "غ",
+        "letterId": "ghayn",
+        "form": "isolated",
+        "confusableWith": [
+          "ayn"
+        ],
+        "label": "Гойн",
+        "note": "Гойн. Тот же крючок с чашей, и одна точка сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "zho.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ayn.finalForm",
+        "kind": "letterForm",
+        "display": "ـع",
+        "letterId": "ayn",
+        "form": "finalForm",
+        "confusableWith": [
+          "ghayn"
+        ],
+        "label": "Айн в конце",
+        "note": "Айн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ayn.initial",
+        "kind": "letterForm",
+        "display": "عـ",
+        "letterId": "ayn",
+        "form": "initial",
+        "confusableWith": [
+          "ghayn"
+        ],
+        "label": "Айн в начале",
+        "note": "Айн в начале слова: остаётся открытый крючок. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ayn.medial",
+        "kind": "letterForm",
+        "display": "ـعـ",
+        "letterId": "ayn",
+        "form": "medial",
+        "confusableWith": [
+          "ghayn"
+        ],
+        "label": "Айн в середине",
+        "note": "Айн в середине слова: открытый крючок со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ghayn.finalForm",
+        "kind": "letterForm",
+        "display": "ـغ",
+        "letterId": "ghayn",
+        "form": "finalForm",
+        "confusableWith": [
+          "ayn"
+        ],
+        "label": "Гойн в конце",
+        "note": "Гойн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ghayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ghayn.initial",
+        "kind": "letterForm",
+        "display": "غـ",
+        "letterId": "ghayn",
+        "form": "initial",
+        "confusableWith": [
+          "ayn"
+        ],
+        "label": "Гойн в начале",
+        "note": "Гойн в начале слова: остаётся открытый крючок с точкой. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ghayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ghayn.medial",
+        "kind": "letterForm",
+        "display": "ـغـ",
+        "letterId": "ghayn",
+        "form": "medial",
+        "confusableWith": [
+          "ayn"
+        ],
+        "label": "Гойн в середине",
+        "note": "Гойн в середине слова: открытый крючок с точкой со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ghayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "fa.isolated",
+        "kind": "letterForm",
+        "display": "ف",
+        "letterId": "fa",
+        "form": "isolated",
+        "confusableWith": [
+          "qof"
+        ],
+        "label": "Фа",
+        "note": "Фа. Кружок на строке с хвостом и одной точкой сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ghayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "qof.isolated",
+        "kind": "letterForm",
+        "display": "ق",
+        "letterId": "qof",
+        "form": "isolated",
+        "confusableWith": [
+          "fa"
+        ],
+        "label": "Коф",
+        "note": "Коф. Тот же кружок, но чаша уходит под строку, а точек сверху две."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ghayn.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "fa.finalForm",
+        "kind": "letterForm",
+        "display": "ـف",
+        "letterId": "fa",
+        "form": "finalForm",
+        "confusableWith": [
+          "qof"
+        ],
+        "label": "Фа в конце",
+        "note": "Фа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и хвост на строке."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "fa.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "fa.initial",
+        "kind": "letterForm",
+        "display": "فـ",
+        "letterId": "fa",
+        "form": "initial",
+        "confusableWith": [
+          "qof"
+        ],
+        "label": "Фа в начале",
+        "note": "Фа в начале слова: остаётся кружок с точкой сверху. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "fa.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "fa.medial",
+        "kind": "letterForm",
+        "display": "ـفـ",
+        "letterId": "fa",
+        "form": "medial",
+        "confusableWith": [
+          "qof"
+        ],
+        "label": "Фа в середине",
+        "note": "Фа в середине слова: кружок с точкой сверху со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "fa.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "qof.finalForm",
+        "kind": "letterForm",
+        "display": "ـق",
+        "letterId": "qof",
+        "form": "finalForm",
+        "confusableWith": [
+          "fa"
+        ],
+        "label": "Коф в конце",
+        "note": "Коф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и чаша под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "qof.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "qof.initial",
+        "kind": "letterForm",
+        "display": "قـ",
+        "letterId": "qof",
+        "form": "initial",
+        "confusableWith": [
+          "fa"
+        ],
+        "label": "Коф в начале",
+        "note": "Коф в начале слова: остаётся кружок с двумя точками. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "qof.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "qof.medial",
+        "kind": "letterForm",
+        "display": "ـقـ",
+        "letterId": "qof",
+        "form": "medial",
+        "confusableWith": [
+          "fa"
+        ],
+        "label": "Коф в середине",
+        "note": "Коф в середине слова: кружок с двумя точками со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "qof.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kaf.isolated",
+        "kind": "letterForm",
+        "display": "ك",
+        "letterId": "kaf",
+        "form": "isolated",
+        "label": "Кяф",
+        "note": "Кяф. Угловатая буква с маленькой чёрточкой внутри."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "qof.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "lam.isolated",
+        "kind": "letterForm",
+        "display": "ل",
+        "letterId": "lam",
+        "form": "isolated",
+        "label": "Лям",
+        "note": "Лям. Высокая палочка, которая внизу заворачивается в чашу."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "qof.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kaf.finalForm",
+        "kind": "letterForm",
+        "display": "ـك",
+        "letterId": "kaf",
+        "form": "finalForm",
+        "label": "Кяф в конце",
+        "note": "Кяф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: угол с чёрточкой внутри."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kaf.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kaf.initial",
+        "kind": "letterForm",
+        "display": "كـ",
+        "letterId": "kaf",
+        "form": "initial",
+        "label": "Кяф в начале",
+        "note": "Кяф в начале слова: остаётся угловатая палочка. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kaf.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "kaf.medial",
+        "kind": "letterForm",
+        "display": "ـكـ",
+        "letterId": "kaf",
+        "form": "medial",
+        "label": "Кяф в середине",
+        "note": "Кяф в середине слова: угловатая палочка со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "kaf.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "lam.finalForm",
+        "kind": "letterForm",
+        "display": "ـل",
+        "letterId": "lam",
+        "form": "finalForm",
+        "label": "Лям в конце",
+        "note": "Лям в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: палочка и чаша под строкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "lam.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "lam.initial",
+        "kind": "letterForm",
+        "display": "لـ",
+        "letterId": "lam",
+        "form": "initial",
+        "label": "Лям в начале",
+        "note": "Лям в начале слова: остаётся высокая палочка. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "lam.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "lam.medial",
+        "kind": "letterForm",
+        "display": "ـلـ",
+        "letterId": "lam",
+        "form": "medial",
+        "label": "Лям в середине",
+        "note": "Лям в середине слова: высокая палочка со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "lam.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "mim.isolated",
+        "kind": "letterForm",
+        "display": "م",
+        "letterId": "mim",
+        "form": "isolated",
+        "label": "Мим",
+        "note": "Мим. Кружок на строке с хвостиком, уходящим вниз."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "lam.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "nun.isolated",
+        "kind": "letterForm",
+        "display": "ن",
+        "letterId": "nun",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha"
+        ],
+        "label": "Нун",
+        "note": "Нун. Глубокая чаша под строкой и одна точка сверху."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "lam.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "mim.finalForm",
+        "kind": "letterForm",
+        "display": "ـم",
+        "letterId": "mim",
+        "form": "finalForm",
+        "label": "Мим в конце",
+        "note": "Мим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок с хвостиком вниз."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "mim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "mim.initial",
+        "kind": "letterForm",
+        "display": "مـ",
+        "letterId": "mim",
+        "form": "initial",
+        "label": "Мим в начале",
+        "note": "Мим в начале слова: остаётся кружок на строке. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "mim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "mim.medial",
+        "kind": "letterForm",
+        "display": "ـمـ",
+        "letterId": "mim",
+        "form": "medial",
+        "label": "Мим в середине",
+        "note": "Мим в середине слова: кружок на строке со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "mim.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "nun.finalForm",
+        "kind": "letterForm",
+        "display": "ـن",
+        "letterId": "nun",
+        "form": "finalForm",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha"
+        ],
+        "label": "Нун в конце",
+        "note": "Нун в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: глубокая чаша с точкой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "nun.initial",
+        "kind": "letterForm",
+        "display": "نـ",
+        "letterId": "nun",
+        "form": "initial",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha"
+        ],
+        "label": "Нун в начале",
+        "note": "Нун в начале слова: остаётся зубчик с точкой сверху. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "nun.medial",
+        "kind": "letterForm",
+        "display": "ـنـ",
+        "letterId": "nun",
+        "form": "medial",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha"
+        ],
+        "label": "Нун в середине",
+        "note": "Нун в середине слова: зубчик с точкой сверху со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ha.isolated",
+        "kind": "letterForm",
+        "display": "ه",
+        "letterId": "ha",
+        "form": "isolated",
+        "label": "Хэ",
+        "note": "Хэ. Кружок; в разных местах слова он меняется сильнее всех букв."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "waw.isolated",
+        "kind": "letterForm",
+        "display": "و",
+        "letterId": "waw",
+        "form": "isolated",
+        "label": "Вав",
+        "note": "Вав. Кружок с хвостом, уходящим под строку. Слева не соединяется."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ya.isolated",
+        "kind": "letterForm",
+        "display": "ي",
+        "letterId": "ya",
+        "form": "isolated",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha",
+          "nun"
+        ],
+        "label": "Йа",
+        "note": "Йа. Чаша под строкой и две точки снизу."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "nun.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ha.finalForm",
+        "kind": "letterForm",
+        "display": "ـه",
+        "letterId": "ha",
+        "form": "finalForm",
+        "label": "Хэ в конце",
+        "note": "Хэ в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ha.initial",
+        "kind": "letterForm",
+        "display": "هـ",
+        "letterId": "ha",
+        "form": "initial",
+        "label": "Хэ в начале",
+        "note": "Хэ в начале слова: остаётся петелька. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ha.medial",
+        "kind": "letterForm",
+        "display": "ـهـ",
+        "letterId": "ha",
+        "form": "medial",
+        "label": "Хэ в середине",
+        "note": "Хэ в середине слова: петелька со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ha.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "waw.finalForm",
+        "kind": "letterForm",
+        "display": "ـو",
+        "letterId": "waw",
+        "form": "finalForm",
+        "label": "Вав в конце",
+        "note": "Вав в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "waw.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ya.finalForm",
+        "kind": "letterForm",
+        "display": "ـي",
+        "letterId": "ya",
+        "form": "finalForm",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha",
+          "nun"
+        ],
+        "label": "Йа в конце",
+        "note": "Йа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками снизу."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ya.initial",
+        "kind": "letterForm",
+        "display": "يـ",
+        "letterId": "ya",
+        "form": "initial",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha",
+          "nun"
+        ],
+        "label": "Йа в начале",
+        "note": "Йа в начале слова: остаётся зубчик с двумя точками снизу. Хвост убирается, вместо него связка к следующей букве."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "ya.medial",
+        "kind": "letterForm",
+        "display": "ـيـ",
+        "letterId": "ya",
+        "form": "medial",
+        "confusableWith": [
+          "ba",
+          "ta",
+          "tha",
+          "nun"
+        ],
+        "label": "Йа в середине",
+        "note": "Йа в середине слова: зубчик с двумя точками снизу со связками с обеих сторон. Это самая короткая её форма."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "concept.hamza",
+        "kind": "concept",
+        "display": "Хамза",
+        "label": "Хамза",
+        "note": "Хамза — не буква алфавита, а знак гортанной остановки. Пишут её пятью способами: отдельно или на подставке из алифа, вав или йа. Читается везде одинаково."
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hamza.alone",
+        "kind": "sign",
+        "display": "ء",
+        "letterId": "hamza",
+        "label": "Хамза отдельно"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "alif.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hamza.alif",
+        "kind": "sign",
+        "display": "أ",
+        "letterId": "hamza",
+        "label": "Хамза на алифе"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "alif.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hamza.alifBelow",
+        "kind": "sign",
+        "display": "إ",
+        "letterId": "hamza",
+        "label": "Хамза под алифом"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "alif.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hamza.waw",
+        "kind": "sign",
+        "display": "ؤ",
+        "letterId": "hamza",
+        "label": "Хамза на вав"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "waw.isolated"
+      }
+    },
+    {
+      "atom": {
+        "id": "hamza.ya",
+        "kind": "sign",
+        "display": "ئ",
+        "letterId": "hamza",
+        "label": "Хамза на йа"
+      },
+      "requirement": {
+        "type": "atomIntroduced",
+        "atomId": "ya.isolated"
       }
     }
   ],
@@ -278,10 +1938,10 @@
       "stage": 1,
       "title": "Разные формы одной буквы",
       "requirement": {
-        "type": "atomKnown",
-        "atomId": "ba.isolated"
+        "type": "always"
       },
       "counterOf": [
+        "concept.forms",
         "alif.finalForm",
         "ba.finalForm",
         "ba.initial",
@@ -292,6 +1952,309 @@
         "tha.finalForm",
         "tha.initial",
         "tha.medial"
+      ]
+    },
+    {
+      "id": "m.jim",
+      "stage": 1,
+      "title": "Буквы ج ح خ",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "jim.isolated",
+        "hha.isolated",
+        "kha.isolated"
+      ]
+    },
+    {
+      "id": "m.jim.forms",
+      "stage": 1,
+      "title": "ج ح خ в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "jim.finalForm",
+        "jim.initial",
+        "jim.medial",
+        "hha.finalForm",
+        "hha.initial",
+        "hha.medial",
+        "kha.finalForm",
+        "kha.initial",
+        "kha.medial"
+      ]
+    },
+    {
+      "id": "m.nojoin",
+      "stage": 1,
+      "title": "Буквы, которые не соединяются: د ذ ر ز",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "concept.nojoin",
+        "dal.isolated",
+        "dhal.isolated",
+        "ra.isolated",
+        "zay.isolated"
+      ]
+    },
+    {
+      "id": "m.nojoin.forms",
+      "stage": 1,
+      "title": "د ذ ر ز в конце слова",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "dal.finalForm",
+        "dhal.finalForm",
+        "ra.finalForm",
+        "zay.finalForm"
+      ]
+    },
+    {
+      "id": "m.sin",
+      "stage": 1,
+      "title": "Буквы س ش",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "sin.isolated",
+        "shin.isolated"
+      ]
+    },
+    {
+      "id": "m.sin.forms",
+      "stage": 1,
+      "title": "س ش в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "sin.finalForm",
+        "sin.initial",
+        "sin.medial",
+        "shin.finalForm",
+        "shin.initial",
+        "shin.medial"
+      ]
+    },
+    {
+      "id": "m.sod",
+      "stage": 1,
+      "title": "Буквы ص ض",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "sod.isolated",
+        "dod.isolated"
+      ]
+    },
+    {
+      "id": "m.sod.forms",
+      "stage": 1,
+      "title": "ص ض в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "sod.finalForm",
+        "sod.initial",
+        "sod.medial",
+        "dod.finalForm",
+        "dod.initial",
+        "dod.medial"
+      ]
+    },
+    {
+      "id": "m.to",
+      "stage": 1,
+      "title": "Буквы ط ظ",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "to.isolated",
+        "zho.isolated"
+      ]
+    },
+    {
+      "id": "m.to.forms",
+      "stage": 1,
+      "title": "ط ظ в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "to.finalForm",
+        "to.initial",
+        "to.medial",
+        "zho.finalForm",
+        "zho.initial",
+        "zho.medial"
+      ]
+    },
+    {
+      "id": "m.ayn",
+      "stage": 1,
+      "title": "Буквы ع غ",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "ayn.isolated",
+        "ghayn.isolated"
+      ]
+    },
+    {
+      "id": "m.ayn.forms",
+      "stage": 1,
+      "title": "ع غ в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "ayn.finalForm",
+        "ayn.initial",
+        "ayn.medial",
+        "ghayn.finalForm",
+        "ghayn.initial",
+        "ghayn.medial"
+      ]
+    },
+    {
+      "id": "m.fa",
+      "stage": 1,
+      "title": "Буквы ف ق",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "fa.isolated",
+        "qof.isolated"
+      ]
+    },
+    {
+      "id": "m.fa.forms",
+      "stage": 1,
+      "title": "ف ق в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "fa.finalForm",
+        "fa.initial",
+        "fa.medial",
+        "qof.finalForm",
+        "qof.initial",
+        "qof.medial"
+      ]
+    },
+    {
+      "id": "m.kaf",
+      "stage": 1,
+      "title": "Буквы ك ل",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "kaf.isolated",
+        "lam.isolated"
+      ]
+    },
+    {
+      "id": "m.kaf.forms",
+      "stage": 1,
+      "title": "ك ل в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "kaf.finalForm",
+        "kaf.initial",
+        "kaf.medial",
+        "lam.finalForm",
+        "lam.initial",
+        "lam.medial"
+      ]
+    },
+    {
+      "id": "m.mim",
+      "stage": 1,
+      "title": "Буквы م ن",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "mim.isolated",
+        "nun.isolated"
+      ]
+    },
+    {
+      "id": "m.mim.forms",
+      "stage": 1,
+      "title": "م ن в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "mim.finalForm",
+        "mim.initial",
+        "mim.medial",
+        "nun.finalForm",
+        "nun.initial",
+        "nun.medial"
+      ]
+    },
+    {
+      "id": "m.ha",
+      "stage": 1,
+      "title": "Буквы ه و ي",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "ha.isolated",
+        "waw.isolated",
+        "ya.isolated"
+      ]
+    },
+    {
+      "id": "m.ha.forms",
+      "stage": 1,
+      "title": "ه و ي в слове",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "ha.finalForm",
+        "ha.initial",
+        "ha.medial",
+        "waw.finalForm",
+        "ya.finalForm",
+        "ya.initial",
+        "ya.medial"
+      ]
+    },
+    {
+      "id": "m.hamza",
+      "stage": 1,
+      "title": "Хамза: ء أ إ ؤ ئ",
+      "requirement": {
+        "type": "always"
+      },
+      "counterOf": [
+        "concept.hamza",
+        "hamza.alone",
+        "hamza.alif",
+        "hamza.alifBelow",
+        "hamza.waw",
+        "hamza.ya"
       ]
     }
   ]

@@ -97,11 +97,16 @@ class CourseController extends GetxController {
     final last = await _progress.lastActiveTopicId();
     if (last != null && !completed.contains(last)) return last;
 
-    return _curriculum.topics
-        .firstWhereOrNull(
-          (t) => !completed.contains(t.id) && t.requirement.isMet(ctx),
-        )
-        ?.id;
+    // Первый незакрытый урок, до которого человек уже дошёл. Условие
+    // открытия — прохождение предыдущего, ровно как в списке.
+    final topics = _curriculum.topics;
+    for (final (index, topic) in topics.indexed) {
+      if (completed.contains(topic.id)) continue;
+      final previous = index == 0 ? null : topics[index - 1];
+      if (previous == null || completed.contains(previous.id)) return topic.id;
+      break;
+    }
+    return null;
   }
 
   TopicStatus? get currentTopic =>

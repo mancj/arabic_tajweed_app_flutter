@@ -3,7 +3,9 @@ import 'package:collection/collection.dart';
 import 'atom.dart';
 import 'atom_state.dart';
 import 'curriculum.dart';
+import 'learning_rules.dart';
 import 'planner.dart';
+import 'review_queue.dart';
 
 /// Как урок выглядит в списке курса.
 ///
@@ -85,19 +87,25 @@ class TopicBoard {
     CurriculumContext ctx, {
     Map<String, bool> completed = const {},
     String? currentId,
-  }) => curriculum.topics
-      .map((t) => _statusOf(t, ctx, completed, currentId))
-      .toList();
+  }) => [
+    for (final (index, topic) in curriculum.topics.indexed)
+      _statusOf(topic, index, ctx, completed, currentId),
+  ];
 
   TopicStatus _statusOf(
     Topic topic,
+    int index,
     CurriculumContext ctx,
     Map<String, bool> completed,
     String? currentId,
   ) {
     final done = topic.counterOf.where((id) => isDone(id, ctx)).length;
     final total = topic.counterOf.length;
-    final open = topic.requirement.isMet(ctx);
+    // Урок открывается по факту прохождения предыдущего, а не по
+    // освоенности букв. Иначе выходит тупик: урок помечен пройденным,
+    // а следующий заперт, пока буквы не дозреют до known.
+    final previous = index == 0 ? null : curriculum.topics[index - 1];
+    final open = previous == null || completed.containsKey(previous.id);
     final started = topic.counterOf.any(
       (id) => ctx.stateOf(id) != AtomState.fresh,
     );
@@ -117,7 +125,11 @@ class TopicBoard {
       state: state,
       done: done,
       total: total,
-      hint: state == TopicState.locked ? describe(topic.requirement) : '',
+      // Замок объясняет себя тем, что его на самом деле держит:
+      // непройденной предыдущей темой, а не условием графа.
+      hint: state == TopicState.locked && previous != null
+          ? 'сначала пройдите «${previous.title}»'
+          : '',
       started: started,
       canPractice:
           state != TopicState.locked &&
@@ -131,7 +143,12 @@ class TopicBoard {
   /// Незнакомые атомы темы вводятся, знакомые повторяются. Так нажатие
   /// по строке всегда работает с той темой, на которую нажали, а не уводит
   /// туда, куда как раз собирался планировщик.
-  LessonPlan planFor(Topic topic, CurriculumContext ctx) {
+  LessonPlan planFor(
+    Topic topic,
+    CurriculumContext ctx, {
+    int sessionId = 1,
+    LearningRules rules = const LearningRules(),
+  }) {
     final nodes = topic.counterOf.map((id) => _node(id)).nonNulls.toList();
 
     // Вводим только то, что граф уже разрешил: у темы могут быть атомы,
@@ -149,16 +166,43 @@ class TopicBoard {
         .where((id) => ctx.stateOf(id) != AtomState.fresh)
         .toList();
 
+    // Блок повтора берётся из общей очереди, а не из самой темы: иначе
+    // буквы прошлых уроков не возвращались бы никогда. См. ТЗ §6.2.
+    //
+    // Но только назад: атомы тем, которые идут после этой, исключаются.
+    // Иначе возврат к пройденному уроку тащит буквы из следующего —
+    // начатого и брошенного, — и повторение выглядит как чужой урок.
+    final spaced = ReviewQueue(rules: rules)
+        .build(
+          ctx,
+          sessionId: sessionId,
+          exclude: {...topic.counterOf, ..._atomsAfter(topic)},
+          curriculum: curriculum,
+        )
+        .take(rules.reviewPerSession)
+        .toList();
+
     return LessonPlan(
       template: fresh.isEmpty
-          ? LessonTemplate.consolidation
+          ? LessonTemplate.review
           : LessonTemplate.newLetter,
       newAtoms: fresh,
       reviewAtoms: known,
+      spacedReview: spaced,
       reason: fresh.isEmpty
           ? 'повторение темы «${topic.title}»'
           : 'тема «${topic.title}»',
     );
+  }
+
+  /// Атомы тем, стоящих в списке после [topic]. Тема, которой нет
+  /// в списке, ничего не отсекает.
+  Set<String> _atomsAfter(Topic topic) {
+    final index = curriculum.topics.indexWhere((t) => t.id == topic.id);
+    if (index < 0) return const {};
+    return {
+      for (final later in curriculum.topics.skip(index + 1)) ...later.counterOf,
+    };
   }
 
   /// Есть ли по теме что показать: либо готовый к вводу атом, либо уже

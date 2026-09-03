@@ -6,9 +6,10 @@ import 'atom.dart';
 import 'atom_state.dart';
 import 'curriculum.dart';
 import 'learning_rules.dart';
+import 'review_queue.dart';
 
 /// Шаблон урока. Не «урок 7», а урок такого типа. См. SPEC.md §6.2.
-enum LessonTemplate { concept, newLetter, consolidation, connection }
+enum LessonTemplate { concept, newLetter, review, connection }
 
 class LessonPlan {
   const LessonPlan({
@@ -16,11 +17,18 @@ class LessonPlan {
     required this.newAtoms,
     required this.reviewAtoms,
     required this.reason,
+    this.spacedReview = const [],
   });
 
   final LessonTemplate template;
   final List<Atom> newAtoms;
+
+  /// Атомы урока, которые уже знакомы: они идут в закрепление вместе с новыми.
   final List<String> reviewAtoms;
+
+  /// Возврат старого из общей очереди — блок «повтор» по ТЗ §6.2.
+  /// Это буквы из других тем, иначе они не всплывали бы никогда.
+  final List<String> spacedReview;
 
   /// Какое правило сработало. Нужно для отладки и аналитики: без этого
   /// невозможно понять, почему у пользователя третью сессию нет новых букв.
@@ -57,10 +65,10 @@ class LessonPlanner {
     if (deferred.length > rules.maxDeferred) {
       final revived = _oldestDeferred(ctx, deferred);
       return LessonPlan(
-        template: LessonTemplate.consolidation,
+        template: LessonTemplate.review,
         newAtoms: const [],
         // Досрочный возврат обязателен: иначе отложенные ждут своей паузы,
-        // а урок-закрепление работает вхолостую.
+        // а урок-повторение работает вхолостую.
         reviewAtoms: [if (revived != null) revived, ...review],
         reason: 'отложенных ${deferred.length} > ${rules.maxDeferred}',
       );
@@ -78,7 +86,7 @@ class LessonPlanner {
 
     if (overloaded && !forceNew) {
       return LessonPlan(
-        template: LessonTemplate.consolidation,
+        template: LessonTemplate.review,
         newAtoms: const [],
         reviewAtoms: review,
         reason: 'нагрузка $load > $loadThreshold',
@@ -87,7 +95,7 @@ class LessonPlanner {
 
     if (available.isEmpty) {
       return LessonPlan(
-        template: LessonTemplate.consolidation,
+        template: LessonTemplate.review,
         newAtoms: const [],
         reviewAtoms: review,
         reason: 'в графе нет доступных атомов',
@@ -133,7 +141,7 @@ class LessonPlanner {
 
   int _newAtomCount(CurriculumContext ctx) {
     // Считаем только то, что можно спросить заданием: понятия объясняются
-    // и в тренаж не идут, поэтому пул вариантов ими не пополняется.
+    // и в закрепление не идут, поэтому пул вариантов ими не пополняется.
     final drillable = curriculum.nodes
         .where(
           (n) =>
@@ -182,18 +190,6 @@ class LessonPlanner {
           .sortedBy<num>((id) => ctx.progress[id]!.deferredAtSession ?? 0)
           .firstOrNull;
 
-  List<String> _reviewQueue(CurriculumContext ctx, int sessionId) {
-    // Сначала те, кого дольше всего не показывали.
-    return ctx.progress.entries
-        .where(
-          (e) =>
-              e.value.state != AtomState.fresh &&
-              e.value.state != AtomState.mastered &&
-              !e.value.isDeferredAt(sessionId, rules),
-        )
-        .sortedBy<num>((e) => e.value.lastSeenSession ?? 0)
-        .take(rules.reviewQueueCap)
-        .map((e) => e.key)
-        .toList();
-  }
+  List<String> _reviewQueue(CurriculumContext ctx, int sessionId) =>
+      ReviewQueue(rules: rules).build(ctx, sessionId: sessionId);
 }

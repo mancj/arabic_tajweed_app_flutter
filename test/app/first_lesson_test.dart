@@ -4,10 +4,19 @@ import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:drift/native.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 /// Первый урок целиком: знакомство с ا ب ت ث и двенадцать заданий.
+/// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
+/// отвечает только первому тесту файла, а остальные вешает.
+Future<TracingShape> shapeFromDisk(String asset) async => TracingShapeSvg.parse(
+  File('assets/svg/alphabet/$asset.svg').readAsStringSync(),
+  id: asset,
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -37,7 +46,13 @@ void main() {
   testWidgets('урок объясняет алфавит, потом четыре буквы, потом задания', (
     tester,
   ) async {
-    Get.put(LessonController(database: db, curriculum: curriculum));
+    Get.put(
+      LessonController(
+        database: db,
+        curriculum: curriculum,
+        shapeLoader: shapeFromDisk,
+      ),
+    );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
     await settle(tester);
 

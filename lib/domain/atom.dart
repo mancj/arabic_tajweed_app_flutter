@@ -39,6 +39,7 @@ class Atom {
     this.letterId,
     this.form,
     this.confusableWith = const [],
+    this.tracing,
   });
 
   factory Atom.fromJson(Map<String, dynamic> json) => _$AtomFromJson(json);
@@ -65,6 +66,11 @@ class Atom {
   /// Из них строится минимальная пара: ب / ت / ث. Задаётся в контенте,
   /// потому что это факт про арабское письмо, а не про код.
   final List<String> confusableWith;
+
+  /// Имя SVG с осевыми линиями в `assets/svg/alphabet` — по нему строится
+  /// фигура для обводки. Задаётся в контенте: у соединённых форм своих
+  /// файлов пока нет, и атом без этого поля обводкой не спрашивается.
+  final String? tracing;
 
   Map<String, dynamic> toJson() => _$AtomToJson(this);
 

@@ -8,7 +8,13 @@ enum ExerciseMode {
   formToPosition,
   soundToLetter,
   letterToSound,
+
+  /// Обводка по контуру: буква видна бледной подсказкой.
   trace,
+
+  /// Письмо по памяти: контура нет, буква проверяется по частям.
+  traceFromMemory,
+
   assemble,
 }
 
@@ -16,7 +22,11 @@ extension ExerciseModeX on ExerciseMode {
   /// Активная механика — воспроизведение, а не узнавание. Атом не может
   /// дойти до mastered на одних тапах по вариантам.
   bool get isActive =>
-      this == ExerciseMode.trace || this == ExerciseMode.assemble;
+      isTracing || this == ExerciseMode.assemble;
+
+  /// Оба режима письма: холст один, различается только видимость контура.
+  bool get isTracing =>
+      this == ExerciseMode.trace || this == ExerciseMode.traceFromMemory;
 }
 
 /// Запись лога. Лог append-only и упорядочен по времени.

@@ -24,8 +24,13 @@ class ExerciseGenerator {
   final LearningRules rules;
   final Random _random;
 
-  /// Сколько заданий даётся на каждый новый атом в блоке тренажа.
+  /// Сколько заданий даётся на каждый новый атом в блоке закрепления.
   static const _drillsPerNewAtom = 3;
+
+  /// Сколько неверных вариантов показываем. Вместе с ответом получается
+  /// три карточки: четвёртая почти не снижает угадывание, а выбор из трёх
+  /// читается быстрее и на узких экранах помещается без прокрутки.
+  static const _distractorCount = 2;
 
   /// Потолок повторов одного атома за сессию. Добивать урок до двенадцати
   /// заданий по одной и той же букве — не тренировка, а издевательство:
@@ -42,7 +47,7 @@ class ExerciseGenerator {
     final pool = {..._introducedAtoms(ctx), ...plan.newAtoms}.toList();
 
     // Понятия объясняются в блоке «новое» и заданиями не спрашиваются,
-    // поэтому в расписание тренажа они не попадают вовсе — иначе занимали бы
+    // поэтому в расписание закрепления они не попадают вовсе — иначе занимали бы
     // слоты, из которых ничего не получается.
     final review = plan.reviewAtoms
         .map(_atomById)
@@ -51,13 +56,35 @@ class ExerciseGenerator {
         .toList();
     final fresh = plan.newAtoms.where(_drillable).toList();
 
+    final spaced = plan.spacedReview
+        .map(_atomById)
+        .nonNulls
+        .where(_drillable)
+        .toList();
+
+    final schedule = _schedule(fresh, review, spaced);
+    final slots = <Atom, int>{};
+    for (final atom in schedule) {
+      slots[atom] = (slots[atom] ?? 0) + 1;
+    }
+
+    // Кому в этом уроке уже дали обводку по контуру: по памяти просим
+    // только после неё, в том числе когда обе попали в один урок.
+    final traced = <String>{};
+    final seen = <Atom, int>{};
+
     final exercises = <Exercise>[];
-    for (final atom in _schedule(fresh, review)) {
+    for (final atom in schedule) {
+      final index = seen[atom] ?? 0;
+      seen[atom] = index + 1;
+
       final ex = _make(
         atom,
         ctx,
         pool,
         sessionId,
+        slot: _Slot(index: index, count: slots[atom]!),
+        traced: traced,
         isReview: !plan.newAtoms.contains(atom),
       );
       if (ex != null) exercises.add(ex);
@@ -75,14 +102,21 @@ class ExerciseGenerator {
   /// Новый атом встречается чаще старого: он в этом уроке и вводится.
   /// Если атомов меньше, чем слотов, круги повторяются — но не больше
   /// [_maxPerAtom] раз на атом, иначе урок вырождается в одну букву.
-  List<Atom> _schedule(List<Atom> fresh, List<Atom> review) {
+  List<Atom> _schedule(List<Atom> fresh, List<Atom> review, List<Atom> spaced) {
+    // Слоты под возврат старого резервируются первыми: иначе тема съедает
+    // весь урок и буквы прошлых уроков не всплывают. См. ТЗ §6.2.
+    final spacedSlots = spaced.take(rules.reviewPerSession).toList();
+
     final remaining = <Atom, int>{
       for (final atom in fresh) atom: _drillsPerNewAtom,
       for (final atom in review) atom: 1,
     };
-    if (remaining.isEmpty) return const [];
+    if (remaining.isEmpty && spacedSlots.isEmpty) return const [];
 
-    final cap = min(rules.tasksPerSession, remaining.length * _maxPerAtom);
+    final forTopic = max(0, rules.tasksPerSession - spacedSlots.length);
+    final cap = remaining.isEmpty
+        ? 0
+        : min(forTopic, remaining.length * _maxPerAtom);
 
     // Добираем до полного урока по кругу, пока не упрёмся в потолок.
     final atoms = remaining.keys.toList();
@@ -117,6 +151,12 @@ class ExerciseGenerator {
         remaining[atom] = remaining[atom]! - 1;
       }
     }
+
+    // Возврат старого разбрасываем по уроку, а не сваливаем в конец.
+    for (var i = 0; i < spacedSlots.length; i++) {
+      final at = ((i + 1) * result.length ~/ (spacedSlots.length + 1)) + i;
+      result.insert(min(at, result.length), spacedSlots[i]);
+    }
     return result;
   }
 
@@ -127,15 +167,32 @@ class ExerciseGenerator {
     CurriculumContext ctx,
     List<Atom> pool,
     int sessionId, {
+    required _Slot slot,
+    required Set<String> traced,
     required bool isReview,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
+
+    // Обводка выбирается до дистракторов: это не запасной вариант на случай,
+    // когда вариантов не набралось, а самостоятельное задание. Буква в нём
+    // воспроизводится, а не узнаётся — только так атом доходит до mastered.
+    final tracing = _tracingMode(atom, ctx, slot, traced, isReview: isReview);
+    if (tracing != null) {
+      if (tracing == ExerciseMode.trace) traced.add(atom.id);
+      return Exercise.direct(
+        atom: atom,
+        mode: tracing,
+        level: level,
+        isReview: isReview,
+      );
+    }
+
     final picked = _pickDistractors(atom, pool, level);
 
     // Вариантов не набирается — на старте курса введённых букв просто мало.
     // Вместо пустого урока даём задание без выбора: обводку. Она работает
     // с одной буквой и заодно тренирует воспроизведение, а не узнавание.
-    if (picked.distractors.length < 2) {
+    if (picked.distractors.length < _distractorCount) {
       return Exercise.direct(
         atom: atom,
         mode: ExerciseMode.trace,
@@ -153,6 +210,37 @@ class ExerciseGenerator {
       level: picked.level,
       isReview: isReview,
     );
+  }
+
+  /// Когда за букву берётся холст, а не карточки с вариантами.
+  ///
+  /// Порядок всегда один: сначала по контуру, потом по памяти. Просить
+  /// написать по памяти букву, которую человек ни разу не вёл рукой, —
+  /// это проверка до обучения.
+  ///
+  /// Письмо занимает не больше одного слота атома за урок: первый, если
+  /// букву ещё ни разу не вели рукой, и последний, если уже вели. Между
+  /// ними остаётся узнавание — иначе урок сведётся к рисованию.
+  ///
+  /// Букву из повторения по памяти просим, только когда она уже освоена:
+  /// на середине пути повторению полезнее узнавание, а письмо по памяти
+  /// там превращается в экзамен не вовремя.
+  ExerciseMode? _tracingMode(
+    Atom atom,
+    CurriculumContext ctx,
+    _Slot slot,
+    Set<String> traced, {
+    required bool isReview,
+  }) {
+    // Фигуры есть не у всех форм: у соединённых своих файлов пока нет.
+    if (atom.tracing == null) return null;
+
+    final p = ctx.progress[atom.id] ?? const AtomProgress();
+    final wroteBefore = p.hadActiveSuccess || traced.contains(atom.id);
+
+    if (!wroteBefore) return slot.isFirst ? ExerciseMode.trace : null;
+    if (isReview && p.state.index < AtomState.known.index) return null;
+    return slot.isLast ? ExerciseMode.traceFromMemory : null;
   }
 
   /// Градация: только введён → далёкие, в ротации → смешанные,
@@ -189,13 +277,11 @@ class ExerciseGenerator {
     // Если пары нет — честно откатываемся, а не подставляем далёкие
     // варианты под видом сложных.
     final (chosen, source) = switch (level) {
-      DistractorLevel.minimalPair when confusable.length >= 2 => (
-        DistractorLevel.minimalPair,
-        confusable,
-      ),
+      DistractorLevel.minimalPair when confusable.length >= _distractorCount =>
+        (DistractorLevel.minimalPair, confusable),
       DistractorLevel.minimalPair => (DistractorLevel.mixed, sameForm),
       DistractorLevel.mixed => (DistractorLevel.mixed, sameForm),
-      DistractorLevel.distant when distant.length >= 2 => (
+      DistractorLevel.distant when distant.length >= _distractorCount => (
         DistractorLevel.distant,
         distant,
       ),
@@ -203,7 +289,7 @@ class ExerciseGenerator {
     };
 
     final shuffled = [...source]..shuffle(_random);
-    return _Picked(chosen, shuffled.take(3).toList());
+    return _Picked(chosen, shuffled.take(_distractorCount).toList());
   }
 
   ExerciseMode _modeFor(Atom atom, DistractorLevel level) {
@@ -222,6 +308,17 @@ class ExerciseGenerator {
 
   Atom? _atomById(String id) =>
       curriculum.nodes.firstWhereOrNull((n) => n.atom.id == id)?.atom;
+}
+
+/// Какая по счёту встреча атома в уроке и сколько их всего.
+class _Slot {
+  const _Slot({required this.index, required this.count});
+
+  final int index;
+  final int count;
+
+  bool get isFirst => index == 0;
+  bool get isLast => index == count - 1;
 }
 
 class _Picked {

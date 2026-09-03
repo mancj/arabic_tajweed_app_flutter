@@ -14,9 +14,9 @@ class UIColors {
   static const primary = Color(0xFF1858FE);
   static const primary20 = Color(0x331858FE);
   static const accent = Color(0xFFA5EB17);
-  static const cardBackground = Color(0xBFFFFFFF);
+  static const cardBackground = Color(0xFFF3F3F3);
   static const text = Color(0xFF0C233E);
-  static const cardShadow = Color(0x73D1D9F5);
+  static const cardShadow = Color.fromARGB(71, 177, 177, 177);
 
   // Палитра экранов алфавита (макет Tajweed).
   static const lightGray = Color(0xFFECECEC);
@@ -31,6 +31,7 @@ class UIColors {
 
   static const orange = Color(0xFFEE7740);
   static const orangeDark = Color(0xFFD8571C);
+  static const orangeLight = Color(0xFFF19D77);
 
   /// Градиент кнопки «Далее»: в макете нижний стоп уходит за границу (146%),
   /// поэтому здесь цвет, в который градиент реально приходит к низу кнопки.
@@ -53,6 +54,8 @@ class UIColors {
   static const questionCardShadow = Color(0x1AB1B1B1);
   static const optionBackground = Color(0xFFF8F8F8);
   static const optionDivider = Color(0xFFDDDDDD);
+  static const ca
+   = Color(0xFFDDDDDD);
 
   /// Бледные формы буквы на фоне карточки с вопросом.
   static const glyphGhost = Color(0xFFE3E3E3);

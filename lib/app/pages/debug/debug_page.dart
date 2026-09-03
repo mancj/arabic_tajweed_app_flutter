@@ -1,5 +1,6 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/page_title.dart';
 import 'package:flutter/material.dart';
@@ -19,47 +20,49 @@ class DebugPage extends GetView<DebugController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: UIColors.pageBackground,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const PageTitle('Debug'),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                children: [
-                  _DebugTile(
-                    title: 'Сбросить прогресс',
-                    subtitle: 'Стереть лог и начать курс заново',
-                    onTap: controller.resetProgress,
-                  ),
-                  _DebugTile(
-                    title: 'Курс',
-                    subtitle: 'Главный экран с темами',
-                    onTap: controller.openCourse,
-                  ),
-                  _DebugTile(
-                    title: 'Урок',
-                    subtitle: 'Точка входа в курс',
-                    onTap: controller.openLesson,
-                  ),
-                  _DebugTile(
-                    title: 'Алфавит · буква',
-                    subtitle: 'Экран знакомства с буквой',
-                    onTap: controller.openAlphabetLetter,
-                  ),
-                  _DebugTile(
-                    title: 'Home',
-                    subtitle: 'Обводка букв',
-                    onTap: controller.openHome,
-                  ),
-                ],
-              ),
+    return AppScaffold(
+      title: 'Debug',
+      builder: (_, insets) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: ListView(
+              padding: insets,
+              children: [
+                _DebugTile(
+                  title: 'Сбросить прогресс',
+                  subtitle: 'Стереть лог и начать курс заново',
+                  onTap: controller.resetProgress,
+                ),
+                _DebugTile(
+                  title: 'Курс',
+                  subtitle: 'Главный экран с темами',
+                  onTap: controller.openCourse,
+                ),
+                _DebugTile(
+                  title: 'Урок',
+                  subtitle: 'Точка входа в курс',
+                  onTap: controller.openLesson,
+                ),
+                _DebugTile(
+                  title: 'Алфавит · буква',
+                  subtitle: 'Экран знакомства с буквой',
+                  onTap: controller.openAlphabetLetter,
+                ),
+                _DebugTile(
+                  title: 'Home',
+                  subtitle: 'Обводка букв',
+                  onTap: controller.openHome,
+                ),
+                _DebugTile(
+                  title: 'App Widgets',
+                  subtitle: 'Демо виджетов приложения',
+                  onTap: controller.openAppWidgetsPage,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

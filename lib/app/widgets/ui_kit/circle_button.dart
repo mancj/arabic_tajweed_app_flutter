@@ -2,18 +2,25 @@ import 'package:flutter/widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 
 class CircleButton extends StatelessWidget {
+  static const _fill = LinearGradient(
+    colors: [UIColors.orange, UIColors.orangeLight],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
   final double size;
   final Color color;
   final bool showBorder;
-  final Color borderColor;
+  final double borderWidth;
+
   final Widget? child;
 
   const CircleButton({
     super.key,
     this.size = 42,
-    this.color = UIColors.teal,
+    this.color = UIColors.orange,
     this.showBorder = true,
-    this.borderColor = UIColors.tealDark,
+    this.borderWidth = 1,
     this.child,
   });
 
@@ -22,11 +29,25 @@ class CircleButton extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      alignment: Alignment.center,
+      padding: showBorder ? EdgeInsets.all(borderWidth) : EdgeInsets.zero,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color,
-        border: showBorder ? Border.all(color: borderColor, width: 1) : null,
+        gradient: const LinearGradient(
+          colors: [UIColors.orange, UIColors.orangeLight],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: showBorder
+            ? Border.all(color: UIColors.orangeLight, width: borderWidth)
+            : null,
+        boxShadow: const [
+          BoxShadow(
+            color: UIColors.cardShadow,
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: child,
     );

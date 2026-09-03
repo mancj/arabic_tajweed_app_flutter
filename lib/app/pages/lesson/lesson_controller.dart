@@ -15,6 +15,8 @@ import '../../../domain/lesson_session.dart';
 import '../../../domain/topic_board.dart';
 import '../../../domain/planner.dart';
 import '../../../domain/progress_event.dart';
+import '../../widgets/drawing/drawing_canvas.dart';
+import '../../widgets/drawing/tracing_shape_svg.dart';
 
 /// Что показывает экран прямо сейчас.
 enum LessonStage { loading, intro, exercise, finished }
@@ -25,10 +27,12 @@ class LessonController extends GetxController {
     ProgressDatabase? database,
     Curriculum? curriculum,
     String? topicId,
+    Future<TracingShape> Function(String asset)? shapeLoader,
   }) : rules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
-       _topicId = topicId;
+       _topicId = topicId,
+       _shapeLoader = shapeLoader ?? _loadShapeAsset;
 
   final LearningRules rules;
 
@@ -42,6 +46,10 @@ class LessonController extends GetxController {
   /// у планировщика: нажали на строку — работаем с этой темой.
   final String? _topicId;
 
+  /// Откуда берутся фигуры для обводки. В тестах подставляется, чтобы
+  /// не ходить в ассеты.
+  final Future<TracingShape> Function(String asset) _shapeLoader;
+
   final stage = LessonStage.loading.obs;
   final loadError = RxnString();
   final _refresh = 0.obs;
@@ -53,6 +61,38 @@ class LessonController extends GetxController {
   /// Выбранный вариант — до нажатия «Далее» ответ ещё можно передумать.
   final selected = Rxn<int>();
   final wasWrong = false.obs;
+
+  /// Холст обводки. Один на весь урок: между заданиями он очищается,
+  /// а не пересоздаётся.
+  final drawing = DrawingController(smoothing: .4, minDistance: 8);
+
+  /// Фигура текущего задания. null — обводить нечего, показываем заглушку.
+  final tracingShape = Rxn<TracingShape>();
+
+  /// Подсказка под холстом: что рисовать дальше или что не сошлось.
+  final tracingHint = ''.obs;
+
+  /// В режиме по памяти буква собралась целиком — можно засчитывать.
+  final tracingDone = false.obs;
+
+  /// Разобранные SVG: одна и та же буква встречается в уроке не раз.
+  final _shapes = <String, TracingShape>{};
+
+  /// Карточка перед текущим заданием. Формы букв объясняются там, где
+  /// впервые встречаются, а не списком в начале урока: соединение — это
+  /// не десять правил подряд, а одно правило на каждую новую связку.
+  final card = Rxn<Atom>();
+
+  /// Чьи карточки в этом уроке уже показаны.
+  final _shownCards = <String>{};
+
+  /// Атомы, которым этот урок посвящён. Блок повтора приводит буквы
+  /// из прошлых уроков, и объяснять их заново — не дело этого урока:
+  /// карточка показывается только для своего материала.
+  final _ownAtoms = <String>{};
+
+  /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
+  static const tracingMatcher = TracingMatcher();
 
   late final Curriculum _curriculum;
   late final ProgressRepository _progress;
@@ -117,6 +157,17 @@ class LessonController extends GetxController {
           )
         : _topicPlan(ctx);
 
+    _ownAtoms
+      ..clear()
+      ..addAll(
+        _topicId == null
+            ? _plan!.newAtoms.map((a) => a.id)
+            : _curriculum.topics
+                  .firstWhereOrNull((t) => t.id == _topicId)
+                  ?.counterOf ??
+                  const [],
+      );
+
     introAtoms.assignAll(_introFor(_plan!));
     stage.value = introAtoms.isEmpty ? LessonStage.exercise : LessonStage.intro;
     if (introAtoms.isEmpty) await _buildSession();
@@ -129,7 +180,7 @@ class LessonController extends GetxController {
   /// показываем её понятия: спросить их заданием нельзя, поэтому
   /// «повторить понятие» означает перечитать объяснение.
   List<Atom> _introFor(LessonPlan plan) {
-    if (!isTopicLesson) return plan.newAtoms;
+    if (!isTopicLesson) return plan.newAtoms.where(_belongsToIntro).toList();
 
     // Урок по теме показывает её объяснения целиком — и новые, и знакомые.
     // Человек сам выбрал эту тему, значит хочет пройти её заново, а не
@@ -146,9 +197,18 @@ class LessonController extends GetxController {
     return [
       for (final id in topic?.counterOf ?? const <String>[])
         if (inLesson[id] case final atom?)
-          if (atom.kind == AtomKind.concept || atom.note.isNotEmpty) atom,
+          if (_belongsToIntro(atom) && atom.note.isNotEmpty) atom,
     ];
   }
+
+  /// Что объясняется в начале урока, а что по ходу.
+  ///
+  /// Понятия и изолированные начертания идут вперёд: сначала показываем
+  /// буквы, потом спрашиваем. Соединённые формы — нет: девять карточек
+  /// подряд про начало, середину и конец читаются как один длинный текст,
+  /// из которого не запоминается ничего.
+  bool _belongsToIntro(Atom atom) =>
+      atom.form == null || atom.form == LetterForm.isolated;
 
   Atom? _atomById(String id) =>
       _curriculum.nodes.firstWhereOrNull((n) => n.atom.id == id)?.atom;
@@ -156,7 +216,9 @@ class LessonController extends GetxController {
   /// Урок по теме: набор атомов задан ею, планировщик не нужен.
   LessonPlan _topicPlan(CurriculumContext ctx) {
     final topic = _curriculum.topics.firstWhere((m) => m.id == _topicId);
-    return TopicBoard(_curriculum).planFor(topic, ctx);
+    return TopicBoard(
+      _curriculum,
+    ).planFor(topic, ctx, sessionId: _sessionId, rules: rules);
   }
 
   Future<CurriculumContext> _context() async => CurriculumContext(
@@ -212,16 +274,158 @@ class LessonController extends GetxController {
       sessionId: _sessionId,
       rules: rules,
     );
+    await _loadShapes(exercises);
     if (exercises.isEmpty) stage.value = LessonStage.finished;
     _refresh.value++;
+    _syncCard();
+    _syncTracing();
+  }
+
+  /// Фигуры разбираются один раз на урок, до первого задания: иначе холст
+  /// мигал бы пустым, пока грузится SVG.
+  Future<void> _loadShapes(List<Exercise> exercises) async {
+    final names = exercises
+        .where((e) => e.mode.isTracing)
+        .map((e) => e.atom.tracing)
+        .nonNulls
+        .toSet();
+
+    for (final name in names) {
+      if (_shapes.containsKey(name)) continue;
+      try {
+        _shapes[name] = await _shapeLoader(name);
+      } catch (_) {
+        // Файла нет или он не разбирается: задание покажет заглушку.
+        // Ронять из-за этого весь урок нельзя.
+      }
+    }
+  }
+
+  static Future<TracingShape> _loadShapeAsset(String asset) =>
+      TracingShapeSvg.load('assets/svg/alphabet/$asset.svg', id: asset);
+
+  /// Готовит холст под текущее задание: чистит нарисованное, подставляет
+  /// фигуру и возвращает подсказку в исходное состояние.
+  /// Нужна ли карточка перед текущим заданием. Показывается один раз
+  /// за урок: второй встрече той же формы объяснение уже не нужно.
+  void _syncCard() {
+    final atom = _session?.current?.atom;
+    final needed =
+        atom != null &&
+        atom.note.isNotEmpty &&
+        !_belongsToIntro(atom) &&
+        _ownAtoms.contains(atom.id) &&
+        _shownCards.add(atom.id);
+    card.value = needed ? atom : null;
+  }
+
+  /// Карточка прочитана: атом записывается как показанный, и урок
+  /// возвращается к заданию.
+  Future<void> dismissCard() async {
+    final atom = card.value;
+    if (atom == null) return;
+
+    await _progress.record(
+      AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: DateTime.now()),
+    );
+    card.value = null;
+    // Время на ответ считается с закрытия карточки: чтение объяснения
+    // не должно превращать верный ответ в медленный.
+    _shownAt = DateTime.now();
+  }
+
+  void _syncTracing() {
+    final exercise = _session?.current;
+    final name = exercise != null && exercise.mode.isTracing
+        ? exercise.atom.tracing
+        : null;
+
+    drawing.clear();
+    tracingDone.value = false;
+    tracingShape.value = name == null ? null : _shapes[name];
+    // Строка под сеткой — только обратная связь: что рисовать дальше
+    // и что не сошлось. Само задание написано в шапке карточки, и дублировать
+    // его здесь незачем.
+    tracingHint.value = tracingShape.value == null
+        ? ''
+        : exercise!.mode == ExerciseMode.trace
+        ? 'Ведите пальцем по бледной линии'
+        : 'Начните с основы буквы';
+  }
+
+  /// Задание, где вместо вариантов холст.
+  bool get isTracingTask {
+    _refresh.value;
+    final exercise = _session?.current;
+    return exercise != null &&
+        exercise.mode.isTracing &&
+        tracingShape.value != null;
+  }
+
+  /// Холст показывает контур: в режиме обводки всегда, а в режиме по памяти —
+  /// после ошибки, когда контур и есть показ верного ответа.
+  TracingMode get canvasMode {
+    _refresh.value;
+    return _session?.current?.mode == ExerciseMode.trace || wasWrong.value
+        ? TracingMode.tracing
+        : TracingMode.freehand;
+  }
+
+  /// Проверка обводки по контуру. Сверяется вся буква целиком.
+  Future<void> checkTracing() async {
+    final result = drawing.check();
+    if (result.status == TracingMatchStatus.noInput) {
+      tracingHint.value = 'Сначала обведите букву';
+      return;
+    }
+
+    tracingHint.value = _tracingMessage(result);
+    await submit(directOutcome: result.isMatch);
+  }
+
+  /// Части буквы засчитываются по одной, поэтому в режиме по памяти
+  /// проверять нечего: ответ готов, когда собрана последняя.
+  void onTracingProgress(TracingProgress progress) {
+    if (wasWrong.value) return;
+    tracingHint.value = progress.isComplete
+        ? 'Буква собрана'
+        : 'Нарисуйте: ${progress.nextLabel ?? 'букву'}';
+  }
+
+  void onTracingMerged() {
+    if (wasWrong.value) return;
+    tracingDone.value = true;
+    tracingHint.value = 'Буква собрана';
+  }
+
+  /// «Не помню» в режиме по памяти: ответ засчитывается ошибкой, а контур
+  /// открывается — иначе человек застревает на буквe, которую не помнит.
+  Future<void> giveUpTracing() => submit(directOutcome: false);
+
+  String _tracingMessage(TracingMatchResult result) {
+    if (result.isMatch) return 'Верно';
+    if (!result.dotsTraced && result.coverage > 0.8) {
+      return 'Не забудьте точки';
+    }
+    if (result.deviation > tracingMatcher.maxDeviation) {
+      return 'Линия уходит в сторону от буквы';
+    }
+    return 'Обведено ${(result.coverage * 100).round()}% — попробуйте ещё раз';
   }
 
   /// У заданий без выбора нечего выделять — кнопка активна сразу.
+  /// Исключение — письмо по памяти: там ответ готов, только когда буква
+  /// собрана целиком.
   bool get canSubmit {
     _refresh.value;
     final exercise = _session?.current;
     if (exercise == null) return false;
-    return !exercise.isChoice || selected.value != null;
+    if (exercise.isChoice) return selected.value != null;
+    if (exercise.mode == ExerciseMode.traceFromMemory &&
+        tracingShape.value != null) {
+      return tracingDone.value || wasWrong.value;
+    }
+    return true;
   }
 
   void select(int index) {
@@ -231,14 +435,33 @@ class LessonController extends GetxController {
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
   /// иначе случайное касание стоит атому отката.
+  /// Пропустить задание. Только для отладочных сборок: даёт быстро дойти
+  /// до нужного экрана, не отвечая. Ответ в лог не пишется, поэтому
+  /// прогресс букв не искажается.
+  Future<void> skipExercise() async {
+    final session = _session;
+    if (session == null || session.current == null) return;
+
+    session.skip();
+    selected.value = null;
+    wasWrong.value = false;
+    _shownAt = DateTime.now();
+    _refresh.value++;
+    _syncCard();
+    _syncTracing();
+    if (session.isFinished) await _finish();
+  }
+
   /// ВРЕМЕННОЕ. У заданий-заглушек нет своей проверки, поэтому исход
   /// задаёт кнопка: одна засчитывает верно, другая — мимо. Нужно, чтобы
   /// гонять ветку с ошибками, пока обводка и сборка не написаны.
   /// TODO(stub): убрать вместе с заглушками, см. SPEC.md §4.
   Future<void> submitStub({required bool correct}) =>
-      submit(stubOutcome: correct);
+      submit(directOutcome: correct);
 
-  Future<void> submit({bool? stubOutcome}) async {
+  /// [directOutcome] — исход задания без вариантов: обводку судит холст,
+  /// а у оставшихся заглушек его задаёт кнопка.
+  Future<void> submit({bool? directOutcome}) async {
     final session = _session;
     final exercise = session?.current;
     if (session == null || exercise == null) return;
@@ -247,7 +470,9 @@ class LessonController extends GetxController {
     // верный. Отрицательный индекс сессия трактует как ошибку.
     final choice = exercise.isChoice
         ? selected.value
-        : ((stubOutcome ?? true) ? 0 : -1);
+        : ((directOutcome ?? true)
+              ? Exercise.directAnswer
+              : Exercise.directMiss);
     if (choice == null) return;
 
     if (wasWrong.value) {
@@ -255,6 +480,9 @@ class LessonController extends GetxController {
       wasWrong.value = false;
       selected.value = null;
       _refresh.value++;
+      // Холст после разбора чистый: задание осталось тем же, и человек
+      // пишет букву заново, а не поверх своей ошибки.
+      if (exercise.mode.isTracing) _syncTracing();
       return;
     }
 
@@ -277,12 +505,16 @@ class LessonController extends GetxController {
     selected.value = null;
     _shownAt = DateTime.now();
     _refresh.value++;
+    _syncCard();
+    _syncTracing();
     if (session.isFinished) await _finish();
   }
 
   /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они
   /// другие. См. SPEC.md §4.
-  Duration _speedLimit(ExerciseMode mode) => const Duration(seconds: 3);
+  Duration _speedLimit(ExerciseMode mode) => mode.isTracing
+      ? const Duration(seconds: 40)
+      : const Duration(seconds: 3);
 
   Future<void> _finish() async {
     // «Пройден» — это факт о занятии, а не о знании: человек дошёл до конца
@@ -308,4 +540,10 @@ class LessonController extends GetxController {
   }
 
   String get planReason => _plan?.reason ?? '';
+
+  @override
+  void onClose() {
+    drawing.dispose();
+    super.onClose();
+  }
 }

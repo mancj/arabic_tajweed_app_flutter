@@ -19,6 +19,7 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
           ?.map((e) => e as String)
           .toList() ??
       const [],
+  tracing: json['tracing'] as String?,
 );
 
 Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
@@ -30,6 +31,7 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'letterId': instance.letterId,
   'form': _$LetterFormEnumMap[instance.form],
   'confusableWith': instance.confusableWith,
+  'tracing': instance.tracing,
 };
 
 const _$AtomKindEnumMap = {

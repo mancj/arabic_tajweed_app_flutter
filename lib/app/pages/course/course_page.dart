@@ -96,16 +96,13 @@ class CoursePage extends GetView<CourseController> {
 
 /// Подпись под кнопкой: куда ведёт и, если впереди замок, чего не хватает
 /// для его снятия.
+/// Подпись описывает, что произойдёт по нажатию, а не что где-то заперто.
+/// Раньше здесь показывалось название следующего урока — и кнопка выглядела
+/// так, будто ведёт туда, хотя открывала повторение.
 String? _continueSubtitle(CourseController controller) {
-  final locked = controller.nextLocked;
   final target = controller.continueTarget;
-
-  // Если впереди замок, подпись объясняет, ради чего повторять.
-  if (locked != null && locked.hint.isNotEmpty && (target?.isDone ?? true)) {
-    return '${locked.topic.title}: ${locked.hint}';
-  }
   if (target == null) {
-    return controller.statuses.isEmpty ? null : 'То, что успело подзабыться';
+    return controller.statuses.isEmpty ? null : 'Буквы, которые подзабылись';
   }
   return target.topic.title;
 }
