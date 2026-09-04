@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:gaimon/gaimon.dart';
+import 'app_haptics.dart';
 
 class AppGestureDetector extends StatefulWidget {
   final GestureTapCallback? onTap;
@@ -28,7 +28,7 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        Gaimon.soft();
+        AppHaptics.tap();
         widget.onTap?.call();
       },
       onPanDown: (d) => _tapDownState(),

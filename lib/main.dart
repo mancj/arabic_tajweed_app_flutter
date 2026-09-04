@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/app_binding.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
@@ -13,7 +13,8 @@ import 'package:arabic_tajweed_app/app/pages/splash/splash_screen_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const fatalError = true;
+
+  await AppHaptics.init();
 
   await AppBinding().asyncDependencies();
   await LiquidGlassWidgets.initialize();

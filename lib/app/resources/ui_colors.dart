@@ -70,7 +70,7 @@ class UIColors {
   static const patternNode = Color.fromARGB(88, 147, 180, 189);
 
   /// Холмы декоративной волны (будущий waveform аудио).
-  static const waveform = Color.fromARGB(255, 112, 112, 112);
+  static const waveform = Color.fromARGB(87, 0, 0, 0);
 
   static const primaryButtonGradient = [Color(0xFFFDCEB4), Color(0xFFFD8C8C)];
 }

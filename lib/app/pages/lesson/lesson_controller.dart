@@ -1,12 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../../data/curriculum_loader.dart';
+import '../../../data/letter_audio.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
 import '../../../domain/atom.dart';
 import '../../../domain/atom_state.dart';
+import '../../../domain/audio_track.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/exercise_generator.dart';
@@ -90,6 +93,18 @@ class LessonController extends GetxController {
   /// из прошлых уроков, и объяснять их заново — не дело этого урока:
   /// карточка показывается только для своего материала.
   final _ownAtoms = <String>{};
+
+  /// Голос буквы. Один плеер на урок: новое нажатие обрывает предыдущий
+  /// звук, а не накладывается на него.
+  final _audio = LetterAudio();
+
+  /// Есть ли у атома запись. У понятий, слогов и хамзы её пока нет.
+  bool hasVoice(Atom atom) => LetterAudio.has(atom.letterId);
+
+  void playVoice(Atom atom) => unawaited(_audio.play(atom.letterId));
+
+  /// Что сейчас звучит: форма записи и позиция. Карточка отдаёт это волне.
+  ValueListenable<AudioTrack> get voiceTrack => _audio.track;
 
   /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
   static const tracingMatcher = TracingMatcher();
@@ -544,6 +559,7 @@ class LessonController extends GetxController {
   @override
   void onClose() {
     drawing.dispose();
+    unawaited(_audio.dispose());
     super.onClose();
   }
 }

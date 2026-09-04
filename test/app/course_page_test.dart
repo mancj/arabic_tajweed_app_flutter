@@ -59,7 +59,13 @@ void main() {
 
   testWidgets('закрытая тема объясняет условие', (tester) async {
     await pumpCourse(tester);
-    expect(find.textContaining('сначала пройдите'), findsNothing);
+    final controller = Get.find<CourseController>();
+
+    final locked = controller.statuses.firstWhere(
+      (s) => s.state == TopicState.locked,
+    );
+    expect(locked.hint, contains('сначала пройдите'));
+    expect(locked.hint, contains(controller.statuses.first.topic.title));
   });
 
   testWidgets('нажимаются только открытые темы', (tester) async {
@@ -160,12 +166,14 @@ void main() {
 
     // Пройденный урок открывает следующий — тупика «пройден, но заперто»
     // больше нет.
-    expect(controller.nextLocked, isNull);
     expect(controller.continueTarget, isNotNull);
     expect(controller.continueTarget!.topic.id, isNot(first));
     expect(controller.continueLabel, 'Начать');
     expect(find.text('Начать'), findsOneWidget);
-    expect(find.textContaining('сначала пройдите'), findsNothing);
+
+    // Замок ушёл именно со следующей темы, а не со всего списка:
+    // дальние уроки по-прежнему закрыты.
+    expect(controller.statuses[1].state, isNot(TopicState.locked));
   });
 
   testWidgets('когда всё пройдено, кнопка ведёт в повторение', (tester) async {

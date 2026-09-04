@@ -133,11 +133,6 @@ class CourseController extends GetxController {
     };
   }
 
-  /// Ближайшая закрытая тема и чего ей не хватает — чтобы человек понимал,
-  /// ради чего повторяет.
-  TopicStatus? get nextLocked =>
-      statuses.firstWhereOrNull((s) => s.state == TopicState.locked);
-
   /// Уроки, которые начали и бросили, уйдя вперёд.
   List<TopicStatus> get unfinished =>
       statuses.where((s) => s.state == TopicState.unfinished).toList();

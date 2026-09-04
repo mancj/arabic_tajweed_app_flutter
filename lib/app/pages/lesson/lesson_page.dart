@@ -1,7 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart' hide GetNumUtils;
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
@@ -9,6 +10,7 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
@@ -322,18 +324,22 @@ class _IntroBlock extends GetView<LessonController> {
       final isConcept = atom.kind == AtomKind.concept;
 
       return Column(
+        key: kDebugMode ? UniqueKey() : ValueKey(atom.id),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Margin.vertical(24),
           if (!isConcept) ...[
-            _GlyphCard(atom: atom, big: true),
+            _LetterCardFor(
+              atom: atom,
+              key: kDebugMode ? UniqueKey() : ValueKey(atom.id),
+            ),
             const Margin.vertical(16),
           ],
           RuleCard(
             badge: controller.isReviewOnly ? 'Повторение' : 'Новая тема',
             title: atom.label,
             text: atom.note,
-          ),
+          ).animate().slideX(begin: .1, curve: Curves.easeInOut, duration: .5.seconds).fadeIn(),
         ],
       );
     });
@@ -356,7 +362,7 @@ class _FormCard extends GetView<LessonController> {
       children: [
         LessonProgressBar(value: controller.progress),
         const Margin.vertical(16),
-        _GlyphCard(atom: atom, big: true),
+        _LetterCardFor(atom: atom),
         const Margin.vertical(16),
         RuleCard(badge: 'Соединение', title: atom.label, text: atom.note),
       ],
@@ -431,8 +437,7 @@ class _ExerciseBlock extends GetView<LessonController> {
 /// В письме по памяти контура нет и глиф не показываем — иначе задание
 /// превращается в обводку по образцу. Поэтому букву называют словами:
 /// человек должен вспомнить её начертание, а не срисовать.
-String _tracingPrompt(Exercise exercise) =>
-    exercise.mode == ExerciseMode.trace
+String _tracingPrompt(Exercise exercise) => exercise.mode == ExerciseMode.trace
     ? 'Обведите по контуру: ${exercise.atom.label}'
     : 'Напишите по памяти: ${exercise.atom.label}';
 
@@ -534,25 +539,27 @@ class _StubTask extends StatelessWidget {
   }
 }
 
-class _GlyphCard extends StatelessWidget {
-  const _GlyphCard({required this.atom, this.big = false});
+/// Карточка буквы: глиф, фоновая графика и кнопка звучания.
+///
+/// Кнопка появляется только там, где запись есть. У понятий и слогов её нет,
+/// и мёртвая кнопка обещала бы звук, которого не будет.
+class _LetterCardFor extends GetView<LessonController> {
+  const _LetterCardFor({required this.atom, super.key});
 
   final Atom atom;
-  final bool big;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: big ? 180 : 120,
-      decoration: SquircleBorders.squircleBorder(
-        color: UIColors.cardBackground,
-        borderRadius: 28,
-      ),
-      child: Center(
-        child: _Glyph(atom: atom, size: big ? 96 : 56),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      LetterWidgetCard(
+            letter: atom.display,
+            onPlay: controller.hasVoice(atom)
+                ? () => controller.playVoice(atom)
+                : null,
+            track: controller.voiceTrack,
+          )
+          .animate()
+          .slideX(begin: .2, curve: Curves.easeInOut, duration: .3.seconds)
+          .fadeIn();
 }
 
 /// Глиф рисуется шрифтом. Осевые SVG для обводки уже есть в assets/svg,

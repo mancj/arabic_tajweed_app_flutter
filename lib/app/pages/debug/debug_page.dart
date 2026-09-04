@@ -2,7 +2,6 @@ import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
-import 'package:arabic_tajweed_app/app/widgets/page_title.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

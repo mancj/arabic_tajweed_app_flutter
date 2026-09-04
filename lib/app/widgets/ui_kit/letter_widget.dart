@@ -1,7 +1,10 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/drifting_rotation.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +16,25 @@ class LetterWidgetCard extends StatelessWidget {
   );
 
   final String letter;
-  const LetterWidgetCard({super.key, required this.letter});
+  final String? question;
+  final String? labelText;
+
+  /// Нажатие на кнопку воспроизведения. Не задан — кнопки нет: у слогов
+  /// и понятий записи пока не существует, и мёртвая кнопка врёт.
+  final VoidCallback? onPlay;
+
+  /// Звучащая запись — на неё реагирует волна внизу карточки.
+  /// Подписан только сам виджет волны, карточка на позицию не перестраивается.
+  final ValueListenable<AudioTrack>? track;
+
+  const LetterWidgetCard({
+    super.key,
+    required this.letter,
+    this.question,
+    this.labelText,
+    this.onPlay,
+    this.track,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +64,48 @@ class LetterWidgetCard extends StatelessWidget {
               key: kDebugMode ? UniqueKey() : null,
               child: _backgroundShapes(),
             ),
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: WaveformWidget(height: 50, layers: 3),
+              child: WaveformWidget(
+                height: 80,
+                layers: 3,
+                track: track,
+                restHeight: .75,
+                minBumps: 3,
+                maxBumps: 4,
+                // minBumpWidth: 0.015,
+                // maxBumpWidth: 0.3,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
+                  if (labelText != null || question != null)
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (labelText != null)
+                            BadgeLabel(text: labelText!, color: UIColors.ink),
+                          if (question != null) ...[
+                            const Margin.vertical(8),
+                            Text(
+                              question!,
+                              style: UITextStyles.cardTitle.copyWith(
+                                color: UIColors.ink,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
                   Transform.translate(
-                    offset: const Offset(0, 42),
+                    offset: const Offset(0, 32),
                     child: Text(
                       letter,
                       style: const TextStyle(
@@ -66,26 +117,29 @@ class LetterWidgetCard extends StatelessWidget {
                     ),
                   ),
                   const Margin.vertical(56),
-                  const CircleButton(
-                    size: 52,
-                    child: Icon(
-                      Icons.play_arrow_rounded,
-                      size: 28,
-                      color: UIColors.white,
-                    ),
-                  ),
-                  const Margin.vertical(8),
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      'Нажмите, чтобы воспроизвести',
-                      textAlign: TextAlign.center,
-                      style: UITextStyles.regular10.copyWith(
-                        height: 1.1,
-                        color: UIColors.secondary3,
+                  if (onPlay != null) ...[
+                    CircleButton(
+                      size: 46,
+                      onTap: onPlay,
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 24,
+                        color: UIColors.white,
                       ),
                     ),
-                  ),
+                    const Margin.vertical(8),
+                    SizedBox(
+                      width: 100,
+                      child: Text(
+                        'Нажмите, чтобы воспроизвести',
+                        textAlign: TextAlign.center,
+                        style: UITextStyles.regular10.copyWith(
+                          height: 1.1,
+                          color: UIColors.secondary3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -97,10 +151,10 @@ class LetterWidgetCard extends StatelessWidget {
 
   Widget _backgroundShapes() {
     const curve = Curves.easeInOut;
-    const scaleFactor = 1.2;
+    const scaleFactor = 1.0;
 
     return Opacity(
-      opacity: .1,
+      opacity: .3,
       child: Transform.translate(
         offset: const Offset(0, -24),
         child: Stack(
@@ -108,17 +162,45 @@ class LetterWidgetCard extends StatelessWidget {
           children: [
             Transform.scale(
               scale: scaleFactor,
-              child: Image.asset(UIImages.background_shape_1_1, fit: BoxFit.cover)
-                  .animate()
-                  .fadeIn(duration: .5.seconds)
-                  .rotate(duration: 2.seconds, curve: curve, begin: .1, end: 0),
+              child:
+                  DriftingRotation(
+                        minAngle: -40,
+                        maxAngle: 40,
+                        child: Image.asset(
+                          UIImages.background_shape_1_1,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: .5.seconds)
+                      .scaleXY(
+                        begin: 0.9,
+                        end: 1,
+                        duration: .8.seconds,
+                        curve: curve,
+                      ),
             ),
             Transform.scale(
-              scale: scaleFactor * 0.8,
-              child: Image.asset(UIImages.background_shape_1_2, fit: BoxFit.cover)
-                  .animate()
-                  .fadeIn(duration: .5.seconds)
-                  .rotate(duration: 2.seconds, curve: curve, begin: -.05, end: 0),
+              scale: scaleFactor * 0.92,
+              child:
+                  DriftingRotation(
+                        minAngle: -20,
+                        maxAngle: 20,
+                        duration: const Duration(milliseconds: 3600),
+                        period: const Duration(seconds: 6),
+                        child: Image.asset(
+                          UIImages.background_shape_1_2,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: .5.seconds)
+                      .scaleXY(
+                        begin: 1.1,
+                        end: 1,
+                        duration: .6.seconds,
+                        curve: curve,
+                      ),
             ),
             Container(
               width: 110,
