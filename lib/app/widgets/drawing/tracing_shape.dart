@@ -169,17 +169,57 @@ class ResolvedTracingPart {
     required this.dotRadius,
   });
 
-  StrokeSignature? _signature;
-  bool _signatureReady = false;
+  List<StrokeSignature>? _signatures;
 
   /// Форма части без места, размера и пропорций — эталон для сравнения
-  /// с тем, что нарисовал человек. Null у частей из одних точек.
-  StrokeSignature? get signature {
-    if (!_signatureReady) {
-      _signatureReady = true;
-      _signature = paths.isEmpty ? null : StrokeSignature.ofPaths(paths);
+  /// с тем, что нарисовал человек. Пусто у частей из одних точек.
+  ///
+  /// Эталонов несколько, потому что одну и ту же часть законно провести
+  /// по-разному, а сигнатура сравнивается **по порядку точек**. У части из
+  /// двух линий свободны три вещи: с какой начали, в какую сторону вели
+  /// каждую и отрывали ли перо на переходе. Порядок точек внутри одного
+  /// эталона фиксирован, поэтому каждый способ — свой эталон, и [signatures]
+  /// перебирает их все; глобальный разворот перебирать не нужно, его берёт
+  /// на себя [StrokeSignature.distanceTo].
+  ///
+  /// Без этого перебора соединённые формы ـحـ, ـضـ, ـطـ узнавались только
+  /// при совпадении с направлением, в котором линии лежат в svg: обычный
+  /// росчерк справа налево давал расхождение 0.2–0.5 при пороге 0.08.
+  List<StrokeSignature> get signatures => _signatures ??= _buildSignatures();
+
+  List<StrokeSignature> _buildSignatures() {
+    final lines = StrokeSignature.polylinesOf(paths);
+    if (lines.isEmpty) return const [];
+
+    // Нормировка едина для всех эталонов и для ввода: её выбирает форма
+    // части целиком, иначе варианты сравнивались бы по разным правилам.
+    final base = StrokeSignature.ofPolylines(lines);
+    if (base == null) return const [];
+    if (lines.length != 2) return [base];
+
+    final uniform = base.uniform;
+    final a = lines[0];
+    final b = lines[1];
+    final reversedA = a.reversed.toList();
+    final reversedB = b.reversed.toList();
+
+    final result = <StrokeSignature>[];
+    for (final variant in [
+      [a, b],
+      [a, reversedB],
+      [reversedA, b],
+      [b, a],
+    ]) {
+      // Перо оторвали: перемычки нет.
+      final lifted = StrokeSignature.ofPolylines(variant, uniform: uniform);
+      if (lifted != null) result.add(lifted);
+      // Вели не отрываясь: перемычка нарисована и в форму входит.
+      final joined = StrokeSignature.ofPoints([
+        for (final line in variant) ...line,
+      ], uniform: uniform);
+      if (joined != null) result.add(joined);
     }
-    return _signature;
+    return result.isEmpty ? [base] : result;
   }
 
   Rect? _bounds;

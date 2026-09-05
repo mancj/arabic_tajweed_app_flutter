@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Таджвид AI";
+"CFBundleName" = "Таджвид AI";
+"NSMicrophoneUsageDescription" = "Микрофон нужен, чтобы записывать ваше чтение и сравнивать его с образцом.";
+"NSMotionUsageDescription" = "Данные движения нужны для эффекта наклона карточек с буквами.";

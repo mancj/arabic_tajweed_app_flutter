@@ -68,8 +68,8 @@ class Atom {
   final List<String> confusableWith;
 
   /// Имя SVG с осевыми линиями в `assets/svg/alphabet` — по нему строится
-  /// фигура для обводки. Задаётся в контенте: у соединённых форм своих
-  /// файлов пока нет, и атом без этого поля обводкой не спрашивается.
+  /// фигура для обводки. Своё на каждую форму: `ba_base`, `ba_init`,
+  /// `ba_mid`, `ba_end`. Атом без этого поля обводкой не спрашивается.
   final String? tracing;
 
   Map<String, dynamic> toJson() => _$AtomToJson(this);

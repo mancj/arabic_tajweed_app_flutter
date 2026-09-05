@@ -1,6 +1,10 @@
-<svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M290.5 100C303 130.833 314 181 273.5 189.5C230.83 198.456 224.333 147.333 229.5 126.5C232.5 146.667 229.5 185 195.5 189.5C160.604 194.119 151.333 152.167 147.5 132C165 172 172.059 258.032 77.5 247C17.5 240 5.5 186 29 155.5" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M196 76V80" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M215 45V49" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M236 74V78" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="shin_base">
+<g id="Group 9">
+<path id="4-dot" d="M179.969 104.572V108.135" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M202.238 74.2852V77.8482" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M228.961 104.572V108.135" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M257.593 133.458C266.428 151.234 273.415 177.386 244.79 182.286C214.631 187.449 210.039 157.977 213.691 145.966C215.811 157.592 213.691 179.692 189.66 182.286C164.996 184.949 156.201 162.269 153.102 145.966C167.249 178.302 172.955 247.852 96.5124 238.934C48.0073 233.275 38.3063 189.62 57.3041 164.963" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
 </svg>

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audio_waveforms/audio_waveforms.dart';
+// PlayerState прячем: одноимённый класс есть и в audioplayers, а нужен
+// здесь именно его — состояние настоящего плеера.
+import 'package:audio_waveforms/audio_waveforms.dart' hide PlayerState;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -43,7 +45,36 @@ class LetterAudio {
   static bool has(String? letterId) => letters.contains(letterId);
 
   /// Путь внутри ассетов. AudioPlayer ждёт путь без префикса `assets/`.
-  static String assetOf(String letterId) => 'audio/alphabet/$letterId.m4a';
+  static String assetOf(String letterId) => 'audio/alphabet/$letterId.wav';
+
+  /// Что стоит в плеере сейчас: нужно, чтобы отличить повторное нажатие
+  /// по той же букве — это пауза — от перехода к другой букве.
+  String? _current;
+
+  /// Нажатие на кнопку: та же буква на ходу — остановка, любая другая
+  /// (или уже смолкшая) — воспроизведение с начала.
+  Future<void> toggle(String? letterId) async {
+    if (!has(letterId)) return;
+    final player = _player;
+    // Спрашиваем сам плеер, а не прогресс: после конца записи он шлёт
+    // позицию 0, и по прогрессу доигравшая запись неотличима от начала.
+    if (letterId == _current && player?.state == PlayerState.playing) {
+      return stop();
+    }
+    return play(letterId);
+  }
+
+  /// Обрывает звук и возвращает волну в покой: продолжать с места нечего,
+  /// следующее нажатие начнёт запись сначала.
+  Future<void> stop() async {
+    _current = null;
+    track.value = AudioTrack.silent;
+    try {
+      await _player?.stop();
+    } catch (_) {
+      // Плеера может уже не быть — молчание и так наступило.
+    }
+  }
 
   /// Проигрывает имя буквы. Повторное нажатие обрывает предыдущий звук,
   /// а не накладывается на него.
@@ -53,6 +84,7 @@ class LetterAudio {
       final player = _player ??= AudioPlayer();
       await player.stop();
       _listen(player);
+      _current = letterId;
       track.value = AudioTrack(
         levels: _levels[letterId] ?? const [],
         isPlaying: true,
@@ -64,6 +96,7 @@ class LetterAudio {
     } catch (_) {
       // Звук — не то, ради чего стоит ронять урок: если плеера нет,
       // молча продолжаем без него.
+      _current = null;
       track.value = AudioTrack.silent;
     }
   }
@@ -127,7 +160,7 @@ class LetterAudio {
   /// Нативному разбору нужен файл на диске, ассет он открыть не может.
   Future<File> _fileOf(String letterId) async {
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/letter_$letterId.m4a');
+    final file = File('${dir.path}/letter_$letterId.wav');
     if (!file.existsSync()) {
       final bytes = await rootBundle.load('assets/${assetOf(letterId)}');
       await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);

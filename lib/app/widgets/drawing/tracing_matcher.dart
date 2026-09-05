@@ -556,16 +556,23 @@ class TracingMatcher {
     ResolvedTracingPart target,
     List<DrawingStroke> strokes,
   ) {
-    final template = target.signature;
-    if (template == null) return double.infinity;
+    final templates = target.signatures;
+    if (templates.isEmpty) return double.infinity;
 
+    // Штрихи — отдельные линии: между ними человек отрывал перо, и вести
+    // сигнатуру через отрыв так же нельзя, как через разрыв в эталоне.
+    // Способы провести часть перебирает эталон, здесь остаётся порядок,
+    // в котором штрихи легли на холст.
+    final uniform = templates.first.uniform;
     var best = double.infinity;
     for (final order in _orders(strokes)) {
-      final signature = StrokeSignature.ofPoints([
-        for (final stroke in order) ...stroke.points,
-      ], uniform: template.uniform);
+      final signature = StrokeSignature.ofPolylines([
+        for (final stroke in order) stroke.points,
+      ], uniform: uniform);
       if (signature == null) continue;
-      best = math.min(best, signature.distanceTo(template));
+      for (final template in templates) {
+        best = math.min(best, signature.distanceTo(template));
+      }
     }
     return best;
   }

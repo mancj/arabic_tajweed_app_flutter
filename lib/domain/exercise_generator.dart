@@ -232,7 +232,7 @@ class ExerciseGenerator {
     Set<String> traced, {
     required bool isReview,
   }) {
-    // Фигуры есть не у всех форм: у соединённых своих файлов пока нет.
+    // Фигура есть не у всякого атома: у понятий и слогов её нет вовсе.
     if (atom.tracing == null) return null;
 
     final p = ctx.progress[atom.id] ?? const AtomProgress();

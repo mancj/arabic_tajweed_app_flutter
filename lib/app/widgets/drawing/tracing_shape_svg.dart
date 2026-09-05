@@ -97,13 +97,14 @@ class TracingShapeSvg {
     switch (element.localName) {
       case 'circle':
         final center = Offset(_number(element, 'cx'), _number(element, 'cy'));
-        return _Entry(order: order, role: id, dot: center);
+        return _Entry(order: order, index: index, role: id, dot: center);
 
       case 'line':
         final from = Offset(_number(element, 'x1'), _number(element, 'y1'));
         final to = Offset(_number(element, 'x2'), _number(element, 'y2'));
         return _Entry(
           order: order,
+          index: index,
           role: id,
           path: Path()
             ..moveTo(from.dx, from.dy)
@@ -121,8 +122,8 @@ class TracingShapeSvg {
         final path = parseSvgPathData(data);
         final dot = _asDot(path, strokeWidth);
         return dot == null
-            ? _Entry(order: order, role: id, path: path)
-            : _Entry(order: order, role: id, dot: dot);
+            ? _Entry(order: order, index: index, role: id, path: path)
+            : _Entry(order: order, index: index, role: id, dot: dot);
     }
   }
 
@@ -149,21 +150,18 @@ class TracingShapeSvg {
 
   /// Собирает части в порядке написания.
   ///
-  /// Если у элементов есть числовые id — порядок берётся из них. Если нет,
-  /// линии идут раньше точек: редакторы кладут точки первыми, а рисуют их
-  /// последними.
+  /// Если у элементов есть числовые id — порядок берётся из них. Внутри
+  /// одного номера и вообще без номеров линии идут раньше точек: скелет
+  /// буквы пишут целиком, точки ставят после. Редакторы кладут их в файл
+  /// в обратном порядке, а фигме одного номера на линию и точку хватает.
   static List<TracingShapePart> _partsOf(List<_Entry> entries) {
     final tagged = entries.any((entry) => _orderOf(entry.role) != null);
 
-    final sorted = [...entries];
-    if (tagged) {
-      sorted.sort((a, b) => a.order.compareTo(b.order));
-    } else {
-      sorted.sort((a, b) {
-        if (a.isDot != b.isDot) return a.isDot ? 1 : -1;
-        return a.order.compareTo(b.order);
-      });
-    }
+    final sorted = [...entries]..sort((a, b) {
+      if (tagged && a.order != b.order) return a.order.compareTo(b.order);
+      if (a.isDot != b.isDot) return a.isDot ? 1 : -1;
+      return a.index.compareTo(b.index);
+    });
 
     final parts = <TracingShapePart>[];
     for (final entry in sorted) {
@@ -195,8 +193,13 @@ class TracingShapeSvg {
     return parts;
   }
 
+  /// Роль без номера порядка и без суффикса-дубля: фигма не даёт двум
+  /// слоям одно имя и второй «1-dot» экспортирует как «1-dot_2», хотя это
+  /// та же точка и ждать их надо вместе.
   static String _roleOf(_Entry entry) {
-    final role = entry.role?.replaceFirst(RegExp(r'^\d+[-_]?'), '');
+    final role = entry.role
+        ?.replaceFirst(RegExp(r'^\d+[-_]?'), '')
+        .replaceFirst(RegExp(r'_\d+$'), '');
     if (role != null && role.isNotEmpty) return role;
     return entry.isDot ? 'dot' : 'base';
   }
@@ -204,11 +207,20 @@ class TracingShapeSvg {
 
 class _Entry {
   final int order;
+
+  /// Место в файле. Разводит элементы, у которых совпали и номер, и роль.
+  final int index;
   final String? role;
   final Path? path;
   final Offset? dot;
 
-  _Entry({required this.order, this.role, this.path, this.dot});
+  _Entry({
+    required this.order,
+    required this.index,
+    this.role,
+    this.path,
+    this.dot,
+  });
 
   bool get isDot => dot != null;
 }

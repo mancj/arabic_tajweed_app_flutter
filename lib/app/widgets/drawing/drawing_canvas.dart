@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -13,13 +14,17 @@ export 'tracing_matcher.dart';
 export 'tracing_shape.dart';
 
 /// Как холст работает с фигурой.
+/// Части в обоих режимах проверяются одинаково: по очереди, сразу после
+/// штриха, и рисовать их можно где угодно и любого размера — сверяется
+/// форма, а не место на холсте. Режим решает только, видно ли контур,
+/// а значит — куда собранная буква встаёт.
 enum TracingMode {
-  /// Фигура показана бледным контуром: пользователь обводит её и жмёт
-  /// «Проверить» — сверяется вся буква целиком.
+  /// Фигура показана бледным контуром. Штрихи съезжаются к нему: контур
+  /// и есть место буквы, рисунок к нему только приводится.
   tracing,
 
-  /// Фигура скрыта: пользователь рисует по памяти, а части проверяются по
-  /// очереди сразу после каждого штриха. Угаданная часть тут же заливается.
+  /// Фигура скрыта: пользователь пишет по памяти, и буква остаётся там,
+  /// где он её нарисовал. Первая часть закрепляет это место.
   freehand,
 }
 
@@ -35,6 +40,26 @@ class DrawingCanvas extends StatefulWidget {
   /// ([TracingShape.strokeWidth], отмасштабированная под холст) — тогда
   /// нарисованная линия и залитая буква совпадают по толщине.
   final double? strokeWidth;
+
+  /// Во сколько раз перо толще линии фигуры. Чисто внешнее: чернила чуть
+  /// шире контура накрывают бледную линию целиком, и обводка выглядит
+  /// опрятно. На заливку не влияет — контур и собранная буква рисуются
+  /// своей толщиной, и при слиянии штрих в неё же и утончается.
+  final double penScale;
+
+  /// Во сколько раз полоса измерения шире линии фигуры.
+  ///
+  /// Полоса — единица всего позиционного в [TracingMatcher]: от неё
+  /// считаются и допуск на попадание, и отклонение. Одно число смягчает
+  /// покрытие, точность и отклонение разом, не трогая порогов, и не
+  /// касается сравнения форм — там размера не остаётся вовсе.
+  ///
+  /// Отдельно от [penScale], потому что это разные вещи. Обводят пальцем,
+  /// и центр пера гуляет: на линии в 17px он уходит на 10–14px в стороны.
+  /// Мерить такую обводку самой линией — требовать точности, которой
+  /// у пальца нет. Раздувать ради этого видимое перо не годится: толстая
+  /// линия в макете выглядит плохо.
+  final double bandScale;
 
   final Color backgroundColor;
 
@@ -53,10 +78,10 @@ class DrawingCanvas extends StatefulWidget {
   /// Длительность анимации слияния штрихов с фигурой.
   final Duration mergeDuration;
 
-  /// В [TracingMode.freehand] убирать штрих, который не приблизил текущую
-  /// часть к готовности. Иначе промах остаётся на холсте и портит точность
-  /// всех следующих попыток. Работает начиная со второй части, когда буква
-  /// уже стоит на своём месте и промах определяется однозначно.
+  /// Убирать штрих, который не приблизил текущую часть к готовности. Иначе
+  /// промах остаётся на холсте и портит точность всех следующих попыток.
+  /// Работает начиная со второй части, когда буква уже стоит на своём месте
+  /// и промах определяется однозначно.
   final bool discardMisses;
 
   final bool enabled;
@@ -80,6 +105,8 @@ class DrawingCanvas extends StatefulWidget {
     this.controller,
     this.color,
     this.strokeWidth,
+    this.penScale = 1.1,
+    this.bandScale = 1.5,
     this.backgroundColor = Colors.transparent,
     this.mode = TracingMode.tracing,
     this.placeholder,
@@ -135,7 +162,15 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
   /// Единственная толщина пера: ею рисует пользователь, ею же заливаются
   /// собранные части и рисуется подсказка.
+  /// Толщина линии фигуры: ею рисуются контур и собранные части.
   double? _penWidth;
+
+  /// Толщина пера пользователя: только рисование.
+  double? _inkWidth;
+
+  /// Полоса, которой меряется попадание. Уходит в [TracingMatcher] тем же
+  /// параметром, что и перо: там она и есть единица измерения.
+  double? _bandWidth;
   int? _activePointer;
 
   /// Лучшее покрытие текущей части: по нему видно, помог ли новый штрих.
@@ -149,6 +184,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
   /// Фигура, с которой сейчас сверяемся: закреплённая, если она уже есть.
   ResolvedTracingShape? get _activeShape => _anchored ?? _resolvedShape;
+
+  /// Виден ли контур. От этого зависит, где окажется собранная буква.
+  bool get _showsGuide => widget.mode == TracingMode.tracing;
 
   /// Габариты уже собранного — мерка для того, насколько далеко от буквы
   /// разрешено промахнуться следующей частью.
@@ -211,13 +249,12 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _internalController = null;
   }
 
-  /// Параметры виджета сильнее настроек контроллера — иначе при внешнем
-  /// контроллере [DrawingCanvas.strokeWidth] молча ни на что не влияет.
+  /// Цвет виджета сильнее настройки контроллера — иначе при внешнем
+  /// контроллере [DrawingCanvas.color] молча ни на что не влияет.
+  /// Толщиной распоряжается [_syncPen]: она зависит ещё и от раскладки.
   void _applyOverrides() {
     final color = widget.color;
-    final strokeWidth = widget.strokeWidth;
     if (color != null) _controller.color = color;
-    if (strokeWidth != null) _controller.strokeWidth = strokeWidth;
   }
 
   void _onControllerChanged() {
@@ -294,62 +331,84 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     if (pen == null || pen == _penWidth) return;
 
     _penWidth = pen;
+    _inkWidth = pen * widget.penScale;
+    _bandWidth = pen * widget.bandScale;
+    final ink = _inkWidth!;
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.strokeWidth = pen;
+      if (mounted) _controller.strokeWidth = ink;
     });
   }
 
-  /// Сверяет ввод с фигурой и, если совпало, запускает слияние.
+  /// Сверяет очередную часть фигуры и, если совпало, запускает слияние.
   ///
-  /// В [TracingMode.tracing] сверяется вся буква целиком, в
-  /// [TracingMode.freehand] — только текущая, ещё не собранная часть.
+  /// Часть рисуют где угодно и любого размера: выравнивание примеряет
+  /// нарисованное к цели, а [TracingMatcher.match] судит уже приведённое.
+  /// Совпало — буква встаёт на место и дальше держит его сама: остальным
+  /// частям разрешён только небольшой общий сдвиг, чтобы точка попадала
+  /// к своей букве, а не к соседнему углу холста.
+  ///
+  /// Годных исходов два, и это не придирка к порогам, а разные вопросы.
+  /// «Та же форма?» — сравнение сигнатур, единственное, что можно спросить
+  /// у буквы, нарисованной в стороне. «Попал по контуру?» — покрытие,
+  /// точность и отклонение, и спросить это можно, только когда контур
+  /// виден. Обводка пальцем в форму укладывается еле-еле: у сигнатуры
+  /// зазор между законным вариантом (0.063) и ближайшей неверной формой
+  /// (0.087) в две сотых, и дрожание руки его съедает. Зато по контуру
+  /// такая обводка проходит с запасом — и это честный ответ, а не
+  /// послабление: мимо буквы по покрытию с отклонением не пройдёшь.
   TracingMatchResult _check() {
     final shape = _activeShape;
     if (shape == null || shape.parts.isEmpty) {
       return _emptyResult(TracingMatchStatus.noShape);
     }
 
-    final freehand = widget.mode == TracingMode.freehand;
-    final target = freehand ? shape.parts[_filled.length] : shape.whole;
-    final strokes = freehand ? _pendingStrokes : _controller.strokes;
+    final target = shape.parts[_filled.length];
+    final strokes = _pendingStrokes;
     if (strokes.isEmpty) return _emptyResult(TracingMatchStatus.noInput);
 
-    // Первую часть по памяти рисуют где угодно и любого размера — сверяем
-    // форму, а не место на холсте. Дальше буква уже закреплена там, где её
-    // нарисовали, и остальные части сверяются относительно неё.
-    // Этой частью буква встаёт на место: её выравнивание уходит в якорь,
-    // а сами штрихи после этого уже лежат в нужной системе координат.
-    final anchoring = freehand && _anchored == null;
+    final anchoring = _anchored == null;
 
-    final alignment = !freehand
-        ? const TracingAlignment.identity()
-        : anchoring
-        // Первую часть рисуют где угодно и любого размера.
+    final alignment = anchoring
         ? widget.matcher.align(target: target, strokes: strokes)
-        // Дальше буква стоит на своём месте, но точки всё равно ставят
-        // на глаз — им разрешён небольшой общий сдвиг.
         : widget.matcher.alignDots(
             target: target,
             strokes: strokes,
-            penWidth: _penWidth,
+            penWidth: _bandWidth,
             reference: _filledBounds,
           );
 
-    final result = widget.matcher.match(
+    var result = widget.matcher.match(
       target: target,
       strokes: strokes,
       alignment: alignment,
-      penWidth: _penWidth,
-      structural: freehand,
+      penWidth: _bandWidth,
+      structural: true,
     );
-    if (result.isMatch) {
-      _anchorTo(alignment);
-      _startMerge(
-        _activeShape!.parts[_filled.length],
-        strokes,
-        anchoring ? const TracingAlignment.identity() : alignment,
+
+    // Куда едут штрихи при слиянии. К контуру — в его систему координат,
+    // то есть через то же выравнивание, которым мы их узнали. К своему
+    // месту — никуда: туда переехала сама фигура, а штрихи уже лежат как
+    // надо. А попавшие в контур не едут вовсе: они и так на месте.
+    var merge = _showsGuide || !anchoring
+        ? alignment
+        : const TracingAlignment.identity();
+
+    if (!result.isMatch && _showsGuide) {
+      final onGuide = widget.matcher.match(
+        target: target,
+        strokes: strokes,
+        penWidth: _bandWidth,
       );
-    } else if (freehand && widget.discardMisses && _filled.isNotEmpty) {
+      if (onGuide.isMatch) {
+        result = onGuide;
+        merge = const TracingAlignment.identity();
+      }
+    }
+
+    if (result.isMatch) {
+      _settle(alignment, anchoring: anchoring);
+      _startMerge(_activeShape!.parts[_filled.length], strokes, merge);
+    } else if (widget.discardMisses && _filled.isNotEmpty) {
       // Только когда буква уже заякорена. Пока первая часть не собрана,
       // положение свободно, и фрагмент невозможно отличить от промаха:
       // выравнивание одинаково натягивает на букву и половину основы,
@@ -383,11 +442,20 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     return result;
   }
 
-  /// Переносит букву туда, где её нарисовали: обратное к выравниванию,
-  /// которым мы её примеряли. После этого форма уже никуда не поедет —
-  /// пользователь видит свою букву на своём месте, и точки ставит к ней.
-  void _anchorTo(TracingAlignment alignment) {
-    if (_anchored != null || alignment.isIdentity) return;
+  /// Закрепляет букву: после первой собранной части она уже никуда не едет,
+  /// и следующие части сверяются относительно неё.
+  ///
+  /// Под видимым контуром местом буквы служит сам контур — фигура остаётся
+  /// где стояла, а к ней приводят штрихи. Без контура наоборот: фигура
+  /// переносится туда, где рисовал пользователь, обратным преобразованием
+  /// к тому, которым мы её примеряли.
+  void _settle(TracingAlignment alignment, {required bool anchoring}) {
+    if (!anchoring) return;
+    if (_showsGuide) {
+      _anchored = _resolvedShape;
+      return;
+    }
+    if (alignment.isIdentity) return;
     _anchored = _resolvedShape?.transformed(
       alignment.inverseScale,
       alignment.inverseOffset,
@@ -471,29 +539,50 @@ class _DrawingCanvasState extends State<DrawingCanvas>
         _controller.attachChecker(_check);
 
         return RepaintBoundary(
-          child: Listener(
+          // Холст забирает жест себе сразу, как только палец его коснулся.
+          // Сам по себе Listener в арене жестов не участвует, и вертикальный
+          // штрих по букве доставался заодно прокрутке страницы: буква
+          // рисовалась, а экран под ней ехал. Выключенный холст жест не
+          // забирает — по нему прокручивают, как по любой картинке.
+          child: RawGestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPointerDown: _onPointerDown,
-            onPointerMove: _onPointerMove,
-            onPointerUp: _onPointerUp,
-            onPointerCancel: _onPointerCancel,
-            child: Container(
-              color: widget.backgroundColor,
-              child: CustomPaint(
-                painter: _BackgroundPainter(
-                  controller: _controller,
-                  repaint: Listenable.merge([_finishedRepaint, _mergeProgress]),
-                  guide: widget.mode == TracingMode.tracing ? shape : null,
-                  placeholderColor: widget.placeholderColor,
-                  filled: List.of(_filled),
-                  inkColor: _controller.color,
-                  penWidth: _penWidth,
-                  skipStrokes: _consumedStrokes,
-                  merge: _merge,
-                  mergeProgress: _mergeProgress,
+            gestures: widget.enabled
+                ? <Type, GestureRecognizerFactory>{
+                    EagerGestureRecognizer:
+                        GestureRecognizerFactoryWithHandlers<
+                          EagerGestureRecognizer
+                        >(EagerGestureRecognizer.new, (_) {}),
+                  }
+                : const <Type, GestureRecognizerFactory>{},
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: _onPointerDown,
+              onPointerMove: _onPointerMove,
+              onPointerUp: _onPointerUp,
+              onPointerCancel: _onPointerCancel,
+              child: Container(
+                color: widget.backgroundColor,
+                child: CustomPaint(
+                  painter: _BackgroundPainter(
+                    controller: _controller,
+                    repaint: Listenable.merge([
+                      _finishedRepaint,
+                      _mergeProgress,
+                    ]),
+                    guide: _showsGuide ? shape : null,
+                    placeholderColor: widget.placeholderColor,
+                    filled: List.of(_filled),
+                    inkColor: _controller.color,
+                    // Контур и собранные части — своей толщиной: перо шире
+                    // только у пользователя.
+                    penWidth: _penWidth,
+                    skipStrokes: _consumedStrokes,
+                    merge: _merge,
+                    mergeProgress: _mergeProgress,
+                  ),
+                  foregroundPainter: _CurrentStrokePainter(_controller),
+                  size: Size.infinite,
                 ),
-                foregroundPainter: _CurrentStrokePainter(_controller),
-                size: Size.infinite,
               ),
             ),
           ),
@@ -520,19 +609,19 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   void _onPointerUp(PointerUpEvent event) {
     if (event.pointer != _activePointer) return;
     _activePointer = null;
-    _controller.extendStroke(event.localPosition);
-    _controller.endStroke();
+    // Позиция отрыва идёт прямо в endStroke, а не обычным движением:
+    // подворот пальца при отрыве должен попасть под сглаживание хвоста,
+    // а не в линию как есть.
+    _controller.endStroke(event.localPosition);
 
     final stroke = _controller.strokes.isEmpty
         ? null
         : _controller.strokes.last;
     if (stroke != null) widget.onStrokeEnd?.call(stroke);
 
-    // По памяти рисуют без кнопки: часть засчитывается сразу, как только
-    // её удалось узнать.
-    if (widget.mode == TracingMode.freehand && _filled.length < _partCount) {
-      _check();
-    }
+    // Кнопки для проверки нет ни в одном режиме: часть засчитывается
+    // сразу, как только её удалось узнать.
+    if (_filled.length < _partCount) _check();
   }
 
   void _onPointerCancel(PointerCancelEvent event) {

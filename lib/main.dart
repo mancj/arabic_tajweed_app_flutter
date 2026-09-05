@@ -1,3 +1,4 @@
+import 'package:arabic_tajweed_app/app/resources/ui_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
+      theme: ThemeData(useMaterial3: true, fontFamily: UITextStyles.fontOnest),
       initialRoute: SplashScreenPage.routeName,
       initialBinding: AppBinding(),
       getPages: [

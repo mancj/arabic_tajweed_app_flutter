@@ -10,7 +10,6 @@ import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/segmented_tabs.dart';
 
 import 'home_page_controller.dart';
@@ -32,13 +31,6 @@ class HomePage extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Алфавит',
-      bottomBar: Obx(
-        () => NextButton(
-          title: 'Далее',
-          subtitle: controller.nextSubtitle,
-          onTap: controller.onNext,
-        ),
-      ),
       builder: (context, insets) => SingleChildScrollView(
         padding: insets,
         child: Column(
@@ -50,6 +42,8 @@ class HomePage extends GetView<HomeController> {
             const _TracingCard(),
             const Margin.vertical(12),
             const _LetterTabs(),
+            const Margin.vertical(8),
+            const _FormTabs(),
             const Margin.vertical(12),
             const _CanvasActions(),
           ],
@@ -75,7 +69,8 @@ class _ModeTabs extends GetView<HomeController> {
   }
 }
 
-/// Выбор буквы набора: глифы в том же порядке, что и в [HomeController].
+/// Выбор буквы: все 28 в порядке курикулума. В дорожку они не помещаются,
+/// поэтому сегменты фиксированной ширины, а сама дорожка прокручивается.
 class _LetterTabs extends GetView<HomeController> {
   const _LetterTabs();
 
@@ -89,12 +84,35 @@ class _LetterTabs extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Obx(
       () => SegmentedTabs(
-        labels: [for (final item in HomeController.letters) item.glyph],
+        labels: [for (final item in controller.letters) item.glyph],
         selected: controller.index.value,
         onChanged: controller.setLetter,
         style: _style,
+        segmentWidth: 48,
       ),
     );
+  }
+}
+
+/// Форма выбранной буквы. У ا د ذ ر ز و форм две вместо четырёх, поэтому
+/// список свой на каждую букву.
+class _FormTabs extends GetView<HomeController> {
+  const _FormTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final forms = controller.current?.forms ?? const [];
+      if (forms.length < 2) return const SizedBox.shrink();
+
+      return SegmentedTabs(
+        labels: [
+          for (final form in forms) HomeController.formTitles[form.form]!,
+        ],
+        selected: controller.formIndex.value,
+        onChanged: controller.setForm,
+      );
+    });
   }
 }
 
@@ -167,7 +185,7 @@ class _TracingCard extends GetView<HomeController> {
           right: 0,
           child: Obx(
             () => Text(
-              controller.letter.name,
+              controller.letter?.name ?? '',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: UITextStyles.fontOnest,
@@ -216,8 +234,8 @@ class _Hint extends StatelessWidget {
   }
 }
 
-/// Отмена, очистка и проверка холста. «Проверить» есть только в обводке:
-/// по памяти части засчитываются сами, сразу после штриха.
+/// Отмена, очистка и проверка холста. Части засчитываются сами, сразу
+/// после штриха, — «Проверить» здесь только чтобы увидеть разбор попытки.
 class _CanvasActions extends GetView<HomeController> {
   const _CanvasActions();
 
@@ -237,13 +255,7 @@ class _CanvasActions extends GetView<HomeController> {
           onTap: controller.clear,
         ),
         const Margin.horizontal(8),
-        Expanded(
-          child: Obx(
-            () => controller.canCheck
-                ? _CheckButton(onTap: controller.check)
-                : const SizedBox(height: 44),
-          ),
-        ),
+        Expanded(child: _CheckButton(onTap: controller.check)),
       ],
     );
   }
@@ -262,16 +274,15 @@ class _IconAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Обработчик уходит внутрь [CircleButton]: он сам жестовый детектор,
+    // и обёртка снаружи тапа не увидит — внутренний выигрывает арену.
     return Semantics(
       button: true,
       label: semanticLabel,
-      child: AppGestureDetector(
+      child: CircleButton(
         onTap: onTap,
-        child: CircleButton(
-          size: 44,
-          color: UIColors.white,
-          child: Icon(icon, size: 20, color: UIColors.tealDark),
-        ),
+        size: 44,
+        child: Icon(icon, size: 20, color: UIColors.white),
       ),
     );
   }

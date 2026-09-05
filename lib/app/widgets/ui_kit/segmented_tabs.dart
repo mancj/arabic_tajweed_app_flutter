@@ -16,6 +16,10 @@ class SegmentedTabs extends StatelessWidget {
 
   final double height;
 
+  /// Ширина сегмента. Не задана — сегменты делят дорожку поровну. Задана —
+  /// дорожка прокручивается вбок: так в неё помещаются все 28 букв.
+  final double? segmentWidth;
+
   const SegmentedTabs({
     required this.labels,
     required this.selected,
@@ -23,6 +27,7 @@ class SegmentedTabs extends StatelessWidget {
     this.style,
     this.selectedStyle,
     this.height = 44,
+    this.segmentWidth,
     Key? key,
   }) : super(key: key);
 
@@ -42,6 +47,8 @@ class SegmentedTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = segmentWidth;
+
     return Container(
       height: height,
       padding: const EdgeInsets.all(_trackPadding),
@@ -57,32 +64,42 @@ class SegmentedTabs extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: GestureDetector(
-                onTap: () => onChanged(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: i == selected ? UIColors.teal : null,
-                    borderRadius: BorderRadius.circular(16 - _trackPadding * 2),
-                  ),
-                  child: Text(
-                    labels[i],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: i == selected ? _selectedStyle : _style,
-                  ),
-                ),
+      child: width == null
+          ? Row(
+              children: [
+                for (var i = 0; i < labels.length; i++)
+                  Expanded(child: _segment(i)),
+              ],
+            )
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var i = 0; i < labels.length; i++)
+                    SizedBox(width: width, child: _segment(i)),
+                ],
               ),
             ),
-        ],
-      ),
     );
   }
+
+  Widget _segment(int i) => GestureDetector(
+    onTap: () => onChanged(i),
+    behavior: HitTestBehavior.opaque,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: i == selected ? UIColors.teal : null,
+        borderRadius: BorderRadius.circular(16 - _trackPadding * 2),
+      ),
+      child: Text(
+        labels[i],
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: i == selected ? _selectedStyle : _style,
+      ),
+    ),
+  );
 }

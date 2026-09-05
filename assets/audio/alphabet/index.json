@@ -1,0 +1,198 @@
+[
+  {
+    "file": "alif.wav",
+    "letter": "ا",
+    "name": "alif",
+    "start": 0.26,
+    "end": 0.54
+  },
+  {
+    "file": "ba.wav",
+    "letter": "ب",
+    "name": "ba",
+    "start": 2.54,
+    "end": 3.06
+  },
+  {
+    "file": "ta.wav",
+    "letter": "ت",
+    "name": "ta",
+    "start": 4.88,
+    "end": 5.32
+  },
+  {
+    "file": "tha.wav",
+    "letter": "ث",
+    "name": "tha",
+    "start": 7.24,
+    "end": 7.76
+  },
+  {
+    "file": "jim.wav",
+    "letter": "ج",
+    "name": "jim",
+    "start": 9.5,
+    "end": 10.08
+  },
+  {
+    "file": "hha.wav",
+    "letter": "ح",
+    "name": "hha",
+    "start": 12.0,
+    "end": 12.5
+  },
+  {
+    "file": "kha.wav",
+    "letter": "خ",
+    "name": "kha",
+    "start": 14.2,
+    "end": 14.74
+  },
+  {
+    "file": "dal.wav",
+    "letter": "د",
+    "name": "dal",
+    "start": 16.56,
+    "end": 17.1
+  },
+  {
+    "file": "dhal.wav",
+    "letter": "ذ",
+    "name": "dhal",
+    "start": 18.96,
+    "end": 19.6
+  },
+  {
+    "file": "ra.wav",
+    "letter": "ر",
+    "name": "ra",
+    "start": 21.22,
+    "end": 21.7
+  },
+  {
+    "file": "zay.wav",
+    "letter": "ز",
+    "name": "zay",
+    "start": 23.48,
+    "end": 24.02
+  },
+  {
+    "file": "sin.wav",
+    "letter": "س",
+    "name": "sin",
+    "start": 25.76,
+    "end": 26.36
+  },
+  {
+    "file": "shin.wav",
+    "letter": "ش",
+    "name": "shin",
+    "start": 28.12,
+    "end": 28.78
+  },
+  {
+    "file": "sad.wav",
+    "letter": "ص",
+    "name": "sad",
+    "start": 30.42,
+    "end": 31.04
+  },
+  {
+    "file": "dad.wav",
+    "letter": "ض",
+    "name": "dad",
+    "start": 32.74,
+    "end": 33.36
+  },
+  {
+    "file": "tta.wav",
+    "letter": "ط",
+    "name": "tta",
+    "start": 35.06,
+    "end": 35.48
+  },
+  {
+    "file": "zza.wav",
+    "letter": "ظ",
+    "name": "zza",
+    "start": 37.08,
+    "end": 37.62
+  },
+  {
+    "file": "ayn.wav",
+    "letter": "ع",
+    "name": "ayn",
+    "start": 39.1,
+    "end": 39.72
+  },
+  {
+    "file": "ghayn.wav",
+    "letter": "غ",
+    "name": "ghayn",
+    "start": 41.52,
+    "end": 42.18
+  },
+  {
+    "file": "fa.wav",
+    "letter": "ف",
+    "name": "fa",
+    "start": 43.92,
+    "end": 44.42
+  },
+  {
+    "file": "qaf.wav",
+    "letter": "ق",
+    "name": "qaf",
+    "start": 46.42,
+    "end": 46.84
+  },
+  {
+    "file": "kaf.wav",
+    "letter": "ك",
+    "name": "kaf",
+    "start": 48.8,
+    "end": 49.22
+  },
+  {
+    "file": "lam.wav",
+    "letter": "ل",
+    "name": "lam",
+    "start": 51.16,
+    "end": 51.76
+  },
+  {
+    "file": "mim.wav",
+    "letter": "م",
+    "name": "mim",
+    "start": 53.52,
+    "end": 54.18
+  },
+  {
+    "file": "nun.wav",
+    "letter": "ن",
+    "name": "nun",
+    "start": 55.82,
+    "end": 56.52
+  },
+  {
+    "file": "ha.wav",
+    "letter": "ه",
+    "name": "ha",
+    "start": 58.36,
+    "end": 58.84
+  },
+  {
+    "file": "waw.wav",
+    "letter": "و",
+    "name": "waw",
+    "start": 60.66,
+    "end": 61.28
+  },
+  {
+    "file": "ya.wav",
+    "letter": "ي",
+    "name": "ya",
+    "start": 63.08,
+    "end": 63.68
+  }
+]

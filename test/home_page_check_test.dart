@@ -12,9 +12,23 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    Get.put(HomeController());
+    // Набор букв и первая фигура читаются из ассетов в две очереди.
+    // Настоящий ввод-вывод живёт вне поддельных часов теста, поэтому и
+    // контроллер заводится, и загрузка ждётся внутри runAsync: снаружи
+    // future просто не дошагает до конца, и тест повиснет.
+    late HomeController controller;
+    await tester.runAsync(() async {
+      controller = Get.put(HomeController());
+      await controller.ready;
+      // Ба: тест ведёт линию и ставит точку, значит нужна буква с точкой.
+      // Первой в наборе идёт алиф, у которого её нет.
+      controller.setLetter(
+        controller.letters.indexWhere((item) => item.letterId == 'ba'),
+      );
+      await controller.ready;
+    });
+
     await tester.pumpWidget(const GetMaterialApp(home: HomePage()));
-    // Буква подгружается из ассета — ждём, пока она доедет до холста.
     await tester.pumpAndSettle();
 
     final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
@@ -41,7 +55,6 @@ void main() {
     await tester.tapAt(shape.dots.first + box.topLeft);
     await tester.pump();
 
-    final controller = Get.find<HomeController>();
     expect(controller.drawing.strokes.length, 2);
     expect(controller.drawing.check().isMatch, isTrue);
   });

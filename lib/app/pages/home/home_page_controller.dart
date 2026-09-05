@@ -1,33 +1,53 @@
+import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
+import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/domain/atom.dart';
 
-/// Буква набора: файл с осевыми линиями, глиф и название для подписей.
+/// Форма буквы на отладочном экране: файл с осевыми линиями, глиф
+/// и название для подписей.
 class LessonLetter {
   /// Имя SVG в `assets/svg/alphabet` — оно же id фигуры.
   final String id;
   final String glyph;
   final String name;
+  final LetterForm form;
 
   const LessonLetter({
     required this.id,
     required this.glyph,
     required this.name,
+    required this.form,
   });
+}
+
+/// Буква со всеми формами, у которых есть осевой SVG.
+class LessonLetterForms {
+  final String letterId;
+  final List<LessonLetter> forms;
+
+  const LessonLetterForms({required this.letterId, required this.forms});
+
+  /// Чем буква подписана в полосе выбора: изолированный глиф, а если его
+  /// нет — глиф первой доступной формы.
+  String get glyph => forms.first.glyph;
 }
 
 class HomeController extends GetxController {
   final drawing = DrawingController(smoothing: .4, minDistance: 8);
 
-  /// Буквы лежат в assets как SVG с осевыми линиями.
-  static const letters = [
-    LessonLetter(id: 'ba_base', glyph: 'ب', name: 'Ба'),
-    LessonLetter(id: 'ta_base', glyph: 'ت', name: 'Та'),
-    LessonLetter(id: 'sin_base', glyph: 'س', name: 'Син'),
-    LessonLetter(id: 'shin_base', glyph: 'ش', name: 'Шин'),
-    LessonLetter(id: 'to_base', glyph: 'ط', name: 'То'),
-    LessonLetter(id: 'zho_base', glyph: 'ظ', name: 'Зо'),
-  ];
+  /// Набор берётся из курикулума, а не из своего списка: так на отладочном
+  /// экране всегда ровно те же буквы и формы, что урок умеет спрашивать
+  /// обводкой, — включая только что дорисованные.
+  final letters = <LessonLetterForms>[].obs;
+
+  static const formTitles = {
+    LetterForm.isolated: 'Отдельно',
+    LetterForm.initial: 'В начале',
+    LetterForm.medial: 'В середине',
+    LetterForm.finalForm: 'В конце',
+  };
 
   static const modes = [TracingMode.tracing, TracingMode.freehand];
   static const modeTitles = ['Обводка', 'По памяти'];
@@ -36,6 +56,7 @@ class HomeController extends GetxController {
   static const matcher = TracingMatcher();
 
   final index = 0.obs;
+  final formIndex = 0.obs;
   final shape = Rxn<TracingShape>();
 
   final mode = TracingMode.tracing.obs;
@@ -43,26 +64,63 @@ class HomeController extends GetxController {
   /// Подсказка над сеткой: что рисовать дальше или что пошло не так.
   final hint = ''.obs;
 
-  LessonLetter get letter => letters[index.value];
+  LessonLetterForms? get current =>
+      letters.isEmpty ? null : letters[index.value];
+
+  LessonLetter? get letter {
+    final forms = current?.forms;
+    if (forms == null || forms.isEmpty) return null;
+    return forms[formIndex.value.clamp(0, forms.length - 1)];
+  }
 
   /// Заполнение полосы под шапкой: сколько букв набора пройдено.
-  double get progress => (index.value + 1) / letters.length;
+  double get progress =>
+      letters.isEmpty ? 0 : (index.value + 1) / letters.length;
 
-  String get nextSubtitle => 'Буква «${letter.name.toLowerCase()}»';
+  Future<void>? _ready;
 
-  /// Кнопка «Проверить» нужна только в режиме обводки: по памяти части
-  /// засчитываются сами.
-  bool get canCheck => mode.value == TracingMode.tracing;
+  /// Набор и текущая фигура загружены. Ассеты читаются в две очереди —
+  /// сперва курикулум, потом SVG, — и тесту нужно на что-то дождаться,
+  /// прежде чем щупать холст. Смена буквы обновляет это обещание.
+  Future<void> get ready => _ready ?? Future.value();
 
   @override
   void onInit() {
     super.onInit();
     _resetHint();
-    _loadLetter();
+    _ready = _loadLetters();
   }
 
-  Future<void> _loadLetter() async {
+  Future<void> _loadLetters() async {
+    final curriculum = await const CurriculumLoader().load();
+    final tracing = curriculum.nodes
+        .map((node) => node.atom)
+        .where((atom) => atom.kind == AtomKind.letterForm)
+        .where((atom) => atom.tracing != null && atom.letterId != null);
+
+    letters.value = [
+      for (final entry in groupBy(tracing, (atom) => atom.letterId!).entries)
+        LessonLetterForms(
+          letterId: entry.key,
+          forms: [
+            for (final atom in entry.value.sortedBy<num>(
+              (atom) => formTitles.keys.toList().indexOf(atom.form!),
+            ))
+              LessonLetter(
+                id: atom.tracing!,
+                glyph: atom.display,
+                name: atom.label,
+                form: atom.form!,
+              ),
+          ],
+        ),
+    ];
+    await _loadShape();
+  }
+
+  Future<void> _loadShape() async {
     final current = letter;
+    if (current == null) return;
     shape.value = await TracingShapeSvg.load(
       'assets/svg/alphabet/${current.id}.svg',
       id: current.id,
@@ -73,9 +131,22 @@ class HomeController extends GetxController {
   void setLetter(int value) {
     if (index.value == value) return;
     index.value = value;
+    // Форма сбрасывается на изолированную: у несоединяющихся букв средней
+    // формы нет, и прежний индекс уехал бы за конец списка.
+    formIndex.value = 0;
+    _restart();
+  }
+
+  void setForm(int value) {
+    if (formIndex.value == value) return;
+    formIndex.value = value;
+    _restart();
+  }
+
+  void _restart() {
     drawing.clear();
     _resetHint();
-    _loadLetter();
+    _ready = _loadShape();
   }
 
   void setMode(TracingMode value) {
@@ -95,9 +166,6 @@ class HomeController extends GetxController {
     _resetHint();
   }
 
-  /// Следующая буква набора; после последней начинаем сначала.
-  void onNext() => setLetter((index.value + 1) % letters.length);
-
   void check() {
     final result = drawing.check();
 
@@ -115,15 +183,11 @@ class HomeController extends GetxController {
   }
 
   void onChecked(TracingMatchResult result) {
-    if (mode.value != TracingMode.freehand || result.isMatch) return;
+    if (result.isMatch) return;
     hint.value = result.isChecked ? 'Не узнал, попробуйте ещё раз' : hint.value;
   }
 
-  void _resetHint() {
-    hint.value = mode.value == TracingMode.tracing
-        ? 'Обведите букву'
-        : 'Нарисуйте основу буквы';
-  }
+  void _resetHint() => hint.value = 'Нарисуйте основу буквы';
 
   String _messageFor(TracingMatchResult result) {
     switch (result.status) {

@@ -1,4 +1,8 @@
-<svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path id="2-dot" d="M163.84 220.948V224.948" stroke="#156072" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M251.944 103.052C260.11 114.052 262.944 145.052 236.944 159.052C160.751 200.079 35.4434 194.552 78.9435 111.052" stroke="#156072" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="ba_base">
+<g id="Frame 13">
+<path id="2-dot" d="M163.833 253.404V257.577" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M255.737 130.423C264.256 141.898 267.212 174.235 240.09 188.839C160.611 231.636 29.8978 225.87 75.2744 138.768" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
 </svg>

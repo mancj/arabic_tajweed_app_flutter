@@ -1,0 +1,5 @@
+# Идентификатор приложения в App Store Connect
+app_identifier("tajweed.app")
+
+# Team ID разработчика (тот же, что стоит в Xcode → Signing & Capabilities)
+team_id("W875G9YWT7")

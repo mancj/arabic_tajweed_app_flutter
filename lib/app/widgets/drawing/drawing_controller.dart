@@ -27,6 +27,9 @@ class DrawingController extends ChangeNotifier {
   final double _smoothing;
   final double _minDistance;
 
+  /// Насколько хвосту позволено отвернуть от траектории штриха.
+  static const _maxTailTurn = math.pi / 4;
+
   final List<DrawingStroke> _strokes = [];
   final List<Offset> _currentPoints = [];
 
@@ -114,9 +117,13 @@ class DrawingController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void endStroke() {
+  /// Завершает штрих. [at] — место, где палец оторвали: оно идёт сразу
+  /// в догон и не подмешивается в фильтр обычным движением, иначе подворот
+  /// пальца успевал бы попасть в линию до всякого сглаживания.
+  void endStroke([Offset? at]) {
     if (_currentPoints.isEmpty) return;
 
+    if (at != null) _raw = at;
     _catchUp();
 
     _strokes.add(
@@ -137,24 +144,65 @@ class DrawingController extends ChangeNotifier {
   /// Фильтр всегда отстаёт от пальца, и чем сильнее сглаживание, тем больше
   /// отставание: при `smoothing = 0.1` это десятки пикселей. Без догона штрих
   /// обрывается раньше времени — на глаз это заметно, а проверка обводки
-  /// теряет непокрытый хвост буквы. Догоняем тем же фильтром, поэтому
-  /// стык остаётся гладким.
+  /// теряет непокрытый хвост буквы.
+  ///
+  /// Хвост кладётся равными шагами, а не затухающими, как раньше: у самого
+  /// конца точки сгущались, и сплайн, оценивая касательную по соседям
+  /// разной длины, загибал линию крючком. И поворот хвоста ограничен:
+  /// отрывая палец, человек его подворачивает, событие «вверх» приходит
+  /// в стороне от траектории — этот подворот и был изломом на конце.
   void _catchUp() {
     final target = _raw;
     if (target == null) return;
 
-    var point = _filtered ?? _currentPoints.last;
-    for (var i = 0; i < 64 && (point - target).distance > 0.5; i++) {
-      point = _step(point, target);
-      if ((point - _currentPoints.last).distance >=
-          math.max(_minDistance, 0.5)) {
-        _currentPoints.add(point);
-      }
+    final from = _currentPoints.last;
+    final step = math.max(_minDistance, 0.5);
+    final tail = _clampTurn(from, target);
+
+    final distance = (tail - from).distance;
+    if (distance < step) return;
+
+    final steps = math.max(1, (distance / step).round());
+    for (var i = 1; i <= steps; i++) {
+      _currentPoints.add(Offset.lerp(from, tail, i / steps)!);
+    }
+  }
+
+  /// Не даёт хвосту отвернуть от траектории больше чем на [_maxTailTurn].
+  /// Длина сохраняется: догон нужен именно чтобы закрыть отставание фильтра.
+  Offset _clampTurn(Offset from, Offset to) {
+    final delta = to - from;
+    final distance = delta.distance;
+    final direction = _tailDirection();
+    if (distance <= 0 || direction == null) return to;
+
+    final unit = delta / distance;
+    final dot = unit.dx * direction.dx + unit.dy * direction.dy;
+    if (dot >= math.cos(_maxTailTurn)) return to;
+
+    // Сторону поворота задаёт знак векторного произведения.
+    final cross = direction.dx * unit.dy - direction.dy * unit.dx;
+    final angle = cross >= 0 ? _maxTailTurn : -_maxTailTurn;
+    final rotated = Offset(
+      direction.dx * math.cos(angle) - direction.dy * math.sin(angle),
+      direction.dx * math.sin(angle) + direction.dy * math.cos(angle),
+    );
+    return from + rotated * distance;
+  }
+
+  /// Куда штрих шёл перед отрывом. Плечо берём не по двум последним точкам:
+  /// на такой длине дрожание руки заметнее самого движения.
+  Offset? _tailDirection() {
+    final last = _currentPoints.last;
+    final span = math.max(_minDistance * 3, 12.0);
+
+    for (var i = _currentPoints.length - 2; i >= 0; i--) {
+      final delta = last - _currentPoints[i];
+      if (delta.distance >= span) return delta / delta.distance;
     }
 
-    if ((target - _currentPoints.last).distance > 0.5) {
-      _currentPoints.add(target);
-    }
+    final delta = last - _currentPoints.first;
+    return delta.distance > 0 ? delta / delta.distance : null;
   }
 
   Offset _step(Offset from, Offset to) => Offset(

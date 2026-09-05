@@ -1,3 +1,4 @@
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,11 +20,25 @@ class AppWidgetsPage extends GetView<AppWidgetsController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'App Widgets',
-      builder: (context, insets) => ListView(
+      builder: (context, insets) => SingleChildScrollView(
         padding: insets,
-        children: const [
-          LetterWidgetCard(letter: 'ق', question: 'Как произносится буква ق?'),
-        ],
+        child: const Column(
+          children: [
+            LetterWidgetCard(
+              labelText: 'Вопрос',
+              isArabic: true,
+              letter: 'ق',
+              question: 'Какая это буква?',
+            ),
+            Margin.vertical(8),
+            LetterWidgetCard(
+              labelText: 'Вопрос',
+              isArabic: false,
+              letter: 'Ба',
+              question: 'Как произносится буква Ба?',
+            ),
+          ],
+        ),
       ),
     );
   }

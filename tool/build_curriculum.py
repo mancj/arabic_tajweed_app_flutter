@@ -94,9 +94,17 @@ def form_note(lid, form):
             f'Это самая короткая её форма.')
 
 
-# Осевые SVG есть не у всех букв: остальные обводкой не спрашиваются.
-TRACING = {'alif':'alif_base','ba':'ba_base','ta':'ta_base','tha':'tha_base',
-           'sin':'sin_base','shin':'shin_base','to':'to_base','zho':'zho_base'}
+# Осевой SVG формы. Список букв не хардкодим: они дорисовываются, и
+# забытая правка здесь ломает урок тише всего — атом просто перестаёт
+# спрашиваться обводкой.
+SVG = 'assets/svg/alphabet'
+TRACING_SUFFIX = {'isolated': 'base', 'initial': 'init',
+                  'medial': 'mid', 'finalForm': 'end'}
+
+
+def tracing_of(lid, form):
+    name = f'{lid}_{TRACING_SUFFIX[form]}'
+    return name if os.path.exists(f'{SVG}/{name}.svg') else None
 
 FORMS = [('isolated', 1, ''), ('finalForm', 2, ' в конце'),
          ('initial', 3, ' в начале'), ('medial', 4, ' в середине')]
@@ -197,12 +205,10 @@ def letter_node(lid, form, requirement):
     if row[6]:
         atom['confusableWith'] = row[6]
     atom['label'] = row[5] + suffix
-    if form == 'isolated':
-        atom['note'] = row[7]
-        if lid in TRACING:
-            atom['tracing'] = TRACING[lid]
-    else:
-        atom['note'] = form_note(lid, form)
+    atom['note'] = row[7] if form == 'isolated' else form_note(lid, form)
+    tracing = tracing_of(lid, form)
+    if tracing:
+        atom['tracing'] = tracing
     return {'atom': atom, 'requirement': requirement}
 
 

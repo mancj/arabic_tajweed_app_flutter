@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -50,32 +51,11 @@ class QuestionCard extends StatelessWidget {
       side: BorderSide(color: UIColors.white),
     );
 
-    return Container(
-      height: designHeight,
-      decoration: const ShapeDecoration(
-        color: UIColors.questionCardBackground,
-        shape: shape,
-        shadows: [
-          BoxShadow(
-            color: UIColors.questionCardShadow,
-            offset: Offset(0, 6),
-            blurRadius: 4.8,
-          ),
-        ],
-      ),
-      // Чертёж уходит за края карточки — в макете он подрезан её формой.
-      child: ClipPath(
-        clipper: const ShapeBorderClipper(shape: shape),
-        child: Stack(
-          children: [
-            //  _decorArc(), todo add image
-            //  _decorRing(), todo add image
-            if (ghost != null) ..._ghosts(),
-            _subject(),
-            _header(),
-          ],
-        ),
-      ),
+    return LetterWidgetCard(
+      labelText: badge,
+      letter: subject,
+      question: question,
+      isArabic: subjectFont == UITextStyles.fontScheherazadeNew,
     );
   }
 

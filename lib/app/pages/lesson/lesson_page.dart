@@ -5,10 +5,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart' hide GetNumUtils;
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
@@ -43,11 +45,9 @@ class LessonPage extends GetView<LessonController> {
       builder: (context, insets) => Obx(() {
         final stage = controller.stage.value;
         return SingleChildScrollView(
-          // Пока на экране холст, страница не прокручивается: вертикальный
-          // штрих по букве иначе выигрывает жест прокрутка, а не рисование.
-          physics: controller.isTracingTask
-              ? const NeverScrollableScrollPhysics()
-              : null,
+          // Прокрутку у холста отбирает он сам, забирая жест в арене
+          // ([DrawingCanvas]). Всей странице замирать не нужно: карточка
+          // обводки бывает выше экрана, и до кнопок надо доезжать.
           padding: insets,
           child: switch (stage) {
             LessonStage.loading => const _Centered(child: _Loader()),
@@ -158,9 +158,9 @@ class _SkipButton extends GetView<LessonController> {
 
 /// Нижняя панель заданий на письмо.
 ///
-/// По контуру судит кнопка «Проверить»: буква сверяется целиком. По памяти
-/// части засчитываются сами, поэтому кнопка только подтверждает готовое —
-/// и рядом стоит выход для того, кто букву не вспомнил.
+/// Части засчитываются сами, поэтому кнопка только подтверждает готовое.
+/// По памяти рядом стоит выход для того, кто букву не вспомнил; по контуру
+/// он не нужен — буква и так перед глазами.
 class _TracingBar extends GetView<LessonController> {
   const _TracingBar({required this.mode});
 
@@ -168,24 +168,18 @@ class _TracingBar extends GetView<LessonController> {
 
   @override
   Widget build(BuildContext context) {
-    if (mode == ExerciseMode.trace) {
-      return SizedBox(
-        width: double.infinity,
-        child: NextButton(title: 'Проверить', onTap: controller.checkTracing),
-      );
-    }
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: controller.giveUpTracing,
-          child: const Padding(
-            padding: EdgeInsets.only(bottom: 8, top: 6),
-            child: Text('Не помню, показать', style: UITextStyles.hint),
+        if (mode == ExerciseMode.traceFromMemory)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: controller.giveUpTracing,
+            child: const Padding(
+              padding: EdgeInsets.only(bottom: 8, top: 6),
+              child: Text('Не помню, показать', style: UITextStyles.hint),
+            ),
           ),
-        ),
         SizedBox(
           width: double.infinity,
           child: Obx(
@@ -209,83 +203,102 @@ class _TracingTask extends GetView<LessonController> {
 
   final String prompt;
 
-  /// Размеры карточки в макете. Холст с сеткой сохраняет пропорции экрана
-  /// знакомства с буквой, а сверху добавлена строка вопроса.
-  static const _height = 424.0;
-  static const _canvasTop = 62.0;
-  static const _canvasHeight = 329.0;
-  static const _guidesTop = 148.0;
+  /// Кадр буквы — квадрат 329 из svg: в нём заложен запас под верхние
+  /// и нижние точки. Сетка прописи ýже и ниже, она лежит внутри кадра;
+  /// отступ до неё — из макета экрана знакомства с буквой.
+  static const _frameHeight = 329.0;
+  static const _guidesTop = 86.0;
 
   @override
   Widget build(BuildContext context) {
-    return LetterCard(
-      designHeight: _height,
-      builder: (context, k) => [
-        Positioned(
-          top: 22 * k,
-          left: 20 * k,
-          right: 20 * k,
-          child: IgnorePointer(
-            child: Text(
-              prompt,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: UITextStyles.fontOnest,
-                fontWeight: FontWeight.w600,
-                fontSize: 18 * k,
-                color: UIColors.ink,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: _guidesTop * k,
-          left: 0,
-          right: 0,
-          height: LetterGuides.designHeight * k,
-          child: Center(child: LetterGuides(k: k)),
-        ),
-        // Холст выше сетки: у букв общий квадратный кадр с запасом под
-        // верхние и нижние точки, и вписывается в карточку именно он.
-        Positioned(
-          top: _canvasTop * k,
-          left: 0,
-          right: 0,
-          height: _canvasHeight * k,
-          child: Center(
-            child: SizedBox(
-              width: LetterGuides.designWidth * k,
-              child: Obx(
-                () => DrawingCanvas(
-                  controller: controller.drawing,
-                  matcher: LessonController.tracingMatcher,
-                  mode: controller.canvasMode,
-                  placeholder: controller.tracingShape.value,
-                  color: UIColors.tealDark,
-                  placeholderColor: UIColors.letterGhost,
-                  placeholderPadding: 0,
-                  onProgress: controller.onTracingProgress,
-                  onMerged: controller.onTracingMerged,
+    return LessonCard(
+      badge: 'Задание',
+      title: prompt,
+      action: const _ClearButton(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final k = constraints.maxWidth / LetterGuides.designWidth;
+
+          return SizedBox(
+            height: _frameHeight * k,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: _guidesTop * k,
+                  left: 0,
+                  right: 0,
+                  height: LetterGuides.designHeight * k,
+                  child: Center(child: LetterGuides(k: k)),
                 ),
-              ),
+                Positioned.fill(
+                  child: Obx(
+                    () => DrawingCanvas(
+                      controller: controller.drawing,
+                      matcher: LessonController.tracingMatcher,
+                      mode: controller.canvasMode,
+                      placeholder: controller.tracingShape.value,
+                      color: UIColors.tealDark,
+                      placeholderColor: UIColors.letterGhost,
+                      placeholderPadding: 0,
+                      onProgress: controller.onTracingProgress,
+                      onMerged: controller.onTracingMerged,
+                    ),
+                  ),
+                ),
+                // Строка обратной связи лежит в свободном поле под сеткой,
+                // внутри кадра буквы: своей строки под карточкой она не
+                // стоит, а касания холсту не отбирает.
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Obx(
+                      () => Text(
+                        controller.tracingHint.value,
+                        textAlign: TextAlign.center,
+                        style: UITextStyles.hint,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Стереть нарисованное и начать букву заново. Стоит в шапке карточки,
+/// напротив заголовка: холст под ней занята целиком.
+class _ClearButton extends GetView<LessonController> {
+  const _ClearButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Стереть',
+      child: AppGestureDetector(
+        onTap: controller.clearTracing,
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: UIColors.white,
+            border: Border.all(color: UIColors.cardBorder, width: 0.6),
+          ),
+          child: const Icon(
+            Icons.backspace_outlined,
+            size: 18,
+            color: UIColors.tealDark,
           ),
         ),
-        Positioned(
-          bottom: 18 * k,
-          left: 20 * k,
-          right: 20 * k,
-          child: IgnorePointer(
-            child: Obx(
-              () => Text(
-                controller.tracingHint.value,
-                textAlign: TextAlign.center,
-                style: UITextStyles.hint,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -336,10 +349,13 @@ class _IntroBlock extends GetView<LessonController> {
             const Margin.vertical(16),
           ],
           RuleCard(
-            badge: controller.isReviewOnly ? 'Повторение' : 'Новая тема',
-            title: atom.label,
-            text: atom.note,
-          ).animate().slideX(begin: .1, curve: Curves.easeInOut, duration: .5.seconds).fadeIn(),
+                badge: controller.isReviewOnly ? 'Повторение' : 'Новая тема',
+                title: atom.label,
+                text: atom.note,
+              )
+              .animate()
+              .slideX(begin: .1, curve: Curves.easeInOut, duration: .5.seconds)
+              .fadeIn(),
         ],
       );
     });
@@ -405,15 +421,24 @@ class _ExerciseBlock extends GetView<LessonController> {
         children: [
           LessonProgressBar(value: controller.progress),
           const Margin.vertical(16),
-          QuestionCard(
-            badge: 'Вопрос',
-            question: _promptOf(exercise.mode),
-            subject: byName ? exercise.atom.label : exercise.atom.display,
-            subjectFont: byName
-                ? UITextStyles.fontOnest
-                : UITextStyles.fontScheherazadeNew,
-            ghost: byName ? null : exercise.atom.display,
-          ),
+          // Букву показываем той же карточкой, что и на знакомстве, — только
+          // без кнопки звучания: в задании озвучка была бы подсказкой.
+          // Название буквы карточке не подходит: она рисует арабский глиф.
+          if (byName)
+            QuestionCard(
+              badge: 'Вопрос',
+              question: _promptOf(exercise.mode),
+              subject: exercise.atom.label,
+              subjectFont: UITextStyles.fontOnest,
+            )
+          else
+            LetterWidgetCard(
+              letter: exercise.atom.display,
+              labelText: 'Вопрос',
+              question: _promptOf(exercise.mode),
+              showPlay: false,
+              isArabic: true,
+            ),
           const Margin.vertical(16),
           if (exercise.isChoice)
             ...exercise.options.mapIndexed(
@@ -443,7 +468,7 @@ String _tracingPrompt(Exercise exercise) => exercise.mode == ExerciseMode.trace
 
 String _promptOf(ExerciseMode mode) => switch (mode) {
   ExerciseMode.formToName => 'Как называется эта буква?',
-  ExerciseMode.nameToForm => 'Выберите, как она пишется',
+  ExerciseMode.nameToForm => 'Как пишется буква?',
   ExerciseMode.distinguishDots => 'Какая из них — эта буква?',
   ExerciseMode.findInWord => 'Найдите эту букву в слове',
   ExerciseMode.formToPosition => 'Где в слове стоит эта форма?',
@@ -551,10 +576,12 @@ class _LetterCardFor extends GetView<LessonController> {
   @override
   Widget build(BuildContext context) =>
       LetterWidgetCard(
+            isArabic: true,
             letter: atom.display,
             onPlay: controller.hasVoice(atom)
                 ? () => controller.playVoice(atom)
                 : null,
+            onAutoPlay: () => controller.startVoice(atom),
             track: controller.voiceTrack,
           )
           .animate()

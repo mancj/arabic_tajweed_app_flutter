@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Tajweed AI";
+"CFBundleName" = "Tajweed AI";
+"NSMicrophoneUsageDescription" = "Microphone access lets you record your recitation and compare it with the reference audio.";
+"NSMotionUsageDescription" = "Motion data powers the tilt effect on the letter cards.";

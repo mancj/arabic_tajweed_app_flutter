@@ -476,3 +476,13 @@ ios/fastlane/report.xml
 
 # FVM Version Cache
 .fvm/
+ж\\ fastlane (iOS): секреты и артефакты
+ios/fastlane/.env
+ios/fastlane/.env.*
+!ios/fastlane/.env.example
+ios/fastlane/private_keys/*
+!ios/fastlane/private_keys/.gitkeep
+ios/fastlane/*.p8
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/README.md

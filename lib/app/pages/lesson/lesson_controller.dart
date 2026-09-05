@@ -75,6 +75,9 @@ class LessonController extends GetxController {
   /// Подсказка под холстом: что рисовать дальше или что не сошлось.
   final tracingHint = ''.obs;
 
+  /// С чего начинается любая буква: холст ждёт части по порядку.
+  static const _tracingStartHint = 'Начните с основы буквы';
+
   /// В режиме по памяти буква собралась целиком — можно засчитывать.
   final tracingDone = false.obs;
 
@@ -101,7 +104,13 @@ class LessonController extends GetxController {
   /// Есть ли у атома запись. У понятий, слогов и хамзы её пока нет.
   bool hasVoice(Atom atom) => LetterAudio.has(atom.letterId);
 
-  void playVoice(Atom atom) => unawaited(_audio.play(atom.letterId));
+  /// Нажатие на кнопку звучания: играет, ставит на паузу или продолжает —
+  /// решает сам плеер, экрану знать об этом нечего.
+  void playVoice(Atom atom) => unawaited(_audio.toggle(atom.letterId));
+
+  /// Звучание при появлении буквы: всегда с начала. Нажатие звучащую букву
+  /// останавливает, а показ следующей формы той же буквы — не должен.
+  void startVoice(Atom atom) => unawaited(_audio.play(atom.letterId));
 
   /// Что сейчас звучит: форма записи и позиция. Карточка отдаёт это волне.
   ValueListenable<AudioTrack> get voiceTrack => _audio.track;
@@ -361,11 +370,7 @@ class LessonController extends GetxController {
     // Строка под сеткой — только обратная связь: что рисовать дальше
     // и что не сошлось. Само задание написано в шапке карточки, и дублировать
     // его здесь незачем.
-    tracingHint.value = tracingShape.value == null
-        ? ''
-        : exercise!.mode == ExerciseMode.trace
-        ? 'Ведите пальцем по бледной линии'
-        : 'Начните с основы буквы';
+    tracingHint.value = tracingShape.value == null ? '' : _tracingStartHint;
   }
 
   /// Задание, где вместо вариантов холст.
@@ -386,20 +391,18 @@ class LessonController extends GetxController {
         : TracingMode.freehand;
   }
 
-  /// Проверка обводки по контуру. Сверяется вся буква целиком.
-  Future<void> checkTracing() async {
-    final result = drawing.check();
-    if (result.status == TracingMatchStatus.noInput) {
-      tracingHint.value = 'Сначала обведите букву';
-      return;
-    }
-
-    tracingHint.value = _tracingMessage(result);
-    await submit(directOutcome: result.isMatch);
+  /// Стереть нарисованное и начать букву заново. Собранные части холст
+  /// откатывает сам, вслед за исчезнувшими штрихами. После разбора ошибки
+  /// подсказку не трогаем: там на холсте показан верный ответ.
+  void clearTracing() {
+    drawing.clear();
+    if (wasWrong.value) return;
+    tracingDone.value = false;
+    tracingHint.value = _tracingStartHint;
   }
 
-  /// Части буквы засчитываются по одной, поэтому в режиме по памяти
-  /// проверять нечего: ответ готов, когда собрана последняя.
+  /// Части буквы засчитываются по одной — и по контуру, и по памяти:
+  /// проверять нечего, ответ готов, когда собрана последняя.
   void onTracingProgress(TracingProgress progress) {
     if (wasWrong.value) return;
     tracingHint.value = progress.isComplete
@@ -417,27 +420,15 @@ class LessonController extends GetxController {
   /// открывается — иначе человек застревает на буквe, которую не помнит.
   Future<void> giveUpTracing() => submit(directOutcome: false);
 
-  String _tracingMessage(TracingMatchResult result) {
-    if (result.isMatch) return 'Верно';
-    if (!result.dotsTraced && result.coverage > 0.8) {
-      return 'Не забудьте точки';
-    }
-    if (result.deviation > tracingMatcher.maxDeviation) {
-      return 'Линия уходит в сторону от буквы';
-    }
-    return 'Обведено ${(result.coverage * 100).round()}% — попробуйте ещё раз';
-  }
-
   /// У заданий без выбора нечего выделять — кнопка активна сразу.
-  /// Исключение — письмо по памяти: там ответ готов, только когда буква
-  /// собрана целиком.
+  /// Исключение — письмо: там ответ готов, только когда буква собрана
+  /// целиком, независимо от того, был ли перед глазами контур.
   bool get canSubmit {
     _refresh.value;
     final exercise = _session?.current;
     if (exercise == null) return false;
     if (exercise.isChoice) return selected.value != null;
-    if (exercise.mode == ExerciseMode.traceFromMemory &&
-        tracingShape.value != null) {
+    if (exercise.mode.isTracing && tracingShape.value != null) {
       return tracingDone.value || wasWrong.value;
     }
     return true;

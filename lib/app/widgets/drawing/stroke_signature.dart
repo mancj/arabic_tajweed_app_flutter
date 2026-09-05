@@ -42,19 +42,81 @@ class StrokeSignature {
 
   const StrokeSignature(this.points, {required this.uniform});
 
-  static StrokeSignature? ofPaths(List<Path> paths, {bool? uniform}) {
-    final points = <Offset>[];
+  static StrokeSignature? ofPaths(List<Path> paths, {bool? uniform}) =>
+      ofPolylines(polylinesOf(paths), uniform: uniform);
+
+  /// Точки каждой линии отдельно: части из двух штрихов разбираются на
+  /// куски, между которыми чернил нет.
+  static List<List<Offset>> polylinesOf(List<Path> paths) {
+    final lines = <List<Offset>>[];
     for (final path in paths) {
       for (final metric in path.computeMetrics()) {
         if (metric.length <= 0) continue;
         final step = metric.length / (sampleCount * 2);
+        final line = <Offset>[];
         for (var d = 0.0; d <= metric.length; d += step) {
           final tangent = metric.getTangentForOffset(d);
-          if (tangent != null) points.add(tangent.position);
+          if (tangent != null) line.add(tangent.position);
         }
+        if (line.length >= 2) lines.add(line);
       }
     }
-    return ofPoints(points, uniform: uniform);
+    return lines;
+  }
+
+  /// Сигнатура части, собранной из нескольких отдельных линий.
+  ///
+  /// Между линиями чернил нет, и вести выборку сквозь разрыв нельзя: у
+  /// соединённых форм ـحـ, ـضـ, ـطـ штрихи расходятся на 60–114 пикселей,
+  /// и прямая через промежуток забирает пятую часть точек. Каждый кусок
+  /// пересэмплируется отдельно, а точки делятся между кусками по длине.
+  ///
+  /// Это модель «перо отрывали». Модель «вели не отрываясь» — это
+  /// [ofPoints] по склеенным точкам: там перемычка нарисована и в счёт
+  /// идти должна.
+  static StrokeSignature? ofPolylines(
+    List<List<Offset>> lines, {
+    bool? uniform,
+  }) {
+    final usable = [
+      for (final line in lines)
+        if (line.length >= 2) line,
+    ];
+    if (usable.isEmpty) return null;
+    if (usable.length == 1) return ofPoints(usable.first, uniform: uniform);
+
+    final lengths = [for (final line in usable) _lengthOf(line)];
+    final total = lengths.fold(0.0, (sum, value) => sum + value);
+    if (total <= 0) return null;
+
+    // Доли округляются вниз, остаток достаётся самому длинному куску: он
+    // несёт основную форму, и лишние точки полезнее всего там.
+    final counts = [
+      for (final length in lengths)
+        math.max(2, (sampleCount * length / total).floor()),
+    ];
+    var longest = 0;
+    for (var i = 1; i < lengths.length; i++) {
+      if (lengths[i] > lengths[longest]) longest = i;
+    }
+    counts[longest] += sampleCount - counts.fold(0, (sum, n) => sum + n);
+    if (counts[longest] < 2) return null;
+
+    final points = <Offset>[];
+    for (var i = 0; i < usable.length; i++) {
+      final part = _resample(usable[i], counts[i]);
+      if (part == null) return null;
+      points.addAll(part);
+    }
+    return _normalize(points, uniform);
+  }
+
+  static double _lengthOf(List<Offset> points) {
+    var total = 0.0;
+    for (var i = 1; i < points.length; i++) {
+      total += (points[i] - points[i - 1]).distance;
+    }
+    return total;
   }
 
   static StrokeSignature? ofPoints(List<Offset> points, {bool? uniform}) {

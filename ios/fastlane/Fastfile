@@ -1,0 +1,236 @@
+default_platform(:ios)
+
+# Корень flutter-проекта (папка на уровень выше ios/)
+FLUTTER_ROOT = File.expand_path("../..", __dir__)
+
+TEAM_ID = "W875G9YWT7"
+BUNDLE_ID = "tajweed.app"
+
+platform :ios do
+  desc "Проверить настройку: версия из pubspec и ключ App Store Connect"
+  lane :check do
+    UI.message("Корень flutter-проекта: #{FLUTTER_ROOT}")
+
+    version = pubspec_version
+    UI.success("pubspec.yaml: #{version[:name]} (#{version[:number]})")
+
+    api_key = asc_api_key
+    UI.success("Файл ключа App Store Connect на месте")
+
+    # Реальный запрос к Apple: проверяет, что ключ и issuer действительно рабочие.
+    # Только чтение, ничего не меняет.
+    latest = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      initial_build_number: 0
+    )
+    UI.success("Apple отвечает. Последняя сборка в TestFlight: #{latest}")
+
+    if latest.to_i >= version[:number].to_i
+      UI.important(
+        "В TestFlight уже есть сборка #{latest}, а в pubspec.yaml номер #{version[:number]}. " \
+        "Apple не примет тот же или меньший номер — поднимите его в pubspec.yaml."
+      )
+    end
+  end
+
+  desc "Собрать релизный ipa и отправить в TestFlight"
+  desc "Версия и номер сборки берутся из pubspec.yaml"
+  lane :beta do |options|
+    # Ключ App Store Connect читаем ДО долгой сборки, чтобы упасть сразу,
+    # если он не настроен, а не через 10 минут.
+    api_key = asc_api_key
+
+    version = pubspec_version
+    UI.important("Версия из pubspec.yaml: #{version[:name]} (#{version[:number]})")
+
+    flutter_build_ios
+    verify_generated_xcconfig(version)
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "app-store",
+      # flutter уже собрал всё, что нужно — чистить незачем
+      clean: false,
+      output_directory: File.join(FLUTTER_ROOT, "build", "ios", "fastlane"),
+      output_name: "Runner.ipa",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: TEAM_ID,
+        uploadSymbols: true,
+        # Без этого Xcode при экспорте сам поднимает номер сборки выше того,
+        # что уже лежит в App Store Connect, и в ipa уезжает не то, что в pubspec.yaml.
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+
+    verify_ipa_version(version)
+
+    changelog = options[:changelog] || ENV["TESTFLIGHT_CHANGELOG"]
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      # Если передали текст «что нового», приходится дождаться обработки сборки
+      # на стороне Apple (10-20 минут) — иначе текст некуда записать.
+      skip_waiting_for_build_processing: changelog.nil?,
+      changelog: changelog,
+      # Внешним тестировщикам не раздаём автоматически — только внутренним
+      distribute_external: false
+    )
+
+    UI.success("Сборка #{version[:name]} (#{version[:number]}) отправлена в TestFlight")
+  end
+
+  desc "Только собрать ipa, без отправки (для проверки, что сборка проходит)"
+  lane :build_only do
+    version = pubspec_version
+    UI.important("Версия из pubspec.yaml: #{version[:name]} (#{version[:number]})")
+
+    flutter_build_ios
+    verify_generated_xcconfig(version)
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: false,
+      output_directory: File.join(FLUTTER_ROOT, "build", "ios", "fastlane"),
+      output_name: "Runner.ipa",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: TEAM_ID,
+        uploadSymbols: true,
+        # Без этого Xcode при экспорте сам поднимает номер сборки выше того,
+        # что уже лежит в App Store Connect, и в ipa уезжает не то, что в pubspec.yaml.
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+
+    verify_ipa_version(version)
+  end
+  desc "Загрузить в TestFlight уже собранный ipa (без пересборки)"
+  lane :upload_ipa do |options|
+    api_key = asc_api_key
+
+    ipa_path = options[:ipa] || Dir[File.join(FLUTTER_ROOT, "build", "ios", "**", "*.ipa")]
+                                  .max_by { |f| File.mtime(f) }
+    UI.user_error!("Не найден ipa. Укажите путь: fastlane ios upload_ipa ipa:путь/к/App.ipa") if ipa_path.nil?
+    ipa_path = File.expand_path(ipa_path)
+    UI.user_error!("Файл не найден: #{ipa_path}") unless File.exist?(ipa_path)
+    UI.message("Загружаю: #{ipa_path}")
+
+    changelog = options[:changelog] || ENV["TESTFLIGHT_CHANGELOG"]
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: changelog.nil?,
+      changelog: changelog,
+      distribute_external: false
+    )
+  end
+end
+
+# --- вспомогательные методы -------------------------------------------------
+
+# Проверяет версию в уже собранном ipa — последняя точка, где её ещё можно подменить.
+def verify_ipa_version(version)
+  ipa_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+  return UI.important("Путь к ipa неизвестен, проверку версии пропускаю") if ipa_path.nil?
+
+  tmp_plist = "#{ipa_path}.Info.plist"
+  sh("/usr/bin/unzip -o -p '#{ipa_path}' 'Payload/*.app/Info.plist' > '#{tmp_plist}'", log: false)
+  built = {
+    name: sh("/usr/bin/plutil -extract CFBundleShortVersionString raw '#{tmp_plist}'", log: false).strip,
+    number: sh("/usr/bin/plutil -extract CFBundleVersion raw '#{tmp_plist}'", log: false).strip
+  }
+  File.delete(tmp_plist) if File.exist?(tmp_plist)
+
+  if built[:name] == version[:name] && built[:number] == version[:number]
+    UI.success("В ipa версия #{built[:name]} (#{built[:number]}) — совпадает с pubspec.yaml")
+    return
+  end
+
+  UI.user_error!(
+    "В готовом ipa версия #{built[:name]} (#{built[:number]}), а в pubspec.yaml " \
+    "#{version[:name]} (#{version[:number]}). Версию кто-то подменил на этапе экспорта."
+  )
+end
+
+# Запускает flutter-сборку. Именно она перегенерирует ios/Flutter/Generated.xcconfig,
+# откуда Xcode берёт CFBundleShortVersionString / CFBundleVersion.
+# Без этого шага в ipa уедет версия от прошлой сборки.
+def flutter_build_ios
+  args = ["fvm", "flutter", "build", "ios", "--release"]
+  # gym всё равно подписывает архив заново, так что подпись на этом шаге
+  # можно пропустить и сэкономить время: FLUTTER_BUILD_NO_CODESIGN=1
+  args << "--no-codesign" if ENV["FLUTTER_BUILD_NO_CODESIGN"] == "1"
+
+  UI.message("Запускаю: #{args.join(' ')}")
+  Dir.chdir(FLUTTER_ROOT) { sh(*args) }
+end
+
+# Читает version: X.Y.Z+N из pubspec.yaml
+def pubspec_version
+  pubspec = File.join(FLUTTER_ROOT, "pubspec.yaml")
+  line = File.readlines(pubspec).find { |l| l =~ /^version:/ }
+  UI.user_error!("В #{pubspec} не найдена строка version:") if line.nil?
+
+  raw = line.split(":", 2).last.strip
+  name, number = raw.split("+", 2)
+  UI.user_error!("Version '#{raw}' в pubspec.yaml без номера сборки (нужен формат 1.2.3+45)") if number.nil?
+
+  { name: name, number: number }
+end
+
+# Проверяет, что flutter действительно записал в Generated.xcconfig версию из pubspec.
+# Если тут расхождение — в TestFlight уехала бы не та версия.
+def verify_generated_xcconfig(version)
+  path = File.join(FLUTTER_ROOT, "ios", "Flutter", "Generated.xcconfig")
+  UI.user_error!("Не найден #{path} — flutter build ios не отработал") unless File.exist?(path)
+
+  config = File.readlines(path).each_with_object({}) do |line, acc|
+    key, value = line.strip.split("=", 2)
+    acc[key] = value if value
+  end
+
+  built = { name: config["FLUTTER_BUILD_NAME"], number: config["FLUTTER_BUILD_NUMBER"] }
+  return if built[:name] == version[:name] && built[:number] == version[:number]
+
+  UI.user_error!(
+    "Generated.xcconfig не совпадает с pubspec.yaml: " \
+    "в конфиге #{built[:name]} (#{built[:number]}), в pubspec #{version[:name]} (#{version[:number]}). " \
+    "Похоже, flutter build ios не перегенерировал конфиг."
+  )
+end
+
+# Собирает ключ App Store Connect из переменных окружения (fastlane/.env)
+def asc_api_key
+  key_id = ENV["ASC_KEY_ID"]
+  issuer_id = ENV["ASC_ISSUER_ID"]
+  key_path = ENV["ASC_KEY_FILEPATH"]
+
+  missing = { "ASC_KEY_ID" => key_id, "ASC_ISSUER_ID" => issuer_id, "ASC_KEY_FILEPATH" => key_path }
+           .select { |_, v| v.nil? || v.empty? }.keys
+  unless missing.empty?
+    UI.user_error!(
+      "Не заданы переменные #{missing.join(', ')}. " \
+      "Скопируйте ios/fastlane/.env.example в ios/fastlane/.env и заполните значения."
+    )
+  end
+
+  key_path = File.expand_path(key_path, File.join(FLUTTER_ROOT, "ios"))
+  UI.user_error!("Файл ключа не найден: #{key_path}") unless File.exist?(key_path)
+
+  app_store_connect_api_key(
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_filepath: key_path,
+    in_house: false
+  )
+end
