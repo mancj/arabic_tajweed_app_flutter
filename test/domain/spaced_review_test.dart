@@ -74,6 +74,27 @@ void main() {
     expect(exercises.length, rules.tasksPerSession);
   });
 
+  test('повтор идёт блоком в конце, после закрепления по теме', () {
+    final topic = topicOf('m.forms');
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
+
+    final exercises = ExerciseGenerator(
+      curriculum: curriculum,
+      rules: rules,
+      random: Random(7),
+    ).build(plan: plan, ctx: afterFirstLesson, sessionId: 2);
+
+    final firstOld = exercises.indexWhere(
+      (e) => !topic.counterOf.contains(e.atom.id),
+    );
+    expect(firstOld, greaterThan(0));
+    expect(
+      exercises.skip(firstOld).every((e) => !topic.counterOf.contains(e.atom.id)),
+      isTrue,
+      reason: 'сначала материал урока, потом старое — ТЗ §6.2',
+    );
+  });
+
   test('очередь отдаёт первыми тех, кого дольше не показывали', () {
     final ctx = ctxOf({
       'ba.isolated': const AtomProgress(

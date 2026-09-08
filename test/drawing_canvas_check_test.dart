@@ -4,7 +4,7 @@ import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 
 void main() {
   testWidgets('check() видит фигуру и штрихи', (tester) async {
-    final controller = DrawingController(strokeWidth: 16);
+    final controller = DrawingController();
     const canvasSize = Size(360, 480);
 
     await tester.pumpWidget(

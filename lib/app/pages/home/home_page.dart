@@ -159,11 +159,17 @@ class _TracingCard extends GetView<HomeController> {
                   placeholder: controller.shape.value,
                   // Перо берётся из фигуры: тогда обводка ложится ровно
                   // в толщину подсказки.
-                  color: UIColors.tealDark,
+                  // Четыре слоя, четыре цвета: контур под всем, поверх
+                  // него показ, дальше чернила руки, и собранная буква
+                  // вместо них, когда часть сошлась.
                   placeholderColor: UIColors.letterGhost,
+                  demoColor: UIColors.teal,
+                  color: UIColors.tealDark,
+                  filledColor: UIColors.tealDark,
                   placeholderPadding: 0,
                   onProgress: controller.onProgress,
                   onChecked: controller.onChecked,
+                  strokeWidth: 16,
                 ),
               ),
             ),

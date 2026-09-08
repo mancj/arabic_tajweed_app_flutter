@@ -8,7 +8,7 @@ void main() {
 
   Future<(DrawingController, Rect, ResolvedTracingShape, List<TracingProgress>)>
   pumpCanvas(WidgetTester tester) async {
-    final controller = DrawingController(strokeWidth: 16);
+    final controller = DrawingController();
     final progress = <TracingProgress>[];
 
     await tester.pumpWidget(

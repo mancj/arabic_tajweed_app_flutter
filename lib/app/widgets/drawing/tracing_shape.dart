@@ -2,7 +2,36 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter/animation.dart';
+
 import 'stroke_signature.dart';
+
+/// Как показ распределён по времени: пишет, держит написанное, растворяется.
+///
+/// Всё это одна анимация, потому что это один жест. Без выдержки и
+/// растворения дорисованная буква осталась бы лежать в полную силу и стала
+/// бы неотличима от чернил человека.
+class TracingDemo {
+  const TracingDemo._();
+
+  /// Доля времени, за которую буква дорисовывается.
+  static const drawing = 0.72;
+
+  /// Докуда написанное держат, прежде чем растворить.
+  static const holding = 0.88;
+
+  /// Сколько буквы обведено к моменту [t].
+  ///
+  /// Кривая приложена внутри доли письма, а не ко всей анимации: иначе перо
+  /// разгонялось бы к концу буквы и обрывалось на полном ходу — вместо
+  /// того чтобы притормозить, как останавливается рука.
+  static double traced(double t, {Curve curve = Curves.easeInOut}) =>
+      curve.transform((t / drawing).clamp(0.0, 1.0));
+
+  /// Насколько показ ещё виден.
+  static double opacity(double t) =>
+      t <= holding ? 1 : (1 - (t - holding) / (1 - holding)).clamp(0.0, 1.0);
+}
 
 /// Часть фигуры, которую пользователь рисует за один заход: основа буквы,
 /// диакритическая точка и т.д. Части проверяются и заполняются по очереди.
@@ -276,6 +305,76 @@ class ResolvedTracingPart {
   /// [strokeWidth] перекрывает собственную толщину части — им рисуют тем же
   /// пером, каким пользователь ведёт линию. Радиус точки меняется в той же
   /// пропорции, иначе точка «потолстеет» относительно линии.
+  List<PathMetric>? _metrics;
+
+  /// Мерки линий части. Считаются один раз: пути после раскладки уже
+  /// не меняются, а показ дёргает их каждый кадр.
+  List<PathMetric> get _pathMetrics =>
+      _metrics ??= [for (final path in paths) ...path.computeMetrics()];
+
+  /// Длина части в пикселях пера: линии плюс время на каждую точку.
+  /// По ней считают, сколько показ должен идти, чтобы скорость пера была
+  /// одинаковой у алифа и у сина.
+  double traceLength({double? strokeWidth}) {
+    final width = strokeWidth ?? this.strokeWidth;
+    var total = 0.0;
+    for (final metric in _pathMetrics) {
+      total += metric.length;
+    }
+    return total + dots.length * width * 2;
+  }
+
+  /// Рисует часть недорисованной — на долю [progress] от её длины.
+  ///
+  /// Линии идут одна за другой в порядке написания, каждая от начала
+  /// к концу; точки в конце вырастают из ничего по очереди. Этим показом
+  /// холст сам обводит букву: иначе про порядок и направление человеку
+  /// взяться неоткуда.
+  void paintTrace(
+    Canvas canvas,
+    Color color,
+    double progress, {
+    double? strokeWidth,
+  }) {
+    final width = strokeWidth ?? this.strokeWidth;
+    final ratio = this.strokeWidth == 0 ? 1.0 : width / this.strokeWidth;
+    final dotTime = width * 2;
+    final total = traceLength(strokeWidth: width);
+    if (total <= 0) return;
+
+    var left = progress.clamp(0.0, 1.0) * total;
+
+    final stroke = Paint()
+      ..color = color
+      ..strokeWidth = width
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..isAntiAlias = true;
+
+    for (final metric in _pathMetrics) {
+      if (left <= 0) return;
+      final taken = math.min(left, metric.length);
+      canvas.drawPath(metric.extractPath(0, taken), stroke);
+      left -= taken;
+    }
+
+    final fill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    for (final dot in dots) {
+      if (left <= 0) return;
+      canvas.drawCircle(
+        dot,
+        dotRadius * ratio * math.min(1, left / dotTime),
+        fill,
+      );
+      left -= dotTime;
+    }
+  }
+
   void paint(Canvas canvas, Color color, {double? strokeWidth}) {
     final width = strokeWidth ?? this.strokeWidth;
     final ratio = this.strokeWidth == 0 ? 1.0 : width / this.strokeWidth;
@@ -371,6 +470,51 @@ class ResolvedTracingShape {
   void paint(Canvas canvas, Color color, {double? strokeWidth}) {
     for (final part in parts) {
       part.paint(canvas, color, strokeWidth: strokeWidth);
+    }
+  }
+
+  /// Длина показа для частей начиная с [from].
+  ///
+  /// [gap] — пауза между частями, выраженная в той же длине: перо на неё
+  /// как бы отрывают. Считается в длине, а не во времени, чтобы пауза
+  /// попала и в отрисовку, и в длительность из одного числа.
+  double traceLength({double? strokeWidth, int from = 0, double gap = 0}) {
+    var total = 0.0;
+    for (var i = from; i < parts.length; i++) {
+      total += parts[i].traceLength(strokeWidth: strokeWidth);
+    }
+    return total + gap * math.max(0, parts.length - from - 1);
+  }
+
+  /// Обводит части подряд, как одну демонстрацию: сперва основа, следом
+  /// точки. Показывать их порознь незачем — человеку нужна вся буква
+  /// сразу, чтобы понять, из чего она складывается.
+  ///
+  /// Между частями перо отрывают на [gap]: без паузы точка вырастала бы
+  /// ровно в тот момент, когда основа дописана, и читалась бы её
+  /// продолжением, а не отдельным движением.
+  void paintTrace(
+    Canvas canvas,
+    Color color,
+    double progress, {
+    double? strokeWidth,
+    int from = 0,
+    double gap = 0,
+  }) {
+    final total = traceLength(strokeWidth: strokeWidth, from: from, gap: gap);
+    if (total <= 0) return;
+
+    var left = progress.clamp(0.0, 1.0) * total;
+    for (var i = from; i < parts.length; i++) {
+      if (left <= 0) return;
+      final length = parts[i].traceLength(strokeWidth: strokeWidth);
+      parts[i].paintTrace(
+        canvas,
+        color,
+        length <= 0 ? 1 : (left / length).clamp(0.0, 1.0),
+        strokeWidth: strokeWidth,
+      );
+      left -= length + gap;
     }
   }
 }

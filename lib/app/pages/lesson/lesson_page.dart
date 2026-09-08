@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -237,8 +238,14 @@ class _TracingTask extends GetView<LessonController> {
                       matcher: LessonController.tracingMatcher,
                       mode: controller.canvasMode,
                       placeholder: controller.tracingShape.value,
-                      color: UIColors.tealDark,
+                      // Четыре слоя, четыре цвета: контур под всем,
+                      // поверх него показ, дальше чернила руки, и собранная
+                      // буква вместо них, когда часть сошлась.
                       placeholderColor: UIColors.letterGhost,
+                      demoColor: UIColors.teal,
+                      color: UIColors.tealDark,
+                      filledColor: UIColors.tealDark,
+                      strokeWidth: 16,
                       placeholderPadding: 0,
                       onProgress: controller.onTracingProgress,
                       onMerged: controller.onTracingMerged,
@@ -284,18 +291,25 @@ class _ClearButton extends GetView<LessonController> {
       child: AppGestureDetector(
         onTap: controller.clearTracing,
         child: Container(
-          width: 40,
-          height: 40,
+          width: 42,
+          height: 42,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: UIColors.white,
             border: Border.all(color: UIColors.cardBorder, width: 0.6),
+            boxShadow: [
+               BoxShadow(
+                 color: UIColors.black.withValues(alpha: 0.05),
+                 blurRadius: 4,
+                 offset: const Offset(0, 2),
+               ),
+            ]
           ),
           child: const Icon(
-            Icons.backspace_outlined,
+            CupertinoIcons.delete,
             size: 18,
-            color: UIColors.tealDark,
+            color: UIColors.ink,
           ),
         ),
       ),

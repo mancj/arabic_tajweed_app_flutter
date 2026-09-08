@@ -14,14 +14,23 @@ import 'tracing_matcher.dart';
 ///    не «звенел» на месте.
 /// Итоговая кривая строится сплайном Catmull-Rom в [DrawingStroke.toPath].
 class DrawingController extends ChangeNotifier {
+  /// [smoothing] — доля пути до пальца, которую линия проходит за одно
+  /// событие: 1 — идёт точно за пальцем, 0.35 — заметно сглаживает.
+  /// [minDistance] — ближе этого (в пикселях) точки не кладутся.
+  ///
+  /// Толщины здесь нет намеренно: её знает только [DrawingCanvas], потому
+  /// что перо масштабируется вместе с фигурой при раскладке.
   DrawingController({
     Color color = Colors.black,
-    double strokeWidth = 26,
     double smoothing = 0.35,
     double minDistance = 3,
-  }) : _color = color,
-       _strokeWidth = strokeWidth,
-       _smoothing = smoothing.clamp(0.05, 1.0),
+  }) : assert(
+         smoothing > 0 && smoothing <= 1,
+         'smoothing — доля от 0 до 1, а не пиксели',
+       ),
+       assert(minDistance >= 0),
+       _color = color,
+       _smoothing = smoothing,
        _minDistance = minDistance;
 
   final double _smoothing;
@@ -34,7 +43,10 @@ class DrawingController extends ChangeNotifier {
   final List<Offset> _currentPoints = [];
 
   Color _color;
-  double _strokeWidth;
+
+  /// Ставится холстом из [DrawingCanvas._syncPen]. До первой раскладки
+  /// штрихи рисуются этой заглушкой.
+  double _strokeWidth = 1;
   Offset? _filtered;
   Offset? _raw;
   TracingChecker? _checker;

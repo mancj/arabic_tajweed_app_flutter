@@ -35,7 +35,7 @@ class LessonLetterForms {
 }
 
 class HomeController extends GetxController {
-  final drawing = DrawingController(smoothing: .4, minDistance: 8);
+  final drawing = DrawingController(smoothing: .5, minDistance: 3);
 
   /// Набор берётся из курикулума, а не из своего списка: так на отладочном
   /// экране всегда ровно те же буквы и формы, что урок умеет спрашивать

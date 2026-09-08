@@ -11,7 +11,7 @@ void main() {
     double? strokeWidth,
     double penScale = 1,
   }) async {
-    final controller = DrawingController(strokeWidth: 1);
+    final controller = DrawingController();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -33,6 +33,19 @@ void main() {
     await tester.pump();
     return controller;
   }
+
+  testWidgets('без фигуры и явной толщины — перо по умолчанию', (tester) async {
+    final controller = DrawingController();
+    await tester.pumpWidget(
+      MaterialApp(home: DrawingCanvas(controller: controller)),
+    );
+    await tester.pump();
+
+    expect(
+      controller.strokeWidth,
+      closeTo(DrawingCanvas.defaultStrokeWidth * 1.1, 0.01),
+    );
+  });
 
   testWidgets('без явной толщины перо берётся из фигуры', (tester) async {
     final controller = await pumpCanvas(tester);
@@ -56,11 +69,7 @@ void main() {
   });
 
   testWidgets('явная толщина тоже умножается', (tester) async {
-    final controller = await pumpCanvas(
-      tester,
-      strokeWidth: 12,
-      penScale: 1.5,
-    );
+    final controller = await pumpCanvas(tester, strokeWidth: 12, penScale: 1.5);
     expect(controller.strokeWidth, closeTo(18, 0.01));
   });
 }

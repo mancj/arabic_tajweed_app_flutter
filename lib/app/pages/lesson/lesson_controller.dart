@@ -67,7 +67,7 @@ class LessonController extends GetxController {
 
   /// Холст обводки. Один на весь урок: между заданиями он очищается,
   /// а не пересоздаётся.
-  final drawing = DrawingController(smoothing: .4, minDistance: 8);
+  final drawing = DrawingController(smoothing: 1, minDistance: 3);
 
   /// Фигура текущего задания. null — обводить нечего, показываем заглушку.
   final tracingShape = Rxn<TracingShape>();
