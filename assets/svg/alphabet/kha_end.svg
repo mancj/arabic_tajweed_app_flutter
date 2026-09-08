@@ -2,8 +2,8 @@
 <g id="kha_end">
 <g id="Group 22">
 <path id="3-dot" d="M150.494 50.6592V54.8317" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M78.9646 96.8551C113.984 84.9336 144.533 107.286 201.161 112.502C178.063 119.208 53.6313 142.306 83.4352 236.188C97.8711 281.662 179.801 288.842 206.376 262.267" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M264 178.071C264 178.071 260.023 178.071 213.082 178.071C191.474 178.071 169.867 161.232 169.867 126.659" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="2-base" d="M85.5831 90C122.52 97.6748 146.681 89.7565 203.309 94.9722C180.21 101.678 55.7791 124.776 85.5831 218.659C100.019 264.132 176.733 260.075 203.309 233.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M275 129C275 129 258.045 129 211.162 129C189.581 129 168 121.467 168 106" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

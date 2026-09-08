@@ -160,7 +160,7 @@ class _LetterCard extends StatelessWidget {
             transcription,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: UITextStyles.fontPrata,
+              fontFamily: UITextStyles.fontSerif,
               fontSize: 17 * k,
               color: UIColors.ink,
             ),

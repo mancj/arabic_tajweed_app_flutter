@@ -1,14 +1,9 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="dod_end" clip-path="url(#clip0_112_2271)">
+<g id="dod_end">
 <g id="Group 36">
-<path id="3-dot" d="M223.512 79.2817V82.7734" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M155.802 187.257C175.755 157.744 223.64 106.949 255.564 139.87C295.469 181.022 154.797 223.904 116.521 147.352C98.4393 111.189 172.014 231.526 72.8753 237.761C-5.74007 242.706 24.865 164.187 24.865 164.187" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M321.5 187.149H288.98C272.145 187.149 263.292 183.408 250.322 175.926" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M224 100V103.492" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="2-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 142.585 167.735 135.643 153.85C117.664 117.891 170.148 220.808 71.5704 227.008C-6.60007 231.925 23.8318 153.85 23.8318 153.85" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M311.5 185H274.452C257.713 185 240 185 218.5 185" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<defs>
-<clipPath id="clip0_112_2271">
-<rect width="329" height="322.5" fill="white"/>
-</clipPath>
-</defs>
 </svg>

@@ -1,8 +1,6 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="hha_end">
-<g id="Group 18">
-<path id="2-base" d="M78.9646 89.8251C113.984 77.9036 144.533 100.256 201.161 105.472C178.063 112.178 53.6313 135.276 83.4352 229.158C97.8711 274.632 179.801 281.812 206.376 255.237" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M262 171.041C262 171.041 260.023 171.041 213.082 171.041C191.474 171.041 169.867 154.201 169.867 119.629" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+<path id="2-base" d="M85.5831 90C122.52 97.6748 146.681 89.7565 203.309 94.9722C180.21 101.678 55.7791 124.776 85.5831 218.659C100.019 264.132 176.733 260.075 203.309 233.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M275 129C275 129 258.045 129 211.162 129C189.581 129 168 121.467 168 106" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

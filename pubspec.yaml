@@ -77,10 +77,11 @@ flutter:
     - family: Playfair
       fonts:
         - asset: assets/fonts/Playfair/Playfair-Variable.ttf
-    - family: Prata
+    - family: STIXTwoText
       fonts:
-        - asset: assets/fonts/Prata/Prata-Regular.ttf
-          weight: 400
+        - asset: assets/fonts/STIXTwoText/STIXTwoText-Variable.ttf
+        - asset: assets/fonts/STIXTwoText/STIXTwoText-Italic-Variable.ttf
+          style: italic
     - family: ScheherazadeNew
       fonts:
         - asset: assets/fonts/ScheherazadeNew/ScheherazadeNew-Regular.ttf

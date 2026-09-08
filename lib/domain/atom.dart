@@ -40,6 +40,7 @@ class Atom {
     this.form,
     this.confusableWith = const [],
     this.tracing,
+    this.example,
   });
 
   factory Atom.fromJson(Map<String, dynamic> json) => _$AtomFromJson(json);
@@ -72,6 +73,11 @@ class Atom {
   /// `ba_mid`, `ba_end`. Атом без этого поля обводкой не спрашивается.
   final String? tracing;
 
+  /// Слово, в котором форма встречается: соединённая форма показывается
+  /// не только глифом с татвилями, но и в контексте. Только у форм,
+  /// отличных от изолированной.
+  final WordExample? example;
+
   Map<String, dynamic> toJson() => _$AtomToJson(this);
 
   @override
@@ -82,4 +88,21 @@ class Atom {
 
   @override
   String toString() => 'Atom($id)';
+}
+
+/// Слово-пример и позиция буквы в нём, которую надо подсветить.
+@JsonSerializable()
+class WordExample {
+  const WordExample({required this.word, required this.index});
+
+  factory WordExample.fromJson(Map<String, dynamic> json) =>
+      _$WordExampleFromJson(json);
+
+  final String word;
+
+  /// Индекс буквы в [word]. Арабские буквы — по одной кодовой единице,
+  /// поэтому обычный строковый индекс.
+  final int index;
+
+  Map<String, dynamic> toJson() => _$WordExampleToJson(this);
 }

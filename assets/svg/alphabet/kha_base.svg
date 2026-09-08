@@ -1,8 +1,8 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="kha_base">
 <g id="Group 21">
-<path id="1-base" d="M99.0626 96.8551C134.082 84.9336 164.631 107.286 221.259 112.502C198.161 119.208 73.7293 142.306 103.533 236.188C117.969 281.662 199.899 288.842 226.474 262.267" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 <path id="2-dot" d="M170.592 50.6592V54.8317" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="1-base" d="M101.583 97C138.52 104.675 162.681 96.7565 219.309 101.972C196.21 108.678 71.7791 131.776 101.583 225.659C116.019 271.132 192.733 267.075 219.309 240.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

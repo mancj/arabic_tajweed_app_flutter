@@ -1,10 +1,10 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="tha_end">
 <g id="Frame 13">
-<path id="4-dot" d="M102.408 101.161V105.333" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="3-dot" d="M128.486 65.6941V69.8666" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M159.78 101.161V105.333" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M302.745 203.388C292.661 203.215 295.075 202.971 266.702 203.388C238.329 203.806 234.712 170.53 236.451 153.839C231.235 161.663 219.761 186.177 180.643 199.737C141.526 213.298 0.6429 225.871 46.0195 138.769" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M50.4316 163.839C12.4316 250.339 130.432 229.839 172.432 229.839C214.432 229.839 212.932 185.839 214.432 171.339C215.852 191.339 221.015 230.257 249.388 229.839C277.762 229.422 292.348 229.665 302.432 229.839" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="4-dot" d="M106 121.967V126.139" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M132.078 86.5V90.6725" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M163.373 121.967V126.139" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

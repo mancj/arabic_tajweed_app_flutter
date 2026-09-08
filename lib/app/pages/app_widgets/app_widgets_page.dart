@@ -29,6 +29,14 @@ class AppWidgetsPage extends GetView<AppWidgetsController> {
               isArabic: true,
               letter: 'ق',
               question: 'Какая это буква?',
+              subtitle: 'в начале',
+            ),
+            Margin.vertical(8),
+            LetterWidgetCard(
+              labelText: 'Буква',
+              isArabic: true,
+              letter: 'ص',
+              subtitle: 'в конце',
             ),
             Margin.vertical(8),
             LetterWidgetCard(

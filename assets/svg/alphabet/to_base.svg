@@ -1,7 +1,5 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="to_base">
-<g id="Group 39">
-<path id="1-base" d="M136.647 61.1265V244.968C142.906 205.155 221.988 147.185 240.439 197.777C258.89 248.37 154.902 253.835 71.9722 244.968" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+<path id="1-base" d="M127 69V221C150 188.667 210.31 155.526 232 183C262 221 210 233.5 178.5 233.5C153.3 233.5 107 233.5 87 233.5" stroke="black" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

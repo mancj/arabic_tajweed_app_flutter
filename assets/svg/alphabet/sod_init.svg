@@ -1,7 +1,5 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="sod_init">
-<g id="Group 34">
-<path id="1-base" d="M167.837 184.766C187.677 155.42 235.291 104.912 267.034 137.647C306.713 178.566 174.405 224.337 135.966 147.459C126.303 128.133 167.837 202.018 54.7484 184.766" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+<path id="1-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 141.442 157.385 134.5 143.5C134.5 159.5 134.5 185.024 101 185.024H43.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

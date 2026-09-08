@@ -124,4 +124,51 @@ void main() {
 
     expect(const ReviewQueue().build(ctx, sessionId: 9), ['tha.isolated']);
   });
+
+  test('недоученные идут раньше освоенных, даже если показаны позже', () {
+    final ctx = ctxOf({
+      'ba.isolated': const AtomProgress(
+        state: AtomState.known,
+        lastSeenSession: 1,
+      ),
+      'jim.isolated': const AtomProgress(
+        state: AtomState.learning,
+        lastSeenSession: 7,
+      ),
+    });
+
+    final queue = const ReviewQueue().build(ctx, sessionId: 9);
+    expect(queue, ['jim.isolated', 'ba.isolated']);
+  });
+
+  test('узкая тема добирается повтором до полного урока', () {
+    // Восемь букв известны, тема «айн» вводит только две.
+    final ctx = ctxOf({
+      for (final id in [
+        'alif.isolated',
+        'ba.isolated',
+        'ta.isolated',
+        'tha.isolated',
+        'jim.isolated',
+        'hha.isolated',
+        'kha.isolated',
+        'sin.isolated',
+        'to.isolated',
+        'zho.isolated',
+      ])
+        id: const AtomProgress(state: AtomState.known, lastSeenSession: 3),
+    });
+    final topic = topicOf('m.ayn');
+    final plan = board.planFor(topic, ctx, sessionId: 4);
+
+    final exercises = ExerciseGenerator(
+      curriculum: curriculum,
+      rules: rules,
+      random: Random(7),
+    ).build(plan: plan, ctx: ctx, sessionId: 4);
+
+    final own = exercises.where((e) => topic.counterOf.contains(e.atom.id));
+    expect(own, hasLength(6), reason: 'два новых атома по три задания');
+    expect(exercises.length, rules.tasksPerSession);
+  });
 }

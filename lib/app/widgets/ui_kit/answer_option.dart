@@ -30,7 +30,7 @@ class AnswerOption extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 62,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         decoration: SquircleBorders.squircleBorder(
           color: UIColors.optionBackground,
           borderRadius: 18,
@@ -56,6 +56,7 @@ class AnswerOption extends StatelessWidget {
             ),
             const Margin.horizontal(12),
             Expanded(child: child),
+            const Margin.horizontal(8),
           ],
         ),
       ),

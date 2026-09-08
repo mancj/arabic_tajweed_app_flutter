@@ -34,6 +34,11 @@ class DebugPage extends GetView<DebugController> {
                   onTap: controller.resetProgress,
                 ),
                 _DebugTile(
+                  title: 'Атомы',
+                  subtitle: 'Состояние каждого атома по логу',
+                  onTap: controller.openAtomProgress,
+                ),
+                _DebugTile(
                   title: 'Курс',
                   subtitle: 'Главный экран с темами',
                   onTap: controller.openCourse,

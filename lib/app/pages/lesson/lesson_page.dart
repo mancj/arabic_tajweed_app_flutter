@@ -19,6 +19,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/question_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/exercise.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
@@ -394,7 +395,19 @@ class _FormCard extends GetView<LessonController> {
         const Margin.vertical(16),
         _LetterCardFor(atom: atom),
         const Margin.vertical(16),
-        RuleCard(badge: 'Соединение', title: atom.label, text: atom.note),
+        RuleCard(
+          badge: 'Соединение',
+          title: atom.label,
+          text: atom.note,
+          child: switch (atom.example) {
+            final example? => HighlightedWord(
+              word: example.word,
+              index: example.index,
+              fontSize: 48,
+            ),
+            null => null,
+          },
+        ),
       ],
     );
   }

@@ -1,10 +1,10 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="tha_base">
 <g id="Frame 13">
-<path id="4-dot" d="M132.408 101.161V105.333" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="3-dot" d="M158.486 65.6941V69.8666" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M189.78 101.161V105.333" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M256.482 130.423C265.001 141.898 267.957 174.235 240.835 188.839C161.356 231.636 30.6429 225.87 76.0194 138.768" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="4-dot" d="M136 120.967V125.139" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M162.078 85.5V89.6725" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M193.373 120.967V125.139" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M245.606 152.5C256.772 178.5 266.006 230.5 213.606 230.5C161.206 230.5 130.606 230.5 103.606 230.5C81.6059 230.5 59.2058 204 83.6058 162" stroke="black" stroke-width="20" stroke-linecap="round"/>
 </g>
 </g>
 </svg>

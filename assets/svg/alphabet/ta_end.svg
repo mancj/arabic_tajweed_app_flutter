@@ -1,9 +1,9 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="ta_end">
 <g id="Frame 13">
-<path id="3-dot" d="M106.878 101.161V105.333" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M152.776 96.9883V101.161" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M305 203.388C294.916 203.214 294.33 202.971 265.957 203.388C237.583 203.805 233.967 170.529 235.706 153.839C230.49 161.663 219.016 186.176 179.898 199.737C140.78 213.298 -0.1022 225.87 45.2744 138.768" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M110 110V114.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M151 110V114.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M46 151.839C8 238.339 126 217.839 168 217.839C210 217.839 208.5 173.839 210 159.339C211.421 179.339 216.583 218.256 244.957 217.839C273.33 217.422 287.916 217.665 298 217.839" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

@@ -42,6 +42,9 @@ L = [
 ]
 BY = {r[0]: r for r in L}
 
+# Буквы, не соединяющиеся со следующей: у них нет начальной формы.
+NOJOIN = {r[1] for r in L if r[3] is None}
+
 # Что от буквы остаётся в начальной и средней форме и что возвращается
 # в конечной. Отсюда собираются объяснения соединений: каждая форма
 # показывается карточкой в тот момент, когда впервые встречается.
@@ -105,6 +108,44 @@ TRACING_SUFFIX = {'isolated': 'base', 'initial': 'init',
 def tracing_of(lid, form):
     name = f'{lid}_{TRACING_SUFFIX[form]}'
     return name if os.path.exists(f'{SVG}/{name}.svg') else None
+
+# Слово-пример на соединённую форму: где буква встречается в таком виде.
+# Индекс — позиция буквы в слове. Слова короткие и по возможности из букв,
+# введённых раньше; где нельзя, берётся самое узнаваемое слово.
+#
+# Форма в слове должна быть именно той, что показываем: перед конечной и
+# средней формой стоит буква, которая соединяется влево (после ا د ذ ر ز و
+# буква рисуется как отдельная), а начальная и средняя не последние в слове.
+WORDS = {
+ 'alif':  {'finalForm': ('بابا', 1)},
+ 'ba':    {'initial': ('بات', 0),  'medial': ('ثبت', 1),  'finalForm': ('كتب', 2)},
+ 'ta':    {'initial': ('تاب', 0),  'medial': ('كتاب', 1), 'finalForm': ('بنت', 2)},
+ 'tha':   {'initial': ('ثابت', 0), 'medial': ('مثل', 1),  'finalForm': ('ثلث', 2)},
+ 'jim':   {'initial': ('جبل', 0),  'medial': ('نجم', 1),  'finalForm': ('ثلج', 2)},
+ 'hha':   {'initial': ('حب', 0),   'medial': ('بحث', 1),  'finalForm': ('ربح', 2)},
+ 'kha':   {'initial': ('خبز', 0),  'medial': ('بخت', 1),  'finalForm': ('شيخ', 2)},
+ 'dal':   {'finalForm': ('جد', 1)},
+ 'dhal':  {'finalForm': ('خذ', 1)},
+ 'ra':    {'finalForm': ('بحر', 2)},
+ 'zay':   {'finalForm': ('خبز', 2)},
+ 'sin':   {'initial': ('سبت', 0),  'medial': ('جسر', 1),  'finalForm': ('شمس', 2)},
+ 'shin':  {'initial': ('شجر', 0),  'medial': ('بشر', 1),  'finalForm': ('عيش', 2)},
+ 'sod':   {'initial': ('صبر', 0),  'medial': ('بصر', 1),  'finalForm': ('نص', 1)},
+ 'dod':   {'initial': ('ضرب', 0),  'medial': ('خضر', 1),  'finalForm': ('بيض', 2)},
+ 'to':    {'initial': ('طبخ', 0),  'medial': ('خطر', 1),  'finalForm': ('خط', 1)},
+ 'zho':   {'initial': ('ظهر', 0),  'medial': ('حظر', 1),  'finalForm': ('حظ', 1)},
+ 'ayn':   {'initial': ('عرب', 0),  'medial': ('شعر', 1),  'finalForm': ('ربع', 2)},
+ 'ghayn': {'initial': ('غرب', 0),  'medial': ('بغداد', 1), 'finalForm': ('صبغ', 2)},
+ 'fa':    {'initial': ('فتح', 0),  'medial': ('سفر', 1),  'finalForm': ('صف', 1)},
+ 'qof':   {'initial': ('قصر', 0),  'medial': ('بقر', 1),  'finalForm': ('حق', 1)},
+ 'kaf':   {'initial': ('كتب', 0),  'medial': ('سكر', 1),  'finalForm': ('ضحك', 2)},
+ 'lam':   {'initial': ('لعب', 0),  'medial': ('بلد', 1),  'finalForm': ('جبل', 2)},
+ 'mim':   {'initial': ('مصر', 0),  'medial': ('شمس', 1),  'finalForm': ('علم', 2)},
+ 'nun':   {'initial': ('نجم', 0),  'medial': ('بنت', 1),  'finalForm': ('لبن', 2)},
+ 'ha':    {'initial': ('هلال', 0), 'medial': ('نهر', 1),  'finalForm': ('فقه', 2)},
+ 'waw':   {'finalForm': ('دلو', 2)},
+ 'ya':    {'initial': ('يد', 0),   'medial': ('بيت', 1),  'finalForm': ('كرسي', 3)},
+}
 
 FORMS = [('isolated', 1, ''), ('finalForm', 2, ' в конце'),
          ('initial', 3, ' в начале'), ('medial', 4, ' в середине')]
@@ -209,6 +250,16 @@ def letter_node(lid, form, requirement):
     tracing = tracing_of(lid, form)
     if tracing:
         atom['tracing'] = tracing
+    example = WORDS.get(lid, {}).get(form)
+    if example:
+        word, index = example
+        assert word[index] == row[1], f'{lid}.{form}: в {word}[{index}] не {row[1]}'
+        if form in ('finalForm', 'medial'):
+            assert index > 0 and word[index - 1] not in NOJOIN, \
+                f'{lid}.{form}: в {word} буква не соединена справа'
+        if form in ('initial', 'medial'):
+            assert index < len(word) - 1, f'{lid}.{form}: в {word} буква последняя'
+        atom['example'] = {'word': word, 'index': index}
     return {'atom': atom, 'requirement': requirement}
 
 

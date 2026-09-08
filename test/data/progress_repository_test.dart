@@ -31,6 +31,29 @@ void main() {
     fastEnough: true,
   );
 
+  test('номер сессии — следующий за последним в логе', () async {
+    expect(await repo.nextSessionId(), 1);
+    await repo.recordAll([
+      AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: t0),
+      answer(session: 3),
+    ]);
+    expect(await repo.nextSessionId(), 4);
+  });
+
+  test('считает сессии подряд без новых атомов', () async {
+    await repo.recordAll([
+      AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: t0),
+      answer(session: 2),
+      answer(session: 3),
+    ]);
+    expect(await repo.sessionsWithoutNew(), 2);
+
+    await repo.record(
+      AtomIntroduced(atomId: 'ta.isolated', sessionId: 4, at: t0),
+    );
+    expect(await repo.sessionsWithoutNew(), 0);
+  });
+
   test('событие переживает круг через базу', () async {
     await repo.record(answer());
     final log = await db.readAll();

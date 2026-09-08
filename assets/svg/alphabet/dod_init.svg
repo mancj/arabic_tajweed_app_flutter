@@ -1,8 +1,8 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="dod_init">
 <g id="Group 38">
-<path id="2-dot" d="M238.059 84.1299V87.6215" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M167.856 189.611C187.808 160.098 235.694 109.303 267.617 142.224C307.522 183.376 174.461 229.408 135.803 152.092C126.085 132.656 167.856 206.961 54.1234 189.611" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M221 98V101.492" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="1-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 141.442 157.385 134.5 143.5C134.5 159.5 134.5 185.024 101 185.024H43.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

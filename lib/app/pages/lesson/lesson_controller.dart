@@ -124,10 +124,9 @@ class LessonController extends GetxController {
   LessonPlan? _plan;
   DateTime _shownAt = DateTime.now();
 
-  /// TODO(session-id): сейчас каждая сессия считается первой. Когда появится
-  /// счётчик пройденных уроков, брать номер оттуда — от него зависят
-  /// откладывание атомов и гарантия темпа.
-  int get _sessionId => 1;
+  /// Номер сессии — следующий за последним в логе. От него зависят очередь
+  /// повторений, откладывание атомов и гарантия темпа.
+  late final int _sessionId;
 
   /// Урок собран по теме, а не выдан планировщиком.
   bool get isTopicLesson => _topicId != null;
@@ -172,12 +171,12 @@ class LessonController extends GetxController {
     );
 
     final ctx = await _context();
+    _sessionId = await _progress.nextSessionId();
     _plan = _topicId == null
         ? LessonPlanner(curriculum: _curriculum, rules: rules).plan(
             ctx: ctx,
             sessionId: _sessionId,
-            // TODO(session-id): считать по истории, а не всегда 0.
-            sessionsWithoutNew: 0,
+            sessionsWithoutNew: await _progress.sessionsWithoutNew(),
           )
         : _topicPlan(ctx);
 

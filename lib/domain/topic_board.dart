@@ -178,9 +178,7 @@ class TopicBoard {
           sessionId: sessionId,
           exclude: {...topic.counterOf, ..._atomsAfter(topic)},
           curriculum: curriculum,
-        )
-        .take(rules.reviewPerSession)
-        .toList();
+        );
 
     return LessonPlan(
       template: fresh.isEmpty

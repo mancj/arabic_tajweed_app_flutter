@@ -27,13 +27,14 @@ class LetterWidgetCard extends StatelessWidget {
   /// лежат по-разному, и кольцо прыгало бы при каждой смене.
   static const _decorRise = -6.0;
 
-  /// Сторона квадрата узора, когда ширина карточки ничем не ограничена.
-  static const _decorSideFallback = 100.0;
-
   final String letter;
   final String? question;
   final String? labelText;
   final bool isArabic;
+
+  /// Подпись под буквой внутри кольца: «в конце», «в середине» — где
+  /// стоит показанная форма. Не задана — под буквой пусто.
+  final String? subtitle;
 
   /// Нажатие на кнопку воспроизведения. Не задан — кнопки нет: у слогов
   /// и понятий записи пока не существует, и мёртвая кнопка врёт.
@@ -63,6 +64,7 @@ class LetterWidgetCard extends StatelessWidget {
     required this.isArabic,
     this.question,
     this.labelText,
+    this.subtitle,
     this.onPlay,
     this.onAutoPlay,
     this.track,
@@ -111,13 +113,15 @@ class LetterWidgetCard extends StatelessWidget {
         // Высоту карточки задаёт контент. Узор на неё не влияет: он живёт
         // в боксе буквы и вылезает за него через [OverflowBox], а по краям
         // карточки его подрезает [ClipRRect].
-        // Узор занимает квадрат в ширину карточки — столько же, сколько
-        // покрывал прежний фон во всю её площадь.
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final decorSide = constraints.hasBoundedWidth
-                ? constraints.maxWidth
-                : _decorSideFallback;
+        // Узор занимает квадрат в ширину экрана: карточка растянута на всю
+        // страницу, а лишнее всё равно подрезается. Ширину самой карточки
+        // дал бы [LayoutBuilder], но он тут вреден: перестройки внутри него,
+        // включая тики анимаций узора, выполняются в его layout, тот всплывает
+        // до вьюпорта, а [SingleChildScrollView] на каждом layout загоняет
+        // позицию в границы — и пружина у края пропадает.
+        child: Builder(
+          builder: (context) {
+            final decorSide = MediaQuery.sizeOf(context).width;
 
             return ClipRRect(
               borderRadius: _shape,
@@ -256,7 +260,7 @@ class LetterWidgetCard extends StatelessWidget {
 
                     fontFamily: isArabic
                         ? UITextStyles.fontScheherazadeNew
-                        : UITextStyles.fontPrata,
+                        : UITextStyles.fontSerif,
                     color: UIColors.ink,
                     letterSpacing: 0,
                   ),
@@ -265,6 +269,25 @@ class LetterWidgetCard extends StatelessWidget {
             ),
           ),
         ),
+        if (subtitle != null)
+          Positioned(
+            bottom: -12,
+            child: TiltParallax(
+              offset: const Offset(8, 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal:3, vertical: 0),
+                decoration:  BoxDecoration(
+                  color: UIColors.cardBackground,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  subtitle!,
+                  key: ValueKey(subtitle),
+                  style: UITextStyles.serifSemibold18.copyWith(color: UIColors.orange),
+                ).animate().fadeIn(duration: .3.seconds),
+              ),
+            ),
+          ),
       ],
     ),
   );

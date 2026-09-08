@@ -15,7 +15,9 @@ class ReviewQueue {
 
   final LearningRules rules;
 
-  /// Атомы в порядке «кого дольше всего не показывали».
+  /// Атомы в порядке срочности: сначала недоученные (до `known`), внутри
+  /// группы — кого дольше всего не показывали. Слабая буква не должна
+  /// ждать очереди наравне с уверенной. См. ТЗ §6.2.
   ///
   /// [exclude] — атомы, которые урок и так спросит: повторять их вторым
   /// заходом незачем. Отложенные и полностью освоенные не берутся.
@@ -41,9 +43,18 @@ class ReviewQueue {
               !e.value.isDeferredAt(sessionId, rules) &&
               (drillable?.contains(e.key) ?? true),
         )
-        .sortedBy<num>((e) => e.value.lastSeenSession ?? 0)
+        .sorted((a, b) {
+          final byState = _urgency(a.value).compareTo(_urgency(b.value));
+          if (byState != 0) return byState;
+          return (a.value.lastSeenSession ?? 0).compareTo(
+            b.value.lastSeenSession ?? 0,
+          );
+        })
         .take(rules.reviewQueueCap)
         .map((e) => e.key)
         .toList();
   }
+
+  static int _urgency(AtomProgress p) =>
+      p.state.index < AtomState.known.index ? 0 : 1;
 }

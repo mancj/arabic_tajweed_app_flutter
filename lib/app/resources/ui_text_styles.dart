@@ -6,7 +6,7 @@ class UITextStyles {
   static const fontOnest = 'Onest';
 
   /// Акцентный шрифт для заголовков.
-  static const fontPrata = 'Prata';
+  static const fontSerif = 'STIXTwoText';
 
   /// Шрифт для арабского текста.
   static const fontScheherazadeNew = 'ScheherazadeNew';
@@ -129,7 +129,17 @@ class UITextStyles {
     color: UIColors.black,
     fontSize: 16,
     height: 1.5,
-    fontFamily: fontPrata,
+    fontFamily: fontSerif,
+  );
+
+  /// Засечки в одну строку: интерлиньяж ужат до кегля, чтобы бокс
+  /// не зависел от запасов шрифта.
+  static const serifSemibold18 = TextStyle(
+    color: UIColors.text,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1,
+    fontFamily: fontSerif,
   );
 
   static const semibold17 = TextStyle(

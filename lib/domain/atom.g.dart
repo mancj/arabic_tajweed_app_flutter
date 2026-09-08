@@ -20,6 +20,9 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
           .toList() ??
       const [],
   tracing: json['tracing'] as String?,
+  example: json['example'] == null
+      ? null
+      : WordExample.fromJson(json['example'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
@@ -32,6 +35,7 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'form': _$LetterFormEnumMap[instance.form],
   'confusableWith': instance.confusableWith,
   'tracing': instance.tracing,
+  'example': instance.example,
 };
 
 const _$AtomKindEnumMap = {
@@ -48,3 +52,11 @@ const _$LetterFormEnumMap = {
   LetterForm.medial: 'medial',
   LetterForm.finalForm: 'finalForm',
 };
+
+WordExample _$WordExampleFromJson(Map<String, dynamic> json) => WordExample(
+  word: json['word'] as String,
+  index: (json['index'] as num).toInt(),
+);
+
+Map<String, dynamic> _$WordExampleToJson(WordExample instance) =>
+    <String, dynamic>{'word': instance.word, 'index': instance.index};

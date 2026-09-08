@@ -1,8 +1,8 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="sod_end">
 <g id="Group 32">
-<path id="2-base" d="M147.028 182.295C166.868 152.95 214.482 102.442 246.225 135.177C285.904 176.096 146.028 218.735 107.969 142.616C89.9897 106.657 163.148 226.314 64.5704 232.514C-13.6001 237.431 16.8318 159.356 16.8318 159.356" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M316.5 182.188H279.452C262.713 182.188 253.909 178.468 241.013 171.028" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M311.5 185H274.452C257.713 185 240 185 218.5 185" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="2-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 142.585 167.735 135.643 153.85C117.664 117.891 170.148 220.808 71.5704 227.008C-6.60007 231.925 23.8318 153.85 23.8318 153.85" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

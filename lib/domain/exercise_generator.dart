@@ -104,25 +104,27 @@ class ExerciseGenerator {
   /// Если атомов меньше, чем слотов, круги повторяются — но не больше
   /// [_maxPerAtom] раз на атом, иначе урок вырождается в одну букву.
   List<Atom> _schedule(List<Atom> fresh, List<Atom> review, List<Atom> spaced) {
-    // Слоты под возврат старого резервируются первыми: иначе тема съедает
-    // весь урок и буквы прошлых уроков не всплывают. См. ТЗ §6.2.
-    final spacedSlots = spaced.take(rules.reviewPerSession).toList();
-
     final remaining = <Atom, int>{
       for (final atom in fresh) atom: _drillsPerNewAtom,
       for (final atom in review) atom: 1,
     };
-    if (remaining.isEmpty && spacedSlots.isEmpty) return const [];
+    if (remaining.isEmpty && spaced.isEmpty) return const [];
 
-    final forTopic = max(0, rules.tasksPerSession - spacedSlots.length);
+    // Слоты под возврат старого резервируются первыми: иначе тема съедает
+    // весь урок и буквы прошлых уроков не всплывают. А если тема сама
+    // не заполняет урок, остаток тоже отдаётся повтору — урок не должен
+    // кончаться на десятом задании только потому, что тема узкая. ТЗ §6.2.
+    final reserved = min(rules.reviewPerSession, spaced.length);
+    final forTopic = max(0, rules.tasksPerSession - reserved);
     final cap = remaining.isEmpty
         ? 0
         : min(forTopic, remaining.length * _maxPerAtom);
+    final spacedSlots = spaced.take(rules.tasksPerSession - cap).toList();
 
     // Добираем до полного урока по кругу, пока не упрёмся в потолок.
     final atoms = remaining.keys.toList();
     var i = 0;
-    var planned = remaining.values.reduce((a, b) => a + b);
+    var planned = remaining.values.sum;
     while (planned < cap) {
       final atom = atoms[i % atoms.length];
       if (remaining[atom]! < _maxPerAtom) {

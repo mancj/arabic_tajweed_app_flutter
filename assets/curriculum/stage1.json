@@ -109,7 +109,11 @@
         "form": "finalForm",
         "label": "Алиф в конце",
         "note": "Алиф в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "alif_end"
+        "tracing": "alif_end",
+        "example": {
+          "word": "بابا",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -130,7 +134,11 @@
         ],
         "label": "Ба в конце",
         "note": "Ба в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с точкой снизу.",
-        "tracing": "ba_end"
+        "tracing": "ba_end",
+        "example": {
+          "word": "كتب",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -151,7 +159,11 @@
         ],
         "label": "Ба в начале",
         "note": "Ба в начале слова: остаётся зубчик с точкой снизу. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ba_init"
+        "tracing": "ba_init",
+        "example": {
+          "word": "بات",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -172,7 +184,11 @@
         ],
         "label": "Ба в середине",
         "note": "Ба в середине слова: зубчик с точкой снизу со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ba_mid"
+        "tracing": "ba_mid",
+        "example": {
+          "word": "ثبت",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -193,7 +209,11 @@
         ],
         "label": "Та в конце",
         "note": "Та в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками.",
-        "tracing": "ta_end"
+        "tracing": "ta_end",
+        "example": {
+          "word": "بنت",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -214,7 +234,11 @@
         ],
         "label": "Та в начале",
         "note": "Та в начале слова: остаётся зубчик с двумя точками. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ta_init"
+        "tracing": "ta_init",
+        "example": {
+          "word": "تاب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -235,7 +259,11 @@
         ],
         "label": "Та в середине",
         "note": "Та в середине слова: зубчик с двумя точками со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ta_mid"
+        "tracing": "ta_mid",
+        "example": {
+          "word": "كتاب",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -256,7 +284,11 @@
         ],
         "label": "Са в конце",
         "note": "Са в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с тремя точками.",
-        "tracing": "tha_end"
+        "tracing": "tha_end",
+        "example": {
+          "word": "ثلث",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -277,7 +309,11 @@
         ],
         "label": "Са в начале",
         "note": "Са в начале слова: остаётся зубчик с тремя точками. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "tha_init"
+        "tracing": "tha_init",
+        "example": {
+          "word": "ثابت",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -298,7 +334,11 @@
         ],
         "label": "Са в середине",
         "note": "Са в середине слова: зубчик с тремя точками со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "tha_mid"
+        "tracing": "tha_mid",
+        "example": {
+          "word": "مثل",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -378,7 +418,11 @@
         ],
         "label": "Джим в конце",
         "note": "Джим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.",
-        "tracing": "jim_end"
+        "tracing": "jim_end",
+        "example": {
+          "word": "ثلج",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -398,7 +442,11 @@
         ],
         "label": "Джим в начале",
         "note": "Джим в начале слова: остаётся крючок с точкой внутри. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "jim_init"
+        "tracing": "jim_init",
+        "example": {
+          "word": "جبل",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -418,7 +466,11 @@
         ],
         "label": "Джим в середине",
         "note": "Джим в середине слова: крючок с точкой внутри со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "jim_mid"
+        "tracing": "jim_mid",
+        "example": {
+          "word": "نجم",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -438,7 +490,11 @@
         ],
         "label": "Ха в конце",
         "note": "Ха в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.",
-        "tracing": "hha_end"
+        "tracing": "hha_end",
+        "example": {
+          "word": "ربح",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -458,7 +514,11 @@
         ],
         "label": "Ха в начале",
         "note": "Ха в начале слова: остаётся крючок без точек. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "hha_init"
+        "tracing": "hha_init",
+        "example": {
+          "word": "حب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -478,7 +538,11 @@
         ],
         "label": "Ха в середине",
         "note": "Ха в середине слова: крючок без точек со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "hha_mid"
+        "tracing": "hha_mid",
+        "example": {
+          "word": "بحث",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -498,7 +562,11 @@
         ],
         "label": "Хо в конце",
         "note": "Хо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.",
-        "tracing": "kha_end"
+        "tracing": "kha_end",
+        "example": {
+          "word": "شيخ",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -518,7 +586,11 @@
         ],
         "label": "Хо в начале",
         "note": "Хо в начале слова: остаётся крючок с точкой сверху. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "kha_init"
+        "tracing": "kha_init",
+        "example": {
+          "word": "خبز",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -538,7 +610,11 @@
         ],
         "label": "Хо в середине",
         "note": "Хо в середине слова: крючок с точкой сверху со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "kha_mid"
+        "tracing": "kha_mid",
+        "example": {
+          "word": "بخت",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -646,7 +722,11 @@
         ],
         "label": "Даль в конце",
         "note": "Даль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "dal_end"
+        "tracing": "dal_end",
+        "example": {
+          "word": "جد",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -665,7 +745,11 @@
         ],
         "label": "Заль в конце",
         "note": "Заль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "dhal_end"
+        "tracing": "dhal_end",
+        "example": {
+          "word": "خذ",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -684,7 +768,11 @@
         ],
         "label": "Ро в конце",
         "note": "Ро в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "ra_end"
+        "tracing": "ra_end",
+        "example": {
+          "word": "بحر",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -703,7 +791,11 @@
         ],
         "label": "Зай в конце",
         "note": "Зай в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "zay_end"
+        "tracing": "zay_end",
+        "example": {
+          "word": "خبز",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -760,7 +852,11 @@
         ],
         "label": "Син в конце",
         "note": "Син в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними.",
-        "tracing": "sin_end"
+        "tracing": "sin_end",
+        "example": {
+          "word": "شمس",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -779,7 +875,11 @@
         ],
         "label": "Син в начале",
         "note": "Син в начале слова: остаётся три зубчика. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "sin_init"
+        "tracing": "sin_init",
+        "example": {
+          "word": "سبت",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -798,7 +898,11 @@
         ],
         "label": "Син в середине",
         "note": "Син в середине слова: три зубчика со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "sin_mid"
+        "tracing": "sin_mid",
+        "example": {
+          "word": "جسر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -817,7 +921,11 @@
         ],
         "label": "Шин в конце",
         "note": "Шин в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними.",
-        "tracing": "shin_end"
+        "tracing": "shin_end",
+        "example": {
+          "word": "عيش",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -836,7 +944,11 @@
         ],
         "label": "Шин в начале",
         "note": "Шин в начале слова: остаётся три зубчика с точками сверху. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "shin_init"
+        "tracing": "shin_init",
+        "example": {
+          "word": "شجر",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -855,7 +967,11 @@
         ],
         "label": "Шин в середине",
         "note": "Шин в середине слова: три зубчика с точками сверху со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "shin_mid"
+        "tracing": "shin_mid",
+        "example": {
+          "word": "بشر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -912,7 +1028,11 @@
         ],
         "label": "Сод в конце",
         "note": "Сод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней.",
-        "tracing": "sod_end"
+        "tracing": "sod_end",
+        "example": {
+          "word": "نص",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -931,7 +1051,11 @@
         ],
         "label": "Сод в начале",
         "note": "Сод в начале слова: остаётся петля. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "sod_init"
+        "tracing": "sod_init",
+        "example": {
+          "word": "صبر",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -950,7 +1074,11 @@
         ],
         "label": "Сод в середине",
         "note": "Сод в середине слова: петля со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "sod_mid"
+        "tracing": "sod_mid",
+        "example": {
+          "word": "بصر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -969,7 +1097,11 @@
         ],
         "label": "Дод в конце",
         "note": "Дод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней.",
-        "tracing": "dod_end"
+        "tracing": "dod_end",
+        "example": {
+          "word": "بيض",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -988,7 +1120,11 @@
         ],
         "label": "Дод в начале",
         "note": "Дод в начале слова: остаётся петля с точкой сверху. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "dod_init"
+        "tracing": "dod_init",
+        "example": {
+          "word": "ضرب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1007,7 +1143,11 @@
         ],
         "label": "Дод в середине",
         "note": "Дод в середине слова: петля с точкой сверху со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "dod_mid"
+        "tracing": "dod_mid",
+        "example": {
+          "word": "خضر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1064,7 +1204,11 @@
         ],
         "label": "То в конце",
         "note": "То в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой.",
-        "tracing": "to_end"
+        "tracing": "to_end",
+        "example": {
+          "word": "خط",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1083,7 +1227,11 @@
         ],
         "label": "То в начале",
         "note": "То в начале слова: остаётся петля с прямой палочкой. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "to_init"
+        "tracing": "to_init",
+        "example": {
+          "word": "طبخ",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1102,7 +1250,11 @@
         ],
         "label": "То в середине",
         "note": "То в середине слова: петля с прямой палочкой со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "to_mid"
+        "tracing": "to_mid",
+        "example": {
+          "word": "خطر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1121,7 +1273,11 @@
         ],
         "label": "Зо в конце",
         "note": "Зо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой.",
-        "tracing": "zho_end"
+        "tracing": "zho_end",
+        "example": {
+          "word": "حظ",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1140,7 +1296,11 @@
         ],
         "label": "Зо в начале",
         "note": "Зо в начале слова: остаётся петля с палочкой и точкой. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "zho_init"
+        "tracing": "zho_init",
+        "example": {
+          "word": "ظهر",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1159,7 +1319,11 @@
         ],
         "label": "Зо в середине",
         "note": "Зо в середине слова: петля с палочкой и точкой со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "zho_mid"
+        "tracing": "zho_mid",
+        "example": {
+          "word": "حظر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1216,7 +1380,11 @@
         ],
         "label": "Айн в конце",
         "note": "Айн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой.",
-        "tracing": "ayn_end"
+        "tracing": "ayn_end",
+        "example": {
+          "word": "ربع",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1235,7 +1403,11 @@
         ],
         "label": "Айн в начале",
         "note": "Айн в начале слова: остаётся открытый крючок. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ayn_init"
+        "tracing": "ayn_init",
+        "example": {
+          "word": "عرب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1254,7 +1426,11 @@
         ],
         "label": "Айн в середине",
         "note": "Айн в середине слова: открытый крючок со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ayn_mid"
+        "tracing": "ayn_mid",
+        "example": {
+          "word": "شعر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1273,7 +1449,11 @@
         ],
         "label": "Гойн в конце",
         "note": "Гойн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой.",
-        "tracing": "ghayn_end"
+        "tracing": "ghayn_end",
+        "example": {
+          "word": "صبغ",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1292,7 +1472,11 @@
         ],
         "label": "Гойн в начале",
         "note": "Гойн в начале слова: остаётся открытый крючок с точкой. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ghayn_init"
+        "tracing": "ghayn_init",
+        "example": {
+          "word": "غرب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1311,7 +1495,11 @@
         ],
         "label": "Гойн в середине",
         "note": "Гойн в середине слова: открытый крючок с точкой со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ghayn_mid"
+        "tracing": "ghayn_mid",
+        "example": {
+          "word": "بغداد",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1368,7 +1556,11 @@
         ],
         "label": "Фа в конце",
         "note": "Фа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и хвост на строке.",
-        "tracing": "fa_end"
+        "tracing": "fa_end",
+        "example": {
+          "word": "صف",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1387,7 +1579,11 @@
         ],
         "label": "Фа в начале",
         "note": "Фа в начале слова: остаётся кружок с точкой сверху. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "fa_init"
+        "tracing": "fa_init",
+        "example": {
+          "word": "فتح",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1406,7 +1602,11 @@
         ],
         "label": "Фа в середине",
         "note": "Фа в середине слова: кружок с точкой сверху со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "fa_mid"
+        "tracing": "fa_mid",
+        "example": {
+          "word": "سفر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1425,7 +1625,11 @@
         ],
         "label": "Коф в конце",
         "note": "Коф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и чаша под строкой.",
-        "tracing": "qof_end"
+        "tracing": "qof_end",
+        "example": {
+          "word": "حق",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1444,7 +1648,11 @@
         ],
         "label": "Коф в начале",
         "note": "Коф в начале слова: остаётся кружок с двумя точками. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "qof_init"
+        "tracing": "qof_init",
+        "example": {
+          "word": "قصر",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1463,7 +1671,11 @@
         ],
         "label": "Коф в середине",
         "note": "Коф в середине слова: кружок с двумя точками со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "qof_mid"
+        "tracing": "qof_mid",
+        "example": {
+          "word": "بقر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1511,7 +1723,11 @@
         "form": "finalForm",
         "label": "Кяф в конце",
         "note": "Кяф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: угол с чёрточкой внутри.",
-        "tracing": "kaf_end"
+        "tracing": "kaf_end",
+        "example": {
+          "word": "ضحك",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1527,7 +1743,11 @@
         "form": "initial",
         "label": "Кяф в начале",
         "note": "Кяф в начале слова: остаётся угловатая палочка. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "kaf_init"
+        "tracing": "kaf_init",
+        "example": {
+          "word": "كتب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1543,7 +1763,11 @@
         "form": "medial",
         "label": "Кяф в середине",
         "note": "Кяф в середине слова: угловатая палочка со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "kaf_mid"
+        "tracing": "kaf_mid",
+        "example": {
+          "word": "سكر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1559,7 +1783,11 @@
         "form": "finalForm",
         "label": "Лям в конце",
         "note": "Лям в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: палочка и чаша под строкой.",
-        "tracing": "lam_end"
+        "tracing": "lam_end",
+        "example": {
+          "word": "جبل",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1575,7 +1803,11 @@
         "form": "initial",
         "label": "Лям в начале",
         "note": "Лям в начале слова: остаётся высокая палочка. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "lam_init"
+        "tracing": "lam_init",
+        "example": {
+          "word": "لعب",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1591,7 +1823,11 @@
         "form": "medial",
         "label": "Лям в середине",
         "note": "Лям в середине слова: высокая палочка со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "lam_mid"
+        "tracing": "lam_mid",
+        "example": {
+          "word": "بلد",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1644,7 +1880,11 @@
         "form": "finalForm",
         "label": "Мим в конце",
         "note": "Мим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок с хвостиком вниз.",
-        "tracing": "mim_end"
+        "tracing": "mim_end",
+        "example": {
+          "word": "علم",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1660,7 +1900,11 @@
         "form": "initial",
         "label": "Мим в начале",
         "note": "Мим в начале слова: остаётся кружок на строке. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "mim_init"
+        "tracing": "mim_init",
+        "example": {
+          "word": "مصر",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1676,7 +1920,11 @@
         "form": "medial",
         "label": "Мим в середине",
         "note": "Мим в середине слова: кружок на строке со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "mim_mid"
+        "tracing": "mim_mid",
+        "example": {
+          "word": "شمس",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1697,7 +1945,11 @@
         ],
         "label": "Нун в конце",
         "note": "Нун в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: глубокая чаша с точкой.",
-        "tracing": "nun_end"
+        "tracing": "nun_end",
+        "example": {
+          "word": "لبن",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1718,7 +1970,11 @@
         ],
         "label": "Нун в начале",
         "note": "Нун в начале слова: остаётся зубчик с точкой сверху. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "nun_init"
+        "tracing": "nun_init",
+        "example": {
+          "word": "نجم",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1739,7 +1995,11 @@
         ],
         "label": "Нун в середине",
         "note": "Нун в середине слова: зубчик с точкой сверху со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "nun_mid"
+        "tracing": "nun_mid",
+        "example": {
+          "word": "بنت",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1809,7 +2069,11 @@
         "form": "finalForm",
         "label": "Хэ в конце",
         "note": "Хэ в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок.",
-        "tracing": "ha_end"
+        "tracing": "ha_end",
+        "example": {
+          "word": "فقه",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1825,7 +2089,11 @@
         "form": "initial",
         "label": "Хэ в начале",
         "note": "Хэ в начале слова: остаётся петелька. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ha_init"
+        "tracing": "ha_init",
+        "example": {
+          "word": "هلال",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1841,7 +2109,11 @@
         "form": "medial",
         "label": "Хэ в середине",
         "note": "Хэ в середине слова: петелька со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ha_mid"
+        "tracing": "ha_mid",
+        "example": {
+          "word": "نهر",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1857,7 +2129,11 @@
         "form": "finalForm",
         "label": "Вав в конце",
         "note": "Вав в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.",
-        "tracing": "waw_end"
+        "tracing": "waw_end",
+        "example": {
+          "word": "دلو",
+          "index": 2
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1879,7 +2155,11 @@
         ],
         "label": "Йа в конце",
         "note": "Йа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками снизу.",
-        "tracing": "ya_end"
+        "tracing": "ya_end",
+        "example": {
+          "word": "كرسي",
+          "index": 3
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1901,7 +2181,11 @@
         ],
         "label": "Йа в начале",
         "note": "Йа в начале слова: остаётся зубчик с двумя точками снизу. Хвост убирается, вместо него связка к следующей букве.",
-        "tracing": "ya_init"
+        "tracing": "ya_init",
+        "example": {
+          "word": "يد",
+          "index": 0
+        }
       },
       "requirement": {
         "type": "atomIntroduced",
@@ -1923,7 +2207,11 @@
         ],
         "label": "Йа в середине",
         "note": "Йа в середине слова: зубчик с двумя точками снизу со связками с обеих сторон. Это самая короткая её форма.",
-        "tracing": "ya_mid"
+        "tracing": "ya_mid",
+        "example": {
+          "word": "بيت",
+          "index": 1
+        }
       },
       "requirement": {
         "type": "atomIntroduced",

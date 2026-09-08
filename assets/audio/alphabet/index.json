@@ -91,30 +91,30 @@
     "end": 28.78
   },
   {
-    "file": "sad.wav",
+    "file": "sod.wav",
     "letter": "ص",
-    "name": "sad",
+    "name": "sod",
     "start": 30.42,
     "end": 31.04
   },
   {
-    "file": "dad.wav",
+    "file": "dod.wav",
     "letter": "ض",
-    "name": "dad",
+    "name": "dod",
     "start": 32.74,
     "end": 33.36
   },
   {
-    "file": "tta.wav",
+    "file": "to.wav",
     "letter": "ط",
-    "name": "tta",
+    "name": "to",
     "start": 35.06,
     "end": 35.48
   },
   {
-    "file": "zza.wav",
+    "file": "zho.wav",
     "letter": "ظ",
-    "name": "zza",
+    "name": "zho",
     "start": 37.08,
     "end": 37.62
   },
@@ -140,9 +140,9 @@
     "end": 44.42
   },
   {
-    "file": "qaf.wav",
+    "file": "qof.wav",
     "letter": "ق",
-    "name": "qaf",
+    "name": "qof",
     "start": 46.42,
     "end": 46.84
   },

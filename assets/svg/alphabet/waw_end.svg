@@ -1,7 +1,7 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="waw_end">
 <g id="Group 77">
-<path id="1-base" d="M248.936 208.778L179.843 208.778C151.398 208.778 111.908 220.24 111.908 181.785C111.908 164.648 125.32 134.636 151.398 146.765C177.477 158.895 196.235 281.052 80 271.366" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M80 271.366C196.235 281.052 177.477 158.895 151.398 146.765C125.32 134.636 111.908 164.648 111.908 181.785C111.908 220.24 151.398 208.778 179.843 208.778H248.936" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

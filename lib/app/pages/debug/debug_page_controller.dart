@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
+import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
@@ -21,6 +22,8 @@ class DebugController extends GetxController {
   }
 
   void openCourse() => Get.toNamed(CoursePage.routeName);
+
+  void openAtomProgress() => Get.toNamed(AtomProgressPage.routeName);
 
   void openLesson() => Get.toNamed(LessonPage.routeName);
 

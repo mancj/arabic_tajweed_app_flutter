@@ -1,9 +1,9 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="zho_mid">
 <g id="Group 45">
-<path id="3-dot" d="M152.632 124.098V128.271" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M93.6206 63.0005V246.842C99.8794 207.029 178.962 149.059 197.413 199.651C215.864 250.244 123.559 252.255 18.5 250.02" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M283.5 247.784C210 247.784 194.333 258.382 169 240.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M216 129V133.173" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="2-base" d="M127 71.5V221C150 188.667 210.31 155.526 232 183C262 221 210 233.5 178.5 233.5C153.3 233.5 66 233.5 46 233.5" stroke="black" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M273 234H235.952C219.213 234 201.5 234 180 234" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

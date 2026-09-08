@@ -6,6 +6,7 @@ import 'package:arabic_tajweed_app/app/app_binding.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
+import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
@@ -59,6 +60,11 @@ class MyApp extends StatelessWidget {
           name: DebugPage.routeName,
           page: () => const DebugPage(),
           binding: DebugPageBinding(),
+        ),
+        GetPage(
+          name: AtomProgressPage.routeName,
+          page: () => const AtomProgressPage(),
+          binding: AtomProgressBinding(),
         ),
         GetPage(
           name: AlphabetLetterPage.routeName,

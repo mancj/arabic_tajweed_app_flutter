@@ -2,7 +2,7 @@
 <g id="kha_init">
 <g id="Group 24">
 <path id="2-dot" d="M206.647 78.3726V82.5451" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M147.784 124.569C159.954 120.098 190.851 117.416 211.118 130.529C236.451 146.922 252.843 151.392 264.765 149.157C276.686 146.922 231.235 159.588 213.353 168.529C196.799 176.806 170.137 191.627 136.608 191.627C109.784 191.627 76.7518 191.627 63.5884 191.627" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="2-base" d="M140 125.37C152.119 121.546 176.346 107.833 205.922 117.232C234.102 126.187 258.2 165.337 269.5 169H60" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

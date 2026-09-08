@@ -2,8 +2,8 @@
 <g id="jim_mid">
 <g id="Group 15">
 <path id="3-dot" d="M148.799 218.81V222.982" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M100.368 110.026C112.538 105.555 143.434 102.873 163.701 115.987C189.034 132.379 205.426 136.849 217.348 134.614C229.27 132.379 183.819 145.045 165.936 153.986C149.382 162.263 122.721 177.084 89.1912 177.084C62.3676 177.084 47.1634 177.085 34 177.085" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M296 177.83C296 177.83 288.132 177.83 241.191 177.83C219.583 177.83 201.701 171.869 190.525 140.575" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-base" d="M98 133.37C110.119 129.546 134.346 115.833 163.922 125.232C192.102 134.187 204.7 173.337 216 177" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M296 177.83C296 177.83 288.132 177.83 241.191 177.83C219.583 177.83 94 177.83 42.5 177.83" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

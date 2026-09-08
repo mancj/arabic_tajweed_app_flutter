@@ -1,7 +1,5 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="hha_init">
-<g id="Group 20">
-<path id="1-base" d="M147.196 117.575C159.366 113.104 190.263 110.422 210.529 123.535C235.863 139.927 252.255 144.398 264.176 142.163C276.098 139.927 230.647 152.594 212.765 161.535C196.211 169.812 169.549 184.633 136.02 184.633C109.196 184.633 76.1634 184.633 63 184.633" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+<path id="2-base" d="M140 125.37C152.119 121.546 176.346 107.833 205.922 117.232C234.102 126.187 258.2 165.337 269.5 169H60" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

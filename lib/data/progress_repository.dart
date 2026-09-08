@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../domain/atom_state.dart';
 import '../domain/learning_rules.dart';
 import '../domain/progress_event.dart';
@@ -22,6 +24,12 @@ class ProgressRepository {
   List<TopicCompletion> _completions = const [];
   bool _loaded = false;
 
+  /// Номера сессий, встреченные в логе, и те из них, где вводилось новое.
+  /// От номера сессии зависят очередь повторений, откладывание и гарантия
+  /// темпа, поэтому он считается из лога, а не хранится отдельно.
+  Set<int> _sessions = const {};
+  Set<int> _sessionsWithNew = const {};
+
   Future<Map<String, AtomProgress>> progress() async {
     if (!_loaded) await recompute();
     return _cache;
@@ -29,6 +37,24 @@ class ProgressRepository {
 
   Future<AtomProgress> of(String atomId) async =>
       (await progress())[atomId] ?? const AtomProgress();
+
+  /// Номер для урока, который начинается сейчас: следующий за последним
+  /// в логе. Брошенный на середине урок номер не освобождает — так проще,
+  /// и это честно: сессия была, просто не дошла до конца.
+  Future<int> nextSessionId() async {
+    if (!_loaded) await recompute();
+    return (_sessions.maxOrNull ?? 0) + 1;
+  }
+
+  /// Сколько последних сессий подряд прошло без ввода новых атомов.
+  /// Нужно планировщику для гарантии темпа, см. ТЗ §6.3.
+  Future<int> sessionsWithoutNew() async {
+    if (!_loaded) await recompute();
+    return _sessions
+        .sorted((a, b) => b.compareTo(a))
+        .takeWhile((id) => !_sessionsWithNew.contains(id))
+        .length;
+  }
 
   Future<void> record(LogEntry entry) async {
     await _db.append(entry);
@@ -75,8 +101,17 @@ class ProgressRepository {
   /// Полный пересчёт из лога. Нужен при старте и после изменения порогов:
   /// новые правила применяются ко всей истории, а не только к будущему.
   Future<void> recompute() async {
-    _cache = _fold.fold(await _db.readAll());
+    final log = await _db.readAll();
+    _cache = _fold.fold(log);
     _completions = await _db.readCompletions();
+    _sessions = {
+      ...log.map((e) => e.sessionId),
+      ..._completions.map((c) => c.sessionId),
+    };
+    _sessionsWithNew = {
+      for (final e in log)
+        if (e is AtomIntroduced) e.sessionId,
+    };
     _loaded = true;
   }
 
@@ -92,5 +127,11 @@ class ProgressRepository {
       for (final id in touched) id: _cache[id] ?? const AtomProgress(),
     };
     _cache = {..._cache, ..._fold.foldOnto(base, entries)};
+    _sessions = {..._sessions, ...entries.map((e) => e.sessionId)};
+    _sessionsWithNew = {
+      ..._sessionsWithNew,
+      for (final e in entries)
+        if (e is AtomIntroduced) e.sessionId,
+    };
   }
 }
