@@ -121,8 +121,10 @@ void main() {
     final resolved = shape.resolve(box.size);
     final box2 = resolved.parts.first.bounds;
     final points = [
-      for (final point in tracedAlong(resolved.parts.first.paths.first,
-          wobble: 4))
+      for (final point in tracedAlong(
+        resolved.parts.first.paths.first,
+        wobble: 4,
+      ))
         Offset(point.dx, box2.top + box2.bottom - point.dy),
     ];
 

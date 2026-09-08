@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/stroke_projector.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 
 void main() {
@@ -62,7 +63,9 @@ void main() {
     final samples = matcher.sample(part);
     final hand = handOf(part);
 
-    final projected = matcher.project(target: part, strokes: [hand]).single;
+    final projected = StrokeProjector(
+      matcher.tracks(part),
+    ).project([hand], strokeWidth: part.strokeWidth).single;
 
     expect(projected.points.length, hand.points.length);
     expect(

@@ -2,10 +2,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'demo_animation.dart';
 import 'drawing_controller.dart';
 import 'drawing_painter.dart';
 import 'drawing_stroke.dart';
+import 'merge_animation.dart';
+import 'stroke_projector.dart';
 import 'tracing_matcher.dart';
+import 'tracing_miss_counter.dart';
 import 'tracing_shape.dart';
 
 export 'drawing_controller.dart';
@@ -26,6 +30,20 @@ enum TracingMode {
   /// Фигура скрыта: пользователь пишет по памяти, и буква остаётся там,
   /// где он её нарисовал. Первая часть закрепляет это место.
   freehand,
+}
+
+/// Чем закончился штрих для текущей части буквы.
+enum TracingStrokeOutcome {
+  /// Часть собрана: штрихи сливаются с ней.
+  completed,
+
+  /// Часть ещё не готова, но штрих её продвинул — фрагмент части из
+  /// нескольких линий или кусок линии под контуром. Остаётся на холсте.
+  progressed,
+
+  /// Штрих не приблизил часть к готовности. При [DrawingCanvas.discardMisses]
+  /// стирается сразу: иначе он портил бы все следующие попытки.
+  missed,
 }
 
 /// Холст, на котором пользователь рисует пальцем.
@@ -118,8 +136,9 @@ class DrawingCanvas extends StatefulWidget {
 
   /// Убирать штрих, который не приблизил текущую часть к готовности. Иначе
   /// промах остаётся на холсте и портит точность всех следующих попыток.
-  /// Работает начиная со второй части, когда буква уже стоит на своём месте
-  /// и промах определяется однозначно.
+  /// После первой части буква стоит на месте, и промах виден по покрытию.
+  /// На первой части покрытие не судья: выравнивание натягивает на букву
+  /// что угодно, — поэтому там промах отличают по форме, см. [_isFragment].
   final bool discardMisses;
 
   final bool enabled;
@@ -128,6 +147,19 @@ class DrawingCanvas extends StatefulWidget {
 
   /// Результат каждой проверки [DrawingController.check].
   final ValueChanged<TracingMatchResult>? onChecked;
+
+  /// Чем закончился штрих: часть собрана, продвинута или промах.
+  final ValueChanged<TracingStrokeOutcome>? onStrokeOutcome;
+
+  /// Сколько промахов подряд по одной части холст терпит, прежде чем сам
+  /// покажет, как пишется: очистит холст, откроет контур и запустит показ.
+  /// Правило живёт в холсте, а не у экрана: иначе каждый экран с обводкой
+  /// заводил бы его заново. 0 — не показывать никогда. См. SPEC.md §5.
+  final int missesBeforeReveal;
+
+  /// Холст показал, как пишется, после серии промахов. Урок здесь
+  /// засчитывает ошибку; экран без оценок может просто сменить подсказку.
+  final VoidCallback? onReveal;
 
   /// Часть фигуры собрана: штрихи слились с ней и она залита.
   final ValueChanged<ResolvedTracingPart>? onPartCompleted;
@@ -163,6 +195,9 @@ class DrawingCanvas extends StatefulWidget {
     this.onStrokeStart,
     this.onStrokeEnd,
     this.onChecked,
+    this.onStrokeOutcome,
+    this.missesBeforeReveal = 3,
+    this.onReveal,
     this.onPartCompleted,
     this.onProgress,
     this.onMerged,
@@ -177,31 +212,15 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   late DrawingController _controller;
   DrawingController? _internalController;
 
-  late final AnimationController _mergeController = AnimationController(
+  late final _merge = MergeAnimation(
     vsync: this,
     duration: widget.mergeDuration,
   );
-  late final Animation<double> _mergeProgress = CurvedAnimation(
-    parent: _mergeController,
-    curve: Curves.easeInOutCubic,
-  );
+  late final _demo = DemoAnimation(vsync: this);
 
   /// Отдельный сигнал для нижнего слоя: завершённые штрихи перерисовываются
   /// только когда их список реально изменился, а не на каждое движение пальца.
   final _finishedRepaint = ValueNotifier<int>(0);
-
-  _MergeState? _merge;
-
-  /// Длительность у показа своя на каждую часть — её задаёт [_playDemo].
-  late final AnimationController _demoController = AnimationController(
-    vsync: this,
-  );
-
-  /// Буква, которую холст сейчас обводит сам. null — показа нет.
-  ResolvedTracingShape? _demo;
-
-  /// С какой части показ начинается: собранные заново не показываем.
-  int _demoFrom = 0;
 
   /// Пауза между частями в длине показа.
   double get _demoGap =>
@@ -235,6 +254,16 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   /// Лучшее покрытие текущей части: по нему видно, помог ли новый штрих.
   double _bestCoverage = 0;
 
+  late final _misses = TracingMissCounter(limit: widget.missesBeforeReveal);
+
+  /// Контур открыт после серии промахов, хотя режим — по памяти.
+  /// Держится до смены буквы или режима.
+  bool _revealed = false;
+
+  /// Холст сам стирает промах: это не «человек начал заново», и счёт
+  /// промахов при таком опустевшем холсте сбрасывать нельзя.
+  bool _discarding = false;
+
   /// Штрихи до этого индекса уже влиты в собранные части и отдельно
   /// не рисуются.
   int get _consumedStrokes => _filled.isEmpty ? 0 : _filled.last.strokeCount;
@@ -245,7 +274,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   ResolvedTracingShape? get _activeShape => _anchored ?? _resolvedShape;
 
   /// Виден ли контур. От этого зависит, где окажется собранная буква.
-  bool get _showsGuide => widget.mode == TracingMode.tracing;
+  bool get _showsGuide => widget.mode == TracingMode.tracing || _revealed;
 
   /// Габариты уже собранного — мерка для того, насколько далеко от буквы
   /// разрешено промахнуться следующей частью.
@@ -272,14 +301,16 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   void didUpdateWidget(DrawingCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    _mergeController.duration = widget.mergeDuration;
+    _merge.duration = widget.mergeDuration;
 
     if (widget.placeholder != oldWidget.placeholder ||
         widget.placeholderPadding != oldWidget.placeholderPadding ||
         widget.mode != oldWidget.mode) {
       _resolvedShape = null;
       _resolvedFor = null;
-      _cancelMerge();
+      _revealed = false;
+      _misses.reset();
+      _merge.cancel();
       _resetProgress();
     }
 
@@ -327,7 +358,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
         changed = true;
       }
       if (changed) {
-        _cancelMerge();
+        _merge.cancel();
         _bestCoverage = 0;
         setState(() {
           if (_filled.isEmpty) _anchored = null;
@@ -336,13 +367,19 @@ class _DrawingCanvasState extends State<DrawingCanvas>
       }
     }
 
+    // Стёрли всё — начинают заново, и промахи прошлой попытки не в счёт.
+    // Именно стёрли: штрихи были и пропали, а не «ещё ничего не нарисовано».
+    if (count == 0 && _finishedRepaint.value > 0 && !_discarding) {
+      _misses.reset();
+    }
+
     // Холст снова чист под текущей частью — значит человек стёр начатое
     // и заходит заново. Тут показ и уместен.
     if (count == _consumedStrokes && !_controller.isDrawing) {
       SchedulerBinding.instance.addPostFrameCallback((_) => _playDemo());
     }
 
-    if (_merge != null && count != _finishedRepaint.value) _cancelMerge();
+    if (_merge.isActive && count != _finishedRepaint.value) _merge.cancel();
     _finishedRepaint.value = count;
   }
 
@@ -372,8 +409,8 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   @override
   void dispose() {
     _detachController();
-    _demoController.dispose();
-    _mergeController.dispose();
+    _demo.dispose();
+    _merge.dispose();
     _finishedRepaint.dispose();
     super.dispose();
   }
@@ -486,32 +523,70 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     if (result.isMatch) {
       _settle(alignment, anchoring: anchoring);
       _startMerge(_activeShape!.parts[_filled.length], strokes, merge);
-    } else if (widget.discardMisses && _filled.isNotEmpty) {
-      // Только когда буква уже заякорена. Пока первая часть не собрана,
-      // положение свободно, и фрагмент невозможно отличить от промаха:
-      // выравнивание одинаково натягивает на букву и половину основы,
-      // и случайную черту. Там пусть решает пользователь кнопкой.
-      _discardIfMiss(result);
+      widget.onStrokeOutcome?.call(TracingStrokeOutcome.completed);
+    } else {
+      final helped = anchoring
+          ? _isFragment(target, strokes)
+          : _advancesCoverage(result);
+      if (!helped && widget.discardMisses) {
+        _discarding = true;
+        _controller.undo();
+        _discarding = false;
+      }
+      final outcome = helped
+          ? TracingStrokeOutcome.progressed
+          : TracingStrokeOutcome.missed;
+      widget.onStrokeOutcome?.call(outcome);
+      if (widget.missesBeforeReveal > 0 && _misses.register(outcome)) {
+        _reveal();
+      }
     }
 
     widget.onChecked?.call(result);
     return result;
   }
 
-  /// Штрих оставляем, только если он продвинул часть: иначе случайная
-  /// линия навсегда обнулит точность и часть уже никогда не соберётся.
-  void _discardIfMiss(TracingMatchResult result) {
-    if (!result.isChecked) return;
+  /// Серия промахов: показываем, как пишется. Холст очищается, контур
+  /// открывается и на чистом холсте сам запускается показ. По памяти это
+  /// меняет и место буквы — теперь она встанет на контур, как при обводке.
+  void _reveal() {
+    _controller.clear();
+    if (!_revealed) {
+      setState(() => _revealed = true);
+      _resolvedShape = null;
+      _resolvedFor = null;
+      _resetProgress();
+    }
+    widget.onReveal?.call();
+  }
 
+  /// Буква уже стоит на месте: штрих полезен, если поднял покрытие части
+  /// и хоть наполовину лёг в её полосу. Иначе случайная линия навсегда
+  /// обнулит точность, и часть уже никогда не соберётся.
+  bool _advancesCoverage(TracingMatchResult result) {
     final helped =
         result.coverage > _bestCoverage + 0.001 &&
         result.accuracy >= widget.matcher.keepAccuracy;
+    if (helped) _bestCoverage = result.coverage;
+    return helped;
+  }
 
-    if (helped) {
-      _bestCoverage = result.coverage;
-    } else {
-      _controller.undo();
-    }
+  /// Первая часть ещё не закрепила букву, и по покрытию промах не отличить:
+  /// выравнивание одинаково натягивает на букву и половину основы, и
+  /// случайную черту. Зато отличить можно по форме: нарисованное похоже
+  /// на одну из линий части или на её кусок. А под контуром штрих, лежащий
+  /// на линии, — тоже не промах, как бы он ни выглядел сам по себе.
+  bool _isFragment(ResolvedTracingPart target, List<DrawingStroke> strokes) {
+    if (target.paths.isEmpty) return true;
+    if (widget.matcher.isLineFragment(target, strokes)) return true;
+    if (!_showsGuide) return false;
+    final last = strokes.last;
+    final onGuide = widget.matcher.match(
+      target: target,
+      strokes: [last],
+      penWidth: _bandWidth,
+    );
+    return onGuide.accuracy >= widget.matcher.keepAccuracy;
   }
 
   TracingMatchResult _emptyResult(TracingMatchStatus status) {
@@ -545,36 +620,30 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     List<DrawingStroke> strokes,
     TracingAlignment alignment,
   ) {
-    setState(() {
-      _merge = _MergeState(
+    _merge.start(
+      MergeState(
         sources: List.of(strokes),
         targets: [
-          for (final stroke in widget.matcher.project(
-            target: target,
-            strokes: strokes,
-            alignment: alignment,
-          ))
+          for (final stroke
+              in StrokeProjector(widget.matcher.tracks(target)).project(
+                strokes,
+                alignment: alignment,
+                strokeWidth: target.strokeWidth,
+              ))
             stroke.copyWith(width: _penWidth ?? target.strokeWidth),
         ],
         part: target,
         strokeCount: _controller.strokes.length,
         inkColor: strokes.last.color,
-      );
-    });
-
-    _mergeController
-      ..reset()
-      ..forward().then((_) {
-        if (!mounted) return;
-        final merge = _merge;
-        if (merge == null) return;
-        _completeMerge(merge);
-      });
+      ),
+      onComplete: _completeMerge,
+    );
   }
 
   /// Показывает, как пишется текущая часть: холст обводит её сам, поверх
   /// контура. Нужен ровно там, где человек ещё не начал: начатую часть
   /// показ бы перекрывал, а по памяти он был бы подсказкой.
+  /// Само движение — в [DemoAnimation]; здесь решается, уместен ли показ.
   void _playDemo() {
     if (!mounted) return;
 
@@ -588,70 +657,34 @@ class _DrawingCanvasState extends State<DrawingCanvas>
         !_showsGuide ||
         _pendingStrokes.isNotEmpty ||
         _controller.isDrawing) {
-      _stopDemo();
+      _demo.stop();
       return;
     }
 
-    // Показ живёт три доли: пишет, держит написанное и растворяется.
-    // Без последних двух дорисованная буква так и осталась бы лежать
-    // в полную силу и была бы неотличима от чернил человека.
-    final length = shape.traceLength(
-      strokeWidth: _penWidth,
+    _demo.play(
+      shape,
       from: from,
       gap: _demoGap,
+      speed: widget.demoSpeed,
+      strokeWidth: _penWidth,
     );
-    final drawing = (length / widget.demoSpeed * 1000).round().clamp(400, 4000);
-
-    setState(() {
-      _demo = shape;
-      _demoFrom = from;
-    });
-    _demoController
-      ..duration = Duration(
-        milliseconds: (drawing / TracingDemo.drawing).round(),
-      )
-      ..forward(from: 0).whenCompleteOrCancel(() {
-        if (mounted && _demoController.isCompleted) _stopDemo();
-      });
-  }
-
-  void _stopDemo() {
-    if (_demo == null) return;
-    _demoController.stop();
-    setState(() => _demo = null);
   }
 
   /// Слияние доиграло: часть окончательно залита, её штрихи «съедены».
-  void _completeMerge(_MergeState merge) {
+  void _completeMerge(MergeState merge) {
     setState(() {
       _filled.add(
         _FilledPart(part: merge.part, strokeCount: merge.strokeCount),
       );
-      _merge = null;
       _bestCoverage = 0;
     });
+    _misses.partsDone(_filled.length);
 
     widget.onPartCompleted?.call(merge.part);
     _publishProgress();
     _playDemo();
 
     if (_filled.length >= _partCount) widget.onMerged?.call();
-  }
-
-  /// Мгновенно доводит слияние до конца.
-  void _finalizeMerge() {
-    final merge = _merge;
-    if (merge == null) return;
-    _mergeController.stop();
-    _mergeController.value = 1;
-    _completeMerge(merge);
-  }
-
-  void _cancelMerge() {
-    if (_merge == null) return;
-    _mergeController.stop();
-    _mergeController.value = 0;
-    setState(() => _merge = null);
   }
 
   @override
@@ -695,15 +728,12 @@ class _DrawingCanvasState extends State<DrawingCanvas>
                     controller: _controller,
                     repaint: Listenable.merge([
                       _finishedRepaint,
-                      _mergeProgress,
-                      _demoController,
+                      _merge,
+                      _demo,
                     ]),
                     guide: _showsGuide ? shape : null,
                     placeholderColor: widget.placeholderColor,
                     demo: _demo,
-                    demoFrom: _demoFrom,
-                    demoGap: _demoGap,
-                    demoProgress: _demoController,
                     demoCurve: widget.demoCurve,
                     demoColor: widget.demoColor ?? _controller.color,
                     filled: List.of(_filled),
@@ -713,7 +743,6 @@ class _DrawingCanvasState extends State<DrawingCanvas>
                     penWidth: _penWidth,
                     skipStrokes: _consumedStrokes,
                     merge: _merge,
-                    mergeProgress: _mergeProgress,
                   ),
                   foregroundPainter: _CurrentStrokePainter(_controller),
                   size: Size.infinite,
@@ -730,10 +759,10 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     if (!widget.enabled || _activePointer != null) return;
     // Начали новый штрих поверх незаконченной анимации — доигрывать нечего,
     // но и терять уже засчитанную часть нельзя.
-    _finalizeMerge();
+    _merge.finalize();
     // Человек взялся сам — показ больше не нужен и только мешал бы
     // смотреть на свою линию.
-    _stopDemo();
+    _demo.stop();
     _activePointer = event.pointer;
     _controller.startStroke(event.localPosition);
     widget.onStrokeStart?.call();
@@ -769,26 +798,6 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   }
 }
 
-/// Слияние: откуда штрихи едут, куда приезжают и чем заливается часть.
-class _MergeState {
-  final List<DrawingStroke> sources;
-  final List<DrawingStroke> targets;
-  final ResolvedTracingPart part;
-
-  /// Сколько всего штрихов нарисовано к моменту слияния.
-  final int strokeCount;
-
-  final Color inkColor;
-
-  _MergeState({
-    required this.sources,
-    required this.targets,
-    required this.part,
-    required this.strokeCount,
-    required this.inkColor,
-  });
-}
-
 /// Собранная часть и число штрихов, которыми её нарисовали.
 class _FilledPart {
   final ResolvedTracingPart part;
@@ -797,8 +806,10 @@ class _FilledPart {
   const _FilledPart({required this.part, required this.strokeCount});
 }
 
-/// Нижний слой: фигура-подсказка и уже завершённые штрихи. Список штрихов
-/// читается в момент отрисовки, иначе слой застынет на снимке из build().
+/// Нижний слой: контур, показ, собранные части и завершённые штрихи.
+/// Список штрихов читается в момент отрисовки, иначе слой застынет на
+/// снимке из build(). Показ и слияние рисуют себя сами: слой только
+/// расставляет их по порядку — поверх подсказки, под рукой.
 class _BackgroundPainter extends CustomPainter {
   final DrawingController controller;
 
@@ -806,16 +817,7 @@ class _BackgroundPainter extends CustomPainter {
   final ResolvedTracingShape? guide;
   final Color placeholderColor;
 
-  /// Буква, которую холст обводит сам, показывая порядок и направление.
-  /// Лежит между контуром и чернилами: поверх подсказки, под рукой.
-  final ResolvedTracingShape? demo;
-
-  /// С какой части начинается показ: собранные заново не показываем.
-  final int demoFrom;
-
-  /// Пауза между частями в длине показа.
-  final double demoGap;
-  final Animation<double> demoProgress;
+  final DemoAnimation demo;
   final Curve demoCurve;
   final Color demoColor;
 
@@ -828,9 +830,7 @@ class _BackgroundPainter extends CustomPainter {
   final double? penWidth;
 
   final int skipStrokes;
-
-  final _MergeState? merge;
-  final Animation<double> mergeProgress;
+  final MergeAnimation merge;
 
   _BackgroundPainter({
     required this.controller,
@@ -838,9 +838,6 @@ class _BackgroundPainter extends CustomPainter {
     required this.guide,
     required this.placeholderColor,
     required this.demo,
-    required this.demoFrom,
-    required this.demoGap,
-    required this.demoProgress,
     required this.demoCurve,
     required this.demoColor,
     required this.filled,
@@ -848,63 +845,27 @@ class _BackgroundPainter extends CustomPainter {
     required this.penWidth,
     required this.skipStrokes,
     required this.merge,
-    required this.mergeProgress,
   }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
     guide?.paint(canvas, placeholderColor, strokeWidth: penWidth);
-
-    final demo = this.demo;
-    if (demo != null) {
-      final t = demoProgress.value;
-      demo.paintTrace(
-        canvas,
-        demoColor.withValues(alpha: TracingDemo.opacity(t)),
-        TracingDemo.traced(t, curve: demoCurve),
-        strokeWidth: penWidth,
-        from: demoFrom,
-        gap: demoGap,
-      );
-    }
-
+    demo.paint(
+      canvas,
+      color: demoColor,
+      curve: demoCurve,
+      strokeWidth: penWidth,
+    );
     for (final item in filled) {
       item.part.paint(canvas, inkColor, strokeWidth: penWidth);
     }
-
-    final strokes = controller.strokes;
-    final merge = this.merge;
-
-    if (merge == null) {
-      DrawingPainter(
-        strokes: skipStrokes == 0 ? strokes : strokes.sublist(skipStrokes),
-      ).paint(canvas, size);
-      return;
-    }
-
-    final t = mergeProgress.value;
-
-    DrawingPainter(
-      strokes: [
-        for (
-          var i = 0;
-          i < merge.targets.length && i < merge.sources.length;
-          i++
-        )
-          DrawingStroke.lerp(merge.sources[i], merge.targets[i], t),
-      ],
-    ).paint(canvas, size);
-
-    // Во второй половине проявляем часть целиком: она дорисовывает то,
-    // чего пользователь чуть-чуть не дотянул, — без рывка в конце.
-    final fill = ((t - 0.5) / 0.5).clamp(0.0, 1.0);
-    if (fill > 0) {
-      merge.part.paint(
-        canvas,
-        merge.inkColor.withValues(alpha: fill),
-        strokeWidth: penWidth,
-      );
-    }
+    merge.paint(
+      canvas,
+      size,
+      strokes: controller.strokes,
+      skipStrokes: skipStrokes,
+      penWidth: penWidth,
+    );
   }
 
   @override
@@ -912,15 +873,14 @@ class _BackgroundPainter extends CustomPainter {
       oldDelegate.controller != controller ||
       oldDelegate.guide != guide ||
       oldDelegate.placeholderColor != placeholderColor ||
+      oldDelegate.demo != demo ||
+      oldDelegate.demoCurve != demoCurve ||
+      oldDelegate.demoColor != demoColor ||
       oldDelegate.filled.length != filled.length ||
       oldDelegate.inkColor != inkColor ||
       oldDelegate.penWidth != penWidth ||
       oldDelegate.skipStrokes != skipStrokes ||
-      oldDelegate.merge != merge ||
-      oldDelegate.demo != demo ||
-      oldDelegate.demoFrom != demoFrom ||
-      oldDelegate.demoCurve != demoCurve ||
-      oldDelegate.demoGap != demoGap;
+      oldDelegate.merge != merge;
 }
 
 /// Верхний слой: только штрих, который рисуется прямо сейчас.

@@ -157,11 +157,12 @@ class TracingShapeSvg {
   static List<TracingShapePart> _partsOf(List<_Entry> entries) {
     final tagged = entries.any((entry) => _orderOf(entry.role) != null);
 
-    final sorted = [...entries]..sort((a, b) {
-      if (tagged && a.order != b.order) return a.order.compareTo(b.order);
-      if (a.isDot != b.isDot) return a.isDot ? 1 : -1;
-      return a.index.compareTo(b.index);
-    });
+    final sorted = [...entries]
+      ..sort((a, b) {
+        if (tagged && a.order != b.order) return a.order.compareTo(b.order);
+        if (a.isDot != b.isDot) return a.isDot ? 1 : -1;
+        return a.index.compareTo(b.index);
+      });
 
     final parts = <TracingShapePart>[];
     for (final entry in sorted) {

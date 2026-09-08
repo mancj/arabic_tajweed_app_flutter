@@ -30,8 +30,9 @@ class AtomProgressPage extends GetView<AtomProgressController> {
         return ListView.builder(
           padding: insets,
           itemCount: rows.length + 1,
-          itemBuilder: (_, i) =>
-              i == 0 ? _Summary(controller) : _AtomTile(rows[i - 1], controller),
+          itemBuilder: (_, i) => i == 0
+              ? _Summary(controller)
+              : _AtomTile(rows[i - 1], controller),
         );
       }),
     );

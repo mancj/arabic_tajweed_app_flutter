@@ -187,6 +187,12 @@ class HomeController extends GetxController {
     hint.value = result.isChecked ? 'Не узнал, попробуйте ещё раз' : hint.value;
   }
 
+  /// Холст сам показал, как пишется, после серии промахов: контур открыт,
+  /// показ идёт. Экрану остаётся сменить подсказку.
+  void onRevealed() {
+    hint.value = 'Смотрите, как пишется, и попробуйте ещё раз';
+  }
+
   void _resetHint() => hint.value = 'Нарисуйте основу буквы';
 
   String _messageFor(TracingMatchResult result) {

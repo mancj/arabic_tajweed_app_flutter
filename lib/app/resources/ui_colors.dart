@@ -54,8 +54,7 @@ class UIColors {
   static const questionCardShadow = Color(0x1AB1B1B1);
   static const optionBackground = Color(0xFFF8F8F8);
   static const optionDivider = Color(0xFFDDDDDD);
-  static const ca
-   = Color(0xFFDDDDDD);
+  static const ca = Color(0xFFDDDDDD);
 
   /// Бледные формы буквы на фоне карточки с вопросом.
   static const glyphGhost = Color(0xFFE3E3E3);

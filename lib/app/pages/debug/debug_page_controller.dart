@@ -8,7 +8,6 @@ import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 
 class DebugController extends GetxController {
-
   /// Сбросить прогресс: лог стирается, курс начинается с первого урока.
   /// Нужно, чтобы проверять правки в контенте — иначе пройденные уроки
   /// заново не показываются.
@@ -32,5 +31,4 @@ class DebugController extends GetxController {
   void openAlphabetLetter() => Get.toNamed(AlphabetLetterPage.routeName);
 
   void openAppWidgetsPage() => Get.toNamed(AppWidgetsPage.routeName);
-
 }

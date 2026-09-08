@@ -31,11 +31,13 @@ class LessonController extends GetxController {
     Curriculum? curriculum,
     String? topicId,
     Future<TracingShape> Function(String asset)? shapeLoader,
+    LetterAudio? audio,
   }) : rules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
        _topicId = topicId,
-       _shapeLoader = shapeLoader ?? _loadShapeAsset;
+       _shapeLoader = shapeLoader ?? _loadShapeAsset,
+       _audio = audio ?? LetterAudio();
 
   final LearningRules rules;
 
@@ -99,7 +101,9 @@ class LessonController extends GetxController {
 
   /// Голос буквы. Один плеер на урок: новое нажатие обрывает предыдущий
   /// звук, а не накладывается на него.
-  final _audio = LetterAudio();
+  /// В тестах подставляется с плеером под известным именем: у настоящего
+  /// имя случайное, и его каналы нечем подменить.
+  final LetterAudio _audio;
 
   /// Есть ли у атома запись. У понятий, слогов и хамзы её пока нет.
   bool hasVoice(Atom atom) => LetterAudio.has(atom.letterId);
@@ -186,8 +190,8 @@ class LessonController extends GetxController {
         _topicId == null
             ? _plan!.newAtoms.map((a) => a.id)
             : _curriculum.topics
-                  .firstWhereOrNull((t) => t.id == _topicId)
-                  ?.counterOf ??
+                      .firstWhereOrNull((t) => t.id == _topicId)
+                      ?.counterOf ??
                   const [],
       );
 
@@ -349,7 +353,11 @@ class LessonController extends GetxController {
     if (atom == null) return;
 
     await _progress.record(
-      AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: DateTime.now()),
+      AtomIntroduced(
+        atomId: atom.id,
+        sessionId: _sessionId,
+        at: DateTime.now(),
+      ),
     );
     card.value = null;
     // Время на ответ считается с закрытия карточки: чтение объяснения
@@ -415,9 +423,27 @@ class LessonController extends GetxController {
     tracingHint.value = 'Буква собрана';
   }
 
+  /// Холст сам показал, как пишется, после серии промахов, см.
+  /// [DrawingCanvas.missesBeforeReveal]. Это не ошибка и не разбор: контур
+  /// остаётся, человек обводит по нему, и собранная буква засчитывается
+  /// верным ответом. Строгость проверки не меняется — подсказка честнее,
+  /// чем сниженная планка, — а ошибкой обводка становится только по
+  /// кнопке «Не помню». См. SPEC.md §5.
+  void onTracingRevealed() {
+    if (wasWrong.value) return;
+    tracingHint.value = 'Обведите по подсказке';
+  }
+
+  /// Ошибка в обводке: ответ засчитан как неверный, холст очищен, и на нём
+  /// открывается контур — показ сам запускается на чистом холсте.
+  Future<void> _revealTracing() async {
+    await submit(directOutcome: false);
+    if (wasWrong.value) drawing.clear();
+  }
+
   /// «Не помню» в режиме по памяти: ответ засчитывается ошибкой, а контур
-  /// открывается — иначе человек застревает на буквe, которую не помнит.
-  Future<void> giveUpTracing() => submit(directOutcome: false);
+  /// открывается — иначе человек застревает на букве, которую не помнит.
+  Future<void> giveUpTracing() => _revealTracing();
 
   /// У заданий без выбора нечего выделять — кнопка активна сразу.
   /// Исключение — письмо: там ответ готов, только когда буква собрана
@@ -517,9 +543,8 @@ class LessonController extends GetxController {
 
   /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они
   /// другие. См. SPEC.md §4.
-  Duration _speedLimit(ExerciseMode mode) => mode.isTracing
-      ? const Duration(seconds: 40)
-      : const Duration(seconds: 3);
+  Duration _speedLimit(ExerciseMode mode) =>
+      mode.isTracing ? const Duration(seconds: 40) : const Duration(seconds: 3);
 
   Future<void> _finish() async {
     // «Пройден» — это факт о занятии, а не о знании: человек дошёл до конца

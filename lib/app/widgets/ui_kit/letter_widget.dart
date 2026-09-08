@@ -275,15 +275,17 @@ class LetterWidgetCard extends StatelessWidget {
             child: TiltParallax(
               offset: const Offset(8, 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal:3, vertical: 0),
-                decoration:  BoxDecoration(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0),
+                decoration: BoxDecoration(
                   color: UIColors.cardBackground,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   subtitle!,
                   key: ValueKey(subtitle),
-                  style: UITextStyles.serifSemibold18.copyWith(color: UIColors.orange),
+                  style: UITextStyles.serifSemibold18.copyWith(
+                    color: UIColors.orange,
+                  ),
                 ).animate().fadeIn(duration: .3.seconds),
               ),
             ),

@@ -22,12 +22,13 @@ void main() {
 
   String roleOf(String id) => id.replaceFirst(RegExp(r'^\d+[-_]?'), '');
 
-  final files = Directory(dir)
-      .listSync()
-      .whereType<File>()
-      .where((file) => file.path.endsWith('.svg'))
-      .toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
+  final files =
+      Directory(dir)
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.svg'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
 
   test('у каждой линии есть номер, и нумерация сплошная', () {
     for (final file in files) {
@@ -95,7 +96,8 @@ void main() {
       expect(
         dots,
         greaterThan(lines),
-        reason: '$name: точка стала первой частью — холст ждёт её раньше основы',
+        reason:
+            '$name: точка стала первой частью — холст ждёт её раньше основы',
       );
     }
   });

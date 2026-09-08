@@ -113,7 +113,10 @@ void main() {
     test('кривая задаётся снаружи', () {
       const half = TracingDemo.drawing / 2;
 
-      expect(TracingDemo.traced(half, curve: Curves.linear), closeTo(0.5, 1e-6));
+      expect(
+        TracingDemo.traced(half, curve: Curves.linear),
+        closeTo(0.5, 1e-6),
+      );
       expect(
         TracingDemo.traced(half, curve: Curves.easeIn),
         lessThan(TracingDemo.traced(half, curve: Curves.easeOut)),

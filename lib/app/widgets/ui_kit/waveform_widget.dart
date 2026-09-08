@@ -188,7 +188,8 @@ class _WaveformWidgetState extends State<WaveformWidget>
       // Дальние слои ниже и шире, ближние — острее и выше.
       final depth = widget.layers == 1 ? 1.0 : layer / (widget.layers - 1);
       final count =
-          widget.minBumps + random.nextInt(widget.maxBumps - widget.minBumps + 1);
+          widget.minBumps +
+          random.nextInt(widget.maxBumps - widget.minBumps + 1);
 
       // Каждому бугру своя доля ширины, а разброс — только внутри неё.
       // На чистом случайном центре двух-трёх бугров хватало, чтобы все они
@@ -340,7 +341,14 @@ class _WaveformPainter extends CustomPainter {
       final scale =
           restHeight + (loudHeight - restHeight) * loudness.clamp(0.0, 1.0);
       canvas.drawPath(
-        _layerPath(layers[i], size, baseline, peak * scale, frame.clock, loudness),
+        _layerPath(
+          layers[i],
+          size,
+          baseline,
+          peak * scale,
+          frame.clock,
+          loudness,
+        ),
         paint,
       );
     }

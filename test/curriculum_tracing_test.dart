@@ -14,8 +14,9 @@ void main() {
   test('у каждой формы буквы есть свой SVG, и наоборот', () {
     final atoms = [
       for (final asset in CurriculumLoader.defaultStageAssets)
-        ...CurriculumLoader.parse(File(asset).readAsStringSync()).nodes
-            .map((node) => node.atom),
+        ...CurriculumLoader.parse(
+          File(asset).readAsStringSync(),
+        ).nodes.map((node) => node.atom),
     ];
 
     final letterForms = atoms.where((a) => a.kind == AtomKind.letterForm);

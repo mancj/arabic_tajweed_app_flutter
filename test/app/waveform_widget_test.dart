@@ -34,17 +34,13 @@ void main() {
   });
 
   testWidgets('дорожка без пиков только раскачивает волну', (tester) async {
-    final track = ValueNotifier<AudioTrack>(
-      const AudioTrack(isPlaying: true),
-    );
+    final track = ValueNotifier<AudioTrack>(const AudioTrack(isPlaying: true));
     await pumpWave(tester, track);
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('строгое количество бугров и неподвижная высота', (
-    tester,
-  ) async {
+  testWidgets('строгое количество бугров и неподвижная высота', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(

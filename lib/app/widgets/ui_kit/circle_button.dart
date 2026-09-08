@@ -45,7 +45,7 @@ class CircleButton extends StatelessWidget {
               color: UIColors.cardShadow,
               spreadRadius: 1,
               blurRadius: 8,
-              
+
               offset: Offset(0, 2),
             ),
           ],

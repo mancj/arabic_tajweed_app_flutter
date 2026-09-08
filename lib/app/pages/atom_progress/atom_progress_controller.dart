@@ -64,9 +64,7 @@ class AtomProgressController extends GetxController {
     final lazy = progress.keys
         .whereNot(known.contains)
         .sorted()
-        .map(
-          (id) => Atom(id: id, kind: AtomKind.syllable, display: id),
-        );
+        .map((id) => Atom(id: id, kind: AtomKind.syllable, display: id));
 
     rows.assignAll([
       for (final node in curriculum.nodes)

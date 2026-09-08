@@ -249,6 +249,9 @@ class _TracingTask extends GetView<LessonController> {
                       strokeWidth: 16,
                       placeholderPadding: 0,
                       onProgress: controller.onTracingProgress,
+                      missesBeforeReveal:
+                          controller.rules.tracingMissesBeforeReveal,
+                      onReveal: controller.onTracingRevealed,
                       onMerged: controller.onTracingMerged,
                     ),
                   ),
@@ -300,12 +303,12 @@ class _ClearButton extends GetView<LessonController> {
             color: UIColors.white,
             border: Border.all(color: UIColors.cardBorder, width: 0.6),
             boxShadow: [
-               BoxShadow(
-                 color: UIColors.black.withValues(alpha: 0.05),
-                 blurRadius: 4,
-                 offset: const Offset(0, 2),
-               ),
-            ]
+              BoxShadow(
+                color: UIColors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: const Icon(
             CupertinoIcons.delete,

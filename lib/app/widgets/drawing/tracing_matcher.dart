@@ -123,17 +123,27 @@ class TracingAlignment {
   }) {
     if (from.longestSide < minSize || to.longestSide < minSize) return null;
 
-    final byWidth = from.width < 1 ? double.infinity : to.width / from.width;
-    final byHeight = from.height < 1
-        ? double.infinity
-        : to.height / from.height;
+    final double scale;
+    if (to.shortestSide * StrokeSignature.extremeAspect < to.longestSide) {
+      // Тонкая фигура — алиф, прямая связка. Её узкая ось — шум: у эталона
+      // ширина почти ноль, у руки зависит от наклона линии, и их отношение
+      // случайно. Среднее геометрическое с ним раздувало алиф вдвое от
+      // небольшого наклона. Такой фигуре масштаб даёт только длинная ось.
+      scale = to.longestSide / from.longestSide;
+    } else {
+      final byWidth = from.width < 1 ? double.infinity : to.width / from.width;
+      final byHeight = from.height < 1
+          ? double.infinity
+          : to.height / from.height;
 
-    // Среднее геометрическое, а не «вписать внутрь»: пропорции нарисованного
-    // могут отличаться от эталонных, и min() схлопнул бы широкую букву до
-    // размера её узкой оси — при заливке это выглядело бы как рывок.
-    final scale = byWidth.isFinite && byHeight.isFinite
-        ? math.sqrt(byWidth * byHeight)
-        : math.min(byWidth, byHeight);
+      // Среднее геометрическое, а не «вписать внутрь»: пропорции
+      // нарисованного могут отличаться от эталонных, и min() схлопнул бы
+      // широкую букву до размера её узкой оси — при заливке это выглядело
+      // бы как рывок.
+      scale = byWidth.isFinite && byHeight.isFinite
+          ? math.sqrt(byWidth * byHeight)
+          : math.min(byWidth, byHeight);
+    }
     if (!scale.isFinite || scale < minScale || scale > maxScale) return null;
 
     return TracingAlignment(
@@ -152,11 +162,12 @@ class TracingAlignment {
 /// * точность — сколько его точек легло в полосу фигуры;
 /// * отклонение — насколько далеко линия уходит от фигуры.
 ///
-/// Ни одной из них по отдельности не хватает. Без точности зачлась бы любая
-/// мазня поверх буквы. А покрытие с точностью не чувствуют порядок точек:
-/// «W» на месте чаши обходит всю фигуру и каждой своей точкой лежит рядом
-/// с какой-нибудь точкой фигуры — ловится только отклонением, у которого
-/// от локального выброса распухает хвост распределения.
+/// Зачёт решают покрытие и отклонение. Покрытие само не чувствует порядок
+/// точек: «W» на месте чаши обходит всю фигуру и каждой своей точкой лежит
+/// рядом с какой-нибудь точкой фигуры — ловится только отклонением, у
+/// которого от локального выброса распухает хвост распределения. Оно же
+/// ловит мазню поверх буквы. Точность порогом не проверяется, но считается:
+/// холст по ней отличает промах от штриха, продвинувшего часть.
 class TracingMatcher {
   /// Допуск в долях толщины линии фигуры.
   final double toleranceFactor;
@@ -165,7 +176,6 @@ class TracingMatcher {
   final double sampleStepFactor;
 
   final double minCoverage;
-  final double minAccuracy;
 
   /// Требовать, чтобы пользователь поставил все точки буквы. В покрытии они
   /// весят один сэмпл на точку, то есть сами по себе почти ни на что не
@@ -188,6 +198,13 @@ class TracingMatcher {
   /// начинается с 0.087.
   final double maxShapeError;
 
+  /// Максимальное расхождение формы, при котором нарисованное считается
+  /// куском части — её линией целиком или началом либо концом линии. Ниже
+  /// [maxShapeError]: кусок проще целой буквы, и случайная черта подходит
+  /// к нему легче. Замеры на ба и ـحـ: половины основы 0.02, целая линия
+  /// 0.00, зигзаг против линии ـحـ 0.069, против основы ба 0.13.
+  final double maxFragmentError;
+
   /// Какой перцентиль отклонений брать. Не максимум — иначе одна
   /// дёрнувшаяся точка забракует верную букву.
   final double deviationPercentile;
@@ -209,13 +226,13 @@ class TracingMatcher {
     this.toleranceFactor = 0.75,
     this.sampleStepFactor = 0.25,
     this.minCoverage = 0.85,
-    this.minAccuracy = 0.8,
     this.requireDots = true,
     this.minFitScale = 0.4,
     this.maxFitScale = 3.0,
     this.maxDeviation = 0.65,
     this.deviationPercentile = 0.9,
     this.maxShapeError = 0.08,
+    this.maxFragmentError = 0.06,
     this.maxDotShiftFactor = 0.35,
     this.minDotScale = 0.5,
     this.maxDotScale = 2.0,
@@ -359,8 +376,17 @@ class TracingMatcher {
       return const TracingMatchResult.empty(TracingMatchStatus.noInput);
     }
 
-    final band = _bandFor(target, penWidth);
-    final tolerance = band * toleranceFactor;
+    // Допуск считается от большей из толщин: если перо толще линии буквы,
+    // центр штриха может законно отойти на половину пера.
+    final band = math.max(target.strokeWidth, penWidth ?? 0);
+    // Единственное правило про точки: допуск на попадание в точку — радиус
+    // плюс полоса, но не дальше [dotSpacingShare] расстояния до соседней.
+    // Иначе один тап накрывал бы обе, и ت стало бы неотличимо от ب. Для
+    // части из одних точек это же расстояние служит и полосой покрытия.
+    final dotTolerance = _dotToleranceFor(target, band * toleranceFactor);
+    final tolerance = target.paths.isEmpty
+        ? dotTolerance
+        : band * toleranceFactor;
     final toleranceSq = tolerance * tolerance;
 
     var covered = 0;
@@ -379,14 +405,6 @@ class TracingMatcher {
     final deviation =
         deviations[((deviations.length - 1) * deviationPercentile).round()];
 
-    // Допуск на попадание в точку зажат расстоянием до соседней целиком,
-    // вместе с радиусом: иначе сумма перекроет соседнюю точку, и
-    // перевёрнутый треугольник зачтётся как правильный.
-    var dotTolerance = target.dotRadius + tolerance;
-    final dotSpacing = _minSpacing(target.dots);
-    if (dotSpacing.isFinite) {
-      dotTolerance = math.min(dotTolerance, dotSpacing * 0.45);
-    }
     final dotToleranceSq = dotTolerance * dotTolerance;
     final dotsTraced = target.dots.every(
       (dot) => _nearestDistanceSq(dot, points) <= dotToleranceSq,
@@ -414,17 +432,17 @@ class TracingMatcher {
       holds =
           countHolds &&
           (dotsTraced || !requireDots) &&
-          (structural || (coverage >= minCoverage && accuracy >= minAccuracy));
+          (structural || coverage >= minCoverage);
     } else if (structural) {
       // Форма и только форма — но не любого размера: буква впятеро мельче
       // эталона это каракуля, а не «другие пропорции».
       holds = shapeError <= maxShapeError && _sizeIsSane(target, points);
     } else {
+      // Точность порогом не проверяется: 90-й перцентиль отклонения
+      // ловит и мазню поверх буквы, и уход в сторону. Второй порог на ту же
+      // величину только мешал калибровке.
       holds =
-          coverage >= minCoverage &&
-          accuracy >= minAccuracy &&
-          shapeHolds &&
-          (dotsTraced || !requireDots);
+          coverage >= minCoverage && shapeHolds && (dotsTraced || !requireDots);
     }
 
     return TracingMatchResult(
@@ -437,103 +455,47 @@ class TracingMatcher {
     );
   }
 
-  /// Проецирует штрихи на фигуру: штрих ложится на кусок линии между своими
-  /// концами, толщина становится толщиной фигуры. Результат — то, во что
-  /// штрихи «вливаются» при слиянии.
-  List<DrawingStroke> project({
-    required ResolvedTracingPart target,
-    required List<DrawingStroke> strokes,
-    TracingAlignment alignment = const TracingAlignment.identity(),
-  }) {
-    final tracks = this.tracks(target);
-    if (tracks.isEmpty) return strokes;
+  /// Похожи ли штрихи на кусок части: на одну из её линий целиком или на
+  /// начало либо конец линии. Так фрагмент — первая линия ـحـ или половина
+  /// основы, которую ведут в два касания, — отличается от промаха, пока
+  /// часть ещё не нарисована. Форма сверяется как по памяти, размер — в тех
+  /// же пределах, что и подгонка: короткая закорючка формой совпадает
+  /// с началом любой линии и без размера сошла бы за фрагмент.
+  bool isLineFragment(ResolvedTracingPart target, List<DrawingStroke> strokes) {
+    final drawn = [for (final stroke in strokes) ...stroke.points];
+    if (drawn.length < 2) return false;
+    final input = _boundsOf(drawn).longestSide;
+    if (input <= 0) return false;
 
-    return [
-      for (final stroke in alignment.applyTo(strokes))
-        DrawingStroke(
-          points: _projectOnTrack(
-            stroke.points,
-            _bestTrack(stroke.points, tracks),
-          ),
-          color: stroke.color,
-          width: target.strokeWidth,
-        ),
-    ];
-  }
+    for (final line in StrokeSignature.polylinesOf(target.paths)) {
+      for (final piece in _piecesOf(line)) {
+        final template = StrokeSignature.ofPoints(piece);
+        if (template == null) continue;
+        final signature = StrokeSignature.ofPoints(
+          drawn,
+          uniform: template.uniform,
+        );
+        if (signature == null) continue;
+        if (signature.distanceTo(template) > maxFragmentError) continue;
 
-  /// Дорожка, по которой штрих шёл: та, к которой он в сумме ближе всех.
-  static List<Offset> _bestTrack(
-    List<Offset> points,
-    List<List<Offset>> tracks,
-  ) {
-    if (tracks.length == 1) return tracks.first;
-
-    var best = tracks.first;
-    var bestCost = double.infinity;
-    for (final track in tracks) {
-      var cost = 0.0;
-      for (final point in points) {
-        cost += _nearestDistanceSq(point, track);
-      }
-      if (cost < bestCost) {
-        bestCost = cost;
-        best = track;
+        final fit = _boundsOf(piece).longestSide / input;
+        if (fit >= minFitScale && fit <= maxFitScale) return true;
       }
     }
-    return best;
+    return false;
   }
 
-  /// Растягивает штрих по куску дорожки между его концами.
-  ///
-  /// Каждую точку по отдельности в ближайшую опорную двигать нельзя:
-  /// ближайшая точка не монотонна вдоль линии, и на острых зубцах (س, ش)
-  /// середина штриха перескакивает через вершину на соседнюю ветку и
-  /// возвращается обратно. Сплайн затягивает такой скачок хордой — поперёк
-  /// зубца появляется прямая перемычка. Кусок дорожки же по построению
-  /// повторяет саму линию буквы и изломов дать не может.
-  static List<Offset> _projectOnTrack(List<Offset> points, List<Offset> track) {
-    if (points.isEmpty) return points;
-    if (track.length == 1) {
-      return [for (var i = 0; i < points.length; i++) track.first];
+  /// Какие доли линии считаются её узнаваемым куском. Меньше 0.4 — уже
+  /// не кусок, а черта, которая похожа на начало чего угодно.
+  static const _fragmentShares = [0.4, 0.55, 0.7, 0.85, 1.0];
+
+  /// Начала и концы линии по долям из [_fragmentShares], плюс она целиком.
+  static Iterable<List<Offset>> _piecesOf(List<Offset> line) sync* {
+    for (final share in _fragmentShares) {
+      final count = (line.length * share).round().clamp(2, line.length);
+      yield line.sublist(0, count);
+      if (count < line.length) yield line.sublist(line.length - count);
     }
-
-    // Концы штриха — самое надёжное, что в нём есть: середину неоднозначно
-    // тянет к соседним веткам, а начало и конец лежат там, где человек
-    // поставил и оторвал палец.
-    final from = _nearestIndex(points.first, track);
-    final to = _nearestIndex(points.last, track);
-    if (from == to || points.length == 1) {
-      return [for (var i = 0; i < points.length; i++) track[from]];
-    }
-
-    final span = (to - from).toDouble();
-    final last = points.length - 1;
-
-    return [
-      for (var i = 0; i <= last; i++) _pointAt(track, from + span * i / last),
-    ];
-  }
-
-  /// Точка дорожки по дробному индексу — между соседними опорными.
-  static Offset _pointAt(List<Offset> track, double index) {
-    final low = index.floor().clamp(0, track.length - 1);
-    final high = math.min(low + 1, track.length - 1);
-    return Offset.lerp(track[low], track[high], index - low) ?? track[low];
-  }
-
-  static int _nearestIndex(Offset point, List<Offset> track) {
-    var best = 0;
-    var bestDistanceSq = double.infinity;
-    for (var i = 0; i < track.length; i++) {
-      final dx = point.dx - track[i].dx;
-      final dy = point.dy - track[i].dy;
-      final distanceSq = dx * dx + dy * dy;
-      if (distanceSq < bestDistanceSq) {
-        bestDistanceSq = distanceSq;
-        best = i;
-      }
-    }
-    return best;
   }
 
   /// Размер нарисованного соизмерим с эталоном. Границы те же, что у
@@ -601,18 +563,15 @@ class TracingMatcher {
     }
   }
 
-  /// Допуск для части. Неточность руки при постановке точек поглощает общий
-  /// сдвиг группы в [alignDots], поэтому здесь допуск не раздуваем — но и
-  /// не даём ему дотянуться до соседней точки: иначе одним тапом закрывались
-  /// бы обе, и ت стало бы неотличимо от ب.
-  double _bandFor(ResolvedTracingPart target, double? penWidth) {
-    final band = math.max(target.strokeWidth, penWidth ?? 0);
-    if (target.paths.isNotEmpty) return band;
+  /// Какую долю расстояния между соседними точками может занимать допуск
+  /// на попадание в точку. Меньше половины — чтобы допуски двух соседних
+  /// точек не перекрывались.
+  static const dotSpacingShare = 0.45;
 
+  double _dotToleranceFor(ResolvedTracingPart target, double tolerance) {
+    final own = target.dotRadius + tolerance;
     final spacing = _minSpacing(target.dots);
-    if (!spacing.isFinite) return band;
-
-    return math.min(band, spacing * 0.45 / toleranceFactor);
+    return spacing.isFinite ? math.min(own, spacing * dotSpacingShare) : own;
   }
 
   static double _minSpacing(List<Offset> dots) {

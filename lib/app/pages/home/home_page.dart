@@ -169,6 +169,7 @@ class _TracingCard extends GetView<HomeController> {
                   placeholderPadding: 0,
                   onProgress: controller.onProgress,
                   onChecked: controller.onChecked,
+                  onReveal: controller.onRevealed,
                   strokeWidth: 16,
                 ),
               ),

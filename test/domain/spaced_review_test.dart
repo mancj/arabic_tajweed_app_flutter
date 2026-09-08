@@ -89,7 +89,9 @@ void main() {
     );
     expect(firstOld, greaterThan(0));
     expect(
-      exercises.skip(firstOld).every((e) => !topic.counterOf.contains(e.atom.id)),
+      exercises
+          .skip(firstOld)
+          .every((e) => !topic.counterOf.contains(e.atom.id)),
       isTrue,
       reason: 'сначала материал урока, потом старое — ТЗ §6.2',
     );

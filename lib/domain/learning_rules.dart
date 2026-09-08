@@ -22,6 +22,7 @@ class LearningRules {
     this.sessionsWithoutNewBeforeForcing = 2,
     this.tasksPerSession = 12,
     this.maxTasksPerSession = 16,
+    this.tracingMissesBeforeReveal = 3,
   });
 
   /// Верных подряд с первой попытки для перехода learning → known.
@@ -59,4 +60,11 @@ class LearningRules {
   final int sessionsWithoutNewBeforeForcing;
   final int tasksPerSession;
   final int maxTasksPerSession;
+
+  /// После скольких промахов подряд по одной части буквы холст показывает,
+  /// как она пишется: открывает контур и показ. Это подсказка, а не ошибка:
+  /// человек обводит по ней, и ответ засчитывается верным. Без этого тот,
+  /// у кого не выходит линия, застревал бы на букве без помощи сколько
+  /// угодно долго. См. SPEC.md §5.
+  final int tracingMissesBeforeReveal;
 }

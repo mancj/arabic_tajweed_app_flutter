@@ -62,11 +62,10 @@ void main() {
     }
   });
 
-  test('покрытие и точность сами по себе «W» не ловят', () {
-    // Ради этого и добавлено отклонение: две первые метрики здесь проходят.
+  test('покрытие само по себе «W» не ловит', () {
+    // Ради этого и добавлено отклонение: покрытие здесь проходит.
     final result = match(spiked(0.35));
     expect(result.coverage, greaterThan(matcher.minCoverage));
-    expect(result.accuracy, greaterThan(matcher.minAccuracy));
     expect(result.isMatch, isFalse);
   });
 }

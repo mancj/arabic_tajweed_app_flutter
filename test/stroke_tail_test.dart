@@ -14,8 +14,7 @@ void main() {
       final a = points[i - 1] - points[i - 2];
       final b = points[i] - points[i - 1];
       if (a.distance == 0 || b.distance == 0) continue;
-      final cosine =
-          (a.dx * b.dx + a.dy * b.dy) / (a.distance * b.distance);
+      final cosine = (a.dx * b.dx + a.dy * b.dy) / (a.distance * b.distance);
       worst = max(worst, acos(cosine.clamp(-1.0, 1.0)) * 180 / pi);
     }
     return worst;
