@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/drifting_rotation.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
@@ -28,7 +26,16 @@ class LetterWidgetCard extends StatelessWidget {
   static const _decorRise = -6.0;
 
   final String letter;
+
+  /// Что показать в кольце вместо текста [letter]: например, иконку
+  /// знака вопроса в задании на слух. Сам [letter] при этом остаётся
+  /// ключом смены глифа и автозвука.
+  final Widget? glyph;
   final String? question;
+
+  /// Кусок [question], который подсвечивается цветом: «в начале слова»
+  /// в вопросе о форме, чтобы глаз цеплялся за условие.
+  final String? questionAccent;
   final String? labelText;
   final bool isArabic;
 
@@ -62,7 +69,9 @@ class LetterWidgetCard extends StatelessWidget {
     super.key,
     required this.letter,
     required this.isArabic,
+    this.glyph,
     this.question,
+    this.questionAccent,
     this.labelText,
     this.subtitle,
     this.onPlay,
@@ -90,6 +99,25 @@ class LetterWidgetCard extends StatelessWidget {
     sensorFactor: 3,
     sensorRevertFactor: .02,
   );
+
+  /// Текст вопроса, где [questionAccent] выделен цветом. Если куска
+  /// в тексте нет, вопрос остаётся одноцветным.
+  TextSpan _questionSpan() {
+    final text = question!;
+    final accent = questionAccent;
+    final at = accent == null ? -1 : text.indexOf(accent);
+    if (at < 0) return TextSpan(text: text);
+    return TextSpan(
+      children: [
+        TextSpan(text: text.substring(0, at)),
+        TextSpan(
+          text: accent,
+          style: const TextStyle(color: UIColors.highlight),
+        ),
+        TextSpan(text: text.substring(at + accent!.length)),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +189,9 @@ class LetterWidgetCard extends StatelessWidget {
                                     color: UIColors.ink,
                                   ),
                                 if (question != null) ...[
-                                  const Margin.vertical(8),
-                                  Text(
-                                    question!,
+                                  const Margin.vertical(4),
+                                  Text.rich(
+                                    _questionSpan(),
                                     style: UITextStyles.cardTitle.copyWith(
                                       color: UIColors.ink,
                                     ),
@@ -172,11 +200,11 @@ class LetterWidgetCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                        const Margin.vertical(16),
+                        const Margin.vertical(12),
                         _glyph(decorSide),
                         if (_playable) ...[
-                          const Margin.vertical(56),
-                          _PlayControl(
+                          const Margin.vertical(32),
+                          PlayControl(
                             letter: letter,
                             onTap: onPlay!,
                             onAutoPlay: onAutoPlay,
@@ -249,21 +277,25 @@ class LetterWidgetCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Text(
-                  letter,
+                child: KeyedSubtree(
                   key: ValueKey(letter),
-                  style: TextStyle(
-                    fontSize: isArabic ? 80 : 32,
-                    // Строка ужата до кегля: иначе высоту бокса задаёт шрифт,
-                    // и у каждой буквы свой запас сверху и снизу.
-                    height: 1,
+                  child:
+                      glyph ??
+                      Text(
+                        letter,
+                        style: TextStyle(
+                          fontSize: isArabic ? 80 : 32,
+                          // Строка ужата до кегля: иначе высоту бокса задаёт
+                          // шрифт, и у каждой буквы свой запас сверху и снизу.
+                          height: 1,
 
-                    fontFamily: isArabic
-                        ? UITextStyles.fontScheherazadeNew
-                        : UITextStyles.fontSerif,
-                    color: UIColors.ink,
-                    letterSpacing: 0,
-                  ),
+                          fontFamily: isArabic
+                              ? UITextStyles.fontScheherazadeNew
+                              : UITextStyles.fontSerif,
+                          color: UIColors.text,
+                          letterSpacing: 0,
+                        ),
+                      ),
                 ),
               ),
             ),
@@ -309,7 +341,7 @@ class LetterWidgetCard extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         Opacity(
-          opacity: .13,
+          opacity: .05,
           child: Transform.scale(
             scale: scaleFactor,
             child: TiltParallax(
@@ -375,110 +407,4 @@ class LetterWidgetCard extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Кнопка звучания: на ходу показывает остановку, в остальное время —
-/// воспроизведение. Слушает запись сама, чтобы карточка не перестраивалась
-/// на каждый кадр волны.
-///
-/// Она же заводит автоматическое звучание: буква звучит при появлении
-/// карточки и при каждой смене глифа — состояние нужно только для этого.
-class _PlayControl extends StatefulWidget {
-  const _PlayControl({
-    required this.letter,
-    required this.onTap,
-    required this.autoPlay,
-    this.onAutoPlay,
-    this.track,
-  });
-
-  final String letter;
-  final VoidCallback onTap;
-  final VoidCallback? onAutoPlay;
-  final ValueListenable<AudioTrack>? track;
-  final bool autoPlay;
-
-  @override
-  State<_PlayControl> createState() => _PlayControlState();
-}
-
-class _PlayControlState extends State<_PlayControl> {
-  /// Пауза перед автоматическим звучанием: карточка успевает выехать
-  /// и показать букву, и только потом её называют.
-  static const _autoPlayDelay = Duration(milliseconds: 300);
-
-  Timer? _autoPlay;
-
-  @override
-  void initState() {
-    super.initState();
-    _scheduleAutoPlay();
-  }
-
-  @override
-  void didUpdateWidget(covariant _PlayControl oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // В уроке карточка нередко остаётся на месте, а меняется только глиф —
-    // для звука это такое же появление буквы, как и новая карточка.
-    if (oldWidget.letter != widget.letter) _scheduleAutoPlay();
-  }
-
-  void _scheduleAutoPlay() {
-    _autoPlay?.cancel();
-    if (!widget.autoPlay) return;
-    _autoPlay = Timer(_autoPlayDelay, () {
-      if (mounted) (widget.onAutoPlay ?? widget.onTap)();
-    });
-  }
-
-  @override
-  void dispose() {
-    _autoPlay?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final listenable = widget.track;
-    if (listenable == null) return _button(false);
-
-    return ValueListenableBuilder<AudioTrack>(
-      valueListenable: listenable,
-      builder: (_, value, _) => _button(value.isPlaying),
-    );
-  }
-
-  Widget _button(bool isPlaying) => Column(
-    children: [
-      CircleButton(
-        size: 46,
-        onTap: widget.onTap,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          transitionBuilder: (child, animation) =>
-              ScaleTransition(scale: animation, child: child),
-          child: Icon(
-            isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-            key: ValueKey(isPlaying),
-            size: 24,
-            color: UIColors.white,
-          ),
-        ),
-      ),
-      const Margin.vertical(8),
-      SizedBox(
-        width: 100,
-        child: Text(
-          isPlaying
-              ? 'Нажмите, чтобы остановить'
-              : 'Нажмите, чтобы воспроизвести',
-          textAlign: TextAlign.center,
-          style: UITextStyles.regular10.copyWith(
-            height: 1.1,
-            color: UIColors.secondary3,
-          ),
-        ),
-      ),
-    ],
-  );
 }

@@ -106,13 +106,13 @@ class _AtomTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 56,
+            width: 68,
             child: Text(
               atom.display,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: UITextStyles.fontScheherazadeNew,
-                fontSize: 28,
+                fontSize: 16,
                 color: UIColors.text,
               ),
             ),

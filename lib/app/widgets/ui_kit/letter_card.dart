@@ -64,7 +64,7 @@ class LetterCard extends StatelessWidget {
 class LetterGuides extends StatelessWidget {
   /// Размеры сетки в макете.
   static const designWidth = 369.0;
-  static const designHeight = 209.0;
+  static const designHeight = 200.0;
 
   /// Масштаб карточки, в которой лежит сетка.
   final double k;

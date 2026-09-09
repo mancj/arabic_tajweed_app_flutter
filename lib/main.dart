@@ -11,6 +11,7 @@ import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
+import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 import 'package:arabic_tajweed_app/app/pages/splash/splash_screen_page.dart';
 
 void main() async {
@@ -80,6 +81,11 @@ class MyApp extends StatelessWidget {
           name: HomePage.routeName,
           page: () => const HomePage(),
           binding: HomePageBinding(),
+        ),
+        GetPage(
+          name: PronunciationPage.routeName,
+          page: () => const PronunciationPage(),
+          binding: PronunciationBinding(),
         ),
       ],
       // home: BpmMeasureTestPage(),

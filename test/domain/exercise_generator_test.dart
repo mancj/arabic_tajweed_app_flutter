@@ -23,6 +23,20 @@ final ta = letter('ta', confusable: ['ba', 'tha']);
 final tha = letter('tha', confusable: ['ba', 'ta']);
 final siin = letter('siin');
 final miim = letter('miim');
+final baFinal = Atom(
+  id: 'ba.finalForm',
+  kind: AtomKind.letterForm,
+  display: 'ـب',
+  letterId: 'ba',
+  form: LetterForm.finalForm,
+);
+final baInitial = Atom(
+  id: 'ba.initial',
+  kind: AtomKind.letterForm,
+  display: 'بـ',
+  letterId: 'ba',
+  form: LetterForm.initial,
+);
 final concept = const Atom(
   id: 'concept.dots',
   kind: AtomKind.concept,
@@ -32,7 +46,7 @@ final concept = const Atom(
 final curriculum = Curriculum(
   topics: const [],
   nodes: [
-    for (final a in [ba, ta, tha, siin, miim, concept])
+    for (final a in [ba, ta, tha, siin, miim, baFinal, baInitial, concept])
       CurriculumNode(atom: a, requirement: const Always()),
   ],
 );
@@ -56,6 +70,36 @@ LessonPlan planOf({
 void main() {
   const introduced = AtomProgress(state: AtomState.introduced);
 
+  test('назвать вслух просят не на первой встрече и раз за урок', () {
+    // Шанс режима случайный, поэтому гоняем разные сеансы: правила должны
+    // держаться в каждом, а сам режим — встретиться хоть раз.
+    var seen = 0;
+    for (var seed = 0; seed < 30; seed++) {
+      final ex = ExerciseGenerator(curriculum: curriculum, random: Random(seed))
+          .build(
+            plan: planOf(newAtoms: [ba, baFinal], review: [ta.id]),
+            ctx: ctxOf({
+              for (final a in [ta, tha, siin, miim]) a.id: introduced,
+            }),
+            sessionId: 1,
+          );
+      final spoken = ex.where((e) => e.mode == ExerciseMode.sayName).toList();
+      seen += spoken.length;
+
+      // Имя одно на все формы — спрашивается только у отдельной.
+      expect(spoken.map((e) => e.atom.form), everyElement(LetterForm.isolated));
+      // Не больше раза на букву.
+      expect(
+        spoken.map((e) => e.atom.letterId).toSet(),
+        hasLength(spoken.length),
+      );
+      // Новую букву сначала узнают, потом просят назвать.
+      final firstBa = ex.indexWhere((e) => e.atom == ba);
+      expect(ex[firstBa].mode, isNot(ExerciseMode.sayName));
+    }
+    expect(seen, greaterThan(0));
+  });
+
   test('одна буква не растягивается на двенадцать заданий', () {
     final ex = gen().build(
       plan: planOf(newAtoms: [ba]),
@@ -64,8 +108,9 @@ void main() {
       }),
       sessionId: 1,
     );
-    // Добивать урок до двенадцати одной и той же буквой — не тренировка.
-    expect(ex, hasLength(3));
+    // Добивать урок до двадцати одной и той же буквой — не тренировка:
+    // у одного атома потолок пять заданий.
+    expect(ex, hasLength(5));
     expect(ex.every((e) => e.atom == ba), isTrue);
   });
 
@@ -77,7 +122,7 @@ void main() {
       }),
       sessionId: 1,
     );
-    expect(ex, hasLength(12));
+    expect(ex, hasLength(20));
   });
 
   test('дистракторы берутся только из введённых атомов', () {
@@ -113,10 +158,16 @@ void main() {
       }),
       sessionId: 1,
     );
-    expect(ex.every((e) => e.level == DistractorLevel.minimalPair), isTrue);
-    expect(ex.every((e) => e.mode == ExerciseMode.distinguishDots), isTrue);
+    // «Назвать вслух» — задание без вариантов, уровня у него нет:
+    // смотрим только на задания с выбором.
+    final choice = ex.where((e) => e.isChoice).toList();
+    expect(choice, isNotEmpty);
+    expect(choice.every((e) => e.level == DistractorLevel.minimalPair), isTrue);
+    // Режим тот же, на слух: минимальная пара — уровень вариантов, а не
+    // отдельное задание.
+    expect(choice.every((e) => e.mode == ExerciseMode.soundToLetter), isTrue);
     expect(
-      ex.expand((e) => e.options).map((a) => a.id),
+      choice.expand((e) => e.options).map((a) => a.id),
       isNot(contains(siin.id)),
     );
   });
@@ -131,7 +182,9 @@ void main() {
       }),
       sessionId: 1,
     );
-    expect(ex.every((e) => e.level == DistractorLevel.mixed), isTrue);
+    final choice = ex.where((e) => e.isChoice).toList();
+    expect(choice, isNotEmpty);
+    expect(choice.every((e) => e.level == DistractorLevel.mixed), isTrue);
   });
 
   test('атом после паузы возвращается на далёкие дистракторы', () {
@@ -173,8 +226,9 @@ void main() {
       }),
       sessionId: 1,
     );
-    expect(ex, isNotEmpty);
-    for (final e in ex) {
+    final choice = ex.where((e) => e.isChoice).toList();
+    expect(choice, isNotEmpty);
+    for (final e in choice) {
       expect(e.options[e.answerIndex], e.atom);
     }
   });
@@ -233,7 +287,7 @@ void main() {
       }),
       sessionId: 1,
     );
-    expect(ex.length, lessThanOrEqualTo(12));
+    expect(ex.length, lessThanOrEqualTo(20));
   });
 
   test('в задании всегда три варианта ответа', () {
@@ -251,5 +305,73 @@ void main() {
       expect(e.options, hasLength(3));
       expect(e.options.toSet(), hasLength(3), reason: 'без повторов');
     }
+  });
+
+  /// Задания с выбором строятся без русского имени: на слух — буквы в той
+  /// же форме, о позиции — формы той же буквы. См. SPEC.md §4.
+  group('выбор без имени буквы', () {
+    final ctx = ctxOf({
+      for (final a in [ba, ta, tha, siin, miim, baFinal, baInitial])
+        a.id: introduced,
+    });
+
+    List<Exercise> many() => [
+      for (var seed = 0; seed < 20; seed++)
+        ...ExerciseGenerator(
+          curriculum: curriculum,
+          random: Random(seed),
+        ).build(
+          plan: planOf(review: [ba.id, ta.id, baFinal.id]),
+          ctx: ctx,
+          sessionId: 1,
+        ),
+    ].where((e) => e.isChoice).toList();
+
+    test('на слух варианты стоят в той же форме, что ответ', () {
+      final byEar = many().where((e) => e.mode == ExerciseMode.soundToLetter);
+      expect(byEar, isNotEmpty);
+      for (final e in byEar) {
+        expect(e.options.map((o) => o.form).toSet(), {e.atom.form});
+      }
+    });
+
+    test('вопрос о позиции предлагает формы той же буквы', () {
+      final byPosition = many().where(
+        (e) => e.mode == ExerciseMode.positionToForm,
+      );
+      expect(byPosition, isNotEmpty, reason: 'у ба введены три формы');
+      for (final e in byPosition) {
+        final prompt = e.prompt;
+        expect(prompt, isNotNull, reason: 'в вопросе показана форма буквы');
+        expect(prompt!.letterId, e.atom.letterId);
+        expect(prompt.id, isNot(e.atom.id), reason: 'иначе ответ виден');
+        if (e.atom.form != LetterForm.isolated) {
+          expect(
+            prompt.form,
+            LetterForm.isolated,
+            reason: 'в вопросе отдельная форма, если спрашивают не её',
+          );
+        }
+        expect(e.options.map((o) => o.letterId).toSet(), {e.atom.letterId});
+        expect(e.options.map((o) => o.id).toSet().length, e.options.length);
+        expect(
+          e.options.map((o) => o.id),
+          isNot(contains(prompt.id)),
+          reason: 'показанную форму выбирать нет смысла',
+        );
+        expect(e.options.length, greaterThanOrEqualTo(2));
+      }
+    });
+
+    test('старые режимы с именем буквы не строятся', () {
+      const legacy = {
+        ExerciseMode.formToName,
+        ExerciseMode.nameToForm,
+        ExerciseMode.letterToSound,
+        ExerciseMode.formToPosition,
+        ExerciseMode.distinguishDots,
+      };
+      expect(many().map((e) => e.mode).where(legacy.contains), isEmpty);
+    });
   });
 }

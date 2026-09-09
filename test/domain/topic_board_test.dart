@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/domain/topic_board.dart';
@@ -86,6 +87,86 @@ void main() {
     ]);
   });
 
+  test('урок форм включает все начертания темы за один сеанс', () {
+    // Иначе урок отмечается пройденным после конечных форм, хотя
+    // начальные и срединные ученик ещё не видел.
+    final ctx = ctxOf({for (final id in firstLesson) id: AtomState.known});
+    final plan = board.planFor(statusOf('m.forms', ctx).topic, ctx);
+
+    expect(plan.newAtoms.map((a) => a.id), [
+      'concept.forms',
+      'alif.finalForm',
+      'ba.finalForm',
+      'ba.initial',
+      'ba.medial',
+      'ta.finalForm',
+      'ta.initial',
+      'ta.medial',
+      'tha.finalForm',
+      'tha.initial',
+      'tha.medial',
+    ]);
+
+    final next = ctxOf({
+      for (final a in plan.newAtoms) a.id: AtomState.known,
+      for (final id in firstLesson) id: AtomState.known,
+    });
+    expect(
+      board
+          .planFor(statusOf('m.forms', next).topic, next)
+          .newAtoms
+          .map((a) => a.id),
+      isEmpty,
+    );
+  });
+
+  // Иначе изменение зависимостей оставит только часть форм, а урок всё
+  // равно откроет следующую тему после сокращённого набора упражнений.
+  test('недоступные формы не исключаются из темы молча', () {
+    final ctx = ctxOf({'ba.isolated': AtomState.introduced});
+    expect(
+      () => board.planFor(statusOf('m.forms', ctx).topic, ctx),
+      throwsStateError,
+    );
+  });
+
+  // Укрупнение тем нельзя компенсировать пропуском форм. Ошибка должна
+  // обнаружиться при составлении плана, ещё до объяснений и заданий.
+  test('слишком большую тему нужно разделить в программе курса', () {
+    final forms = curriculum.nodes.where(
+      (n) => n.atom.form != null && n.atom.form != LetterForm.isolated,
+    );
+    final topic = Topic(
+      id: 'all.forms',
+      stage: 1,
+      title: 'Все формы',
+      requirement: const Always(),
+      counterOf: forms.map((n) => n.atom.id).toList(),
+    );
+    final ctx = ctxOf({
+      for (final n in curriculum.nodes)
+        if (n.atom.form == LetterForm.isolated) n.atom.id: AtomState.introduced,
+    });
+    expect(() => board.planFor(topic, ctx), throwsStateError);
+  });
+
+  test('буквы с одной формой идут в урок все разом', () {
+    // У ـد ـذ ـر ـز форма одна — конечная, значит и заход один.
+    final ctx = ctxOf({
+      for (final id in firstLesson) id: AtomState.known,
+      for (final id in ['dal', 'dhal', 'ra', 'zay'])
+        '$id.isolated': AtomState.known,
+    });
+    final plan = board.planFor(statusOf('m.nojoin.forms', ctx).topic, ctx);
+
+    expect(plan.newAtoms.map((a) => a.id), [
+      'dal.finalForm',
+      'dhal.finalForm',
+      'ra.finalForm',
+      'zay.finalForm',
+    ]);
+  });
+
   test('пройденная тема уходит в чистое повторение', () {
     final ctx = ctxOf({for (final id in firstLesson) id: AtomState.known});
     final plan = board.planFor(statusOf('m.first', ctx).topic, ctx);
@@ -106,5 +187,38 @@ void main() {
     expect(board.describe(const LettersKnown(2)), 'нужно 2 буквы');
     expect(board.describe(const LettersKnown(8)), 'нужно 8 букв');
     expect(board.describe(const LettersKnown(11)), 'нужно 11 букв');
+  });
+
+  test('возврат в частично пройденную тему добирает все оставшиеся формы', () {
+    final sinForms = statusOf('m.sin.forms', ctxOf({})).topic;
+    final known = {
+      for (final t in curriculum.topics.takeWhile((t) => t.id != 'm.sin.forms'))
+        for (final id in t.counterOf) id: AtomState.known,
+    };
+
+    final first = board.planFor(sinForms, ctxOf(known));
+    expect(first.newAtoms.map((a) => a.id), [
+      'sin.finalForm',
+      'sin.initial',
+      'sin.medial',
+      'shin.finalForm',
+      'shin.initial',
+      'shin.medial',
+    ]);
+
+    final second = board.planFor(
+      sinForms,
+      ctxOf({
+        ...known,
+        'sin.finalForm': AtomState.known,
+        'shin.finalForm': AtomState.learning,
+      }),
+    );
+    expect(second.newAtoms.map((a) => a.id), [
+      'sin.initial',
+      'sin.medial',
+      'shin.initial',
+      'shin.medial',
+    ]);
   });
 }

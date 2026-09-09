@@ -27,6 +27,7 @@ class Exercise {
     this.options = const [],
     this.answerIndex = -1,
     this.isReview = false,
+    this.prompt,
   });
 
   /// Задание без выбора: обводка, сборка, аудио. Ответ не выбирается
@@ -42,7 +43,8 @@ class Exercise {
     this.level = DistractorLevel.distant,
     this.isReview = false,
   }) : options = const [],
-       answerIndex = directAnswer;
+       answerIndex = directAnswer,
+       prompt = null;
 
   /// Индекс, которым отмечается верный исход задания без выбора.
   static const directAnswer = 0;
@@ -64,6 +66,11 @@ class Exercise {
 
   /// Задание из блока повторения, а не по новому атому.
   final bool isReview;
+
+  /// Что показано в карточке вопроса, если не сам [atom]. В вопросе
+  /// о позиции это другая форма той же буквы: показывать спрашиваемую
+  /// значило бы показать ответ.
+  final Atom? prompt;
 
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;

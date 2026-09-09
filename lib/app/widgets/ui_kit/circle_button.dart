@@ -11,9 +11,15 @@ class CircleButton extends StatelessWidget {
   final Widget? child;
   final VoidCallback? onTap;
 
+  /// Кнопка «удерживайте»: см. [AppGestureDetector.onPressStart].
+  final VoidCallback? onPressStart;
+  final VoidCallback? onPressEnd;
+
   const CircleButton({
     super.key,
     this.onTap,
+    this.onPressStart,
+    this.onPressEnd,
     this.size = 42,
     this.color = UIColors.orange,
     this.showBorder = true,
@@ -25,6 +31,8 @@ class CircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppGestureDetector(
       onTap: onTap,
+      onPressStart: onPressStart,
+      onPressEnd: onPressEnd,
       pressedOpacity: .94,
       child: Container(
         width: size,

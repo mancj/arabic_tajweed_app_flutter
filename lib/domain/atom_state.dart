@@ -21,6 +21,7 @@ class AtomProgress {
     this.deferCount = 0,
     this.lastSeenSession,
     this.weak = false,
+    this.cleanSinceKnown = 0,
   });
 
   final AtomState state;
@@ -41,6 +42,10 @@ class AtomProgress {
   final int deferCount;
   final int? lastSeenSession;
 
+  /// Чистых ответов подряд с тех пор, как атом в `known`. От этого растёт
+  /// интервал повтора; ошибка обнуляет вместе с откатом состояния.
+  final int cleanSinceKnown;
+
   /// Атом засчитан по облегчённому критерию после двух откладываний.
   /// Формально known, но требует добора в контексте слогов и слов —
   /// модель честно помечает, что здесь она знает меньше обычного.
@@ -55,6 +60,23 @@ class AtomProgress {
   /// бессмысленно — если человек не различил пять раз, шестой не поможет.
   bool returnedEasy(int session, LearningRules rules) =>
       deferCount > 0 && !isDeferredAt(session, rules);
+
+  /// Через сколько сессий после последнего показа атом просится в повтор.
+  /// Недоученный — сразу, выученный — по растущему интервалу.
+  int reviewIntervalFor(LearningRules rules) {
+    if (state.index < AtomState.known.index) return 0;
+    final doubled = rules.reviewIntervalBase << cleanSinceKnown;
+    return doubled < rules.reviewIntervalCap
+        ? doubled
+        : rules.reviewIntervalCap;
+  }
+
+  /// Сессия, с которой атом пора повторять.
+  int dueSession(LearningRules rules) =>
+      (lastSeenSession ?? 0) + reviewIntervalFor(rules);
+
+  bool isDueAt(int session, LearningRules rules) =>
+      session >= dueSession(rules);
 
   /// `clearDeferred` отдельным флагом, потому что в `copyWith` null означает
   /// «не менять поле» — иначе снять отложенность было бы нечем.
@@ -72,6 +94,7 @@ class AtomProgress {
     int? deferCount,
     int? lastSeenSession,
     bool? weak,
+    int? cleanSinceKnown,
   }) => AtomProgress(
     state: state ?? this.state,
     cleanStreak: cleanStreak ?? this.cleanStreak,
@@ -87,6 +110,7 @@ class AtomProgress {
     deferCount: deferCount ?? this.deferCount,
     lastSeenSession: lastSeenSession ?? this.lastSeenSession,
     weak: weak ?? this.weak,
+    cleanSinceKnown: cleanSinceKnown ?? this.cleanSinceKnown,
   );
 }
 
@@ -126,9 +150,14 @@ class ProgressFold {
 
     final active = p.hadActiveSuccess || e.mode.isActive;
 
-    // Медленный или со второй попытки: засчитан, но вперёд не двигает.
+    // Медленный или со второй попытки: засчитан, серию не растит и в known
+    // не ведёт. Но «показан» → «учится» всё же переводит: атом спросили
+    // и он ответил, а иначе медленный человек вечно висел бы в introduced.
     if (!e.isClean) {
       return p.copyWith(
+        state: p.state == AtomState.fresh || p.state == AtomState.introduced
+            ? AtomState.learning
+            : p.state,
         hadActiveSuccess: active,
         lastSeenSession: e.sessionId,
         clearDeferred: true,
@@ -153,6 +182,12 @@ class ProgressFold {
         ? AtomState.learning
         : p.state;
     next = next.copyWith(state: state);
+
+    // Выученный ответил чисто ещё раз — интервал до следующего повтора
+    // удваивается.
+    if (state.index >= AtomState.known.index) {
+      next = next.copyWith(cleanSinceKnown: p.cleanSinceKnown + 1);
+    }
 
     return switch (state) {
       AtomState.learning when _reachedKnown(next, e) => next.copyWith(
@@ -209,6 +244,7 @@ class ProgressFold {
     return p.copyWith(
       state: _stepBack(p.state),
       cleanStreak: 0,
+      cleanSinceKnown: 0,
       modesInStreak: const {},
       // При откладывании счётчики обнуляются: иначе атом, однажды перешедший
       // порог, откладывался бы после каждой следующей ошибки.

@@ -59,6 +59,11 @@ class DebugPage extends GetView<DebugController> {
                   onTap: controller.openHome,
                 ),
                 _DebugTile(
+                  title: 'Произношение',
+                  subtitle: 'Назвать любую букву и увидеть ответ сервера',
+                  onTap: controller.openPronunciation,
+                ),
+                _DebugTile(
                   title: 'App Widgets',
                   subtitle: 'Демо виджетов приложения',
                   onTap: controller.openAppWidgetsPage,

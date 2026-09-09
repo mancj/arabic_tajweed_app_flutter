@@ -3,7 +3,7 @@
 <g id="Frame 13">
 <path id="3-dot" d="M110 110V114.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 <path id="2-dot" d="M151 110V114.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M46 151.839C8 238.339 126 217.839 168 217.839C210 217.839 208.5 173.839 210 159.339C211.421 179.339 216.583 218.256 244.957 217.839C273.33 217.422 287.916 217.665 298 217.839" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M298 217.839C287.916 217.665 273.33 217.422 244.957 217.839C216.583 218.256 211.421 179.339 210 159.339C208.5 173.839 210 217.839 168 217.839C126 217.839 8 238.339 46 151.839" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

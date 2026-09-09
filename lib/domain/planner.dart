@@ -28,11 +28,41 @@ class LessonPlan {
 
   /// Возврат старого из общей очереди — блок «повтор» по ТЗ §6.2.
   /// Это буквы из других тем, иначе они не всплывали бы никогда.
+  /// Кандидаты на оставшиеся места; обязательный материал — newAtoms/reviewAtoms.
   final List<String> spacedReview;
 
   /// Какое правило сработало. Нужно для отладки и аналитики: без этого
   /// невозможно понять, почему у пользователя третью сессию нет новых букв.
   final String reason;
+
+  /// Проверяем до объяснений: генератор обязан спросить весь материал
+  /// плана. Слишком большую тему нужно разделить в программе курса.
+  void validate(Curriculum curriculum, LearningRules rules) {
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    final own = {
+      for (final atom in newAtoms) atom.id: atom,
+      for (final id in reviewAtoms)
+        id:
+            byId[id] ??
+            (throw StateError('Неизвестный атом $id в плане урока')),
+    };
+    final minimum = own.values.map(rules.minimumExercises).sum;
+    final reserved = min(
+      rules.reviewPerSession,
+      spacedReview
+          .map((id) => byId[id])
+          .nonNulls
+          .where((atom) => atom.kind != AtomKind.concept)
+          .length,
+    );
+    if (minimum + reserved > rules.tasksPerSession) {
+      throw StateError(
+        'План «$reason» требует минимум ${minimum + reserved} заданий '
+        'при лимите ${rules.tasksPerSession}. Разделите материал на уроки; '
+        'пропускать формы нельзя.',
+      );
+    }
+  }
 }
 
 /// Планировщик. Четыре правила строго по приоритету — срабатывает первое
@@ -64,7 +94,7 @@ class LessonPlanner {
     //    человек формально не застревает, а фактически ничего не учит.
     if (deferred.length > rules.maxDeferred) {
       final revived = _oldestDeferred(ctx, deferred);
-      return LessonPlan(
+      return _buildPlan(
         template: LessonTemplate.review,
         newAtoms: const [],
         // Досрочный возврат обязателен: иначе отложенные ждут своей паузы,
@@ -85,7 +115,7 @@ class LessonPlanner {
         sessionsWithoutNew >= rules.sessionsWithoutNewBeforeForcing;
 
     if (overloaded && !forceNew) {
-      return LessonPlan(
+      return _buildPlan(
         template: LessonTemplate.review,
         newAtoms: const [],
         reviewAtoms: review,
@@ -94,7 +124,7 @@ class LessonPlanner {
     }
 
     if (available.isEmpty) {
-      return LessonPlan(
+      return _buildPlan(
         template: LessonTemplate.review,
         newAtoms: const [],
         reviewAtoms: review,
@@ -107,7 +137,7 @@ class LessonPlanner {
         ? available.take(1).toList()
         : _pickNew(available, ctx);
 
-    return LessonPlan(
+    return _buildPlan(
       template: _templateFor(newAtoms.first),
       newAtoms: newAtoms,
       reviewAtoms: review,
@@ -115,6 +145,36 @@ class LessonPlanner {
           ? 'гарантия темпа: $sessionsWithoutNew сессий без новых'
           : 'обычный ввод',
     );
+  }
+
+  /// Общая очередь — кандидаты, а не обещанный материал урока. Выбираем
+  /// посильный набор до показа объяснений, затем весь план обязателен.
+  LessonPlan _buildPlan({
+    required LessonTemplate template,
+    required List<Atom> newAtoms,
+    required List<String> reviewAtoms,
+    required String reason,
+  }) {
+    var remaining =
+        rules.tasksPerSession - newAtoms.map(rules.minimumExercises).sum;
+    final selected = <String>[];
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    for (final id in reviewAtoms.toSet()) {
+      final atom = byId[id];
+      if (atom == null || newAtoms.any((a) => a.id == id)) continue;
+      final minimum = rules.minimumExercises(atom);
+      if (minimum > remaining) continue;
+      selected.add(id);
+      remaining -= minimum;
+    }
+    final plan = LessonPlan(
+      template: template,
+      newAtoms: newAtoms,
+      reviewAtoms: selected,
+      reason: reason,
+    );
+    plan.validate(curriculum, rules);
+    return plan;
   }
 
   /// Что вводим этим уроком.
@@ -161,7 +221,7 @@ class LessonPlanner {
   static const _newAtomsPerLesson = 2;
 
   /// Держится в паре с потолком повторов у генератора.
-  static const _maxDrillsPerAtom = 3;
+  static const _maxDrillsPerAtom = 5;
 
   LessonTemplate _templateFor(Atom atom) => switch (atom.kind) {
     AtomKind.concept => LessonTemplate.concept,

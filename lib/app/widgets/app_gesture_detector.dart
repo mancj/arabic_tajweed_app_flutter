@@ -3,6 +3,12 @@ import 'app_haptics.dart';
 
 class AppGestureDetector extends StatefulWidget {
   final GestureTapCallback? onTap;
+
+  /// Палец лёг и палец поднялся — для кнопок «удерживайте»: запись голоса
+  /// идёт, пока кнопка нажата. Конец приходит сразу, без задержки на
+  /// анимацию нажатия, и ровно один раз на каждое начало.
+  final VoidCallback? onPressStart;
+  final VoidCallback? onPressEnd;
   final Widget child;
   final double pressedOpacity;
 
@@ -11,6 +17,8 @@ class AppGestureDetector extends StatefulWidget {
   const AppGestureDetector({
     Key? key,
     this.onTap,
+    this.onPressStart,
+    this.onPressEnd,
     required this.child,
     this.pressedOpacity = .98,
   }) : super(key: key);
@@ -21,6 +29,7 @@ class AppGestureDetector extends StatefulWidget {
 
 class _AppGestureDetectorState extends State<AppGestureDetector> {
   bool _isPressed = false;
+  bool _holding = false;
   DateTime? _pressedAt;
 
   @override
@@ -28,7 +37,7 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        AppHaptics.tap();
+        AppHaptics.tick();
         widget.onTap?.call();
       },
       onPanDown: (d) => _tapDownState(),
@@ -52,11 +61,17 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
         _isPressed = true;
         _pressedAt = DateTime.now();
       });
+      _holding = true;
+      widget.onPressStart?.call();
     }
   }
 
   void _tapUpState() {
     if (!_isPressed) return;
+    if (_holding) {
+      _holding = false;
+      widget.onPressEnd?.call();
+    }
 
     final held = DateTime.now().difference(_pressedAt ?? DateTime.now());
     final remaining = AppGestureDetector._minPressedDuration - held;

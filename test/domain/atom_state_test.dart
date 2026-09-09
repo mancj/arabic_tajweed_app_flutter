@@ -50,10 +50,44 @@ void main() {
     expect(p.state, AtomState.known);
   });
 
-  test('медленный верный ответ не двигает вперёд', () {
+  test('медленный верный ответ не растит серию, но переводит в learning', () {
     final p = run([answer(fast: false), answer(fast: false)]);
     expect(p.cleanStreak, 0);
-    expect(p.state, AtomState.fresh);
+    expect(p.state, AtomState.learning, reason: 'спросили — уже не «показан»');
+  });
+
+  test('чистые повторы в known удваивают интервал, ошибка обнуляет', () {
+    const rules = LearningRules();
+    final known = run([
+      answer(),
+      answer(),
+      answer(mode: ExerciseMode.nameToForm),
+    ]);
+    expect(known.state, AtomState.known);
+    expect(known.reviewIntervalFor(rules), rules.reviewIntervalBase);
+
+    final twice = run([
+      answer(),
+      answer(),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(),
+      answer(),
+    ]);
+    expect(twice.reviewIntervalFor(rules), rules.reviewIntervalBase * 4);
+
+    final failed = run([
+      answer(),
+      answer(),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(),
+      answer(correct: false),
+    ]);
+    expect(failed.state, AtomState.learning);
+    expect(
+      failed.reviewIntervalFor(rules),
+      0,
+      reason: 'недоученный — каждый урок',
+    );
   });
 
   test('ответ со второй попытки не двигает вперёд', () {

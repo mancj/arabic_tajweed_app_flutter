@@ -15,9 +15,11 @@ class ReviewQueue {
 
   final LearningRules rules;
 
-  /// Атомы в порядке срочности: сначала недоученные (до `known`), внутри
-  /// группы — кого дольше всего не показывали. Слабая буква не должна
-  /// ждать очереди наравне с уверенной. См. ТЗ §6.2.
+  /// Атомы, которым пора в повтор, в порядке срочности: сначала
+  /// недоученные (до `known`), они просятся каждый урок; затем выученные,
+  /// у которых вышел интервал, — раньше те, кто ждёт дольше. Выученный
+  /// атом, чей интервал ещё не вышел, в очередь не попадает вовсе:
+  /// в этом и смысл интервального повторения. См. ТЗ §6.2.
   ///
   /// [exclude] — атомы, которые урок и так спросит: повторять их вторым
   /// заходом незачем. Отложенные и полностью освоенные не берутся.
@@ -41,14 +43,13 @@ class ReviewQueue {
               e.value.state != AtomState.fresh &&
               e.value.state != AtomState.mastered &&
               !e.value.isDeferredAt(sessionId, rules) &&
+              e.value.isDueAt(sessionId, rules) &&
               (drillable?.contains(e.key) ?? true),
         )
         .sorted((a, b) {
           final byState = _urgency(a.value).compareTo(_urgency(b.value));
           if (byState != 0) return byState;
-          return (a.value.lastSeenSession ?? 0).compareTo(
-            b.value.lastSeenSession ?? 0,
-          );
+          return a.value.dueSession(rules).compareTo(b.value.dueSession(rules));
         })
         .take(rules.reviewQueueCap)
         .map((e) => e.key)

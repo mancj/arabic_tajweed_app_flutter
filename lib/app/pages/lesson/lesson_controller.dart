@@ -7,6 +7,10 @@ import '../../../data/curriculum_loader.dart';
 import '../../../data/letter_audio.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
+import '../../../data/pronunciation_checker.dart';
+import '../../../data/rest/letter_check.dart';
+import '../../../data/rest/pronunciation_rest_client.dart';
+import '../../../data/voice_recorder.dart';
 import '../../../domain/atom.dart';
 import '../../../domain/atom_state.dart';
 import '../../../domain/audio_track.dart';
@@ -32,12 +36,18 @@ class LessonController extends GetxController {
     String? topicId,
     Future<TracingShape> Function(String asset)? shapeLoader,
     LetterAudio? audio,
+    VoiceRecorder? recorder,
+    PronunciationRestClient? pronunciation,
   }) : rules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
        _topicId = topicId,
        _shapeLoader = shapeLoader ?? _loadShapeAsset,
-       _audio = audio ?? LetterAudio();
+       _audio = audio ?? LetterAudio(),
+       pronunciation = PronunciationChecker(
+         recorder: recorder,
+         client: pronunciation,
+       );
 
   final LearningRules rules;
 
@@ -67,9 +77,15 @@ class LessonController extends GetxController {
   final selected = Rxn<int>();
   final wasWrong = false.obs;
 
+  /// Имя буквы в задании на слух показано по просьбе: звук выключен или
+  /// не слышно. Само по себе оно в задании не появляется.
+  final nameRevealed = false.obs;
+
+  void revealName() => nameRevealed.value = true;
+
   /// Холст обводки. Один на весь урок: между заданиями он очищается,
   /// а не пересоздаётся.
-  final drawing = DrawingController(smoothing: 1, minDistance: 3);
+  final drawing = DrawingController();
 
   /// Фигура текущего задания. null — обводить нечего, показываем заглушку.
   final tracingShape = Rxn<TracingShape>();
@@ -93,6 +109,10 @@ class LessonController extends GetxController {
 
   /// Чьи карточки в этом уроке уже показаны.
   final _shownCards = <String>{};
+
+  /// Объясняем также новые формы в вариантах ответа, прежде чем показать
+  /// сам вопрос. Иначе узнавание проверяло бы ещё не показанный материал.
+  final _pendingCards = <Atom>[];
 
   /// Атомы, которым этот урок посвящён. Блок повтора приводит буквы
   /// из прошлых уроков, и объяснять их заново — не дело этого урока:
@@ -121,6 +141,59 @@ class LessonController extends GetxController {
 
   /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
   static const tracingMatcher = TracingMatcher();
+
+  /// Задание «назови букву»: запись и проверка на сервере. Цепочка общая
+  /// с экраном тренировки, здесь решается только, что делать с ответом.
+  final PronunciationChecker pronunciation;
+
+  /// Номер записи в текущем задании. После первого промаха сервер
+  /// подсказывает, что услышал, и даётся ещё одна, см.
+  /// [LearningRules.sayNameAttempts].
+  final sayAttempt = 1.obs;
+
+  bool get isSayNameTask {
+    _refresh.value;
+    return _session?.current?.mode == ExerciseMode.sayName;
+  }
+
+  /// Палец лёг на кнопку: начать запись. После разбора ошибки не пишем —
+  /// сначала «Ясно».
+  Future<void> startRecording() async {
+    if (wasWrong.value) return;
+    await pronunciation.start();
+  }
+
+  /// Палец поднят: остановить запись, спросить сервер и рассудить ответ.
+  Future<void> stopRecording() async {
+    final exercise = _session?.current;
+    if (exercise == null) return;
+    final result = await pronunciation.stop(expected: exercise.atom.display);
+    // Ответ пришёл на другое задание — например, после пропуска.
+    if (result == null || _session?.current != exercise) return;
+    await _judgePronunciation(result);
+  }
+
+  /// Совпало — ответ верный. Не совпало: плохая запись (тихо, шумно)
+  /// попытку не тратит, первый настоящий промах даёт ещё одну, последний
+  /// засчитывается ошибкой — дальше как в остальных режимах.
+  Future<void> _judgePronunciation(LetterCheck result) async {
+    if (result.matched) {
+      await submit(directOutcome: true);
+      return;
+    }
+    if (result.recording.warning != null) return;
+    if (sayAttempt.value < rules.sayNameAttempts) {
+      sayAttempt.value++;
+      return;
+    }
+    await submit(directOutcome: false);
+  }
+
+  /// Новое задание — прошлые записи и подсказки к делу не относятся.
+  void _syncPronunciation() {
+    pronunciation.reset();
+    sayAttempt.value = 1;
+  }
 
   late final Curriculum _curriculum;
   late final ProgressRepository _progress;
@@ -196,8 +269,16 @@ class LessonController extends GetxController {
       );
 
     introAtoms.assignAll(_introFor(_plan!));
-    stage.value = introAtoms.isEmpty ? LessonStage.exercise : LessonStage.intro;
-    if (introAtoms.isEmpty) await _buildSession();
+    if (introAtoms.isEmpty) {
+      // Сначала готовим объяснение первой формы и холст, затем открываем
+      // задание. Иначе темы без intro успевали показать вопрос без карточки.
+      await _buildSession();
+      if (stage.value != LessonStage.finished) {
+        stage.value = LessonStage.exercise;
+      }
+    } else {
+      stage.value = LessonStage.intro;
+    }
     _shownAt = DateTime.now();
   }
 
@@ -224,7 +305,7 @@ class LessonController extends GetxController {
     return [
       for (final id in topic?.counterOf ?? const <String>[])
         if (inLesson[id] case final atom?)
-          if (_belongsToIntro(atom) && atom.note.isNotEmpty) atom,
+          if (_belongsToIntro(atom)) atom,
     ];
   }
 
@@ -239,6 +320,14 @@ class LessonController extends GetxController {
 
   Atom? _atomById(String id) =>
       _curriculum.nodes.firstWhereOrNull((n) => n.atom.id == id)?.atom;
+
+  /// Номер текущего задания в сессии. Карточки вопроса ключуются по нему:
+  /// новая буква спрашивается несколько раз подряд, и ключ по атому
+  /// не отличил бы одно задание от следующего.
+  int get exerciseIndex {
+    _refresh.value;
+    return _session?.position ?? 0;
+  }
 
   /// Урок по теме: набор атомов задан ею, планировщик не нужен.
   LessonPlan _topicPlan(CurriculumContext ctx) {
@@ -306,6 +395,7 @@ class LessonController extends GetxController {
     _refresh.value++;
     _syncCard();
     _syncTracing();
+    _syncPronunciation();
   }
 
   /// Фигуры разбираются один раз на урок, до первого задания: иначе холст
@@ -336,15 +426,27 @@ class LessonController extends GetxController {
   /// Нужна ли карточка перед текущим заданием. Показывается один раз
   /// за урок: второй встрече той же формы объяснение уже не нужно.
   void _syncCard() {
-    final atom = _session?.current?.atom;
-    final needed =
-        atom != null &&
-        atom.note.isNotEmpty &&
-        !_belongsToIntro(atom) &&
-        _ownAtoms.contains(atom.id) &&
-        _shownCards.add(atom.id);
-    card.value = needed ? atom : null;
+    nameRevealed.value = false;
+    final exercise = _session?.current;
+    _pendingCards
+      ..clear()
+      ..addAll(
+        {
+          if (exercise != null) exercise.atom,
+          if (exercise?.prompt case final prompt?) prompt,
+          ...?exercise?.options,
+        }.where(
+          (atom) =>
+              !_belongsToIntro(atom) &&
+              _ownAtoms.contains(atom.id) &&
+              !_shownCards.contains(atom.id),
+        ),
+      );
+    _nextCard();
   }
+
+  void _nextCard() =>
+      card.value = _pendingCards.isEmpty ? null : _pendingCards.removeAt(0);
 
   /// Карточка прочитана: атом записывается как показанный, и урок
   /// возвращается к заданию.
@@ -359,7 +461,8 @@ class LessonController extends GetxController {
         at: DateTime.now(),
       ),
     );
-    card.value = null;
+    _shownCards.add(atom.id);
+    _nextCard();
     // Время на ответ считается с закрытия карточки: чтение объяснения
     // не должно превращать верный ответ в медленный.
     _shownAt = DateTime.now();
@@ -456,6 +559,8 @@ class LessonController extends GetxController {
     if (exercise.mode.isTracing && tracingShape.value != null) {
       return tracingDone.value || wasWrong.value;
     }
+    // Голос судит сервер, кнопкой подтверждается только разбор ошибки.
+    if (exercise.mode == ExerciseMode.sayName) return wasWrong.value;
     return true;
   }
 
@@ -464,11 +569,22 @@ class LessonController extends GetxController {
     selected.value = index;
   }
 
+  /// Только для отладки: засчитать текущее задание верным, каким бы оно
+  /// ни было. В отличие от пропуска ответ пишется в лог как чистый —
+  /// так можно быстро прогнать курс с настоящим прогрессом букв.
+  Future<void> answerCorrectly() async {
+    final exercise = _session?.current;
+    if (exercise == null) return;
+    if (exercise.isChoice) selected.value = exercise.answerIndex;
+    await submit(directOutcome: true);
+  }
+
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
   /// иначе случайное касание стоит атому отката.
-  /// Пропустить задание. Только для отладочных сборок: даёт быстро дойти
-  /// до нужного экрана, не отвечая. Ответ в лог не пишется, поэтому
-  /// прогресс букв не искажается.
+  /// Пропустить задание, не отвечая. Ответ в лог не пишется, поэтому
+  /// прогресс букв не искажается. В отладке — чтобы быстро дойти до нужного
+  /// экрана; в бою — когда сервер проверки голоса недоступен и задание
+  /// «назови букву» выполнить нечем.
   Future<void> skipExercise() async {
     final session = _session;
     if (session == null || session.current == null) return;
@@ -480,6 +596,7 @@ class LessonController extends GetxController {
     _refresh.value++;
     _syncCard();
     _syncTracing();
+    _syncPronunciation();
     if (session.isFinished) await _finish();
   }
 
@@ -512,8 +629,10 @@ class LessonController extends GetxController {
       selected.value = null;
       _refresh.value++;
       // Холст после разбора чистый: задание осталось тем же, и человек
-      // пишет букву заново, а не поверх своей ошибки.
+      // пишет букву заново, а не поверх своей ошибки. С голосом так же:
+      // подсказка убрана, попытки отсчитываются заново.
       if (exercise.mode.isTracing) _syncTracing();
+      if (exercise.mode == ExerciseMode.sayName) _syncPronunciation();
       return;
     }
 
@@ -538,13 +657,18 @@ class LessonController extends GetxController {
     _refresh.value++;
     _syncCard();
     _syncTracing();
+    _syncPronunciation();
     if (session.isFinished) await _finish();
   }
 
   /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они
-  /// другие. См. SPEC.md §4.
-  Duration _speedLimit(ExerciseMode mode) =>
-      mode.isTracing ? const Duration(seconds: 40) : const Duration(seconds: 3);
+  /// другие. См. SPEC.md §4. Голос: нажать, сказать, дождаться сервера —
+  /// на это уходят секунды, порог отсекает только брошенное задание.
+  Duration _speedLimit(ExerciseMode mode) => switch (mode) {
+    _ when mode.isTracing => const Duration(seconds: 40),
+    ExerciseMode.sayName => const Duration(seconds: 20),
+    _ => const Duration(seconds: 5),
+  };
 
   Future<void> _finish() async {
     // «Пройден» — это факт о занятии, а не о знании: человек дошёл до конца
@@ -574,6 +698,7 @@ class LessonController extends GetxController {
   @override
   void onClose() {
     drawing.dispose();
+    pronunciation.dispose();
     unawaited(_audio.dispose());
     super.onClose();
   }

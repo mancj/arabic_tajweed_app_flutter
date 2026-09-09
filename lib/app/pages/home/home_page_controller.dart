@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/data/letter_audio.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 
 /// Форма буквы на отладочном экране: файл с осевыми линиями, глиф
 /// и название для подписей.
@@ -35,19 +41,22 @@ class LessonLetterForms {
 }
 
 class HomeController extends GetxController {
-  final drawing = DrawingController(smoothing: .5, minDistance: 3);
+  final drawing = DrawingController();
+  final _audio = LetterAudio();
+
+  bool get hasVoice => LetterAudio.has(current?.letterId);
+  ValueListenable<AudioTrack> get voiceTrack => _audio.track;
+  void playVoice() => unawaited(_audio.toggle(current?.letterId));
+  void startVoice() => unawaited(_audio.play(current?.letterId));
+
+  /// Правила те же, что в уроке: показ после промахов срабатывает
+  /// на том же счёте.
+  final rules = const LearningRules();
 
   /// Набор берётся из курикулума, а не из своего списка: так на отладочном
   /// экране всегда ровно те же буквы и формы, что урок умеет спрашивать
   /// обводкой, — включая только что дорисованные.
   final letters = <LessonLetterForms>[].obs;
-
-  static const formTitles = {
-    LetterForm.isolated: 'Отдельно',
-    LetterForm.initial: 'В начале',
-    LetterForm.medial: 'В середине',
-    LetterForm.finalForm: 'В конце',
-  };
 
   static const modes = [TracingMode.tracing, TracingMode.freehand];
   static const modeTitles = ['Обводка', 'По памяти'];
@@ -104,7 +113,7 @@ class HomeController extends GetxController {
           letterId: entry.key,
           forms: [
             for (final atom in entry.value.sortedBy<num>(
-              (atom) => formTitles.keys.toList().indexOf(atom.form!),
+              (atom) => LetterForm.values.indexOf(atom.form!),
             ))
               LessonLetter(
                 id: atom.tracing!,
@@ -130,6 +139,7 @@ class HomeController extends GetxController {
 
   void setLetter(int value) {
     if (index.value == value) return;
+    unawaited(_audio.stop());
     index.value = value;
     // Форма сбрасывается на изолированную: у несоединяющихся букв средней
     // формы нет, и прежний индекс уехал бы за конец списка.
@@ -217,6 +227,7 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     drawing.dispose();
+    unawaited(_audio.dispose());
     super.onClose();
   }
 }

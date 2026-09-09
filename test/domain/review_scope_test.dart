@@ -59,7 +59,8 @@ void main() {
         for (final id in topic.counterOf) id: AtomState.known,
     });
 
-    final plan = board.planFor(third, ctx);
+    // Интервал выученного — две сессии: к третьей буквы первых тем уже пора.
+    final plan = board.planFor(third, ctx, sessionId: 3);
     expect(plan.spacedReview, isNotEmpty);
     expect(
       plan.spacedReview.every((id) => !third.counterOf.contains(id)),

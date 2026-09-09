@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
+import 'package:arabic_tajweed_app/domain/exercise_generator.dart';
 import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 
@@ -92,7 +93,7 @@ void main() {
 
   test('при переполнении самый старый отложенный возвращается досрочно', () {
     final progress = {
-      'old': learning(deferredAt: 1),
+      'l0': learning(deferredAt: 1),
       for (var i = 0; i < 4; i++) 'd$i': learning(deferredAt: 3),
     };
     final plan = planner.plan(
@@ -100,7 +101,7 @@ void main() {
       sessionId: 3,
       sessionsWithoutNew: 0,
     );
-    expect(plan.reviewAtoms.first, 'old');
+    expect(plan.reviewAtoms.first, 'l0');
   });
 
   test('отложенные не считаются нагрузкой', () {
@@ -114,5 +115,47 @@ void main() {
       sessionsWithoutNew: 0,
     );
     expect(plan.newAtoms, isNotEmpty);
+  });
+
+  // Длинная очередь повторений не должна превращаться в невыполнимый
+  // план: все выбранные буквы должны получить задания, включая новую.
+  test('автоплан выбирает материал по вместимости до генерации', () {
+    final letters = [
+      for (var i = 0; i < 28; i++)
+        Atom(
+          id: 'letter$i',
+          kind: AtomKind.letterForm,
+          display: '$i',
+          letterId: 'letter$i',
+          form: LetterForm.isolated,
+          tracing: 'shape$i',
+        ),
+    ];
+    final course = Curriculum(
+      topics: const [],
+      nodes: [
+        for (final atom in letters)
+          CurriculumNode(atom: atom, requirement: const Always()),
+      ],
+    );
+    final context = ctx({
+      for (final atom in letters.take(27)) atom.id: learning(),
+    });
+    for (final sessionsWithoutNew in [0, 2]) {
+      final plan = LessonPlanner(curriculum: course).plan(
+        ctx: context,
+        sessionId: 2,
+        sessionsWithoutNew: sessionsWithoutNew,
+      );
+      final ex = ExerciseGenerator(
+        curriculum: course,
+      ).build(plan: plan, ctx: context, sessionId: 2);
+      expect(ex.length, lessThanOrEqualTo(20));
+      expect(ex.map((e) => e.atom.id).toSet(), {
+        ...plan.newAtoms.map((a) => a.id),
+        ...plan.reviewAtoms,
+      });
+      if (sessionsWithoutNew == 2) expect(plan.newAtoms, [letters.last]);
+    }
   });
 }

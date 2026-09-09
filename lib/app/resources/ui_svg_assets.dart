@@ -11,6 +11,7 @@ class UISVGAssets {
 
   // Экран с заданием.
   static final dashedDivider = _path("dashed_divider");
+  static final questionMark = _path("question_mark");
 
   // Экран обводки буквы.
   static final handDraw = _path("hand_draw");

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
-import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/segmented_tabs.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/tracing_card.dart';
 
 import 'home_page_controller.dart';
 
@@ -69,26 +69,16 @@ class _ModeTabs extends GetView<HomeController> {
   }
 }
 
-/// Выбор буквы: все 28 в порядке курикулума. В дорожку они не помещаются,
-/// поэтому сегменты фиксированной ширины, а сама дорожка прокручивается.
 class _LetterTabs extends GetView<HomeController> {
   const _LetterTabs();
-
-  static const _style = TextStyle(
-    fontFamily: UITextStyles.fontScheherazadeNew,
-    fontSize: 22,
-    color: UIColors.tealDark,
-  );
 
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => SegmentedTabs(
-        labels: [for (final item in controller.letters) item.glyph],
+      () => LetterTabs(
+        glyphs: [for (final item in controller.letters) item.glyph],
         selected: controller.index.value,
         onChanged: controller.setLetter,
-        style: _style,
-        segmentWidth: 48,
       ),
     );
   }
@@ -106,9 +96,7 @@ class _FormTabs extends GetView<HomeController> {
       if (forms.length < 2) return const SizedBox.shrink();
 
       return SegmentedTabs(
-        labels: [
-          for (final form in forms) HomeController.formTitles[form.form]!,
-        ],
+        labels: [for (final form in forms) form.form.title],
         selected: controller.formIndex.value,
         onChanged: controller.setForm,
       );
@@ -116,132 +104,38 @@ class _FormTabs extends GetView<HomeController> {
   }
 }
 
-/// Карточка обводки: подсказка сверху, сетка прописи с холстом и название
-/// буквы снизу.
+/// Карточка обводки: та же [TracingCard], что и в уроке. В шапке —
+/// режим и название формы, показ после промахов идёт по общим правилам.
 class _TracingCard extends GetView<HomeController> {
-  /// Высота карточки в макете.
-  static const _height = 410.0;
-
-  /// Холст выше сетки: у букв набора общий квадратный кадр (viewBox 329),
-  /// в него заложен запас под верхние и нижние диакритики. По высоте сетки
-  /// такой кадр ужал бы саму букву вдвое против макета, поэтому в холст
-  /// вписывается кадр целиком, а сетка остаётся фоном внутри него.
-  static const _canvasTop = 18.0;
-  static const _canvasHeight = 329.0;
-
   const _TracingCard();
 
   @override
   Widget build(BuildContext context) {
-    return LetterCard(
-      designHeight: _height,
-      builder: (context, k) => [
-        Positioned(
-          top: 104 * k,
-          left: 0,
-          right: 0,
-          height: LetterGuides.designHeight * k,
-          child: Center(child: LetterGuides(k: k)),
-        ),
-        Positioned(
-          top: _canvasTop * k,
-          left: 0,
-          right: 0,
-          height: _canvasHeight * k,
-          child: Center(
-            child: SizedBox(
-              width: LetterGuides.designWidth * k,
-              child: Obx(
-                () => DrawingCanvas(
-                  controller: controller.drawing,
-                  matcher: HomeController.matcher,
-                  mode: controller.mode.value,
-                  placeholder: controller.shape.value,
-                  // Перо берётся из фигуры: тогда обводка ложится ровно
-                  // в толщину подсказки.
-                  // Четыре слоя, четыре цвета: контур под всем, поверх
-                  // него показ, дальше чернила руки, и собранная буква
-                  // вместо них, когда часть сошлась.
-                  placeholderColor: UIColors.letterGhost,
-                  demoColor: UIColors.teal,
-                  color: UIColors.tealDark,
-                  filledColor: UIColors.tealDark,
-                  placeholderPadding: 0,
-                  onProgress: controller.onProgress,
-                  onChecked: controller.onChecked,
-                  onReveal: controller.onRevealed,
-                  strokeWidth: 16,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Подсказка лежит поверх холста, но не отбирает у него касания:
-        // кадр буквы заходит выше сетки и достаёт до строки подсказки.
-        Positioned(
-          top: 32 * k,
-          left: 0,
-          right: 0,
-          child: IgnorePointer(
-            child: Obx(() => _Hint(text: controller.hint.value, k: k)),
-          ),
-        ),
-        Positioned(
-          top: 361 * k,
-          left: 0,
-          right: 0,
-          child: Obx(
-            () => Text(
-              controller.letter?.name ?? '',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: UITextStyles.fontOnest,
-                fontWeight: FontWeight.w600,
-                fontSize: 22 * k,
-                color: UIColors.ink,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Obx(
+      () => TracingCard(
+        badge: HomeController
+            .modeTitles[HomeController.modes.indexOf(controller.mode.value)],
+        title: controller.letter?.name ?? '',
+        hint: controller.hint.value,
+        onClear: controller.clear,
+        onPlay: controller.hasVoice ? controller.playVoice : null,
+        onAutoPlay: controller.hasVoice ? controller.startVoice : null,
+        track: controller.voiceTrack,
+        playbackKey: controller.letter?.glyph,
+        controller: controller.drawing,
+        matcher: HomeController.matcher,
+        mode: controller.mode.value,
+        shape: controller.shape.value,
+        missesBeforeReveal: controller.rules.tracingMissesBeforeReveal,
+        onProgress: controller.onProgress,
+        onChecked: controller.onChecked,
+        onReveal: controller.onRevealed,
+      ),
     );
   }
 }
 
-/// Строка-подсказка с иконкой руки над сеткой.
-class _Hint extends StatelessWidget {
-  final String text;
-  final double k;
-
-  const _Hint({required this.text, required this.k});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(UISVGAssets.handDraw, width: 16 * k, height: 16 * k),
-        Margin.horizontal(4 * k),
-        Flexible(
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontOnest,
-              fontWeight: FontWeight.w500,
-              fontSize: 15 * k,
-              color: UIColors.tealDark,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Отмена, очистка и проверка холста. Части засчитываются сами, сразу
+/// Отмена и проверка холста; стирание стоит в шапке карточки. Части засчитываются сами, сразу
 /// после штриха, — «Проверить» здесь только чтобы увидеть разбор попытки.
 class _CanvasActions extends GetView<HomeController> {
   const _CanvasActions();
@@ -254,12 +148,6 @@ class _CanvasActions extends GetView<HomeController> {
           icon: Icons.undo_rounded,
           semanticLabel: 'Отменить',
           onTap: controller.undo,
-        ),
-        const Margin.horizontal(8),
-        _IconAction(
-          icon: Icons.close_rounded,
-          semanticLabel: 'Очистить',
-          onTap: controller.clear,
         ),
         const Margin.horizontal(8),
         Expanded(child: _CheckButton(onTap: controller.check)),

@@ -42,6 +42,19 @@ L = [
 ]
 BY = {r[0]: r for r in L}
 
+# Различаем похожие звуки в подписях: «Са (th)», «Ха (ḥ)», «То (ṭ)».
+# Обозначение одинаково для всех форм буквы; в текстах объяснений
+# остаётся привычное русское имя.
+LETTER_NOTATION = {
+ 'ta': 't', 'tha': 'th',
+ 'hha': 'ḥ', 'kha': 'kh', 'ha': 'h',
+ 'dal': 'd', 'dhal': 'dh', 'dod': 'ḍ',
+ 'zay': 'z', 'zho': 'ẓ',
+ 'sin': 's', 'shin': 'sh', 'sod': 'ṣ',
+ 'to': 'ṭ', 'ayn': 'ʿ', 'ghayn': 'gh',
+ 'qof': 'q', 'kaf': 'k',
+}
+
 # Буквы, не соединяющиеся со следующей: у них нет начальной формы.
 NOJOIN = {r[1] for r in L if r[3] is None}
 
@@ -236,16 +249,23 @@ def concept_node(cid, requirement):
             'requirement': requirement}
 
 
+TATWEEL = 'ـ'
+
+
 def letter_node(lid, form, requirement):
     row = BY[lid]
     glyph = {'isolated': row[1], 'finalForm': row[2],
              'initial': row[3], 'medial': row[4]}[form]
     suffix = dict((f, s) for f, _, s in FORMS)[form]
+    # Соединительную черту удваиваем: с одной ـب и ب в вопросе и вариантах
+    # на глаз почти не различаются.
+    glyph = glyph.replace(TATWEEL, TATWEEL * 2)
     atom = {'id': f'{lid}.{form}', 'kind': 'letterForm', 'display': glyph,
             'letterId': lid, 'form': form}
     if row[6]:
         atom['confusableWith'] = row[6]
-    atom['label'] = row[5] + suffix
+    notation = LETTER_NOTATION.get(lid)
+    atom['label'] = row[5] + (f' ({notation})' if notation else '') + suffix
     atom['note'] = row[7] if form == 'isolated' else form_note(lid, form)
     tracing = tracing_of(lid, form)
     if tracing:

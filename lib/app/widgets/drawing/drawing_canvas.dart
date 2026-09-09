@@ -1,7 +1,9 @@
+import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../app_haptics.dart';
 import 'demo_animation.dart';
 import 'drawing_controller.dart';
 import 'drawing_painter.dart';
@@ -142,6 +144,11 @@ class DrawingCanvas extends StatefulWidget {
   final bool discardMisses;
 
   final bool enabled;
+
+  /// Через сколько пикселей пути под пальцем повторяется тик вибрации.
+  /// 0 — рисовать без отклика.
+  final double hapticStep;
+
   final VoidCallback? onStrokeStart;
   final ValueChanged<DrawingStroke>? onStrokeEnd;
 
@@ -173,7 +180,7 @@ class DrawingCanvas extends StatefulWidget {
   const DrawingCanvas({
     Key? key,
     this.controller,
-    this.color,
+    this.color = UIColors.text,
     this.filledColor,
     this.strokeWidth,
     this.penScale = 1.1,
@@ -186,12 +193,13 @@ class DrawingCanvas extends StatefulWidget {
     this.matcher = const TracingMatcher(),
     this.mergeDuration = const Duration(milliseconds: 250),
     this.showDemo = true,
-    this.demoColor,
+    this.demoColor = UIColors.letterDemo,
     this.demoSpeed = 350,
     this.demoCurve = Curves.easeOut,
     this.demoPartGap = const Duration(milliseconds: 100),
     this.discardMisses = true,
     this.enabled = true,
+    this.hapticStep = 14,
     this.onStrokeStart,
     this.onStrokeEnd,
     this.onChecked,
@@ -250,6 +258,10 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   /// параметром, что и перо: там она и есть единица измерения.
   double? _bandWidth;
   int? _activePointer;
+
+  /// Где палец был в момент последнего тика вибрации: от этой точки
+  /// копится путь до следующего.
+  Offset? _hapticFrom;
 
   /// Лучшее покрытие текущей части: по нему видно, помог ли новый штрих.
   double _bestCoverage = 0;
@@ -764,6 +776,10 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     // смотреть на свою линию.
     _demo.stop();
     _activePointer = event.pointer;
+    _hapticFrom = event.localPosition;
+    // Отклик уже на касание: перо «легло на бумагу». Иначе точка —
+    // касание без пути — проходила беззвучно, тик идёт только по длине.
+    AppHaptics.tick();
     _controller.startStroke(event.localPosition);
     widget.onStrokeStart?.call();
   }
@@ -771,6 +787,19 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   void _onPointerMove(PointerMoveEvent event) {
     if (event.pointer != _activePointer) return;
     _controller.extendStroke(event.localPosition);
+    _tickHaptic(event.localPosition);
+  }
+
+  /// Тик вибрации раз в [DrawingCanvas.hapticStep] пикселей пути.
+  /// Считается по сырому положению пальца, а не по сглаженной линии:
+  /// отклик должен идти в такт руке, а не фильтру.
+  void _tickHaptic(Offset at) {
+    final from = _hapticFrom;
+    final step = widget.hapticStep;
+    if (from == null || step <= 0) return;
+    if ((at - from).distance < step) return;
+    _hapticFrom = at;
+    AppHaptics.tick();
   }
 
   void _onPointerUp(PointerUpEvent event) {

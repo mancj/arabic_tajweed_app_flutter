@@ -149,18 +149,32 @@ class TopicBoard {
     int sessionId = 1,
     LearningRules rules = const LearningRules(),
   }) {
-    final nodes = topic.counterOf.map((id) => _node(id)).nonNulls.toList();
-
-    // Вводим только то, что граф уже разрешил: у темы могут быть атомы,
-    // до которых человек ещё не дошёл.
-    final fresh = nodes
-        .where(
-          (n) =>
-              ctx.stateOf(n.atom.id) == AtomState.fresh &&
-              n.requirement.isMet(ctx),
+    final nodes = topic.counterOf
+        .map(
+          (id) =>
+              _node(id) ??
+              (throw StateError('В теме ${topic.id} неизвестный атом $id')),
         )
+        .toList();
+
+    // Вся тема обязательна. Если часть материала пока недоступна,
+    // нужно исправить зависимости или разделить тему, а не урезать урок.
+    final fresh = nodes
+        .where((n) => ctx.stateOf(n.atom.id) == AtomState.fresh)
         .map((n) => n.atom)
         .toList();
+    final blocked = nodes.where(
+      (n) =>
+          ctx.stateOf(n.atom.id) == AtomState.fresh &&
+          !n.requirement.isMet(ctx),
+    );
+    if (blocked.isNotEmpty) {
+      throw StateError(
+        'Тема ${topic.id} недоступна целиком: '
+        '${blocked.map((n) => n.atom.id).join(', ')}. '
+        'Проверьте порядок уроков и зависимости.',
+      );
+    }
 
     final known = topic.counterOf
         .where((id) => ctx.stateOf(id) != AtomState.fresh)
@@ -172,15 +186,14 @@ class TopicBoard {
     // Но только назад: атомы тем, которые идут после этой, исключаются.
     // Иначе возврат к пройденному уроку тащит буквы из следующего —
     // начатого и брошенного, — и повторение выглядит как чужой урок.
-    final spaced = ReviewQueue(rules: rules)
-        .build(
-          ctx,
-          sessionId: sessionId,
-          exclude: {...topic.counterOf, ..._atomsAfter(topic)},
-          curriculum: curriculum,
-        );
+    final spaced = ReviewQueue(rules: rules).build(
+      ctx,
+      sessionId: sessionId,
+      exclude: {...topic.counterOf, ..._atomsAfter(topic)},
+      curriculum: curriculum,
+    );
 
-    return LessonPlan(
+    final plan = LessonPlan(
       template: fresh.isEmpty
           ? LessonTemplate.review
           : LessonTemplate.newLetter,
@@ -191,6 +204,8 @@ class TopicBoard {
           ? 'повторение темы «${topic.title}»'
           : 'тема «${topic.title}»',
     );
+    plan.validate(curriculum, rules);
+    return plan;
   }
 
   /// Атомы тем, стоящих в списке после [topic]. Тема, которой нет

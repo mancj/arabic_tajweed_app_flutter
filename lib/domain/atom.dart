@@ -27,6 +27,24 @@ enum AtomKind {
 /// они не соединяются со следующей буквой.
 enum LetterForm { isolated, initial, medial, finalForm }
 
+extension LetterFormX on LetterForm {
+  /// Подпись формы для переключателей и подсказок: «В начале».
+  String get title => switch (this) {
+    LetterForm.isolated => 'Отдельно',
+    LetterForm.initial => 'В начале',
+    LetterForm.medial => 'В середине',
+    LetterForm.finalForm => 'В конце',
+  };
+
+  /// Та же позиция внутри вопроса: «как она пишется в начале слова?».
+  String get inWord => switch (this) {
+    LetterForm.isolated => 'отдельно',
+    LetterForm.initial => 'в начале слова',
+    LetterForm.medial => 'в середине слова',
+    LetterForm.finalForm => 'в конце слова',
+  };
+}
+
 /// Разбирается из ассетов, поэтому сериализуемо.
 @JsonSerializable()
 class Atom {

@@ -37,9 +37,34 @@ class LetterAudio {
 
   /// Буквы, для которых записан звук. Хамза и слоги пока без озвучки.
   static const letters = {
-    'alif', 'ba', 'ta', 'tha', 'jim', 'hha', 'kha', 'dal', 'dhal', 'ra',
-    'zay', 'sin', 'shin', 'sod', 'dod', 'to', 'zho', 'ayn', 'ghayn', 'fa',
-    'qof', 'kaf', 'lam', 'mim', 'nun', 'ha', 'waw', 'ya',
+    'alif',
+    'ba',
+    'ta',
+    'tha',
+    'jim',
+    'hha',
+    'kha',
+    'dal',
+    'dhal',
+    'ra',
+    'zay',
+    'sin',
+    'shin',
+    'sod',
+    'dod',
+    'to',
+    'zho',
+    'ayn',
+    'ghayn',
+    'fa',
+    'qof',
+    'kaf',
+    'lam',
+    'mim',
+    'nun',
+    'ha',
+    'waw',
+    'ya',
   };
 
   static bool has(String? letterId) => letters.contains(letterId);
@@ -119,7 +144,8 @@ class LetterAudio {
         );
       }),
       player.onPlayerComplete.listen(
-        (_) => track.value = track.value.copyWith(progress: 1, isPlaying: false),
+        (_) =>
+            track.value = track.value.copyWith(progress: 1, isPlaying: false),
       ),
     ]);
   }

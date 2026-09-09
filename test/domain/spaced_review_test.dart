@@ -22,7 +22,9 @@ void main() {
   CurriculumContext ctxOf(Map<String, AtomProgress> progress) =>
       CurriculumContext(progress: progress, formsByLetter: const {});
 
-  // Первый урок пройден: четыре буквы знакомы, но не доведены до mastered.
+  // Первый урок пройден: четыре буквы выучены, но не доведены до mastered.
+  // Интервал только что выученного — две сессии, поэтому тесты ниже
+  // смотрят на третью сессию, а не на вторую.
   final afterFirstLesson = ctxOf({
     for (final id in [
       'alif.isolated',
@@ -35,11 +37,11 @@ void main() {
 
   Topic topicOf(String id) => curriculum.topics.firstWhere((t) => t.id == id);
 
-  test('урок по второй теме возвращает буквы из первой', () {
+  test('буквы первой темы возвращаются, когда вышел их интервал', () {
     final plan = board.planFor(
       topicOf('m.forms'),
       afterFirstLesson,
-      sessionId: 2,
+      sessionId: 3,
     );
 
     expect(plan.spacedReview, isNotEmpty);
@@ -48,7 +50,7 @@ void main() {
 
   test('в повтор не попадают буквы самой темы', () {
     final topic = topicOf('m.forms');
-    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
 
     expect(
       plan.spacedReview.where(topic.counterOf.contains),
@@ -59,13 +61,13 @@ void main() {
 
   test('в уроке действительно появляются задания по старым буквам', () {
     final topic = topicOf('m.forms');
-    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
 
     final exercises = ExerciseGenerator(
       curriculum: curriculum,
       rules: rules,
       random: Random(7),
-    ).build(plan: plan, ctx: afterFirstLesson, sessionId: 2);
+    ).build(plan: plan, ctx: afterFirstLesson, sessionId: 3);
 
     final asked = exercises.map((e) => e.atom.id).toSet();
     final fromOtherTopics = asked.where((id) => !topic.counterOf.contains(id));
@@ -76,13 +78,13 @@ void main() {
 
   test('повтор идёт блоком в конце, после закрепления по теме', () {
     final topic = topicOf('m.forms');
-    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
 
     final exercises = ExerciseGenerator(
       curriculum: curriculum,
       rules: rules,
       random: Random(7),
-    ).build(plan: plan, ctx: afterFirstLesson, sessionId: 2);
+    ).build(plan: plan, ctx: afterFirstLesson, sessionId: 3);
 
     final firstOld = exercises.indexWhere(
       (e) => !topic.counterOf.contains(e.atom.id),
@@ -161,16 +163,38 @@ void main() {
         id: const AtomProgress(state: AtomState.known, lastSeenSession: 3),
     });
     final topic = topicOf('m.ayn');
-    final plan = board.planFor(topic, ctx, sessionId: 4);
+    final plan = board.planFor(topic, ctx, sessionId: 5);
 
     final exercises = ExerciseGenerator(
       curriculum: curriculum,
       rules: rules,
       random: Random(7),
-    ).build(plan: plan, ctx: ctx, sessionId: 4);
+    ).build(plan: plan, ctx: ctx, sessionId: 5);
 
     final own = exercises.where((e) => topic.counterOf.contains(e.atom.id));
-    expect(own, hasLength(6), reason: 'два новых атома по три задания');
+    expect(own, hasLength(10), reason: 'два новых атома, потолок пять на атом');
     expect(exercises.length, rules.tasksPerSession);
+  });
+
+  test('выученный атом до срока в очередь не попадает', () {
+    final ctx = ctxOf({
+      'ba.isolated': const AtomProgress(
+        state: AtomState.known,
+        lastSeenSession: 4,
+      ),
+      'ta.isolated': const AtomProgress(
+        state: AtomState.known,
+        lastSeenSession: 4,
+        cleanSinceKnown: 2,
+      ),
+    });
+
+    expect(const ReviewQueue().build(ctx, sessionId: 5), isEmpty);
+    expect(const ReviewQueue().build(ctx, sessionId: 6), ['ba.isolated']);
+    expect(
+      const ReviewQueue().build(ctx, sessionId: 12),
+      ['ba.isolated', 'ta.isolated'],
+      reason: 'после двух чистых повторов интервал 8',
+    );
   });
 }
