@@ -119,7 +119,8 @@ class TracingCard extends StatelessWidget {
                     height: 100,
                     child: IgnorePointer(
                       child: WaveformWidget(
-                        color: UIColors.orange,
+                          strokeColor: UIColors.orange.withValues(alpha: .5),
+                        fillColor: UIColors.orange.withValues(alpha: .1),
                         height: 100,
                         layers: 3,
                         track: track,

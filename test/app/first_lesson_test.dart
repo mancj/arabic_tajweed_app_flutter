@@ -3,13 +3,20 @@ import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/letter_audio.dart';
+import 'package:arabic_tajweed_app/domain/progress_event.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
-/// Первый урок целиком: знакомство с ا ب ت ث и двенадцать заданий.
+import '../helpers/plugin_mocks.dart';
+
+/// Произношение идёт после карточки каждой новой буквы. Проверяем экран,
+/// чтобы переходы intro/exercise и счётчик не отставали от контроллера.
 /// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
 /// отвечает только первому тесту файла, а остальные вешает.
 Future<TracingShape> shapeFromDisk(String asset) async => TracingShapeSvg.parse(
@@ -25,7 +32,10 @@ void main() {
     File('assets/curriculum/stage1.json').readAsStringSync(),
   );
 
-  setUp(() => db = ProgressDatabase(NativeDatabase.memory()));
+  setUp(() {
+    mockPlatformPlugins();
+    db = ProgressDatabase(NativeDatabase.memory());
+  });
   tearDown(() async {
     Get.reset();
     await db.close();
@@ -43,7 +53,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  testWidgets('урок объясняет алфавит, потом четыре буквы, потом задания', (
+  testWidgets('после каждой новой буквы открывается её произношение', (
     tester,
   ) async {
     Get.put(
@@ -51,6 +61,7 @@ void main() {
         database: db,
         curriculum: curriculum,
         shapeLoader: shapeFromDisk,
+        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
@@ -70,22 +81,27 @@ void main() {
 
     await tester.tap(find.text('Понятно'));
     await settle(tester);
-    expect(find.textContaining('Алиф'), findsWidgets);
-
-    await tester.tap(find.text('Понятно'));
-    await settle(tester);
-    expect(find.textContaining('одна точка снизу'), findsOneWidget);
-
-    await tester.tap(find.text('Понятно'));
-    await settle(tester);
-    expect(find.textContaining('две, и стоят сверху'), findsOneWidget);
-
-    await tester.tap(find.text('Понятно'));
-    await settle(tester);
-    expect(find.textContaining('на одну больше'), findsOneWidget);
-
-    await tester.tap(find.text('Понятно'));
-    await settle(tester);
+    for (final (index, id) in [
+      'alif.isolated',
+      'ba.isolated',
+      'ta.isolated',
+      'tha.isolated',
+    ].indexed) {
+      expect(controller.stage.value, LessonStage.intro);
+      expect(controller.introAtom!.id, id);
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+      expect(controller.current!.atom.id, id);
+      expect(controller.current!.mode, ExerciseMode.sayName);
+      expect(find.text('Назовите эту букву вслух'), findsOneWidget);
+      expect(find.text('№ ${index + 1} из 20'), findsOneWidget);
+      await tester.runAsync(controller.answerCorrectly);
+      await settle(tester);
+    }
     expect(controller.stage.value, LessonStage.exercise);
+    expect(controller.current!.mode, isNot(ExerciseMode.sayName));
+    expect(find.text('№ 5 из 20'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await settle(tester);
   });
 }

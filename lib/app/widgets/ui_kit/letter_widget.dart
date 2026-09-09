@@ -162,7 +162,9 @@ class LetterWidgetCard extends StatelessWidget {
                       right: 0,
                       bottom: 0,
                       child: WaveformWidget(
-                        color: UIColors.orange,
+                        strokeColor: UIColors.orange.withValues(alpha: .5),
+                        fillColor: UIColors.orange.withValues(alpha: .1),
+                        strokeWidth: .5,
                         height: 100,
                         layers: 3,
                         track: track,

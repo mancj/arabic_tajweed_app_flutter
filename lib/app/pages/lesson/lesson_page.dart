@@ -408,7 +408,7 @@ class _FormCard extends GetView<LessonController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LessonProgressBar(value: controller.progress),
+        const _LessonProgress(),
         const Margin.vertical(16),
         _LetterCardFor(atom: atom),
         const Margin.vertical(16),
@@ -449,7 +449,7 @@ class _ExerciseBlock extends GetView<LessonController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LessonProgressBar(value: controller.progress),
+            const _LessonProgress(),
             const Margin.vertical(16),
             _TracingTask(prompt: _tracingPrompt(exercise)),
           ],
@@ -459,7 +459,7 @@ class _ExerciseBlock extends GetView<LessonController> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LessonProgressBar(value: controller.progress),
+          const _LessonProgress(),
           const Margin.vertical(16),
           _QuestionFor(exercise: exercise),
           const Margin.vertical(16),
@@ -481,6 +481,22 @@ class _ExerciseBlock extends GetView<LessonController> {
         ],
       );
     });
+  }
+}
+
+class _LessonProgress extends GetView<LessonController> {
+  const _LessonProgress();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => LessonProgressBar(
+        value: controller.progress,
+        debugLabel: kDebugMode
+            ? '№ ${controller.exerciseNumber} из ${controller.totalExercises}'
+            : null,
+      ),
+    );
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 
 /// Полоса прогресса урока под шапкой: сколько букв набора уже пройдено.
@@ -8,12 +9,19 @@ class LessonProgressBar extends StatelessWidget {
 
   final double height;
 
-  const LessonProgressBar({required this.value, this.height = 12, Key? key})
-    : super(key: key);
+  /// Отладочная подпись рядом с полосой. В боевом интерфейсе не задаётся.
+  final String? debugLabel;
+
+  const LessonProgressBar({
+    required this.value,
+    this.height = 12,
+    this.debugLabel,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final bar = Container(
       height: height,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
@@ -33,6 +41,15 @@ class LessonProgressBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (debugLabel == null) return bar;
+    return Row(
+      children: [
+        Expanded(child: bar),
+        const SizedBox(width: 8),
+        Text(debugLabel!, style: UITextStyles.hint),
+      ],
     );
   }
 }

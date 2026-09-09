@@ -60,44 +60,43 @@ ExerciseGenerator gen() =>
 LessonPlan planOf({
   List<Atom> newAtoms = const [],
   List<String> review = const [],
+  List<String> spaced = const [],
 }) => LessonPlan(
   template: LessonTemplate.newLetter,
   newAtoms: newAtoms,
   reviewAtoms: review,
+  spacedReview: spaced,
   reason: 'тест',
 );
 
 void main() {
   const introduced = AtomProgress(state: AtomState.introduced);
 
-  test('назвать вслух просят не на первой встрече и раз за урок', () {
-    // Шанс режима случайный, поэтому гоняем разные сеансы: правила должны
-    // держаться в каждом, а сам режим — встретиться хоть раз.
-    var seen = 0;
+  test('каждую отдельную букву просят назвать ровно раз за урок', () {
     for (var seed = 0; seed < 30; seed++) {
       final ex = ExerciseGenerator(curriculum: curriculum, random: Random(seed))
           .build(
-            plan: planOf(newAtoms: [ba, baFinal], review: [ta.id]),
+            plan: planOf(
+              newAtoms: [ba, baFinal],
+              review: [ta.id],
+              spaced: [tha.id],
+            ),
             ctx: ctxOf({
               for (final a in [ta, tha, siin, miim]) a.id: introduced,
             }),
             sessionId: 1,
           );
       final spoken = ex.where((e) => e.mode == ExerciseMode.sayName).toList();
-      seen += spoken.length;
 
       // Имя одно на все формы — спрашивается только у отдельной.
       expect(spoken.map((e) => e.atom.form), everyElement(LetterForm.isolated));
-      // Не больше раза на букву.
-      expect(
-        spoken.map((e) => e.atom.letterId).toSet(),
-        hasLength(spoken.length),
-      );
+      // Каждая отдельная буква из плана получает ровно одно задание.
+      expect(spoken.map((e) => e.atom.letterId).toSet(), {'ba', 'ta', 'tha'});
+      expect(spoken, hasLength(3));
       // Новую букву сначала узнают, потом просят назвать.
       final firstBa = ex.indexWhere((e) => e.atom == ba);
       expect(ex[firstBa].mode, isNot(ExerciseMode.sayName));
     }
-    expect(seen, greaterThan(0));
   });
 
   test('одна буква не растягивается на двенадцать заданий', () {

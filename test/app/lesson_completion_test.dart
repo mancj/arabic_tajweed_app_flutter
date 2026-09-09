@@ -3,12 +3,16 @@ import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/letter_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+
+import '../helpers/plugin_mocks.dart';
 
 /// Урок считается пройденным только когда человек дошёл до конца сессии.
 /// Открыть и выйти — не прохождение.
@@ -27,7 +31,10 @@ void main() {
     File('assets/curriculum/stage1.json').readAsStringSync(),
   );
 
-  setUp(() => db = ProgressDatabase(NativeDatabase.memory()));
+  setUp(() {
+    mockPlatformPlugins();
+    db = ProgressDatabase(NativeDatabase.memory());
+  });
   tearDown(() async {
     Get.reset();
     await db.close();
@@ -52,6 +59,7 @@ void main() {
         database: db,
         curriculum: curriculum,
         topicId: 'm.first',
+        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
@@ -66,6 +74,10 @@ void main() {
   /// и «назови букву» закрываем через контроллер — ровно так же, как это
   /// делают холст, узнав букву, и сервер, услышав её.
   Future<void> answerOne(WidgetTester tester, LessonController c) async {
+    while (c.stage.value == LessonStage.intro) {
+      await tester.runAsync(c.nextIntro);
+      await settle(tester);
+    }
     final ex = c.current!;
     if (c.isTracingTask || c.isSayNameTask) {
       await c.submit(directOutcome: true);
@@ -77,7 +89,7 @@ void main() {
   }
 
   Future<void> answerAll(WidgetTester tester, LessonController c) async {
-    while (c.stage.value == LessonStage.exercise) {
+    while (c.stage.value != LessonStage.finished) {
       await answerOne(tester, c);
     }
   }
@@ -106,7 +118,7 @@ void main() {
     for (var i = 0; i < 3; i++) {
       await answerOne(tester, c);
     }
-    expect(c.stage.value, LessonStage.exercise);
+    expect(c.stage.value, LessonStage.intro);
     expect(await db.readCompletions(), isEmpty);
   });
 
@@ -132,7 +144,12 @@ void main() {
 
     // Три ответа мимо: отметка о прохождении от них не зависит.
     var wrongs = 0;
-    while (c.stage.value == LessonStage.exercise) {
+    while (c.stage.value != LessonStage.finished) {
+      if (c.stage.value == LessonStage.intro) {
+        await tester.runAsync(c.nextIntro);
+        await settle(tester);
+        continue;
+      }
       final ex = c.current!;
       final wrongTurn = wrongs < 3 && ex.isChoice && !c.wasWrong.value;
       c.select(
@@ -252,7 +269,6 @@ void main() {
       await settle(tester);
     }
 
-    final skipped = c.current!.atom.id;
     final before = (await db.readAll()).whereType<ProgressEvent>().length;
 
     await c.skipExercise();
@@ -261,7 +277,8 @@ void main() {
     // Пропуск — отладочный ход: атом не двигается ни вперёд, ни назад.
     final after = (await db.readAll()).whereType<ProgressEvent>().toList();
     expect(after, hasLength(before));
-    expect(c.current?.atom.id, isNot(skipped));
+    expect(c.stage.value, LessonStage.intro);
+    expect(c.introAtom!.id, 'ba.isolated');
   });
 
   testWidgets('пропустив все задания, доходим до итога', (tester) async {
@@ -270,8 +287,12 @@ void main() {
       await c.nextIntro();
       await settle(tester);
     }
-    while (c.stage.value == LessonStage.exercise) {
-      await c.skipExercise();
+    while (c.stage.value != LessonStage.finished) {
+      if (c.stage.value == LessonStage.intro) {
+        await tester.runAsync(c.nextIntro);
+      } else {
+        await c.skipExercise();
+      }
       await settle(tester);
     }
     expect(c.stage.value, LessonStage.finished);

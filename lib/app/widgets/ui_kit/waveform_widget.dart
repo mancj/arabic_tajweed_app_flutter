@@ -6,13 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-/// Декоративная «волна» — несколько полупрозрачных холмов, наложенных друг
-/// на друга, и тонкая линия-основание, растворяющаяся у краёв.
+/// Декоративная «волна» — несколько полупрозрачных контуров холмов,
+/// наложенных друг на друга, и тонкая линия-основание, растворяющаяся у краёв.
 ///
 /// Холмы всегда одни и те же: у каждого бугра своя частота дыхания и лёгкий
 /// горизонтальный дрейф. Без звука они еле шевелятся, а на звучащей записи
 /// [track] прыгают вверх-вниз по её громкости — новых фигур не появляется
-/// и ничего не заливается слева направо.
+/// и не заполняется слева направо.
 ///
 /// Громкость берётся из пиков записи в точке воспроизведения. Пики снимает
 /// нативный разбор файла, а он есть не везде; без них холмы просто
@@ -25,7 +25,15 @@ class WaveformWidget extends StatefulWidget {
   /// Пересечения складываются по альфе и дают более тёмные участки.
   final int layers;
 
-  final Color color;
+  /// Цвет контуров холмов и линии-основания, включая прозрачность.
+  final Color strokeColor;
+
+  /// Цвет заливки холмов, включая прозрачность. Если не задан, совпадает с
+  /// [strokeColor].
+  final Color? fillColor;
+
+  /// Толщина контуров холмов и линии-основания.
+  final double strokeWidth;
 
   /// Общий множитель амплитуды, 0 — ровная линия.
   final double amplitude;
@@ -69,7 +77,9 @@ class WaveformWidget extends StatefulWidget {
     super.key,
     this.height = 80,
     this.layers = 4,
-    this.color = UIColors.waveform,
+    this.strokeColor = UIColors.waveform,
+    this.fillColor,
+    this.strokeWidth = 1,
     this.amplitude = 1,
     this.restHeight = 0.72,
     this.loudHeight = 1,
@@ -83,6 +93,7 @@ class WaveformWidget extends StatefulWidget {
     this.animate = true,
     this.seed = 7,
   }) : assert(restHeight <= loudHeight, 'В тишине волна не выше, чем на пике'),
+       assert(strokeWidth > 0, 'Толщина контура должна быть больше нуля'),
        assert(minBumps >= 1 && minBumps <= maxBumps, 'Пустой диапазон бугров'),
        assert(
          minBumpWidth > 0 && minBumpWidth <= maxBumpWidth,
@@ -235,7 +246,9 @@ class _WaveformWidgetState extends State<WaveformWidget>
         painter: _WaveformPainter(
           layers: _layers,
           pulse: _pulse,
-          color: widget.color,
+          strokeColor: widget.strokeColor,
+          fillColor: widget.fillColor,
+          strokeWidth: widget.strokeWidth,
           amplitude: widget.amplitude,
           restHeight: widget.restHeight,
           loudHeight: widget.loudHeight,
@@ -293,10 +306,6 @@ class _Bump {
 }
 
 class _WaveformPainter extends CustomPainter {
-  /// Сколько альфы добавляет один слой: пересечения складываются и дают
-  /// градации серого без отдельных цветов на каждый холм.
-  static const _layerAlpha = 0.16;
-  static const _lineWidth = 1.0;
   static const _step = 2.0;
 
   /// Насколько громкость перекраивает форму сверх общего роста: соседние
@@ -309,7 +318,9 @@ class _WaveformPainter extends CustomPainter {
 
   final List<List<_Bump>> layers;
   final ValueListenable<_Pulse> pulse;
-  final Color color;
+  final Color strokeColor;
+  final Color? fillColor;
+  final double strokeWidth;
   final double amplitude;
   final double restHeight;
   final double loudHeight;
@@ -317,7 +328,9 @@ class _WaveformPainter extends CustomPainter {
   _WaveformPainter({
     required this.layers,
     required this.pulse,
-    required this.color,
+    required this.strokeColor,
+    required this.fillColor,
+    required this.strokeWidth,
     required this.amplitude,
     required this.restHeight,
     required this.loudHeight,
@@ -326,13 +339,20 @@ class _WaveformPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final frame = pulse.value;
-    final baseline = size.height - _lineWidth;
+    final baseline = size.height - strokeWidth / 2;
     final peak = baseline * amplitude;
 
-    final paint = Paint()
+    final strokePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..isAntiAlias = true
+      ..color = strokeColor;
+    final fillPaint = Paint()
       ..style = PaintingStyle.fill
       ..isAntiAlias = true
-      ..color = color.withValues(alpha: _layerAlpha);
+      ..color = fillColor ?? strokeColor;
 
     for (var i = 0; i < layers.length; i++) {
       final depth = layers.length == 1 ? 1.0 : i / (layers.length - 1);
@@ -340,17 +360,21 @@ class _WaveformPainter extends CustomPainter {
           frame.level * (1 - _depthResponse + _depthResponse * depth);
       final scale =
           restHeight + (loudHeight - restHeight) * loudness.clamp(0.0, 1.0);
-      canvas.drawPath(
-        _layerPath(
-          layers[i],
-          size,
-          baseline,
-          peak * scale,
-          frame.clock,
-          loudness,
-        ),
-        paint,
+      final layerPath = _layerPath(
+        layers[i],
+        size,
+        baseline,
+        peak * scale,
+        frame.clock,
+        loudness,
       );
+      canvas.drawPath(
+        Path.from(layerPath)
+          ..lineTo(size.width, baseline)
+          ..close(),
+        fillPaint,
+      );
+      canvas.drawPath(layerPath, strokePaint);
     }
 
     _paintBaseline(canvas, size, baseline);
@@ -378,24 +402,22 @@ class _WaveformPainter extends CustomPainter {
       path.lineTo(x, baseline - (1 - math.exp(-value)) * peak);
     }
 
-    return path
-      ..lineTo(size.width, baseline)
-      ..close();
+    return path;
   }
 
   /// Линия-основание: к краям растворяется, поэтому полоса не выглядит
-  /// обрезанной по границе виджета.
+  /// обрезанной по границе виджета. В центре она имеет цвет [strokeColor].
   void _paintBaseline(Canvas canvas, Size size, double baseline) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final paint = Paint()
-      ..strokeWidth = _lineWidth
+      ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..shader = LinearGradient(
         colors: [
-          color.withValues(alpha: 0),
-          color.withValues(alpha: 0.55),
-          color.withValues(alpha: 0.55),
-          color.withValues(alpha: 0),
+          strokeColor.withValues(alpha: 0),
+          strokeColor,
+          strokeColor,
+          strokeColor.withValues(alpha: 0),
         ],
         stops: const [0, 0.18, 0.82, 1],
       ).createShader(rect);
@@ -406,7 +428,9 @@ class _WaveformPainter extends CustomPainter {
   @override
   bool shouldRepaint(_WaveformPainter old) =>
       old.layers != layers ||
-      old.color != color ||
+      old.strokeColor != strokeColor ||
+      old.fillColor != fillColor ||
+      old.strokeWidth != strokeWidth ||
       old.amplitude != amplitude ||
       old.restHeight != restHeight ||
       old.loudHeight != loudHeight ||

@@ -148,7 +148,7 @@ void main() {
     expect(ex.every((e) => !e.mode.isTracing), isTrue);
   });
 
-  test('в повторении обводка даётся один раз за урок', () {
+  test('в повторении отдельную букву просят назвать один раз за урок', () {
     final ex = gen().build(
       plan: planOf(newAtoms: [siin], spaced: [ba.id]),
       ctx: ctxOf({...others, ba.id: introduced}),
@@ -156,10 +156,10 @@ void main() {
     );
 
     final modes = modesOf(ex, ba);
-    expect(modes.where((m) => m.isTracing), [ExerciseMode.trace]);
+    expect(modes, [ExerciseMode.sayName]);
   });
 
-  test('освоенная буква возвращается письмом по памяти', () {
+  test('освоенная буква возвращается заданием на произношение', () {
     final ex = gen().build(
       plan: planOf(newAtoms: [siin], spaced: [ba.id]),
       ctx: ctxOf({
@@ -173,13 +173,11 @@ void main() {
     );
 
     final modes = modesOf(ex, ba);
-    expect(modes, isNot(contains(ExerciseMode.trace)));
-    expect(modes, contains(ExerciseMode.traceFromMemory));
-    expect(modes, hasLength(1));
+    expect(modes, [ExerciseMode.sayName]);
   });
 
-  // Случайный выбор голоса и сокращение урока раньше могли вытеснить
-  // письмо по памяти. Все три режима нужны каждой букве, даже при
+  // Сокращение урока раньше могло вытеснить
+  // письмо по памяти. Все три режима нужны каждой букве темы, даже при
   // плотном плане и уже накопленном прогрессе.
   test('три обязательных режима сохраняются при 3–5 встречах', () {
     for (final count in [3, 4, 5]) {

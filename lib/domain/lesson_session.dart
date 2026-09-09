@@ -49,6 +49,17 @@ class LessonSession {
 
   List<LogEntry> get log => List.unmodifiable(_log);
 
+  /// Переносит запланированное произношение к только что введённой букве.
+  /// Уже пройденные задания и общее число заданий не меняются.
+  void prioritizePronunciation(String atomId) {
+    final at = _queue.indexWhere(
+      (e) => e.atom.id == atomId && e.mode == ExerciseMode.sayName,
+      _index,
+    );
+    if (at < 0) throw StateError('Нет произношения для $atomId');
+    _queue.insert(_index, _queue.removeAt(at));
+  }
+
   /// [fastEnough] считает вызывающий: порог зависит от режима.
   AnswerOutcome answer(
     Exercise exercise,

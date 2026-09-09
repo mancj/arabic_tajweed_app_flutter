@@ -198,6 +198,7 @@ class LessonController extends GetxController {
   late final Curriculum _curriculum;
   late final ProgressRepository _progress;
   LessonSession? _session;
+  bool _returnToIntro = false;
   LessonPlan? _plan;
   DateTime _shownAt = DateTime.now();
 
@@ -329,6 +330,18 @@ class LessonController extends GetxController {
     return _session?.position ?? 0;
   }
 
+  /// Номер текущего задания для отладочной подписи у прогресс-бара.
+  int get exerciseNumber {
+    _refresh.value;
+    return (_session?.position ?? 0) + 1;
+  }
+
+  /// Общее число заданий в текущей сессии для отладочной подписи.
+  int get totalExercises {
+    _refresh.value;
+    return _session?.total ?? 0;
+  }
+
   /// Урок по теме: набор атомов задан ею, планировщик не нужен.
   LessonPlan _topicPlan(CurriculumContext ctx) {
     final topic = _curriculum.topics.firstWhere((m) => m.id == _topicId);
@@ -356,6 +369,7 @@ class LessonController extends GetxController {
 
   /// Блок «новое»: атом показан, но ещё не спрошен.
   Future<void> nextIntro() async {
+    if (stage.value != LessonStage.intro) return;
     final atom = introAtom;
     if (atom != null) {
       await _progress.record(
@@ -367,14 +381,54 @@ class LessonController extends GetxController {
       );
     }
     introIndex.value++;
+    final pronounceNow =
+        atom != null &&
+        atom.letterId != null &&
+        atom.form == LetterForm.isolated &&
+        _plan!.newAtoms.any((a) => a.id == atom.id);
+    if (pronounceNow) {
+      if (_session == null) await _buildSession();
+      _session!.prioritizePronunciation(atom.id);
+      _returnToIntro = true;
+      _showExercise();
+      return;
+    }
     if (introAtom != null) return;
 
     // _buildSession сам ставит finished, если спрашивать нечего:
     // затирать это переходом в exercise нельзя.
-    await _buildSession();
+    if (_session == null) await _buildSession();
     if (stage.value != LessonStage.finished) {
-      stage.value = LessonStage.exercise;
-      _shownAt = DateTime.now();
+      _showExercise();
+    }
+  }
+
+  void _showExercise() {
+    _shownAt = DateTime.now();
+    _refresh.value++;
+    _syncCard();
+    _syncTracing();
+    _syncPronunciation();
+    stage.value = LessonStage.exercise;
+  }
+
+  /// После первого произношения продолжаем знакомство с остальными буквами.
+  Future<void> _afterExercise() async {
+    selected.value = null;
+    wasWrong.value = false;
+    if (_returnToIntro) {
+      _returnToIntro = false;
+      if (introAtom != null) {
+        _refresh.value++;
+        _syncPronunciation();
+        stage.value = LessonStage.intro;
+        return;
+      }
+    }
+    if (_session!.isFinished) {
+      await _finish();
+    } else {
+      _showExercise();
     }
   }
 
@@ -586,18 +640,12 @@ class LessonController extends GetxController {
   /// экрана; в бою — когда сервер проверки голоса недоступен и задание
   /// «назови букву» выполнить нечем.
   Future<void> skipExercise() async {
+    if (stage.value != LessonStage.exercise) return;
     final session = _session;
     if (session == null || session.current == null) return;
 
     session.skip();
-    selected.value = null;
-    wasWrong.value = false;
-    _shownAt = DateTime.now();
-    _refresh.value++;
-    _syncCard();
-    _syncTracing();
-    _syncPronunciation();
-    if (session.isFinished) await _finish();
+    await _afterExercise();
   }
 
   /// ВРЕМЕННОЕ. У заданий-заглушек нет своей проверки, поэтому исход
@@ -610,6 +658,7 @@ class LessonController extends GetxController {
   /// [directOutcome] — исход задания без вариантов: обводку судит холст,
   /// а у оставшихся заглушек его задаёт кнопка.
   Future<void> submit({bool? directOutcome}) async {
+    if (stage.value != LessonStage.exercise) return;
     final session = _session;
     final exercise = session?.current;
     if (session == null || exercise == null) return;
@@ -648,17 +697,12 @@ class LessonController extends GetxController {
     await _progress.record(session.log.last);
 
     if (outcome == AnswerOutcome.wrong) {
+      _refresh.value++;
       wasWrong.value = true;
       return;
     }
 
-    selected.value = null;
-    _shownAt = DateTime.now();
-    _refresh.value++;
-    _syncCard();
-    _syncTracing();
-    _syncPronunciation();
-    if (session.isFinished) await _finish();
+    await _afterExercise();
   }
 
   /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они

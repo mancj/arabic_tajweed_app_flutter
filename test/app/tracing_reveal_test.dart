@@ -66,14 +66,13 @@ void main() {
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
     await settle(tester);
     final c = Get.find<LessonController>();
-    while (c.stage.value == LessonStage.intro) {
-      await tester.tap(find.text('Понятно'));
-      await settle(tester);
-    }
-    while (c.stage.value == LessonStage.exercise && !c.isTracingTask) {
-      final ex = c.current!;
-      c.select(ex.isChoice ? ex.answerIndex : 0);
-      await c.submit();
+    while (c.stage.value != LessonStage.finished) {
+      if (c.stage.value == LessonStage.intro) {
+        await tester.runAsync(c.nextIntro);
+      } else {
+        if (c.isTracingTask) break;
+        await tester.runAsync(c.answerCorrectly);
+      }
       await settle(tester);
     }
     expect(c.isTracingTask, isTrue, reason: 'в уроке нет письма');

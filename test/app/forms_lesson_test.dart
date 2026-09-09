@@ -44,7 +44,7 @@ void main() {
     await progress.completeTopic('m.first', sessionId: 1);
   }
 
-  Future<LessonController> open(String topicId) async {
+  Future<LessonController> open(String? topicId) async {
     final controller = LessonController(
       database: database,
       curriculum: curriculum,
@@ -73,6 +73,97 @@ void main() {
       await controller.dismissCard();
     }
   }
+
+  // Перенос голоса не должен пропускать объяснения, удваивать задания
+  // или завершать урок после первой буквы. Проверяем и автоплан, и тему.
+  for (final topicId in ['m.first', null]) {
+    test('новые буквы произносятся сразу после знакомства: $topicId', () async {
+      final controller = await open(topicId);
+      addTearDown(controller.onClose);
+      final letters = controller.introAtoms
+          .where((a) => a.form == LetterForm.isolated)
+          .toList();
+      for (final (index, letter) in letters.indexed) {
+        expect(controller.stage.value, LessonStage.exercise);
+        expect(controller.current!.atom.id, letter.id);
+        expect(controller.current!.mode, ExerciseMode.sayName);
+        expect(controller.exerciseNumber, index + 1);
+        expect(controller.totalExercises, 20);
+        final introduced = (await database.readAll())
+            .whereType<AtomIntroduced>()
+            .map((e) => e.atomId);
+        expect(introduced, contains(letter.id));
+        for (final future in letters.skip(index + 1)) {
+          expect(introduced, isNot(contains(future.id)));
+        }
+        await controller.answerCorrectly();
+        if (index < letters.length - 1) {
+          expect(controller.stage.value, LessonStage.intro);
+          expect(controller.introAtom!.id, letters[index + 1].id);
+          await controller.nextIntro();
+        }
+      }
+      expect(await database.readCompletions(), isEmpty);
+      var remaining = 0;
+      while (controller.stage.value == LessonStage.exercise) {
+        expect(++remaining, lessThanOrEqualTo(16));
+        expect(controller.current!.mode, isNot(ExerciseMode.sayName));
+        await controller.answerCorrectly();
+      }
+      expect(remaining, 16);
+      expect(controller.stage.value, LessonStage.finished);
+      expect(
+        (await database.readAll()).whereType<ProgressEvent>(),
+        hasLength(20),
+      );
+    });
+  }
+
+  // Ошибка оставляет человека на произношении, пропуск возвращает
+  // к следующей карточке. Очередь повторов при этом должна сохраниться.
+  test(
+    'ошибка и пропуск произношения не теряют следующие объяснения',
+    () async {
+      final controller = await open('m.first');
+      addTearDown(controller.onClose);
+      final first = controller.current!;
+      await controller.submit(directOutcome: false);
+      expect(controller.current, same(first));
+      expect(controller.stage.value, LessonStage.exercise);
+      expect(controller.totalExercises, 21);
+      await controller.submit(); // Закрыть разбор ошибки.
+      expect(controller.current, same(first));
+      await controller.answerCorrectly();
+      expect(controller.stage.value, LessonStage.intro);
+      expect(controller.introAtom!.id, 'ba.isolated');
+      await controller.nextIntro();
+      expect(controller.current!.atom.id, 'ba.isolated');
+      expect(controller.current!.mode, ExerciseMode.sayName);
+      final before = (await database.readAll())
+          .whereType<ProgressEvent>()
+          .length;
+      await controller.skipExercise();
+      expect(
+        (await database.readAll()).whereType<ProgressEvent>(),
+        hasLength(before),
+      );
+      expect(controller.stage.value, LessonStage.intro);
+      expect(controller.introAtom!.id, 'ta.isolated');
+      var steps = 0;
+      var repeatedFirst = 0;
+      while (controller.stage.value != LessonStage.finished) {
+        expect(++steps, lessThan(30));
+        if (controller.stage.value == LessonStage.intro) {
+          await controller.nextIntro();
+        } else {
+          if (identical(controller.current, first)) repeatedFirst++;
+          await controller.answerCorrectly();
+        }
+      }
+      expect(repeatedFirst, 1);
+      expect(controller.totalExercises, 21);
+    },
+  );
 
   test('второй урок обучает всем формам до открытия третьего', () async {
     await seedFirstLesson();
@@ -146,7 +237,11 @@ void main() {
 
     final next = await open('m.jim');
     addTearDown(next.onClose);
-    while (next.stage.value == LessonStage.exercise) {
+    while (next.stage.value != LessonStage.finished) {
+      if (next.stage.value == LessonStage.intro) {
+        await next.nextIntro();
+        continue;
+      }
       await readCards(next);
       await progress.recompute();
       final known = await progress.progress();
@@ -215,7 +310,11 @@ void main() {
             final asked = <String, List<ExerciseMode>>{};
             final logStart = (await database.readAll()).length;
             var count = 0;
-            while (controller.stage.value == LessonStage.exercise) {
+            while (controller.stage.value != LessonStage.finished) {
+              if (controller.stage.value == LessonStage.intro) {
+                await controller.nextIntro();
+                continue;
+              }
               expect(++count, lessThanOrEqualTo(20), reason: topic.id);
               while (controller.card.value != null) {
                 final id = controller.card.value!.id;
