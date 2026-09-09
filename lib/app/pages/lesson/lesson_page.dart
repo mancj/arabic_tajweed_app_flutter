@@ -589,8 +589,14 @@ String _tracingPrompt(Exercise exercise) => exercise.mode == ExerciseMode.trace
 String _promptFor(Exercise exercise) => switch (exercise.mode) {
   ExerciseMode.positionToForm =>
     'Как эта буква пишется ${exercise.atom.form?.inWord ?? 'в слове'}?',
-  ExerciseMode.formToName => 'Как называется эта буква?',
-  ExerciseMode.nameToForm => 'Как пишется буква?',
+  ExerciseMode.formToName =>
+    exercise.atom.kind == AtomKind.syllable
+        ? 'Какие буквы здесь соединены?'
+        : 'Как называется эта буква?',
+  ExerciseMode.nameToForm =>
+    exercise.atom.kind == AtomKind.syllable
+        ? 'Выберите сочетание букв'
+        : 'Как пишется буква?',
   ExerciseMode.distinguishDots => 'Какая из них — эта буква?',
   ExerciseMode.findInWord => 'Найдите эту букву в слове',
   ExerciseMode.formToPosition => 'Где в слове стоит эта форма?',

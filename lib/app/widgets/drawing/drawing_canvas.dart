@@ -60,6 +60,10 @@ class DrawingCanvas extends StatefulWidget {
   /// Не задан — красится чернилами, и буква выглядит нарисованной рукой.
   final Color? filledColor;
 
+  /// Цвет полностью собранной буквы. В него плавно переходит весь рисунок
+  /// после последней правильно заполненной части.
+  final Color completedColor;
+
   /// Толщина пера в пикселях. Если не задана, перо берётся из фигуры
   /// ([TracingShape.strokeWidth], отмасштабированная под холст) — тогда
   /// нарисованная линия и залитая буква совпадают по толщине. Без фигуры
@@ -182,6 +186,7 @@ class DrawingCanvas extends StatefulWidget {
     this.controller,
     this.color = UIColors.text,
     this.filledColor,
+    this.completedColor = UIColors.tracingCompleted,
     this.strokeWidth,
     this.penScale = 1.1,
     this.bandScale = 1.5,
@@ -225,6 +230,12 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     duration: widget.mergeDuration,
   );
   late final _demo = DemoAnimation(vsync: this);
+
+  /// Подтверждение успеха: после сборки всей буквы цвет переходит в зелёный.
+  late final _completionColor = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 300),
+  );
 
   /// Отдельный сигнал для нижнего слоя: завершённые штрихи перерисовываются
   /// только когда их список реально изменился, а не на каждое движение пальца.
@@ -371,6 +382,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
       }
       if (changed) {
         _merge.cancel();
+        _completionColor.value = 0;
         _bestCoverage = 0;
         setState(() {
           if (_filled.isEmpty) _anchored = null;
@@ -397,6 +409,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
   void _resetProgress() {
     _bestCoverage = 0;
+    _completionColor.value = 0;
     if (_filled.isEmpty && _anchored == null) return;
     setState(() {
       _filled.clear();
@@ -423,6 +436,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _detachController();
     _demo.dispose();
     _merge.dispose();
+    _completionColor.dispose();
     _finishedRepaint.dispose();
     super.dispose();
   }
@@ -696,7 +710,10 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _publishProgress();
     _playDemo();
 
-    if (_filled.length >= _partCount) widget.onMerged?.call();
+    if (_filled.length >= _partCount) {
+      _completionColor.forward(from: 0);
+      widget.onMerged?.call();
+    }
   }
 
   @override
@@ -742,6 +759,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
                       _finishedRepaint,
                       _merge,
                       _demo,
+                      _completionColor,
                     ]),
                     guide: _showsGuide ? shape : null,
                     placeholderColor: widget.placeholderColor,
@@ -750,6 +768,8 @@ class _DrawingCanvasState extends State<DrawingCanvas>
                     demoColor: widget.demoColor ?? _controller.color,
                     filled: List.of(_filled),
                     inkColor: widget.filledColor ?? _controller.color,
+                    completedColor: widget.completedColor,
+                    completionColor: _completionColor,
                     // Контур и собранные части — своей толщиной: перо шире
                     // только у пользователя.
                     penWidth: _penWidth,
@@ -853,6 +873,8 @@ class _BackgroundPainter extends CustomPainter {
   /// Уже собранные части: рисуются вместо штрихов, которыми их нарисовали.
   final List<_FilledPart> filled;
   final Color inkColor;
+  final Color completedColor;
+  final Animation<double> completionColor;
 
   /// Перо, которым рисует пользователь: им же заливаются части, иначе
   /// готовая буква окажется толще или тоньше нарисованной линии.
@@ -871,6 +893,8 @@ class _BackgroundPainter extends CustomPainter {
     required this.demoColor,
     required this.filled,
     required this.inkColor,
+    required this.completedColor,
+    required this.completionColor,
     required this.penWidth,
     required this.skipStrokes,
     required this.merge,
@@ -885,8 +909,13 @@ class _BackgroundPainter extends CustomPainter {
       curve: demoCurve,
       strokeWidth: penWidth,
     );
+    final filledColor = Color.lerp(
+      inkColor,
+      completedColor,
+      completionColor.value,
+    )!;
     for (final item in filled) {
-      item.part.paint(canvas, inkColor, strokeWidth: penWidth);
+      item.part.paint(canvas, filledColor, strokeWidth: penWidth);
     }
     merge.paint(
       canvas,
@@ -907,6 +936,8 @@ class _BackgroundPainter extends CustomPainter {
       oldDelegate.demoColor != demoColor ||
       oldDelegate.filled.length != filled.length ||
       oldDelegate.inkColor != inkColor ||
+      oldDelegate.completedColor != completedColor ||
+      oldDelegate.completionColor != completionColor ||
       oldDelegate.penWidth != penWidth ||
       oldDelegate.skipStrokes != skipStrokes ||
       oldDelegate.merge != merge;

@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
+import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 
 void main() {
@@ -16,9 +16,9 @@ void main() {
     // Настоящий ввод-вывод живёт вне поддельных часов теста, поэтому и
     // контроллер заводится, и загрузка ждётся внутри runAsync: снаружи
     // future просто не дошагает до конца, и тест повиснет.
-    late HomeController controller;
+    late TracingController controller;
     await tester.runAsync(() async {
-      controller = Get.put(HomeController());
+      controller = Get.put(TracingController());
       await controller.ready;
       // Ба: тест ведёт линию и ставит точку, значит нужна буква с точкой.
       // Первой в наборе идёт алиф, у которого её нет.
@@ -28,7 +28,7 @@ void main() {
       await controller.ready;
     });
 
-    await tester.pumpWidget(const GetMaterialApp(home: HomePage()));
+    await tester.pumpWidget(const GetMaterialApp(home: TracingPage()));
     await tester.pumpAndSettle();
 
     final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));

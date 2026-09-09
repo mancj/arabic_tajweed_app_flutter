@@ -106,3 +106,13 @@ class ProgressEvent extends LogEntry {
   /// Ответ, который двигает атом вперёд по состояниям.
   bool get isClean => correct && attempt == 1 && fastEnough;
 }
+
+/// Знание подтверждено двумя заданиями входной проверки. Это отдельное
+/// событие: нельзя выдавать его за несколько обычных учебных ответов.
+class KnowledgeConfirmed extends LogEntry {
+  const KnowledgeConfirmed({
+    required super.atomId,
+    required super.sessionId,
+    required super.at,
+  });
+}

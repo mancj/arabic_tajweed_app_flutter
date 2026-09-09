@@ -9,7 +9,7 @@ import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
-import 'package:arabic_tajweed_app/app/pages/home/home_page.dart';
+import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 import 'package:arabic_tajweed_app/app/pages/splash/splash_screen_page.dart';
@@ -78,9 +78,9 @@ class MyApp extends StatelessWidget {
           binding: AppWidgetsBinding(),
         ),
         GetPage(
-          name: HomePage.routeName,
-          page: () => const HomePage(),
-          binding: HomePageBinding(),
+          name: TracingPage.routeName,
+          page: () => const TracingPage(),
+          binding: TracingPageBinding(),
         ),
         GetPage(
           name: PronunciationPage.routeName,

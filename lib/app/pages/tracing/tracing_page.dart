@@ -12,20 +12,20 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/segmented_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/tracing_card.dart';
 
-import 'home_page_controller.dart';
+import 'tracing_page_controller.dart';
 
-export 'home_page_binding.dart';
-export 'home_page_controller.dart';
+export 'tracing_page_binding.dart';
+export 'tracing_page_controller.dart';
 
 /// Экран обводки буквы (макет Tajweed, node 12:293).
 ///
 /// Каркас, полоса прогресса и кнопка «Далее» те же, что на экране знакомства
 /// с буквой; отличается только карточка — вместо готового глифа в ней холст,
 /// на котором букву обводят по бледной подсказке или рисуют по памяти.
-class HomePage extends GetView<HomeController> {
-  static const routeName = '/home';
+class TracingPage extends GetView<TracingController> {
+  static const routeName = '/tracing';
 
-  const HomePage({Key? key}) : super(key: key);
+  const TracingPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -54,22 +54,23 @@ class HomePage extends GetView<HomeController> {
 }
 
 /// Переключатель режима: обводить бледную букву или рисовать её по памяти.
-class _ModeTabs extends GetView<HomeController> {
+class _ModeTabs extends GetView<TracingController> {
   const _ModeTabs();
 
   @override
   Widget build(BuildContext context) {
     return Obx(
       () => SegmentedTabs(
-        labels: HomeController.modeTitles,
-        selected: HomeController.modes.indexOf(controller.mode.value),
-        onChanged: (index) => controller.setMode(HomeController.modes[index]),
+        labels: TracingController.modeTitles,
+        selected: TracingController.modes.indexOf(controller.mode.value),
+        onChanged: (index) =>
+            controller.setMode(TracingController.modes[index]),
       ),
     );
   }
 }
 
-class _LetterTabs extends GetView<HomeController> {
+class _LetterTabs extends GetView<TracingController> {
   const _LetterTabs();
 
   @override
@@ -86,7 +87,7 @@ class _LetterTabs extends GetView<HomeController> {
 
 /// Форма выбранной буквы. У ا د ذ ر ز و форм две вместо четырёх, поэтому
 /// список свой на каждую букву.
-class _FormTabs extends GetView<HomeController> {
+class _FormTabs extends GetView<TracingController> {
   const _FormTabs();
 
   @override
@@ -106,15 +107,15 @@ class _FormTabs extends GetView<HomeController> {
 
 /// Карточка обводки: та же [TracingCard], что и в уроке. В шапке —
 /// режим и название формы, показ после промахов идёт по общим правилам.
-class _TracingCard extends GetView<HomeController> {
+class _TracingCard extends GetView<TracingController> {
   const _TracingCard();
 
   @override
   Widget build(BuildContext context) {
     return Obx(
       () => TracingCard(
-        badge: HomeController
-            .modeTitles[HomeController.modes.indexOf(controller.mode.value)],
+        badge: TracingController
+            .modeTitles[TracingController.modes.indexOf(controller.mode.value)],
         title: controller.letter?.name ?? '',
         hint: controller.hint.value,
         onClear: controller.clear,
@@ -123,7 +124,7 @@ class _TracingCard extends GetView<HomeController> {
         track: controller.voiceTrack,
         playbackKey: controller.letter?.glyph,
         controller: controller.drawing,
-        matcher: HomeController.matcher,
+        matcher: TracingController.matcher,
         mode: controller.mode.value,
         shape: controller.shape.value,
         missesBeforeReveal: controller.rules.tracingMissesBeforeReveal,
@@ -137,7 +138,7 @@ class _TracingCard extends GetView<HomeController> {
 
 /// Отмена и проверка холста; стирание стоит в шапке карточки. Части засчитываются сами, сразу
 /// после штриха, — «Проверить» здесь только чтобы увидеть разбор попытки.
-class _CanvasActions extends GetView<HomeController> {
+class _CanvasActions extends GetView<TracingController> {
   const _CanvasActions();
 
   @override

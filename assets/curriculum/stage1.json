@@ -2318,7 +2318,29 @@
       "stage": 1,
       "title": "Разные формы одной буквы",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.letter"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "alif.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "tha.isolated"
+          }
+        ]
       },
       "counterOf": [
         "concept.forms",
@@ -2339,7 +2361,53 @@
       "stage": 1,
       "title": "Буквы ج ح خ",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.forms"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "alif.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "tha.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "tha.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "tha.medial"
+          }
+        ]
       },
       "counterOf": [
         "jim.isolated",
@@ -2352,7 +2420,21 @@
       "stage": 1,
       "title": "ج ح خ в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "jim.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "hha.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kha.isolated"
+          }
+        ]
       },
       "counterOf": [
         "jim.finalForm",
@@ -2371,7 +2453,45 @@
       "stage": 1,
       "title": "Буквы, которые не соединяются: د ذ ر ز",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "jim.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "jim.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "jim.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "hha.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "hha.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "hha.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kha.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kha.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kha.medial"
+          }
+        ]
       },
       "counterOf": [
         "concept.nojoin",
@@ -2386,7 +2506,29 @@
       "stage": 1,
       "title": "د ذ ر ز в конце слова",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.nojoin"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dal.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dhal.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ra.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zay.isolated"
+          }
+        ]
       },
       "counterOf": [
         "dal.finalForm",
@@ -2400,7 +2542,25 @@
       "stage": 1,
       "title": "Буквы س ش",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "dal.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dhal.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ra.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zay.finalForm"
+          }
+        ]
       },
       "counterOf": [
         "sin.isolated",
@@ -2412,7 +2572,17 @@
       "stage": 1,
       "title": "س ش в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "sin.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "shin.isolated"
+          }
+        ]
       },
       "counterOf": [
         "sin.finalForm",
@@ -2428,7 +2598,33 @@
       "stage": 1,
       "title": "Буквы ص ض",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "sin.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "sin.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "sin.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "shin.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "shin.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "shin.medial"
+          }
+        ]
       },
       "counterOf": [
         "sod.isolated",
@@ -2440,7 +2636,17 @@
       "stage": 1,
       "title": "ص ض в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "sod.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dod.isolated"
+          }
+        ]
       },
       "counterOf": [
         "sod.finalForm",
@@ -2456,7 +2662,33 @@
       "stage": 1,
       "title": "Буквы ط ظ",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "sod.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "sod.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "sod.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dod.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dod.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dod.medial"
+          }
+        ]
       },
       "counterOf": [
         "to.isolated",
@@ -2468,7 +2700,17 @@
       "stage": 1,
       "title": "ط ظ в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "to.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zho.isolated"
+          }
+        ]
       },
       "counterOf": [
         "to.finalForm",
@@ -2484,7 +2726,33 @@
       "stage": 1,
       "title": "Буквы ع غ",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "to.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "to.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "to.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zho.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zho.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "zho.medial"
+          }
+        ]
       },
       "counterOf": [
         "ayn.isolated",
@@ -2496,7 +2764,17 @@
       "stage": 1,
       "title": "ع غ в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "ayn.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ghayn.isolated"
+          }
+        ]
       },
       "counterOf": [
         "ayn.finalForm",
@@ -2512,7 +2790,33 @@
       "stage": 1,
       "title": "Буквы ف ق",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "ayn.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ayn.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ayn.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ghayn.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ghayn.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ghayn.medial"
+          }
+        ]
       },
       "counterOf": [
         "fa.isolated",
@@ -2524,7 +2828,17 @@
       "stage": 1,
       "title": "ف ق в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "fa.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "qof.isolated"
+          }
+        ]
       },
       "counterOf": [
         "fa.finalForm",
@@ -2540,7 +2854,33 @@
       "stage": 1,
       "title": "Буквы ك ل",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "fa.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "fa.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "fa.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "qof.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "qof.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "qof.medial"
+          }
+        ]
       },
       "counterOf": [
         "kaf.isolated",
@@ -2552,7 +2892,17 @@
       "stage": 1,
       "title": "ك ل в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "kaf.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "lam.isolated"
+          }
+        ]
       },
       "counterOf": [
         "kaf.finalForm",
@@ -2568,7 +2918,33 @@
       "stage": 1,
       "title": "Буквы م ن",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "kaf.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kaf.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "kaf.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "lam.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "lam.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "lam.medial"
+          }
+        ]
       },
       "counterOf": [
         "mim.isolated",
@@ -2580,7 +2956,17 @@
       "stage": 1,
       "title": "م ن в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "mim.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.isolated"
+          }
+        ]
       },
       "counterOf": [
         "mim.finalForm",
@@ -2596,7 +2982,33 @@
       "stage": 1,
       "title": "Буквы ه و ي",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "mim.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "mim.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "mim.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.medial"
+          }
+        ]
       },
       "counterOf": [
         "ha.isolated",
@@ -2609,7 +3021,21 @@
       "stage": 1,
       "title": "ه و ي в слове",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "ha.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "waw.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ya.isolated"
+          }
+        ]
       },
       "counterOf": [
         "ha.finalForm",
@@ -2626,7 +3052,37 @@
       "stage": 1,
       "title": "Хамза: ء أ إ ؤ ئ",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "ha.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ha.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ha.medial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "waw.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ya.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ya.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ya.medial"
+          }
+        ]
       },
       "counterOf": [
         "concept.hamza",

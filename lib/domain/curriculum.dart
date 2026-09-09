@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:collection/collection.dart';
 
 import 'atom.dart';
 import 'atom_state.dart';
@@ -177,6 +178,11 @@ class Curriculum {
       .map((n) => n.atom)
       .toList();
 
+  Map<String, List<String>> get formsByLetter => groupBy(
+    nodes.where((n) => n.atom.letterId != null && n.atom.form != null),
+    (CurriculumNode n) => n.atom.letterId!,
+  ).map((id, nodes) => MapEntry(id, nodes.map((n) => n.atom.id).toList()));
+
   List<Topic> openTopics(CurriculumContext ctx) =>
       topics.where((m) => m.requirement.isMet(ctx)).toList();
 }
@@ -202,6 +208,19 @@ class CurriculumContext {
   }
 
   int get knownLetterCount => formsByLetter.keys.where(isLetterKnown).length;
+
+  /// Доступ остаётся после ошибок: knownAt сохраняется при откате знания.
+  CurriculumContext get accessContext => CurriculumContext(
+    progress: progress.map(
+      (id, p) => MapEntry(
+        id,
+        p.knownAt != null && p.state.index < AtomState.known.index
+            ? p.copyWith(state: AtomState.known)
+            : p,
+      ),
+    ),
+    formsByLetter: formsByLetter,
+  );
 
   final Set<String> _openTopics = {};
 

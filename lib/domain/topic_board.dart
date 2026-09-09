@@ -7,11 +7,8 @@ import 'learning_rules.dart';
 import 'planner.dart';
 import 'review_queue.dart';
 
-/// Как урок выглядит в списке курса.
-///
-/// «Пройден» — это факт о занятии, а не о знании: человек дошёл до конца
-/// сессии. Освоенность букв добирается повторениями и на галочку не влияет.
-/// Раньше их считали одним числом, и закрытый урок выглядел недоделанным.
+/// Состояние блока материала в «Моём пути». Освоенность считается по
+/// знаниям; завершённое занятие само по себе не даёт галочку.
 enum TopicState {
   /// Условие графа не выполнено — замок и текст условия.
   locked,
@@ -19,16 +16,16 @@ enum TopicState {
   /// Открыт, но человек его ещё не начинал.
   available,
 
-  /// Урок, которым занимались последним. К нему ведёт «Продолжить».
+  /// Блок, выбранный для ближайшего занятия.
   current,
 
-  /// Начат и брошен: человек ушёл вперёд, не закрыв этот.
+  /// Материал уже изучается, но ещё требует закрепления.
   unfinished,
 
   /// Не проходили — сдали тест «Уже знаю». Атомы помечены weak.
   passedByTest,
 
-  /// Дошёл до конца сессии.
+  /// Все элементы блока освоены.
   done,
 }
 
@@ -44,14 +41,11 @@ class TopicStatus {
     required this.started,
   });
 
-  /// Показывать ли полосу освоенности. У закрытых уроков её прячем:
-  /// урок закончен, и напоминать о недобранных повторах незачем.
-  /// Урок закрыт — пройден или зачтён тестом.
+  /// Галочка относится к знаниям, а не к количеству занятий.
   bool get isDone =>
       state == TopicState.done || state == TopicState.passedByTest;
 
-  bool get showsMastery =>
-      state == TopicState.current || state == TopicState.unfinished;
+  bool get showsMastery => state != TopicState.locked;
 
   final Topic topic;
   final TopicState state;
@@ -101,39 +95,36 @@ class TopicBoard {
   ) {
     final done = topic.counterOf.where((id) => isDone(id, ctx)).length;
     final total = topic.counterOf.length;
-    // Урок открывается по факту прохождения предыдущего, а не по
-    // освоенности букв. Иначе выходит тупик: урок помечен пройденным,
-    // а следующий заперт, пока буквы не дозреют до known.
-    final previous = index == 0 ? null : curriculum.topics[index - 1];
-    final open = previous == null || completed.containsKey(previous.id);
     final started = topic.counterOf.any(
       (id) => ctx.stateOf(id) != AtomState.fresh,
     );
-
-    final state = switch (completed[topic.id]) {
-      true => TopicState.passedByTest,
-      false => TopicState.done,
-      // Не закрыт: текущий, брошенный или ещё не начатый.
-      null when !open => TopicState.locked,
-      null when topic.id == currentId => TopicState.current,
-      null when started => TopicState.unfinished,
-      null => TopicState.available,
-    };
+    // Старые отметки сохраняют доступ, но не подменяют знание материала.
+    final previous = index == 0 ? null : curriculum.topics[index - 1];
+    final open =
+        topic.requirement.isMet(ctx.accessContext) ||
+        started ||
+        completed.containsKey(topic.id) ||
+        (previous != null && completed.containsKey(previous.id));
+    final state = !open
+        ? TopicState.locked
+        : total > 0 && done == total
+        ? TopicState.done
+        : topic.id == currentId
+        ? TopicState.current
+        : started
+        ? TopicState.unfinished
+        : TopicState.available;
 
     return TopicStatus(
       topic: topic,
       state: state,
       done: done,
       total: total,
-      // Замок объясняет себя тем, что его на самом деле держит:
-      // непройденной предыдущей темой, а не условием графа.
-      hint: state == TopicState.locked && previous != null
-          ? 'сначала пройдите «${previous.title}»'
+      hint: state == TopicState.locked
+          ? missingHint(topic.requirement, ctx.accessContext)
           : '',
       started: started,
-      canPractice:
-          state != TopicState.locked &&
-          topic.counterOf.any((id) => _practicable(id, ctx)),
+      canPractice: open && topic.counterOf.every((id) => _practicable(id, ctx)),
     );
   }
 
@@ -166,7 +157,7 @@ class TopicBoard {
     final blocked = nodes.where(
       (n) =>
           ctx.stateOf(n.atom.id) == AtomState.fresh &&
-          !n.requirement.isMet(ctx),
+          !n.requirement.isMet(ctx.accessContext),
     );
     if (blocked.isNotEmpty) {
       throw StateError(
@@ -194,6 +185,7 @@ class TopicBoard {
     );
 
     final plan = LessonPlan(
+      topicId: topic.id,
       template: fresh.isEmpty
           ? LessonTemplate.review
           : LessonTemplate.newLetter,
@@ -223,9 +215,8 @@ class TopicBoard {
   bool _practicable(String atomId, CurriculumContext ctx) {
     final node = _node(atomId);
     if (node == null) return false;
-    if (node.atom.kind == AtomKind.concept) return true;
     if (ctx.stateOf(atomId) != AtomState.fresh) return true;
-    return node.requirement.isMet(ctx);
+    return node.requirement.isMet(ctx.accessContext);
   }
 
   CurriculumNode? _node(String atomId) =>
@@ -239,6 +230,27 @@ class TopicBoard {
     return atom?.kind == AtomKind.concept
         ? state.index >= AtomState.introduced.index
         : state.index >= AtomState.known.index;
+  }
+
+  String missingHint(Requirement requirement, CurriculumContext ctx) {
+    List<Requirement> missing(Requirement r) => r.isMet(ctx)
+        ? []
+        : switch (r) {
+            AllOf(:final parts) => parts.expand(missing).toList(),
+            _ => [r],
+          };
+    final parts = missing(requirement);
+    final ids = parts.whereType<AtomKnown>().map((r) => r.atomId).toSet();
+    if (ids.isNotEmpty) {
+      if (ids.length <= 3) {
+        return 'нужно освоить: ${ids.map(_label).join(', ')}';
+      }
+      final bases = ids.every((id) => _atom(id)?.form == LetterForm.isolated);
+      return bases
+          ? 'нужно освоить ещё ${ids.length} ${_letters(ids.length)}'
+          : 'нужно закрепить ещё ${ids.length} форм';
+    }
+    return parts.map(describe).where((s) => s.isNotEmpty).toSet().join(', ');
   }
 
   /// Условие словами. Замок должен объяснять себя: «нужно 8 букв» — это

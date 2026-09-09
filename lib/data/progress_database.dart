@@ -117,6 +117,12 @@ class ProgressDatabase extends _$ProgressDatabase {
       sessionId: entry.sessionId,
       at: entry.at,
     ),
+    KnowledgeConfirmed() => LogRowsCompanion.insert(
+      kind: 'confirmed',
+      atomId: entry.atomId,
+      sessionId: entry.sessionId,
+      at: entry.at,
+    ),
     ProgressEvent() => LogRowsCompanion.insert(
       kind: 'answer',
       atomId: entry.atomId,
@@ -131,6 +137,11 @@ class ProgressDatabase extends _$ProgressDatabase {
 
   LogEntry _toDomain(LogRow row) => switch (row.kind) {
     'introduced' => AtomIntroduced(
+      atomId: row.atomId,
+      sessionId: row.sessionId,
+      at: row.at,
+    ),
+    'confirmed' => KnowledgeConfirmed(
       atomId: row.atomId,
       sessionId: row.sessionId,
       at: row.at,

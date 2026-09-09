@@ -1,14 +1,18 @@
 import 'package:arabic_tajweed_app/app/shared_state/auth_state.dart';
 import 'package:arabic_tajweed_app/data/rest/api_config.dart';
+import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 
 /// Собирает единственный на всё приложение [Dio]: базовый адрес,
 /// тайм-ауты и общие заголовки. Клиенты получают его через `Get.find<Dio>()`.
 Dio createApiClient(AuthState authState) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
+      baseUrl:
+          Get.find<SharedPreferenceManager>().serverUrl.get() ??
+          ApiConfig.baseUrl,
       connectTimeout: ApiConfig.connectTimeout,
       receiveTimeout: ApiConfig.receiveTimeout,
       responseType: ResponseType.json,

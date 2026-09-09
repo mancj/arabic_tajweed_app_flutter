@@ -40,7 +40,7 @@ class LessonLetterForms {
   String get glyph => forms.first.glyph;
 }
 
-class HomeController extends GetxController {
+class TracingController extends GetxController {
   final drawing = DrawingController();
   final _audio = LetterAudio();
 

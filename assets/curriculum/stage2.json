@@ -9,8 +9,29 @@
         "note": "В слове буквы слипаются. Первая берёт начальную форму, последняя — конечную, а те, что между ними, — среднюю. Пока читаем молча: только смотрим, как буквы соединились."
       },
       "requirement": {
-        "type": "atomIntroduced",
-        "atomId": "ya.isolated"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "lettersKnown",
+            "count": 2
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.finalForm"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
+          }
+        ]
       }
     },
     {
@@ -24,12 +45,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ba.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ta.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.finalForm"
           }
         ]
       }
@@ -45,12 +74,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ta.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ta.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
           }
         ]
       }
@@ -66,12 +103,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "nun.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
           }
         ]
       }
@@ -87,12 +132,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "sin.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "sin.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
           }
         ]
       }
@@ -108,12 +161,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "mim.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "nun.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "mim.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "nun.finalForm"
           }
         ]
       }
@@ -129,12 +190,20 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "lam.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "lam.initial"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.finalForm"
           }
         ]
       }
@@ -148,8 +217,21 @@
         "note": "После ا د ذ ر ز و соединения нет. Следующая буква начинается заново — как будто с начала слова, хотя слово продолжается."
       },
       "requirement": {
-        "type": "atomIntroduced",
-        "atomId": "ya.isolated"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "alif.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          }
+        ]
       }
     },
     {
@@ -163,11 +245,19 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "dal.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "dal.isolated"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "ba.isolated"
           }
         ]
@@ -184,11 +274,19 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "ra.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "ra.isolated"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "ba.isolated"
           }
         ]
@@ -205,11 +303,19 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "alif.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "alif.isolated"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "ba.isolated"
           }
         ]
@@ -226,11 +332,19 @@
         "type": "allOf",
         "parts": [
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
             "atomId": "waw.isolated"
           },
           {
-            "type": "atomIntroduced",
+            "type": "atomKnown",
+            "atomId": "ba.isolated"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "waw.isolated"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "ba.isolated"
           }
         ]
@@ -243,30 +357,398 @@
       "stage": 2,
       "title": "Как буквы соединяются",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "lettersKnown",
+                "count": 2
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ta.finalForm"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ta.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.finalForm"
+              }
+            ]
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ta.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ta.finalForm"
+              }
+            ]
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "ta.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ta.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.finalForm"
+              }
+            ]
+          }
+        ]
       },
       "counterOf": [
         "concept.join",
         "syl.ba_ta",
-        "syl.ta_ba",
-        "syl.na_ba",
-        "syl.sa_ba",
-        "syl.mi_na",
-        "syl.la_ba"
+        "syl.ta_ba"
       ]
     },
     {
       "id": "m.break",
       "stage": 2,
-      "title": "Разрыв в слове",
+      "title": "Разрыв после алифа",
       "requirement": {
-        "type": "always"
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomIntroduced",
+                "atomId": "concept.join"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "alif.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              }
+            ]
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "alif.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "alif.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              }
+            ]
+          }
+        ]
       },
       "counterOf": [
         "concept.break",
-        "syl.dal_ba",
-        "syl.ra_ba",
-        "syl.alif_ba",
+        "syl.alif_ba"
+      ]
+    },
+    {
+      "id": "m.join.nun",
+      "stage": 2,
+      "title": "Соединение ن ب",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "nun.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "nun.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.finalForm"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.na_ba"
+      ]
+    },
+    {
+      "id": "m.join.sin",
+      "stage": 2,
+      "title": "Соединение س ب",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "sin.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "sin.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.finalForm"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.sa_ba"
+      ]
+    },
+    {
+      "id": "m.join.mim",
+      "stage": 2,
+      "title": "Соединение م ن",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "mim.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "nun.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "mim.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "nun.finalForm"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.mi_na"
+      ]
+    },
+    {
+      "id": "m.join.lam",
+      "stage": 2,
+      "title": "Соединение ل ب",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "lam.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "lam.initial"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.finalForm"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.la_ba"
+      ]
+    },
+    {
+      "id": "m.break.dal",
+      "stage": 2,
+      "title": "Разрыв после د",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "dal.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "dal.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.dal_ba"
+      ]
+    },
+    {
+      "id": "m.break.ra",
+      "stage": 2,
+      "title": "Разрыв после ر",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "ra.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ra.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
+        "syl.ra_ba"
+      ]
+    },
+    {
+      "id": "m.break.waw",
+      "stage": 2,
+      "title": "Разрыв после و",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "allOf",
+            "parts": [
+              {
+                "type": "atomKnown",
+                "atomId": "waw.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "waw.isolated"
+              },
+              {
+                "type": "atomKnown",
+                "atomId": "ba.isolated"
+              }
+            ]
+          }
+        ]
+      },
+      "counterOf": [
         "syl.waw_ba"
       ]
     }

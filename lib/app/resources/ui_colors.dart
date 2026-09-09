@@ -14,6 +14,7 @@ class UIColors {
   static const primary = Color(0xFF1858FE);
   static const primary20 = Color(0x331858FE);
   static const accent = Color(0xFFA5EB17);
+  static const tracingCompleted = Color(0xFF0F9E89);
   static const cardBackground = Color(0xFFF3F3F3);
   static const text = Color(0xFF0C233E);
   static const cardShadow = Color.fromARGB(55, 177, 177, 177);

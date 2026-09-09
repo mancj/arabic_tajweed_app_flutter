@@ -218,6 +218,9 @@ class ExerciseGenerator {
     required bool isTopicAtom,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
+    if (atom.kind == AtomKind.syllable) {
+      return _connectionQuestion(atom, slot.index, isReview);
+    }
 
     // Базовая буква темы обязательно проходит оба вида письма и голос,
     // даже при повторном открытии темы. При пяти встречах между ними
@@ -300,6 +303,21 @@ class ExerciseGenerator {
       );
     }
 
+    if (atom.kind == AtomKind.sign || atom.kind == AtomKind.haraka) {
+      final options = [atom, ..._pickDistractors(atom, pool, level).distractors]
+        ..shuffle(_random);
+      return Exercise(
+        atom: atom,
+        mode: (slot.index + p.cleanStreak).isEven
+            ? ExerciseMode.nameToForm
+            : ExerciseMode.formToName,
+        options: options,
+        answerIndex: options.indexOf(atom),
+        level: level,
+        isReview: isReview,
+      );
+    }
+
     final picked = _pickDistractors(atom, pool, level);
 
     // Вариантов не набирается — на старте курса введённых букв просто мало.
@@ -321,6 +339,43 @@ class ExerciseGenerator {
       options: options,
       answerIndex: options.indexOf(atom),
       level: picked.level,
+      isReview: isReview,
+    );
+  }
+
+  /// Сочетания строятся из уже знакомых букв. Для первого блока
+  /// соединения не нужны три заранее выученных слога или пустой холст.
+  Exercise _connectionQuestion(Atom atom, int index, bool isReview) {
+    final letters = curriculum.nodes
+        .map((n) => n.atom)
+        .where((a) => a.form == LetterForm.isolated)
+        .toList();
+    final parts = atom.display.runes
+        .map(
+          (r) => letters.firstWhere((a) => a.display == String.fromCharCode(r)),
+        )
+        .toList();
+    final variants = [
+      atom,
+      Atom(
+        id: '${atom.id}.reverse',
+        kind: AtomKind.syllable,
+        display: parts.reversed.map((a) => a.display).join(),
+        label: parts.reversed.map((a) => a.label).join(' и '),
+      ),
+      Atom(
+        id: '${atom.id}.repeat',
+        kind: AtomKind.syllable,
+        display: parts.first.display * parts.length,
+        label: List.filled(parts.length, parts.first.label).join(' и '),
+      ),
+    ]..shuffle(_random);
+    return Exercise(
+      atom: atom,
+      mode: index.isEven ? ExerciseMode.nameToForm : ExerciseMode.formToName,
+      level: DistractorLevel.mixed,
+      options: variants,
+      answerIndex: variants.indexOf(atom),
       isReview: isReview,
     );
   }
@@ -416,7 +471,9 @@ class ExerciseGenerator {
   /// между знакомым и незнакомым и просто отсеивает по узнаваемости.
   _Picked _pickDistractors(Atom atom, List<Atom> pool, DistractorLevel level) {
     final sameForm = pool
-        .where((a) => a.id != atom.id && a.form == atom.form)
+        .where(
+          (a) => a.id != atom.id && a.form == atom.form && a.kind == atom.kind,
+        )
         .toList();
 
     final confusable = sameForm

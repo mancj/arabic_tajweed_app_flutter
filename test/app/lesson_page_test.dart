@@ -1,9 +1,11 @@
+import '../helpers/plugin_mocks.dart';
+import 'package:arabic_tajweed_app/data/letter_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
-import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
@@ -25,7 +27,10 @@ void main() {
     File('assets/curriculum/stage1.json').readAsStringSync(),
   );
 
-  setUp(() => db = ProgressDatabase(NativeDatabase.memory()));
+  setUp(() {
+    mockPlatformPlugins();
+    db = ProgressDatabase(NativeDatabase.memory());
+  });
 
   tearDown(() async {
     Get.reset();
@@ -56,6 +61,7 @@ void main() {
         curriculum: curriculum,
         topicId: topicId,
         shapeLoader: shapeFromDisk,
+        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));

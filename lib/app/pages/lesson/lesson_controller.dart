@@ -34,6 +34,7 @@ class LessonController extends GetxController {
     ProgressDatabase? database,
     Curriculum? curriculum,
     String? topicId,
+    LessonPlan? plan,
     Future<TracingShape> Function(String asset)? shapeLoader,
     LetterAudio? audio,
     VoiceRecorder? recorder,
@@ -42,6 +43,7 @@ class LessonController extends GetxController {
        _database = database,
        _injectedCurriculum = curriculum,
        _topicId = topicId,
+       _previewPlan = plan,
        _shapeLoader = shapeLoader ?? _loadShapeAsset,
        _audio = audio ?? LetterAudio(),
        pronunciation = PronunciationChecker(
@@ -59,7 +61,8 @@ class LessonController extends GetxController {
 
   /// Если задан, урок собирается по конкретной теме, а не спрашивается
   /// у планировщика: нажали на строку — работаем с этой темой.
-  final String? _topicId;
+  String? _topicId;
+  final LessonPlan? _previewPlan;
 
   /// Откуда берутся фигуры для обводки. В тестах подставляется, чтобы
   /// не ходить в ассеты.
@@ -211,7 +214,7 @@ class LessonController extends GetxController {
 
   /// Заголовок экрана: повторением урок считается, только если ничего
   /// нового в нём нет.
-  bool get isReviewOnly => isTopicLesson && (_plan?.newAtoms.isEmpty ?? false);
+  bool get isReviewOnly => _plan?.newAtoms.isEmpty ?? false;
 
   Exercise? get current {
     _refresh.value;
@@ -250,13 +253,17 @@ class LessonController extends GetxController {
 
     final ctx = await _context();
     _sessionId = await _progress.nextSessionId();
-    _plan = _topicId == null
-        ? LessonPlanner(curriculum: _curriculum, rules: rules).plan(
-            ctx: ctx,
-            sessionId: _sessionId,
-            sessionsWithoutNew: await _progress.sessionsWithoutNew(),
-          )
-        : _topicPlan(ctx);
+    _plan =
+        _previewPlan ??
+        (_topicId == null
+            ? LessonPlanner(curriculum: _curriculum, rules: rules).plan(
+                ctx: ctx,
+                sessionId: _sessionId,
+                sessionsWithoutNew: await _progress.sessionsWithoutNew(),
+              )
+            : _topicPlan(ctx));
+    _plan!.validate(_curriculum, rules);
+    _topicId ??= _plan!.topicId;
 
     _ownAtoms
       ..clear()
@@ -357,15 +364,7 @@ class LessonController extends GetxController {
 
   /// Какая буква из каких форм состоит — нужно, чтобы считать «буква
   /// в known» как «все её формы в known».
-  Map<String, List<String>> _formsByLetter() {
-    final result = <String, List<String>>{};
-    for (final node in _curriculum.nodes) {
-      final letterId = node.atom.letterId;
-      if (letterId == null) continue;
-      (result[letterId] ??= []).add(node.atom.id);
-    }
-    return result;
-  }
+  Map<String, List<String>> _formsByLetter() => _curriculum.formsByLetter;
 
   /// Блок «новое»: атом показан, но ещё не спрошен.
   Future<void> nextIntro() async {
@@ -719,7 +718,7 @@ class LessonController extends GetxController {
     // сессии. Освоенность букв добирается повторениями и на отметку
     // не влияет — иначе закрытый урок выглядит недоделанным.
     final topicId = _topicId;
-    if (topicId != null) {
+    if (topicId != null && _previewPlan == null) {
       await _progress.completeTopic(topicId, sessionId: _sessionId);
     }
     stage.value = LessonStage.finished;

@@ -7,6 +7,7 @@ import 'atom_state.dart';
 import 'curriculum.dart';
 import 'learning_rules.dart';
 import 'review_queue.dart';
+import 'topic_board.dart';
 
 /// Шаблон урока. Не «урок 7», а урок такого типа. См. SPEC.md §6.2.
 enum LessonTemplate { concept, newLetter, review, connection }
@@ -18,8 +19,11 @@ class LessonPlan {
     required this.reviewAtoms,
     required this.reason,
     this.spacedReview = const [],
+    this.topicId,
   });
 
+  /// Небольшой цельный блок материала; оглавление может объединять их.
+  final String? topicId;
   final LessonTemplate template;
   final List<Atom> newAtoms;
 
@@ -86,6 +90,7 @@ class LessonPlanner {
     required CurriculumContext ctx,
     required int sessionId,
     required int sessionsWithoutNew,
+    Set<String>? topicIds,
   }) {
     final deferred = _deferred(ctx, sessionId);
     final review = _reviewQueue(ctx, sessionId);
@@ -101,6 +106,16 @@ class LessonPlanner {
         // а урок-повторение работает вхолостую.
         reviewAtoms: [if (revived != null) revived, ...review],
         reason: 'отложенных ${deferred.length} > ${rules.maxDeferred}',
+      );
+    }
+
+    if (curriculum.topics.isNotEmpty) {
+      return _planByTopics(
+        ctx,
+        sessionId,
+        sessionsWithoutNew,
+        review,
+        topicIds,
       );
     }
 
@@ -144,6 +159,74 @@ class LessonPlanner {
       reason: forceNew && overloaded
           ? 'гарантия темпа: $sessionsWithoutNew сессий без новых'
           : 'обычный ввод',
+    );
+  }
+
+  LessonPlan _planByTopics(
+    CurriculumContext ctx,
+    int sessionId,
+    int sessionsWithoutNew,
+    List<String> review,
+    Set<String>? topicIds,
+  ) {
+    final board = TopicBoard(curriculum);
+    final candidates = board
+        .statuses(ctx)
+        .where(
+          (s) =>
+              s.canPractice &&
+              (topicIds == null || topicIds.contains(s.topic.id)),
+        )
+        .toList();
+    final fresh = candidates
+        .where(
+          (s) =>
+              s.topic.counterOf.any((id) => ctx.stateOf(id) == AtomState.fresh),
+        )
+        .toList();
+    // Новое понятие, к которому уже готовы, не ждёт конца алфавита.
+    final next =
+        fresh.firstWhereOrNull(
+          (s) => curriculum.nodes.any(
+            (n) =>
+                s.topic.counterOf.contains(n.atom.id) &&
+                n.atom.kind == AtomKind.concept &&
+                ctx.stateOf(n.atom.id) == AtomState.fresh,
+          ),
+        ) ??
+        fresh.firstOrNull;
+    final overloaded = _load(ctx, sessionId) > loadThreshold;
+    final force = sessionsWithoutNew >= rules.sessionsWithoutNewBeforeForcing;
+    if (next != null && (!overloaded || force)) {
+      // Весь объявленный блок обязателен, включая все формы. Если он не
+      // помещается, исправляется контент; генератор ничего не отбрасывает.
+      return board.planFor(next.topic, ctx, sessionId: sessionId, rules: rules);
+    }
+    final scope = topicIds == null
+        ? null
+        : curriculum.topics
+              .where((t) => topicIds.contains(t.id))
+              .expand((t) => t.counterOf)
+              .toSet();
+    final due = review
+        .where((id) => scope == null || scope.contains(id))
+        .toList();
+    // «Потренироваться» работает и до срока очередного повторения.
+    final familiar = curriculum.nodes
+        .where(
+          (n) =>
+              n.atom.kind != AtomKind.concept &&
+              ctx.stateOf(n.atom.id) != AtomState.fresh &&
+              (scope == null || scope.contains(n.atom.id)),
+        )
+        .map((n) => n.atom.id);
+    return _buildPlan(
+      template: LessonTemplate.review,
+      newAtoms: const [],
+      reviewAtoms: due.isNotEmpty ? due : familiar.toList(),
+      reason: overloaded
+          ? 'закрепление перед новым материалом'
+          : 'повторение знакомого',
     );
   }
 
@@ -251,5 +334,7 @@ class LessonPlanner {
           .firstOrNull;
 
   List<String> _reviewQueue(CurriculumContext ctx, int sessionId) =>
-      ReviewQueue(rules: rules).build(ctx, sessionId: sessionId);
+      ReviewQueue(
+        rules: rules,
+      ).build(ctx, sessionId: sessionId, curriculum: curriculum);
 }

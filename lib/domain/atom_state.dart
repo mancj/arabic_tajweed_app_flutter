@@ -143,6 +143,16 @@ class ProgressFold {
       lastSeenSession: entry.sessionId,
     ),
     ProgressEvent() => _applyAnswer(p, entry),
+    KnowledgeConfirmed() =>
+      p.state.index >= AtomState.known.index
+          ? p
+          : p.copyWith(
+              state: AtomState.known,
+              knownAt: entry.at,
+              weak: true,
+              lastSeenSession: entry.sessionId,
+              clearDeferred: true,
+            ),
   };
 
   AtomProgress _applyAnswer(AtomProgress p, ProgressEvent e) {
