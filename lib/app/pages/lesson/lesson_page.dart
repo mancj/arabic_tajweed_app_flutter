@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart' hide GetNumUtils;
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
+import 'package:arabic_tajweed_app/app/media/single_sound_effect.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
@@ -115,10 +118,36 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   }
 }
 
-class _ResultSheet extends StatelessWidget {
+class _ResultSheet extends StatefulWidget {
   const _ResultSheet({required this.controller});
 
   final LessonController controller;
+
+  @override
+  State<_ResultSheet> createState() => _ResultSheetState();
+}
+
+class _ResultSheetState extends State<_ResultSheet> {
+  SingleSoundEffect? _correctAnswerSound;
+
+  LessonController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (controller.wasCorrect.value) {
+      _correctAnswerSound = SingleSoundEffect(
+        assetPath: 'audio/correct_answer.m4a',
+      );
+      unawaited(_correctAnswerSound!.play());
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_correctAnswerSound?.dispose());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -449,7 +478,7 @@ class _TracingTask extends GetView<LessonController> {
     return Obx(() {
       final atom = controller.current!.atom;
       return TracingCard(
-        key: ValueKey('tracing.${controller.exerciseIndex}'),
+        key: ValueKey('tracing.${_visibleExerciseIndex(controller)}'),
         badge: 'Задание',
         title: prompt,
         hint: controller.tracingHint.value,
@@ -460,7 +489,7 @@ class _TracingTask extends GetView<LessonController> {
         onAutoPlay: controller.hasVoice(atom)
             ? () => controller.startVoice(atom)
             : null,
-        autoPlay: false,
+        autoPlay: _canAutoPlay(controller),
         track: controller.voiceTrack,
         playbackKey: atom.display,
         controller: controller.drawing,
@@ -666,7 +695,7 @@ class _QuestionFor extends GetView<LessonController> {
             // Без ключа карточка не пересоздаётся между заданиями, а звук
             // запускается сам только у новой карточки.
             LetterWidgetCard(
-              key: ValueKey('sound.${controller.exerciseIndex}'),
+              key: ValueKey('sound.${_visibleExerciseIndex(controller)}'),
               letter: '?',
               glyph: SvgPicture.asset(
                 UISVGAssets.questionMark,
@@ -682,7 +711,7 @@ class _QuestionFor extends GetView<LessonController> {
               subtitle: named ? atom.label : null,
               onPlay: hasVoice ? () => controller.playVoice(atom) : null,
               onAutoPlay: () => controller.startVoice(atom),
-              autoPlay: false,
+              autoPlay: _canAutoPlay(controller),
               track: controller.voiceTrack,
             ),
             if (!named)
@@ -697,7 +726,7 @@ class _QuestionFor extends GetView<LessonController> {
         );
       }),
       ExerciseMode.positionToForm => LetterWidgetCard(
-        key: ValueKey('position.${controller.exerciseIndex}'),
+        key: ValueKey('position.${_visibleExerciseIndex(controller)}'),
         letter: (exercise.prompt ?? atom).display,
         isArabic: true,
         labelText: 'Вопрос',
@@ -705,7 +734,7 @@ class _QuestionFor extends GetView<LessonController> {
         questionAccent: atom.form?.inWord,
         onPlay: hasVoice ? () => controller.playVoice(atom) : null,
         onAutoPlay: () => controller.startVoice(atom),
-        autoPlay: false,
+        autoPlay: _canAutoPlay(controller),
         track: controller.voiceTrack,
       ),
       // Старые режимы с именем буквы: в уроках не строятся, см. ExerciseMode.
@@ -735,6 +764,14 @@ class _QuestionFor extends GetView<LessonController> {
 String _tracingPrompt(Exercise exercise) => exercise.mode == ExerciseMode.trace
     ? 'Обведите по контуру: ${exercise.atom.label}'
     : 'Напишите по памяти: ${exercise.atom.label}';
+
+int _visibleExerciseIndex(LessonController controller) {
+  final index = controller.exerciseIndex;
+  return controller.wasCorrect.value ? index - 1 : index;
+}
+
+bool _canAutoPlay(LessonController controller) =>
+    !controller.wasCorrect.value && !controller.wasWrong.value;
 
 String _promptFor(Exercise exercise) => switch (exercise.mode) {
   ExerciseMode.positionToForm =>
@@ -869,7 +906,7 @@ class _LetterCardFor extends GetView<LessonController> {
                 ? () => controller.playVoice(atom)
                 : null,
             onAutoPlay: () => controller.startVoice(atom),
-            autoPlay: false,
+            autoPlay: true,
             track: controller.voiceTrack,
           )
           .animate()

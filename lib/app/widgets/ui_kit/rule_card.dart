@@ -36,7 +36,7 @@ class RuleCard extends StatelessWidget {
         color: UIColors.cardBackground,
         borderRadius: 24,
         cornerSmoothing: 0,
-        borderSide: BorderSide(color: UIColors.highlightArea),
+        borderSide: BorderSide(color: UIColors.borders),
         shadows: [
           BoxShadow(
             color: UIColors.shadows,

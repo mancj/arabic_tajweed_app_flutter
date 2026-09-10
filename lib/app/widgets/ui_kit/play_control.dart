@@ -53,6 +53,7 @@ class _PlayControlState extends State<PlayControl> {
   @override
   void didUpdateWidget(covariant PlayControl oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.autoPlay && !widget.autoPlay) _autoPlay?.cancel();
     // В уроке карточка нередко остаётся на месте, а меняется только глиф —
     // для звука это такое же появление буквы, как и новая карточка.
     if (oldWidget.letter != widget.letter) _scheduleAutoPlay();

@@ -47,7 +47,7 @@ class CircleButton extends StatelessWidget {
           ),
           border: showBorder
               ? Border.all(
-                  color: UIColors.circleButtonBottom,
+                  color: UIColors.badgeText2.withValues(alpha: .4),
                   width: borderWidth,
                 )
               : null,

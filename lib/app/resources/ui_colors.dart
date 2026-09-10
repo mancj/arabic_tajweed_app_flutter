@@ -12,8 +12,15 @@ class UIColors {
     secondary1: Color(0xFF8C92A2),
     secondary2: Color(0xFF6F7F91),
     primary: Color(0xFFEE7740),
-    primary40: Color(0x66EE7740),
+    primary10: Color(0x1AEE7740),
     primary20: Color(0x33EE7740),
+    primary30: Color(0x4DEE7740),
+    primary40: Color(0x66EE7740),
+    primary50: Color(0x80EE7740),
+    primary60: Color(0x99EE7740),
+    primary70: Color(0xB3EE7740),
+    primary80: Color(0xCCEE7740),
+    primary90: Color(0xE6EE7740),
     backgroundShapes2: Color(0xFFDDDDDD),
     backgroundShapes1: Color(0xFFE3E3E3),
     text: Color(0xFF0C233E),
@@ -34,8 +41,15 @@ class UIColors {
     secondary1: Color(0xFF8990A0),
     secondary2: Color(0xFF627182),
     primary: Color(0xFFEE7740),
-    primary40: Color(0x66EE7740),
+    primary10: Color(0x1AEE7740),
     primary20: Color(0x33EE7740),
+    primary30: Color(0x4DEE7740),
+    primary40: Color(0x66EE7740),
+    primary50: Color(0x80EE7740),
+    primary60: Color(0x99EE7740),
+    primary70: Color(0xB3EE7740),
+    primary80: Color(0xCCEE7740),
+    primary90: Color(0xE6EE7740),
     backgroundShapes2: Color(0xFF1C3553),
     backgroundShapes1: Color(0xFF223B5B),
     text: Color(0xFFFFFFFF),
@@ -61,8 +75,15 @@ class UIColors {
   static Color get secondary1 => _active.secondary1;
   static Color get secondary2 => _active.secondary2;
   static Color get primary => _active.primary;
-  static Color get primary40 => _active.primary40;
+  static Color get primary10 => _active.primary10;
   static Color get primary20 => _active.primary20;
+  static Color get primary30 => _active.primary30;
+  static Color get primary40 => _active.primary40;
+  static Color get primary50 => _active.primary50;
+  static Color get primary60 => _active.primary60;
+  static Color get primary70 => _active.primary70;
+  static Color get primary80 => _active.primary80;
+  static Color get primary90 => _active.primary90;
   static Color get backgroundShapes2 => _active.backgroundShapes2;
   static Color get backgroundShapes1 => _active.backgroundShapes1;
   static Color get text => _active.text;
@@ -87,8 +108,15 @@ class UIColorPalette {
   final Color secondary1;
   final Color secondary2;
   final Color primary;
-  final Color primary40;
+  final Color primary10;
   final Color primary20;
+  final Color primary30;
+  final Color primary40;
+  final Color primary50;
+  final Color primary60;
+  final Color primary70;
+  final Color primary80;
+  final Color primary90;
   final Color backgroundShapes2;
   final Color backgroundShapes1;
   final Color text;
@@ -109,8 +137,15 @@ class UIColorPalette {
     required this.secondary1,
     required this.secondary2,
     required this.primary,
-    required this.primary40,
+    required this.primary10,
     required this.primary20,
+    required this.primary30,
+    required this.primary40,
+    required this.primary50,
+    required this.primary60,
+    required this.primary70,
+    required this.primary80,
+    required this.primary90,
     required this.backgroundShapes2,
     required this.backgroundShapes1,
     required this.text,

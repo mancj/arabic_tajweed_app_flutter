@@ -129,7 +129,7 @@ class LetterWidgetCard extends StatelessWidget {
           color: UIColors.cardBackground,
           borderRadius: _shape,
           border: Border.all(
-            color: UIColors.highlightArea.withValues(alpha: .3),
+            color: UIColors.borders,
           ),
           boxShadow: [
             BoxShadow(
@@ -158,14 +158,30 @@ class LetterWidgetCard extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
+                  // Декоративный фон — самый нижний слой карточки: он не
+                  // должен перекрывать ни заголовок, ни аудиоволну.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Transform.translate(
+                        offset: const Offset(0, -_decorRise),
+                        child: OverflowBox(
+                          alignment: Alignment.center,
+                          maxWidth: decorSide,
+                          maxHeight: decorSide,
+                          child: SizedBox.square(
+                            dimension: decorSide,
+                            child: _backgroundShapes(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   if (_playable)
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
                       child: WaveformWidget(
-                        strokeColor: UIColors.primary40,
-                        fillColor: UIColors.primary20,
                         strokeWidth: .5,
                         height: 100,
                         layers: 3,
@@ -193,11 +209,12 @@ class LetterWidgetCard extends StatelessWidget {
                                     color: UIColors.text,
                                   ),
                                 if (question != null) ...[
-                                  const Margin.vertical(4),
+                                  const Margin.vertical(8),
                                   Text.rich(
                                     _questionSpan(),
                                     style: UITextStyles.cardTitle.copyWith(
                                       color: UIColors.text,
+                                      height: 1.1,
                                     ),
                                   ),
                                 ],
@@ -205,7 +222,7 @@ class LetterWidgetCard extends StatelessWidget {
                             ),
                           ),
                         const Margin.vertical(12),
-                        _glyph(decorSide),
+                        _glyph(),
                         if (_playable) ...[
                           const Margin.vertical(32),
                           PlayControl(
@@ -229,26 +246,14 @@ class LetterWidgetCard extends StatelessWidget {
     );
   }
 
-  /// Буква вместе с узором: узор лежит в её боксе и центруется по нему,
-  /// поэтому остаётся вокруг буквы, куда бы ту ни поставила раскладка
-  /// карточки. Размером узора распоряжается [side] — ширина карточки:
-  /// [OverflowBox] снимает ограничение бокса, и квадрат узора выходит
-  /// за букву во все стороны.
-  Widget _glyph(double side) => SizedBox(
+  /// Буква вместе с узором. Фон вынесен в общий нижний слой карточки,
+  /// поэтому здесь остаётся только глиф и его анимация.
+  Widget _glyph() => SizedBox(
     height: 80,
     child: Stack(
       alignment: Alignment.center,
       clipBehavior: Clip.none,
       children: [
-        Transform.translate(
-          offset: const Offset(0, -_decorRise),
-          child: OverflowBox(
-            key: kDebugMode ? UniqueKey() : null,
-            maxWidth: side,
-            maxHeight: side,
-            child: SizedBox.square(dimension: side, child: _backgroundShapes()),
-          ),
-        ),
         // Глиф уезжает за наклоном сильнее фона — так буква
         // отделяется от подложки и кажется ближе к зрителю.
         Positioned(

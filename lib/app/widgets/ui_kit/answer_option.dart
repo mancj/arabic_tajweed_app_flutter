@@ -34,7 +34,7 @@ class AnswerOption extends StatelessWidget {
         decoration: SquircleBorders.squircleBorder(
           color: UIColors.cardBackground,
           borderRadius: 18,
-          borderSide: BorderSide(color: UIColors.highlightArea),
+          borderSide: BorderSide(color: UIColors.borders),
           // Выбранный вариант в макете чуть приподнят над списком.
           shadows: selected
               ? [

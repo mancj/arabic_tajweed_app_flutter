@@ -130,18 +130,8 @@ class _AppScaffoldState extends State<AppScaffold> {
             ),
           ),
           Positioned.fill(
-            child: GlassScrollEdgeEffect(
-              // Живой контент под шапкой размывается прогрессивно, а не
-              // прячется под заливку — иначе паттерн фона пропал бы.
-              style: GlassScrollEdgeStyle.blur,
-              maxSigma: widget.edgeBlurSigma,
-              topFadeHeight: headerZone + AppScaffold._headerHeight,
-              bottomFadeHeight: bottomZone,
-              // Builder даёт содержимому контекст ниже каркаса — иначе
-              // страница строила бы его в контексте над Scaffold.
-              child: Builder(
-                builder: (context) => widget.builder(context, contentInsets),
-              ),
+            child: Builder(
+              builder: (context) => widget.builder(context, contentInsets),
             ),
           ),
           Positioned(

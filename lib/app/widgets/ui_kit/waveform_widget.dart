@@ -246,8 +246,8 @@ class _WaveformWidgetState extends State<WaveformWidget>
         painter: _WaveformPainter(
           layers: _layers,
           pulse: _pulse,
-          strokeColor: widget.strokeColor ?? UIColors.secondary2,
-          fillColor: widget.fillColor,
+          strokeColor: widget.strokeColor ?? UIColors.primary60,
+          fillColor: widget.fillColor ?? UIColors.primary20,
           strokeWidth: widget.strokeWidth,
           amplitude: widget.amplitude,
           restHeight: widget.restHeight,
