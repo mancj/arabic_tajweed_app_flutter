@@ -282,7 +282,7 @@ class LetterWidgetCard extends StatelessWidget {
                       offset: const Offset(2, 2),
                       blurRadius: 16,
                       spreadRadius: 8,
-                      color: UIColors.shadows,
+                      color: UIColors.cardBackground.withValues(alpha: .5),
                     ),
                   ],
                 ),

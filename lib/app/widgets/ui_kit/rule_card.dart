@@ -40,7 +40,7 @@ class RuleCard extends StatelessWidget {
         shadows: [
           BoxShadow(
             color: UIColors.shadows,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
             blurRadius: 1.5,
           ),
         ],
@@ -52,7 +52,7 @@ class RuleCard extends StatelessWidget {
             BadgeLabel(
               text: badge,
               color: UIColors.primary,
-              textColor: UIColors.badgeText2,
+              textColor: UIColors.badgeText1,
             ),
             const Margin.vertical(8),
           ],

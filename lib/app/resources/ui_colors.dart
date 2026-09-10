@@ -98,6 +98,16 @@ class UIColors {
   static Color get badgeText1 => _active.badgeText1;
   static Color get primaryButtonText => _active.primaryButtonText;
   static Color get badgeText2 => _active.badgeText2;
+  static Color get white10 => _active.white10;
+  static Color get white20 => _active.white20;
+  static Color get white30 => _active.white30;
+  static Color get white40 => _active.white40;
+  static Color get white50 => _active.white50;
+  static Color get white60 => _active.white60;
+  static Color get white70 => _active.white70;
+  static Color get white80 => _active.white80;
+  static Color get white90 => _active.white90;
+  static Color get white => _active.white;
 
   /// Служебная прозрачность: это не цветовой токен интерфейса.
   static const transparent = Color(0x00000000);
@@ -131,6 +141,16 @@ class UIColorPalette {
   final Color primaryButtonText = const Color(0xFFFFFFFF);
   final Color badgeText1;
   final Color badgeText2;
+  final Color white10 = const Color(0x1AFFFFFF);
+  final Color white20 = const Color(0x33FFFFFF);
+  final Color white30 = const Color(0x4DFFFFFF);
+  final Color white40 = const Color(0x66FFFFFF);
+  final Color white50 = const Color(0x80FFFFFF);
+  final Color white60 = const Color(0x99FFFFFF);
+  final Color white70 = const Color(0xB3FFFFFF);
+  final Color white80 = const Color(0xCCFFFFFF);
+  final Color white90 = const Color(0xE6FFFFFF);
+  final Color white = const Color(0xFFFFFFFF);
 
   const UIColorPalette({
     required this.pageBackground,

@@ -23,21 +23,28 @@ final ta = letter('ta', confusable: ['ba', 'tha']);
 final tha = letter('tha', confusable: ['ba', 'ta']);
 final siin = letter('siin');
 final miim = letter('miim');
-final baFinal = Atom(
+const baFinal = Atom(
   id: 'ba.finalForm',
   kind: AtomKind.letterForm,
   display: 'ـب',
   letterId: 'ba',
   form: LetterForm.finalForm,
 );
-final baInitial = Atom(
+const baInitial = Atom(
   id: 'ba.initial',
   kind: AtomKind.letterForm,
   display: 'بـ',
   letterId: 'ba',
   form: LetterForm.initial,
 );
-final concept = const Atom(
+const baMedial = Atom(
+  id: 'ba.medial',
+  kind: AtomKind.letterForm,
+  display: 'ـبـ',
+  letterId: 'ba',
+  form: LetterForm.medial,
+);
+const concept = Atom(
   id: 'concept.dots',
   kind: AtomKind.concept,
   display: 'Точки',
@@ -46,7 +53,17 @@ final concept = const Atom(
 final curriculum = Curriculum(
   topics: const [],
   nodes: [
-    for (final a in [ba, ta, tha, siin, miim, baFinal, baInitial, concept])
+    for (final a in [
+      ba,
+      ta,
+      tha,
+      siin,
+      miim,
+      baFinal,
+      baInitial,
+      baMedial,
+      concept,
+    ])
       CurriculumNode(atom: a, requirement: const Always()),
   ],
 );
@@ -310,7 +327,7 @@ void main() {
   /// же форме, о позиции — формы той же буквы. См. SPEC.md §4.
   group('выбор без имени буквы', () {
     final ctx = ctxOf({
-      for (final a in [ba, ta, tha, siin, miim, baFinal, baInitial])
+      for (final a in [ba, ta, tha, siin, miim, baFinal, baInitial, baMedial])
         a.id: introduced,
     });
 
@@ -334,7 +351,7 @@ void main() {
       }
     });
 
-    test('вопрос о позиции предлагает формы той же буквы', () {
+    test('формы буквы раскладываются по трём позициям', () {
       final byPosition = many().where(
         (e) => e.mode == ExerciseMode.positionToForm,
       );
@@ -343,22 +360,30 @@ void main() {
         final prompt = e.prompt;
         expect(prompt, isNotNull, reason: 'в вопросе показана форма буквы');
         expect(prompt!.letterId, e.atom.letterId);
-        expect(prompt.id, isNot(e.atom.id), reason: 'иначе ответ виден');
-        if (e.atom.form != LetterForm.isolated) {
-          expect(
-            prompt.form,
-            LetterForm.isolated,
-            reason: 'в вопросе отдельная форма, если спрашивают не её',
-          );
-        }
+        expect(prompt.form, LetterForm.isolated);
         expect(e.options.map((o) => o.letterId).toSet(), {e.atom.letterId});
-        expect(e.options.map((o) => o.id).toSet().length, e.options.length);
+        expect(e.options, hasLength(3));
+        expect(e.options.map((o) => o.form).toSet(), {
+          LetterForm.initial,
+          LetterForm.medial,
+          LetterForm.finalForm,
+        });
+        expect(
+          e.options.map((o) => o.form),
+          isNot(
+            orderedEquals(const [
+              LetterForm.initial,
+              LetterForm.medial,
+              LetterForm.finalForm,
+            ]),
+          ),
+          reason: 'плитки не должны сразу стоять в верном порядке',
+        );
         expect(
           e.options.map((o) => o.id),
           isNot(contains(prompt.id)),
-          reason: 'показанную форму выбирать нет смысла',
+          reason: 'отдельная форма остаётся только образцом',
         );
-        expect(e.options.length, greaterThanOrEqualTo(2));
       }
     });
 

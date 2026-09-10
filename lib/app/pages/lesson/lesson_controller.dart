@@ -80,6 +80,10 @@ class LessonController extends GetxController {
   final selected = Rxn<int>();
   final wasWrong = false.obs;
 
+  /// Номер попытки в задании с тремя формами. После разбора ошибки виджет
+  /// получает новый ключ и снова начинает с первого слота.
+  final formSequenceAttempt = 0.obs;
+
   /// Правильный ответ показывается до перехода, чтобы человек успел увидеть
   /// результат и понять, что именно засчиталось.
   final wasCorrect = false.obs;
@@ -631,6 +635,29 @@ class LessonController extends GetxController {
     selected.value = index;
   }
 
+  /// Три слота проверяются только вместе, после заполнения последнего.
+  Future<void> submitFormSequence(List<Atom> placed) async {
+    final exercise = _session?.current;
+    if (exercise == null ||
+        exercise.mode != ExerciseMode.positionToForm ||
+        wasWrong.value ||
+        wasCorrect.value) {
+      return;
+    }
+    const expected = [
+      LetterForm.initial,
+      LetterForm.medial,
+      LetterForm.finalForm,
+    ];
+    final correct =
+        placed.length == expected.length &&
+        listEquals(placed.map((atom) => atom.form).toList(), expected);
+    selected.value = correct
+        ? exercise.answerIndex
+        : (exercise.answerIndex + 1) % exercise.options.length;
+    await submit();
+  }
+
   /// Только для отладки: засчитать текущее задание верным, каким бы оно
   /// ни было. В отличие от пропуска ответ пишется в лог как чистый —
   /// так можно быстро прогнать курс с настоящим прогрессом букв, сохранив
@@ -690,6 +717,9 @@ class LessonController extends GetxController {
       // Верный ответ уже показан — это подтверждение, а не новая попытка.
       wasWrong.value = false;
       selected.value = null;
+      if (exercise.mode == ExerciseMode.positionToForm) {
+        formSequenceAttempt.value++;
+      }
       _refresh.value++;
       // Холст после разбора чистый: задание осталось тем же, и человек
       // пишет букву заново, а не поверх своей ошибки. С голосом так же:

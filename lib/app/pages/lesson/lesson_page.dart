@@ -15,6 +15,7 @@ import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/record_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/question_card.dart';
@@ -155,6 +156,7 @@ class _ResultSheetState extends State<_ResultSheet> {
     final exercise = controller.current;
     final label = exercise?.atom.label ?? 'ответ';
     final isPronunciation = exercise?.mode == ExerciseMode.sayName;
+    final isFormSequence = exercise?.mode == ExerciseMode.positionToForm;
     final check = controller.pronunciation.result.value;
 
     final title = correct
@@ -165,11 +167,15 @@ class _ResultSheetState extends State<_ResultSheet> {
               ? 'Слышно: ${check.heard}.'
               : isPronunciation
               ? 'Ответ засчитан.'
+              : isFormSequence
+              ? 'Все формы расставлены по своим местам.'
               : exercise?.mode.isTracing == true
               ? 'Буква $label написана правильно.'
               : 'Правильный ответ: $label.'
         : isPronunciation && check != null
         ? 'Услышано: ${check.heard}. Это буква $label.'
+        : isFormSequence
+        ? 'Проверьте порядок форм и попробуйте ещё раз.'
         : exercise?.mode.isTracing == true
         ? 'Попробуйте написать букву $label ещё раз.'
         : 'Правильный ответ: $label.';
@@ -255,6 +261,7 @@ class _BottomBar extends GetView<LessonController> {
         final exercise = controller.current;
         final isTracing = controller.isTracingTask;
         final isSayName = controller.isSayNameTask;
+        final isFormSequence = exercise?.mode == ExerciseMode.positionToForm;
 
         // У заглушки нет своей проверки — обе ветки задаёт человек.
         // TODO(stub): убрать вторую кнопку вместе с заглушками.
@@ -275,6 +282,8 @@ class _BottomBar extends GetView<LessonController> {
               _TracingBar(mode: exercise!.mode)
             else if (isSayName)
               const _RecordBar()
+            else if (isFormSequence)
+              const SizedBox.shrink()
             else if (isStub)
               Row(
                 mainAxisSize: MainAxisSize.max,
@@ -635,6 +644,15 @@ class _ExerciseBlock extends GetView<LessonController> {
           const Margin.vertical(16),
           if (exercise.mode == ExerciseMode.sayName)
             _SayNameFeedback(exercise: exercise)
+          else if (exercise.mode == ExerciseMode.positionToForm)
+            FormSequenceExercise(
+              key: ValueKey(
+                'form-sequence.${_visibleExerciseIndex(controller)}.'
+                '${controller.formSequenceAttempt.value}',
+              ),
+              options: exercise.options,
+              onCompleted: controller.submitFormSequence,
+            )
           else if (exercise.isChoice)
             ...exercise.options.mapIndexed(
               (index, option) => Padding(
@@ -731,7 +749,6 @@ class _QuestionFor extends GetView<LessonController> {
         isArabic: true,
         labelText: 'Вопрос',
         question: _promptFor(exercise),
-        questionAccent: atom.form?.inWord,
         onPlay: hasVoice ? () => controller.playVoice(atom) : null,
         onAutoPlay: () => controller.startVoice(atom),
         autoPlay: _canAutoPlay(controller),
@@ -774,8 +791,7 @@ bool _canAutoPlay(LessonController controller) =>
     !controller.wasCorrect.value && !controller.wasWrong.value;
 
 String _promptFor(Exercise exercise) => switch (exercise.mode) {
-  ExerciseMode.positionToForm =>
-    'Как эта буква пишется ${exercise.atom.form?.inWord ?? 'в слове'}?',
+  ExerciseMode.positionToForm => 'Расставьте формы буквы по местам',
   ExerciseMode.formToName =>
     exercise.atom.kind == AtomKind.syllable
         ? 'Какие буквы здесь соединены?'

@@ -311,21 +311,31 @@ class ExerciseGenerator {
       );
     }
 
-    // Формы одной буквы: «как она пишется в середине?» В вопросе показана
-    // отдельная форма — та, с которой букву узнали. Когда спрашивают саму
-    // отдельную, показывают любую другую введённую. В ответах — спрашиваемая
-    // и остальные, кроме показанной: она уже на экране, выбирать её нет
-    // смысла. Нужны хотя бы две формы кроме спрашиваемой, иначе вариант
-    // всего один.
-    final forms = _otherFormsOf(atom, pool);
-    if (forms.length >= 2 &&
+    // Позиционные формы одной буквы собираются в одном задании: отдельная
+    // форма остаётся образцом, а начальную, срединную и конечную человек
+    // последовательно раскладывает по трём слотам. Пока хотя бы одна форма
+    // не введена, это упражнение не показываем.
+    final family = [atom, ..._otherFormsOf(atom, pool)];
+    final prompt = family.firstWhereOrNull(
+      (form) => form.form == LetterForm.isolated,
+    );
+    final forms = [
+      for (final position in const [
+        LetterForm.initial,
+        LetterForm.medial,
+        LetterForm.finalForm,
+      ])
+        family.firstWhereOrNull((form) => form.form == position),
+    ].nonNulls.toList();
+    if (prompt != null &&
+        forms.length == 3 &&
+        forms.contains(atom) &&
         ((focused && !p.modesInStreak.contains(ExerciseMode.positionToForm)) ||
             _random.nextInt(3) == 0)) {
-      final prompt =
-          forms.firstWhereOrNull((f) => f.form == LetterForm.isolated) ??
-          forms[_random.nextInt(forms.length)];
-      final options = [atom, ...forms.where((f) => f != prompt)]
-        ..shuffle(_random);
+      final options = [...forms]..shuffle(_random);
+      if (const ListEquality<Atom>().equals(options, forms)) {
+        options.swap(0, 1);
+      }
       return Exercise(
         atom: atom,
         mode: ExerciseMode.positionToForm,
@@ -536,8 +546,8 @@ class ExerciseGenerator {
     return _Picked(chosen, shuffled.take(_distractorCount).toList());
   }
 
-  /// Остальные введённые формы той же буквы — варианты для вопроса
-  /// «как она пишется в этой позиции?» и то, что показать в самом вопросе.
+  /// Остальные введённые формы той же буквы — образец и плитки задания
+  /// на раскладывание форм по позициям.
   List<Atom> _otherFormsOf(Atom atom, List<Atom> pool) => atom.form == null
       ? const []
       : pool
