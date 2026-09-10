@@ -25,7 +25,7 @@ class LessonProgressBar extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: UIColors.orange.withValues(alpha: .2),
+        color: UIColors.primary20,
         borderRadius: BorderRadius.circular(height / 2),
       ),
       child: Align(
@@ -35,7 +35,7 @@ class LessonProgressBar extends StatelessWidget {
           heightFactor: 1,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: UIColors.orange,
+              color: UIColors.primary,
               borderRadius: BorderRadius.circular(height / 4),
             ),
           ),

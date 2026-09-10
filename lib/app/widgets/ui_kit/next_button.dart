@@ -51,13 +51,13 @@ class NextButton extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [UIColors.orange, UIColors.orangeButtonBottom],
+              colors: [UIColors.primary, UIColors.primaryButtonBottom],
               stops: [0.234, 1],
             ),
             boxShadow: [
               for (final (alpha, dy, blur) in _shadows)
                 BoxShadow(
-                  color: UIColors.buttonShadow.withValues(alpha: alpha),
+                  color: UIColors.primaryButtonShadow.withValues(alpha: alpha),
                   offset: Offset(0, dy),
                   blurRadius: blur,
                 ),
@@ -67,12 +67,12 @@ class NextButton extends StatelessWidget {
             borderRadius: _borderRadius,
             shadows: [
               InnerShadow(
-                color: UIColors.buttonShadow.withValues(alpha: 0.2),
+                color: UIColors.primaryButtonShadow.withValues(alpha: 0.2),
                 offset: const Offset(0, -3),
                 blur: 6,
               ),
               const InnerShadow(
-                color: UIColors.orangeInnerHighlight,
+                color: UIColors.primaryButtonHighlight,
                 offset: Offset(0, -3),
                 blur: 2,
               ),
@@ -85,7 +85,7 @@ class NextButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 20, color: UIColors.white),
+                      Icon(icon, size: 20, color: UIColors.highlightArea),
                       const SizedBox(width: 10),
                     ],
                     Flexible(
@@ -96,7 +96,7 @@ class NextButton extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                           height: 1.2,
-                          color: UIColors.white,
+                          color: UIColors.highlightArea,
                         ),
                       ),
                     ),
@@ -105,12 +105,12 @@ class NextButton extends StatelessWidget {
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: UITextStyles.fontOnest,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                       height: 1.2,
-                      color: UIColors.whiteHalf,
+                      color: UIColors.highlightArea.withValues(alpha: .5),
                     ),
                   ),
               ],

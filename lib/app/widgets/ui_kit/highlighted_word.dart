@@ -13,7 +13,7 @@ class HighlightedWord extends StatelessWidget {
     required this.index,
     this.fontSize = 64,
     this.color = UIColors.text,
-    this.highlight = UIColors.highlight,
+    this.highlight = UIColors.primary,
     Key? key,
   }) : super(key: key);
 

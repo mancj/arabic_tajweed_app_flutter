@@ -21,7 +21,7 @@ class CircleButton extends StatelessWidget {
     this.onPressStart,
     this.onPressEnd,
     this.size = 42,
-    this.color = UIColors.orange,
+    this.color = UIColors.primary,
     this.showBorder = true,
     this.borderWidth = 1,
     this.child,
@@ -41,16 +41,19 @@ class CircleButton extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            colors: [UIColors.orange, UIColors.orangeLight],
+            colors: [UIColors.primary, UIColors.circleButtonBottom],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
           border: showBorder
-              ? Border.all(color: UIColors.orangeLight, width: borderWidth)
+              ? Border.all(
+                  color: UIColors.circleButtonBottom,
+                  width: borderWidth,
+                )
               : null,
           boxShadow: const [
             BoxShadow(
-              color: UIColors.cardShadow,
+              color: UIColors.circleButtonShadow,
               spreadRadius: 1,
               blurRadius: 8,
 

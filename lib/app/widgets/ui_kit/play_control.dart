@@ -100,7 +100,7 @@ class _PlayControlState extends State<PlayControl> {
               isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
               key: ValueKey(isPlaying),
               size: 24,
-              color: UIColors.white,
+              color: UIColors.highlightArea,
             ),
           ),
         ),
@@ -116,7 +116,7 @@ class _PlayControlState extends State<PlayControl> {
             textAlign: TextAlign.center,
             style: UITextStyles.regular10.copyWith(
               height: 1.1,
-              color: UIColors.secondary3,
+              color: UIColors.secondary2,
             ),
           ),
         ),

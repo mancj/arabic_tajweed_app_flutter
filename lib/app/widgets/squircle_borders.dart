@@ -12,7 +12,7 @@ class SquircleBorders {
     List<BoxShadow>? shadows,
   }) {
     return ShapeDecoration(
-      color: color ?? UIColors.white,
+      color: color ?? UIColors.highlightArea,
       shape: SmoothRectangleBorder(
         borderRadius: SmoothBorderRadius(
           cornerRadius: borderRadius,

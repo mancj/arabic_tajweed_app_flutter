@@ -153,7 +153,7 @@ class _DebugTile extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: UIColors.itemBackground,
+            color: UIColors.cardBackground,
           ),
           child: Row(
             children: [
@@ -169,7 +169,7 @@ class _DebugTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: UIColors.secondary3),
+              const Icon(Icons.chevron_right, color: UIColors.secondary2),
             ],
           ),
         ),

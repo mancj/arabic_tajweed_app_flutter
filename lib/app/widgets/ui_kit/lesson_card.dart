@@ -36,10 +36,12 @@ class LessonCard extends StatelessWidget {
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
         borderRadius: 24,
-        borderSide: BorderSide(color: UIColors.white.withValues(alpha: .3)),
+        borderSide: BorderSide(
+          color: UIColors.highlightArea.withValues(alpha: .3),
+        ),
         shadows: const [
           BoxShadow(
-            color: UIColors.cardShadow,
+            color: UIColors.borders,
             spreadRadius: 1,
             blurRadius: 8,
             offset: Offset(0, 2),
@@ -56,7 +58,7 @@ class LessonCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    BadgeLabel(text: badge, color: UIColors.ink),
+                    BadgeLabel(text: badge, color: UIColors.text),
                     const Margin.vertical(8),
                     Text(title, style: UITextStyles.cardTitle),
                   ],

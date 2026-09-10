@@ -105,7 +105,7 @@ class _LetterCard extends StatelessWidget {
               fontFamily: UITextStyles.fontOnest,
               fontWeight: FontWeight.w500,
               fontSize: 15 * k,
-              color: UIColors.tealDark,
+              color: UIColors.secondary2,
             ),
           ),
         ),
@@ -132,7 +132,7 @@ class _LetterCard extends StatelessWidget {
                 fontFamily: UITextStyles.fontScheherazadeNew,
                 fontVariations: UITextStyles.rubik(500),
                 fontSize: 133.5 * k,
-                color: UIColors.ink,
+                color: UIColors.text,
               ),
             ),
           ),
@@ -148,7 +148,7 @@ class _LetterCard extends StatelessWidget {
               fontFamily: UITextStyles.fontOnest,
               fontWeight: FontWeight.w600,
               fontSize: 22 * k,
-              color: UIColors.ink,
+              color: UIColors.text,
             ),
           ),
         ),
@@ -162,7 +162,7 @@ class _LetterCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: UITextStyles.fontSerif,
               fontSize: 17 * k,
-              color: UIColors.ink,
+              color: UIColors.text,
             ),
           ),
         ),
@@ -189,15 +189,12 @@ class _FormCard extends StatelessWidget {
         return Container(
           height: _height * k,
           decoration: SquircleBorders.squircleBorder(
-            color: UIColors.white,
+            color: UIColors.highlightArea,
             borderRadius: 16,
-            borderSide: const BorderSide(
-              color: UIColors.cardBorder,
-              width: 0.6,
-            ),
+            borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
             shadows: const [
               BoxShadow(
-                color: UIColors.cardShadowMedium,
+                color: UIColors.borders,
                 offset: Offset(0, 3),
                 blurRadius: 1.5,
               ),
@@ -228,7 +225,7 @@ class _FormCard extends StatelessWidget {
                       fontFamily: UITextStyles.fontScheherazadeNew,
                       fontWeight: FontWeight.w500,
                       fontSize: 50.4 * k,
-                      color: UIColors.coral,
+                      color: UIColors.secondary1,
                     ),
                   ),
                 ),
@@ -246,7 +243,7 @@ class _FormCard extends StatelessWidget {
                     fontSize: 10,
                     height: 1,
                     overflow: TextOverflow.ellipsis,
-                    color: UIColors.steel,
+                    color: UIColors.secondary1,
                   ),
                 ),
               ),
@@ -259,7 +256,7 @@ class _FormCard extends StatelessWidget {
                     fontFamily: UITextStyles.fontPlayfair,
                     fontVariations: UITextStyles.playfair(500),
                     fontSize: 14,
-                    color: UIColors.steel,
+                    color: UIColors.secondary1,
                   ),
                 ),
               ),
@@ -281,12 +278,12 @@ class _PronunciationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: SquircleBorders.squircleBorder(
-        color: UIColors.white,
+        color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.cardBorder, width: 0.6),
+        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
         shadows: const [
           BoxShadow(
-            color: UIColors.cardShadowSoft,
+            color: UIColors.borders,
             offset: Offset(0, 4),
             blurRadius: 1.95,
           ),
@@ -298,7 +295,7 @@ class _PronunciationCard extends StatelessWidget {
             child: CircleButton(
               child: const Icon(
                 Icons.play_arrow_rounded,
-                color: UIColors.white,
+                color: UIColors.highlightArea,
                 size: 24,
               ),
             ),
@@ -314,7 +311,7 @@ class _PronunciationCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: UITextStyles.fontOnest,
                     fontSize: 17,
-                    color: UIColors.black,
+                    color: UIColors.text,
                   ),
                 ),
                 Margin.vertical(4),
@@ -323,7 +320,7 @@ class _PronunciationCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: UITextStyles.fontOnest,
                     fontSize: 13,
-                    color: UIColors.steelLight,
+                    color: UIColors.secondary2,
                   ),
                 ),
               ],
@@ -355,9 +352,9 @@ class _TajweedCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: SquircleBorders.squircleBorder(
-        color: UIColors.white,
+        color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.cardBorder, width: 0.6),
+        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +367,7 @@ class _TajweedCard extends StatelessWidget {
               fontFamilyFallback: _fallback,
               fontSize: 18,
               height: _lineHeight,
-              color: UIColors.black,
+              color: UIColors.text,
             ),
           ),
           const Margin.vertical(20),
@@ -382,7 +379,7 @@ class _TajweedCard extends StatelessWidget {
               fontFamilyFallback: _fallback,
               fontSize: 18,
               height: _lineHeight,
-              color: UIColors.black,
+              color: UIColors.text,
             ),
           ),
         ],

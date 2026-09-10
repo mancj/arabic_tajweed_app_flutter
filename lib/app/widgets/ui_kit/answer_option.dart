@@ -19,7 +19,7 @@ class AnswerOption extends StatelessWidget {
   const AnswerOption({
     required this.child,
     this.selected = false,
-    this.accent = UIColors.orange,
+    this.accent = UIColors.primary,
     this.onTap,
     Key? key,
   }) : super(key: key);
@@ -32,14 +32,14 @@ class AnswerOption extends StatelessWidget {
         height: 62,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         decoration: SquircleBorders.squircleBorder(
-          color: UIColors.optionBackground,
+          color: UIColors.cardBackground,
           borderRadius: 18,
-          borderSide: const BorderSide(color: UIColors.white),
+          borderSide: const BorderSide(color: UIColors.highlightArea),
           // Выбранный вариант в макете чуть приподнят над списком.
           shadows: selected
               ? const [
                   BoxShadow(
-                    color: UIColors.cardShadowSoft,
+                    color: UIColors.borders,
                     offset: Offset(0, 2),
                     blurRadius: 2,
                   ),

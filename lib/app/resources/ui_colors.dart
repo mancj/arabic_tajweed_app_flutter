@@ -1,80 +1,93 @@
 import 'package:flutter/material.dart';
 
+/// Цветовые токены интерфейса из референса.
+///
+/// В приложении используются только названия токенов ниже. [light] и [dark]
+/// хранят обе колонки референса; статические поля — активная светлая тема,
+/// которую используют существующие виджеты.
 class UIColors {
-  static const white = Color(0xFFFFFFFF);
-  static const whiteHalf = Color(0x80FFFFFF);
-  static const black = Color(0xFF000000);
-  static const transparent = Color(0x00000000);
+  const UIColors._();
 
-  static const pageBackground = Color(0xFFEEF0F9);
-  static const itemBackground = Color(0xFFEAEDF8);
-  static const secondary1 = Color(0xFFB6C4D6);
-  static const secondary2 = Color(0xFF8BA4C3);
-  static const secondary3 = Color(0xFF6F7F91);
-  static const primary = Color(0xFF1858FE);
-  static const primary20 = Color(0x331858FE);
-  static const accent = Color(0xFFA5EB17);
-  static const tracingCompleted = Color(0xFF0F9E89);
-  static const cardBackground = Color(0xFFF3F3F3);
+  static const pageBackground = Color(0xFFECECEC);
+  static const secondary1 = Color(0xFF8C92A2);
+  static const secondary2 = Color(0xFF6F7F91);
+  static const primary = Color(0xFFEE7740);
+  static const primary40 = Color(0x66EE7740);
+  static const primary20 = Color(0x33EE7740);
+  static const backgroundShapes2 = Color(0xFFDDDDDD);
+  static const backgroundShapes1 = Color(0xFFE3E3E3);
   static const text = Color(0xFF0C233E);
-  static const cardShadow = Color.fromARGB(55, 177, 177, 177);
+  static const cardBackground = Color(0xFFF7F7F7);
+  static const highlightArea = Color(0xFFFFFFFF);
+  static const borders = Color(0xFFFFFFFF);
 
-  // Палитра экранов алфавита (макет Tajweed).
-  static const lightGray = Color(0xFFECECEC);
-  static const iceBlue = Color(0xFFDCEAEF);
-  static const teal = Color(0xFF3F9DB5);
-  static const tealDark = Color(0xFF156072);
-  static const ink = Color(0xFF0C233E);
-  static const coral = Color(0xFFE16868);
-  static const steel = Color(0xFF749DA8);
-  static const steelLight = Color(0xFF7CA3AD);
-  static const cardBorder = Color(0x4D518997);
+  // Точные оттенки старого оформления кнопок.
+  static const primaryButtonBottom = Color(0xFFE36024);
+  static const primaryButtonHighlight = Color(0xFFE66E37);
+  static const primaryButtonShadow = Color(0xFFA04823);
+  static const circleButtonBottom = Color(0xFFF19D77);
+  static const circleButtonShadow = Color(0x37B1B1B1);
 
-  static const orange = Color(0xFFEE7740);
+  static const light = _UIColorPalette(
+    pageBackground: pageBackground,
+    secondary1: secondary1,
+    secondary2: secondary2,
+    primary: primary,
+    primary40: primary40,
+    primary20: primary20,
+    backgroundShapes2: backgroundShapes2,
+    backgroundShapes1: backgroundShapes1,
+    text: text,
+    cardBackground: cardBackground,
+    highlightArea: highlightArea,
+    borders: borders,
+  );
 
-  /// Подсветка важного: буква в слове-примере, ключевые слова вопроса.
-  static const highlight = orange;
-  static const orangeDark = Color(0xFFD8571C);
-  static const orangeLight = Color(0xFFF19D77);
+  static const dark = _UIColorPalette(
+    pageBackground: Color(0xFF0C1724),
+    secondary1: Color(0xFF8990A0),
+    secondary2: Color(0xFF627182),
+    primary: Color(0xFFEE7740),
+    primary40: Color(0x66EE7740),
+    primary20: Color(0x33EE7740),
+    backgroundShapes2: Color(0xFF1C3553),
+    backgroundShapes1: Color(0xFF223B5B),
+    text: Color(0xFFFFFFFF),
+    cardBackground: Color(0xFF132235),
+    highlightArea: Color(0xFF183252),
+    borders: Color(0xFF243A54),
+  );
 
-  /// Градиент кнопки «Далее»: в макете нижний стоп уходит за границу (146%),
-  /// поэтому здесь цвет, в который градиент реально приходит к низу кнопки.
-  static const orangeButtonBottom = Color(0xFFE36024);
+  /// Служебная прозрачность: это не цветовой токен интерфейса.
+  static const transparent = Color(0x00000000);
+}
 
-  /// Светлая подсветка внутренней тени по нижнему краю кнопки.
-  static const orangeInnerHighlight = Color(0xFFE66E37);
+class _UIColorPalette {
+  final Color pageBackground;
+  final Color secondary1;
+  final Color secondary2;
+  final Color primary;
+  final Color primary40;
+  final Color primary20;
+  final Color backgroundShapes2;
+  final Color backgroundShapes1;
+  final Color text;
+  final Color cardBackground;
+  final Color highlightArea;
+  final Color borders;
 
-  /// Основа мягких теней под кнопкой (в макете rgba(106, 47, 22, a)).
-  static const buttonShadow = Color.fromARGB(255, 160, 72, 35);
-
-  /// Плашка «Новая тема» на карточке правила.
-  static const orangeBadge = Color(0xFFE66E37);
-
-  /// Фон карточки с правилом.
-  static const ruleCardBackground = Color(0xFFF4F4F4);
-
-  /// Карточка с вопросом и варианты ответа.
-  static const questionCardBackground = Color(0xFFF3F3F3);
-  static const questionCardShadow = Color(0x1AB1B1B1);
-  static const optionBackground = Color(0xFFF8F8F8);
-  static const optionDivider = Color(0xFFDDDDDD);
-  static const ca = Color(0xFFDDDDDD);
-
-  /// Бледные формы буквы на фоне карточки с вопросом.
-  static const glyphGhost = Color(0xFFE3E3E3);
-
-  /// Бледная буква-подсказка под обводкой.
-  static const letterGhost = Color.fromARGB(255, 183, 185, 190);
-  static const letterDemo = Color.fromARGB(255, 141, 143, 147);
-  static const cardShadowSoft = Color(0x1A7CA3AD);
-  static const cardShadowMedium = Color(0x267CA3AD);
-
-  // Фоновый паттерн экранов алфавита.
-  static const patternDot = Color.fromARGB(56, 147, 180, 189);
-  static const patternNode = Color.fromARGB(88, 147, 180, 189);
-
-  /// Холмы декоративной волны (будущий waveform аудио).
-  static const waveform = Color.fromARGB(87, 0, 0, 0);
-
-  static const primaryButtonGradient = [Color(0xFFFDCEB4), Color(0xFFFD8C8C)];
+  const _UIColorPalette({
+    required this.pageBackground,
+    required this.secondary1,
+    required this.secondary2,
+    required this.primary,
+    required this.primary40,
+    required this.primary20,
+    required this.backgroundShapes2,
+    required this.backgroundShapes1,
+    required this.text,
+    required this.cardBackground,
+    required this.highlightArea,
+    required this.borders,
+  });
 }

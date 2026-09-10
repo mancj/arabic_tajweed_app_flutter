@@ -100,7 +100,7 @@ class _AtomTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: UIColors.itemBackground,
+        color: UIColors.cardBackground,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,9 +127,9 @@ class _AtomTile extends StatelessWidget {
                     Expanded(
                       child: Text(atom.id, style: UITextStyles.semibold17),
                     ),
-                    if (p.weak) const _Badge('weak', UIColors.coral),
+                    if (p.weak) const _Badge('weak', UIColors.secondary1),
                     if (controller.isDeferred(p))
-                      const _Badge('deferred', UIColors.coral),
+                      const _Badge('deferred', UIColors.secondary1),
                     _Badge(p.state.name, _stateColor(p.state)),
                   ],
                 ),
@@ -184,9 +184,9 @@ class _Badge extends StatelessWidget {
 }
 
 Color _stateColor(AtomState state) => switch (state) {
-  AtomState.fresh => UIColors.secondary3,
-  AtomState.introduced => UIColors.steel,
-  AtomState.learning => UIColors.orangeDark,
-  AtomState.known => UIColors.teal,
+  AtomState.fresh => UIColors.secondary2,
+  AtomState.introduced => UIColors.secondary1,
+  AtomState.learning => UIColors.primary,
+  AtomState.known => UIColors.secondary1,
   AtomState.mastered => UIColors.primary,
 };

@@ -30,7 +30,7 @@ class CourseLink extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     button: true,
     child: Material(
-      color: Colors.transparent,
+      color: UIColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),

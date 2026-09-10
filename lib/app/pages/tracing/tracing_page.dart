@@ -178,7 +178,7 @@ class _IconAction extends StatelessWidget {
       child: CircleButton(
         onTap: onTap,
         size: 44,
-        child: Icon(icon, size: 20, color: UIColors.white),
+        child: Icon(icon, size: 20, color: UIColors.highlightArea),
       ),
     );
   }
@@ -197,12 +197,12 @@ class _CheckButton extends StatelessWidget {
         height: 44,
         alignment: Alignment.center,
         decoration: SquircleBorders.squircleBorder(
-          color: UIColors.white,
+          color: UIColors.highlightArea,
           borderRadius: 16,
-          borderSide: const BorderSide(color: UIColors.cardBorder, width: 0.6),
+          borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
           shadows: const [
             BoxShadow(
-              color: UIColors.cardShadowSoft,
+              color: UIColors.borders,
               offset: Offset(0, 3),
               blurRadius: 1.5,
             ),
@@ -214,7 +214,7 @@ class _CheckButton extends StatelessWidget {
             fontFamily: UITextStyles.fontOnest,
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: UIColors.tealDark,
+            color: UIColors.secondary2,
           ),
         ),
       ),

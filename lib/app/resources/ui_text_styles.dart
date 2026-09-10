@@ -49,23 +49,23 @@ class UITextStyles {
   static const buttonTitle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: UIColors.ink,
+    color: UIColors.text,
     fontFamily: fontOnest,
   );
 
   static const regularText = TextStyle(
-    color: UIColors.ink,
+    color: UIColors.text,
     fontSize: 17,
     fontFamily: fontOnest,
   );
 
   static const regularTextDark = TextStyle(
-    color: UIColors.black,
+    color: UIColors.text,
     fontSize: 17,
     fontFamily: fontOnest,
   );
   static const semiboldText = TextStyle(
-    color: UIColors.ink,
+    color: UIColors.text,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
@@ -95,20 +95,20 @@ class UITextStyles {
   );
 
   static const hint = TextStyle(
-    color: UIColors.secondary3,
+    color: UIColors.secondary2,
     fontSize: 13,
     fontFamily: fontOnest,
   );
 
   static const tab = TextStyle(
-    color: UIColors.secondary3,
+    color: UIColors.secondary2,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
 
   static const tabSelected = TextStyle(
-    color: UIColors.ink,
+    color: UIColors.text,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
@@ -116,7 +116,7 @@ class UITextStyles {
 
   /// Плашка «Новая тема» на карточке правила.
   static const badge = TextStyle(
-    color: UIColors.white,
+    color: UIColors.highlightArea,
     fontSize: 12,
     fontWeight: FontWeight.w500,
     fontFamily: fontOnest,
@@ -124,7 +124,7 @@ class UITextStyles {
 
   /// Заголовок карточки с правилом.
   static const cardTitle = TextStyle(
-    color: UIColors.ink,
+    color: UIColors.text,
     fontSize: 22,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
@@ -132,7 +132,7 @@ class UITextStyles {
 
   /// Тело правила: в макете набрано засечками, кегль и интерлиньяж оттуда же.
   static const ruleBody = TextStyle(
-    color: UIColors.black,
+    color: UIColors.text,
     fontSize: 16,
     height: 1.5,
     fontFamily: fontSerif,

@@ -121,8 +121,8 @@ class TracingCard extends StatelessWidget {
                     height: 100,
                     child: IgnorePointer(
                       child: WaveformWidget(
-                        strokeColor: UIColors.orange.withValues(alpha: .5),
-                        fillColor: UIColors.orange.withValues(alpha: .1),
+                        strokeColor: UIColors.primary40,
+                        fillColor: UIColors.primary20,
                         height: 100,
                         layers: 3,
                         track: track,
@@ -199,7 +199,7 @@ class _ClearButton extends StatelessWidget {
         child: const Icon(
           CupertinoIcons.delete,
           size: 22,
-          color: UIColors.white,
+          color: UIColors.highlightArea,
         ),
       ),
     );

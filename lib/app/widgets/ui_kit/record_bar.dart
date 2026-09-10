@@ -52,7 +52,7 @@ class RecordBar extends StatelessWidget {
             child: Icon(
               checking ? CupertinoIcons.hourglass : CupertinoIcons.mic_fill,
               size: 30,
-              color: UIColors.white,
+              color: UIColors.highlightArea,
             ),
           ),
         ),

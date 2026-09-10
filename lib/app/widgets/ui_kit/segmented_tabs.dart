@@ -39,11 +39,11 @@ class SegmentedTabs extends StatelessWidget {
         fontFamily: UITextStyles.fontOnest,
         fontWeight: FontWeight.w500,
         fontSize: 15,
-        color: UIColors.tealDark,
+        color: UIColors.secondary2,
       );
 
   TextStyle get _selectedStyle =>
-      selectedStyle ?? _style.copyWith(color: UIColors.white);
+      selectedStyle ?? _style.copyWith(color: UIColors.highlightArea);
 
   @override
   Widget build(BuildContext context) {
@@ -53,12 +53,12 @@ class SegmentedTabs extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.all(_trackPadding),
       decoration: SquircleBorders.squircleBorder(
-        color: UIColors.white,
+        color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.cardBorder, width: 0.6),
+        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
         shadows: const [
           BoxShadow(
-            color: UIColors.cardShadowSoft,
+            color: UIColors.borders,
             offset: Offset(0, 3),
             blurRadius: 1.5,
           ),
@@ -91,7 +91,7 @@ class SegmentedTabs extends StatelessWidget {
       curve: Curves.easeOut,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: i == selected ? UIColors.teal : null,
+        color: i == selected ? UIColors.secondary1 : null,
         borderRadius: BorderRadius.circular(16 - _trackPadding * 2),
       ),
       child: Text(

@@ -1,4 +1,5 @@
 import 'package:arabic_tajweed_app/app/resources/ui_text_styles.dart';
+import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -38,7 +39,22 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, fontFamily: UITextStyles.fontOnest),
+      theme: ThemeData(
+        useMaterial3: true,
+        fontFamily: UITextStyles.fontOnest,
+        scaffoldBackgroundColor: UIColors.pageBackground,
+        colorScheme: ColorScheme.light(
+          primary: UIColors.primary,
+          onPrimary: UIColors.highlightArea,
+          secondary: UIColors.secondary1,
+          onSecondary: UIColors.text,
+          surface: UIColors.cardBackground,
+          onSurface: UIColors.text,
+          outline: UIColors.borders,
+          error: UIColors.secondary2,
+          onError: UIColors.highlightArea,
+        ),
+      ),
       initialRoute: SplashScreenPage.routeName,
       initialBinding: AppBinding(),
       getPages: [

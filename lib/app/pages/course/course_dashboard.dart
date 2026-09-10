@@ -36,7 +36,7 @@ class CourseLessonPreview extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: UIColors.orange,
+                        color: UIColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -49,7 +49,7 @@ class CourseLessonPreview extends StatelessWidget {
                                   : 'СЕГОДНЯ · НОВЫЙ МАТЕРИАЛ'
                             : 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ',
                         style: UITextStyles.regular12.copyWith(
-                          color: UIColors.orangeDark,
+                          color: UIColors.primary,
                           fontWeight: FontWeight.w600,
                           fontSize: 10,
                           letterSpacing: .8,
@@ -88,7 +88,7 @@ class CourseLessonPreview extends StatelessWidget {
                           child: _Glyph(
                             controller.lessonSource,
                             size: 48,
-                            color: UIColors.secondary3,
+                            color: UIColors.secondary2,
                           ),
                         ),
                       ),
@@ -100,7 +100,7 @@ class CourseLessonPreview extends StatelessWidget {
                           child: Icon(
                             Icons.arrow_forward_rounded,
                             size: 18,
-                            color: UIColors.secondary3,
+                            color: UIColors.secondary2,
                           ),
                         )
                       else
@@ -112,23 +112,18 @@ class CourseLessonPreview extends StatelessWidget {
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: UIColors.orange.withValues(alpha: .2),
-                        ),
+                        border: Border.all(color: UIColors.primary20),
                       ),
                       child: Container(
                         alignment: Alignment.center,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: UIColors.orange,
-                          border: Border.all(
-                            color: UIColors.orangeLight,
-                            width: 2,
-                          ),
+                          color: UIColors.primary,
+                          border: Border.all(color: UIColors.primary, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: UIColors.orange.withValues(alpha: .16),
+                              color: UIColors.primary20,
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -137,7 +132,7 @@ class CourseLessonPreview extends StatelessWidget {
                         child: atom == null
                             ? const Icon(
                                 Icons.auto_stories_outlined,
-                                color: UIColors.white,
+                                color: UIColors.highlightArea,
                                 size: 42,
                               )
                             : FittedBox(
@@ -145,7 +140,7 @@ class CourseLessonPreview extends StatelessWidget {
                                 child: _Glyph(
                                   atom.display,
                                   size: 70,
-                                  color: UIColors.white,
+                                  color: UIColors.highlightArea,
                                 ),
                               ),
                       ),
@@ -156,7 +151,7 @@ class CourseLessonPreview extends StatelessWidget {
             ),
           ),
           ColoredBox(
-            color: UIColors.white,
+            color: UIColors.highlightArea,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               child: Column(
@@ -219,7 +214,7 @@ class CourseActivityWeek extends StatelessWidget {
                   label,
                   style: UITextStyles.hint.copyWith(
                     fontSize: 11,
-                    color: current ? UIColors.ink : UIColors.secondary3,
+                    color: current ? UIColors.text : UIColors.secondary2,
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -230,23 +225,25 @@ class CourseActivityWeek extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: current
-                        ? UIColors.orange
+                        ? UIColors.primary
                         : active
-                        ? UIColors.orange.withValues(alpha: .2)
-                        : UIColors.glyphGhost,
+                        ? UIColors.primary20
+                        : UIColors.backgroundShapes1,
                   ),
                   child: active
                       ? Icon(
                           Icons.check_rounded,
                           size: 18,
-                          color: current ? UIColors.white : UIColors.orangeDark,
+                          color: current
+                              ? UIColors.highlightArea
+                              : UIColors.primary,
                         )
                       : Text(
                           '${date.day}',
                           style: UITextStyles.regular12.copyWith(
                             color: current
-                                ? UIColors.white
-                                : UIColors.secondary3,
+                                ? UIColors.highlightArea
+                                : UIColors.secondary2,
                           ),
                         ),
                 ),
@@ -293,8 +290,8 @@ class CourseOverview extends StatelessWidget {
                       value: progress,
                       strokeWidth: 4,
                       strokeCap: StrokeCap.round,
-                      color: UIColors.orange,
-                      backgroundColor: UIColors.glyphGhost,
+                      color: UIColors.primary,
+                      backgroundColor: UIColors.backgroundShapes1,
                     ),
                   ),
                   const SizedBox(width: 9),
@@ -349,7 +346,7 @@ class CourseOverview extends StatelessWidget {
                 child: _Glyph(
                   nextAtom.display,
                   size: 34,
-                  color: UIColors.orangeDark,
+                  color: UIColors.primary,
                 ),
               ),
             )
@@ -358,7 +355,7 @@ class CourseOverview extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 9),
               child: Icon(
                 Icons.check_circle_outline_rounded,
-                color: UIColors.orange,
+                color: UIColors.primary,
                 size: 28,
               ),
             ),
@@ -442,7 +439,7 @@ class _OverviewTile extends StatelessWidget {
                 const Icon(
                   Icons.north_east_rounded,
                   size: 16,
-                  color: UIColors.secondary3,
+                  color: UIColors.secondary2,
                 ),
               ],
             ),
@@ -466,17 +463,17 @@ class _CourseSurface extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: UIColors.ink.withValues(alpha: .04),
+          color: UIColors.text.withValues(alpha: .04),
           blurRadius: 14,
           offset: const Offset(0, 7),
         ),
       ],
     ),
     child: Material(
-      color: UIColors.ruleCardBackground,
+      color: UIColors.cardBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
-        side: const BorderSide(color: UIColors.white),
+        side: const BorderSide(color: UIColors.highlightArea),
       ),
       clipBehavior: Clip.antiAlias,
       child: onTap == null ? child : InkWell(onTap: onTap, child: child),

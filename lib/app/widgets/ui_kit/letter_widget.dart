@@ -112,7 +112,7 @@ class LetterWidgetCard extends StatelessWidget {
         TextSpan(text: text.substring(0, at)),
         TextSpan(
           text: accent,
-          style: const TextStyle(color: UIColors.highlight),
+          style: const TextStyle(color: UIColors.primary),
         ),
         TextSpan(text: text.substring(at + accent!.length)),
       ],
@@ -128,10 +128,12 @@ class LetterWidgetCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: UIColors.cardBackground,
           borderRadius: _shape,
-          border: Border.all(color: UIColors.white.withValues(alpha: .3)),
+          border: Border.all(
+            color: UIColors.highlightArea.withValues(alpha: .3),
+          ),
           boxShadow: const [
             BoxShadow(
-              color: UIColors.cardShadow,
+              color: UIColors.borders,
               spreadRadius: 1,
               blurRadius: 8,
               offset: Offset(0, 2),
@@ -162,8 +164,8 @@ class LetterWidgetCard extends StatelessWidget {
                       right: 0,
                       bottom: 0,
                       child: WaveformWidget(
-                        strokeColor: UIColors.orange.withValues(alpha: .5),
-                        fillColor: UIColors.orange.withValues(alpha: .1),
+                        strokeColor: UIColors.primary40,
+                        fillColor: UIColors.primary20,
                         strokeWidth: .5,
                         height: 100,
                         layers: 3,
@@ -188,14 +190,14 @@ class LetterWidgetCard extends StatelessWidget {
                                 if (labelText != null)
                                   BadgeLabel(
                                     text: labelText!,
-                                    color: UIColors.ink,
+                                    color: UIColors.text,
                                   ),
                                 if (question != null) ...[
                                   const Margin.vertical(4),
                                   Text.rich(
                                     _questionSpan(),
                                     style: UITextStyles.cardTitle.copyWith(
-                                      color: UIColors.ink,
+                                      color: UIColors.text,
                                     ),
                                   ),
                                 ],
@@ -318,7 +320,7 @@ class LetterWidgetCard extends StatelessWidget {
                   subtitle!,
                   key: ValueKey(subtitle),
                   style: UITextStyles.serifSemibold18.copyWith(
-                    color: UIColors.orange,
+                    color: UIColors.primary,
                   ),
                 ).animate().fadeIn(duration: .3.seconds),
               ),
@@ -397,7 +399,7 @@ class LetterWidgetCard extends StatelessWidget {
               decoration: ShapeDecoration(
                 shape: CircleBorder(
                   side: BorderSide(
-                    color: UIColors.black.withValues(alpha: .1),
+                    color: UIColors.text.withValues(alpha: .1),
                     width: 1,
                   ),
                 ),

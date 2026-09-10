@@ -75,7 +75,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
       if (!mounted) return;
       await showModalBottomSheet<void>(
         context: context,
-        backgroundColor: Colors.transparent,
+        backgroundColor: UIColors.transparent,
         isDismissible: false,
         enableDrag: false,
         builder: (_) => _ResultSheet(controller: controller),
@@ -149,7 +149,7 @@ class _ResultSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         decoration: const BoxDecoration(
-          color: UIColors.ruleCardBackground,
+          color: UIColors.cardBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -167,7 +167,7 @@ class _ResultSheet extends StatelessWidget {
             Icon(
               correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
               size: 46,
-              color: correct ? UIColors.tracingCompleted : UIColors.coral,
+              color: correct ? UIColors.primary : UIColors.secondary1,
             ),
             const SizedBox(height: 12),
             Text(
@@ -213,7 +213,7 @@ class _BottomBar extends GetView<LessonController> {
         onTap: controller.nextIntro,
       ),
       LessonStage.exercise => Obx(() {
-        if (controller.wasWrong.value || controller.wasCorrect.value) {
+        if (controller.wasWrong.value) {
           return const SizedBox.shrink();
         }
 
@@ -795,9 +795,9 @@ class _OptionTile extends GetView<LessonController> {
       // После ошибки верный ответ подсвечивается всегда, а выбранный
       // неверный — красным: человек должен увидеть, что именно перепутал.
       final color = switch ((revealed, isAnswer, selected)) {
-        (true, true, _) => UIColors.accent,
-        (true, false, true) => UIColors.coral,
-        _ => UIColors.orange,
+        (true, true, _) => UIColors.primary,
+        (true, false, true) => UIColors.secondary1,
+        _ => UIColors.primary,
       };
 
       return AnswerOption(

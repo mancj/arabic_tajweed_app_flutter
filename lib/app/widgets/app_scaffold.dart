@@ -64,7 +64,7 @@ class AppScaffold extends StatefulWidget {
     this.bottomBar,
     this.onBack,
     this.showBackButton = true,
-    this.backgroundColor = UIColors.lightGray,
+    this.backgroundColor = UIColors.pageBackground,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.edgeBlurSigma = 4,
     Key? key,
@@ -185,14 +185,14 @@ class _Header extends StatelessWidget {
             Center(
               child: Text(
                 title!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: UITextStyles.fontOnest,
                   fontWeight: FontWeight.w500,
                   fontSize: 22,
-                  color: UIColors.ink,
+                  color: UIColors.text,
                   shadows: [
                     Shadow(
-                      color: Color(0x40FFFFFF),
+                      color: UIColors.highlightArea.withValues(alpha: .25),
                       offset: Offset(0, 4),
                       blurRadius: 4,
                     ),
@@ -206,7 +206,7 @@ class _Header extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GlassIconButton(
-                  icon: const Icon(CupertinoIcons.back, color: UIColors.ink),
+                  icon: const Icon(CupertinoIcons.back, color: UIColors.text),
                   onPressed: onBack,
                   size: AppScaffold._headerHeight,
                   iconSize: 24,

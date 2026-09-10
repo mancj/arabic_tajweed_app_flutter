@@ -48,7 +48,7 @@ class QuestionCard extends StatelessWidget {
       borderRadius: SmoothBorderRadius.all(
         SmoothRadius(cornerRadius: 24, cornerSmoothing: 1),
       ),
-      side: BorderSide(color: UIColors.white),
+      side: BorderSide(color: UIColors.highlightArea),
     );
 
     return LetterWidgetCard(
@@ -61,7 +61,7 @@ class QuestionCard extends StatelessWidget {
 
   /// Бледные формы буквы у правого края: крупная уходит за обрез.
   List<Widget> _ghosts() {
-    const style = TextStyle(color: UIColors.glyphGhost, height: 1);
+    const style = TextStyle(color: UIColors.backgroundShapes1, height: 1);
 
     return [
       Positioned(
@@ -110,7 +110,7 @@ class QuestionCard extends StatelessWidget {
             fontFamily: subjectFont,
             fontSize: 82.5,
             height: 1,
-            color: UIColors.black,
+            color: UIColors.text,
           ),
           textDirection: TextDirection.rtl,
         ),
@@ -125,7 +125,7 @@ class QuestionCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        BadgeLabel(text: badge, color: UIColors.black),
+        BadgeLabel(text: badge, color: UIColors.text),
         const Margin.vertical(8),
         Text(question, style: UITextStyles.cardTitle),
       ],

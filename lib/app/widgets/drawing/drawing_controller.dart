@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 
 import 'drawing_stroke.dart';
 import 'tracing_matcher.dart';
@@ -24,7 +25,7 @@ class DrawingController extends ChangeNotifier {
   /// Толщины здесь нет намеренно: её знает только [DrawingCanvas], потому
   /// что перо масштабируется вместе с фигурой при раскладке.
   DrawingController({
-    Color color = Colors.black,
+    Color color = UIColors.text,
     double smoothing = 0.3,
     double minDistance = 3,
   }) : assert(

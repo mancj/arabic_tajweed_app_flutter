@@ -77,7 +77,7 @@ class WaveformWidget extends StatefulWidget {
     super.key,
     this.height = 80,
     this.layers = 4,
-    this.strokeColor = UIColors.waveform,
+    this.strokeColor = UIColors.secondary2,
     this.fillColor,
     this.strokeWidth = 1,
     this.amplitude = 1,

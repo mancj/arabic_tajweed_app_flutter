@@ -633,15 +633,13 @@ class LessonController extends GetxController {
 
   /// Только для отладки: засчитать текущее задание верным, каким бы оно
   /// ни было. В отличие от пропуска ответ пишется в лог как чистый —
-  /// так можно быстро прогнать курс с настоящим прогрессом букв.
+  /// так можно быстро прогнать курс с настоящим прогрессом букв, сохранив
+  /// обычное окно подтверждения ответа.
   Future<void> answerCorrectly() async {
     final exercise = _session?.current;
     if (exercise == null) return;
     if (exercise.isChoice) selected.value = exercise.answerIndex;
     await submit(directOutcome: true);
-    // Отладочная кнопка нужна для быстрого прогона курса и не должна
-    // оставлять тестовый проход на экране обратной связи.
-    if (wasCorrect.value) await submit();
   }
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
