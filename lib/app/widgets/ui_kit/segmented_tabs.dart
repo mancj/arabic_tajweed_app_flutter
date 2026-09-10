@@ -35,7 +35,7 @@ class SegmentedTabs extends StatelessWidget {
 
   TextStyle get _style =>
       style ??
-      const TextStyle(
+      TextStyle(
         fontFamily: UITextStyles.fontOnest,
         fontWeight: FontWeight.w500,
         fontSize: 15,
@@ -55,8 +55,8 @@ class SegmentedTabs extends StatelessWidget {
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
-        shadows: const [
+        borderSide: BorderSide(color: UIColors.borders, width: 0.6),
+        shadows: [
           BoxShadow(
             color: UIColors.shadows,
             offset: Offset(0, 3),

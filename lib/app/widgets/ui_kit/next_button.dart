@@ -48,7 +48,7 @@ class NextButton extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             borderRadius: _borderRadius,
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [UIColors.primary, UIColors.primaryButtonBottom],
@@ -71,7 +71,7 @@ class NextButton extends StatelessWidget {
                 offset: const Offset(0, -3),
                 blur: 6,
               ),
-              const InnerShadow(
+              InnerShadow(
                 color: UIColors.primaryButtonHighlight,
                 offset: Offset(0, -3),
                 blur: 2,
@@ -85,18 +85,18 @@ class NextButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 20, color: UIColors.highlightArea),
+                      Icon(icon, size: 20, color: UIColors.primaryButtonText),
                       const SizedBox(width: 10),
                     ],
                     Flexible(
                       child: Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: UITextStyles.fontOnest,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                           height: 1.2,
-                          color: UIColors.highlightArea,
+                          color: UIColors.primaryButtonText ,
                         ),
                       ),
                     ),

@@ -191,8 +191,8 @@ class _FormCard extends StatelessWidget {
           decoration: SquircleBorders.squircleBorder(
             color: UIColors.highlightArea,
             borderRadius: 16,
-            borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
-            shadows: const [
+            borderSide: BorderSide(color: UIColors.borders, width: 0.6),
+            shadows: [
               BoxShadow(
                 color: UIColors.shadows,
                 offset: Offset(0, 3),
@@ -280,8 +280,8 @@ class _PronunciationCard extends StatelessWidget {
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
-        shadows: const [
+        borderSide: BorderSide(color: UIColors.borders, width: 0.6),
+        shadows: [
           BoxShadow(
             color: UIColors.shadows,
             offset: Offset(0, 4),
@@ -293,7 +293,7 @@ class _PronunciationCard extends StatelessWidget {
         children: [
           AppGestureDetector(
             child: CircleButton(
-              child: const Icon(
+              child: Icon(
                 Icons.play_arrow_rounded,
                 color: UIColors.highlightArea,
                 size: 24,
@@ -301,7 +301,7 @@ class _PronunciationCard extends StatelessWidget {
             ),
           ),
           const Margin.horizontal(10),
-          const Expanded(
+          Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +354,7 @@ class _TajweedCard extends StatelessWidget {
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.highlightArea,
         borderRadius: 16,
-        borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
+        borderSide: BorderSide(color: UIColors.borders, width: 0.6),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

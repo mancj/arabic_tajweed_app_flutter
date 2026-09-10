@@ -33,81 +33,63 @@ class UITextStyles {
     FontVariation('wght', weight),
   ];
 
-  static const pageTitle = TextStyle(
+  static TextStyle get pageTitle => TextStyle(
     color: UIColors.text,
     fontSize: 32,
     fontWeight: FontWeight.w400,
     fontFamily: fontOnest,
   );
-  static const pageTitleSemibold = TextStyle(
+  static TextStyle get pageTitleSemibold => TextStyle(
     color: UIColors.text,
     fontSize: 32,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
 
-  static const buttonTitle = TextStyle(
+  static TextStyle get buttonTitle => TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: UIColors.text,
     fontFamily: fontOnest,
   );
 
-  static const regularText = TextStyle(
-    color: UIColors.text,
-    fontSize: 17,
-    fontFamily: fontOnest,
-  );
+  static TextStyle get regularText =>
+      TextStyle(color: UIColors.text, fontSize: 17, fontFamily: fontOnest);
 
-  static const regularTextDark = TextStyle(
-    color: UIColors.text,
-    fontSize: 17,
-    fontFamily: fontOnest,
-  );
-  static const semiboldText = TextStyle(
+  static TextStyle get regularTextDark =>
+      TextStyle(color: UIColors.text, fontSize: 17, fontFamily: fontOnest);
+  static TextStyle get semiboldText => TextStyle(
     color: UIColors.text,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
 
-  static const regular17 = TextStyle(
-    color: UIColors.text,
-    fontSize: 17,
-    fontFamily: fontOnest,
-  );
+  static TextStyle get regular17 =>
+      TextStyle(color: UIColors.text, fontSize: 17, fontFamily: fontOnest);
 
-  static const regular14 = TextStyle(
-    color: UIColors.text,
-    fontSize: 14,
-    fontFamily: fontOnest,
-  );
+  static TextStyle get regular14 =>
+      TextStyle(color: UIColors.text, fontSize: 14, fontFamily: fontOnest);
 
-  static const regular12 = TextStyle(
-    color: UIColors.text,
-    fontSize: 12,
-    fontFamily: fontOnest,
-  );
+  static TextStyle get regular12 =>
+      TextStyle(color: UIColors.text, fontSize: 12, fontFamily: fontOnest);
 
-  static const regular10 = TextStyle(
-    color: UIColors.text,
-    fontSize: 10,
-    fontFamily: fontOnest,
-  );
+  static TextStyle get regular10 =>
+      TextStyle(color: UIColors.text, fontSize: 10, fontFamily: fontOnest);
 
-  static const hint = TextStyle(
+  static TextStyle get hint => TextStyle(
     color: UIColors.secondary2,
     fontSize: 13,
     fontFamily: fontOnest,
   );
 
-  static const tab = TextStyle(
+  static TextStyle get tab => TextStyle(
     color: UIColors.secondary2,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
   );
 
-  static const tabSelected = TextStyle(
+  static TextStyle get tabSelected => TextStyle(
     color: UIColors.text,
     fontSize: 15,
     fontWeight: FontWeight.w600,
@@ -115,15 +97,15 @@ class UITextStyles {
   );
 
   /// Плашка «Новая тема» на карточке правила.
-  static const badge = TextStyle(
-    color: UIColors.highlightArea,
+  static TextStyle get badge => TextStyle(
+    color: UIColors.badgeText1,
     fontSize: 12,
     fontWeight: FontWeight.w500,
     fontFamily: fontOnest,
   );
 
   /// Заголовок карточки с правилом.
-  static const cardTitle = TextStyle(
+  static TextStyle get cardTitle => TextStyle(
     color: UIColors.text,
     fontSize: 22,
     fontWeight: FontWeight.w600,
@@ -131,7 +113,7 @@ class UITextStyles {
   );
 
   /// Тело правила: в макете набрано засечками, кегль и интерлиньяж оттуда же.
-  static const ruleBody = TextStyle(
+  static TextStyle get ruleBody => TextStyle(
     color: UIColors.text,
     fontSize: 16,
     height: 1.5,
@@ -140,7 +122,7 @@ class UITextStyles {
 
   /// Засечки в одну строку: интерлиньяж ужат до кегля, чтобы бокс
   /// не зависел от запасов шрифта.
-  static const serifSemibold18 = TextStyle(
+  static TextStyle get serifSemibold18 => TextStyle(
     color: UIColors.text,
     fontSize: 18,
     fontWeight: FontWeight.w600,
@@ -148,7 +130,7 @@ class UITextStyles {
     fontFamily: fontSerif,
   );
 
-  static const semibold17 = TextStyle(
+  static TextStyle get semibold17 => TextStyle(
     color: UIColors.text,
     fontWeight: FontWeight.w700,
     fontSize: 17,

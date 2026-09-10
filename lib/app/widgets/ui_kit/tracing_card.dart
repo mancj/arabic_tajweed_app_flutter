@@ -196,10 +196,10 @@ class _ClearButton extends StatelessWidget {
       child: CircleButton(
         size: TracingCard._actionButtonSize,
         onTap: onTap,
-        child: const Icon(
+        child: Icon(
           CupertinoIcons.delete,
           size: 22,
-          color: UIColors.highlightArea,
+          color: UIColors.primaryButtonText,
         ),
       ),
     );

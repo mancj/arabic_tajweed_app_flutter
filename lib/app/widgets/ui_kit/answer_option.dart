@@ -13,13 +13,13 @@ import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 class AnswerOption extends StatelessWidget {
   final Widget child;
   final bool selected;
-  final Color accent;
+  final Color? accent;
   final VoidCallback? onTap;
 
   const AnswerOption({
     required this.child,
     this.selected = false,
-    this.accent = UIColors.primary,
+    this.accent,
     this.onTap,
     Key? key,
   }) : super(key: key);
@@ -34,10 +34,10 @@ class AnswerOption extends StatelessWidget {
         decoration: SquircleBorders.squircleBorder(
           color: UIColors.cardBackground,
           borderRadius: 18,
-          borderSide: const BorderSide(color: UIColors.highlightArea),
+          borderSide: BorderSide(color: UIColors.highlightArea),
           // Выбранный вариант в макете чуть приподнят над списком.
           shadows: selected
-              ? const [
+              ? [
                   BoxShadow(
                     color: UIColors.shadows,
                     offset: Offset(0, 2),
@@ -48,7 +48,7 @@ class AnswerOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _Radio(selected: selected, accent: accent),
+            _Radio(selected: selected, accent: accent ?? UIColors.primary),
             const Margin.horizontal(12),
             RotatedBox(
               quarterTurns: 1,

@@ -26,7 +26,7 @@ class WaveformWidget extends StatefulWidget {
   final int layers;
 
   /// Цвет контуров холмов и линии-основания, включая прозрачность.
-  final Color strokeColor;
+  final Color? strokeColor;
 
   /// Цвет заливки холмов, включая прозрачность. Если не задан, совпадает с
   /// [strokeColor].
@@ -77,7 +77,7 @@ class WaveformWidget extends StatefulWidget {
     super.key,
     this.height = 80,
     this.layers = 4,
-    this.strokeColor = UIColors.secondary2,
+    this.strokeColor,
     this.fillColor,
     this.strokeWidth = 1,
     this.amplitude = 1,
@@ -246,7 +246,7 @@ class _WaveformWidgetState extends State<WaveformWidget>
         painter: _WaveformPainter(
           layers: _layers,
           pulse: _pulse,
-          strokeColor: widget.strokeColor,
+          strokeColor: widget.strokeColor ?? UIColors.secondary2,
           fillColor: widget.fillColor,
           strokeWidth: widget.strokeWidth,
           amplitude: widget.amplitude,

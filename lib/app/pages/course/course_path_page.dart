@@ -131,7 +131,7 @@ class CourseSectionPage extends StatelessWidget {
       () => ListView(
         padding: insets.copyWith(top: insets.top + 24),
         children: [
-          const Text(
+          Text(
             'Каждый блок можно закреплять за несколько занятий.',
             style: UITextStyles.hint,
           ),
@@ -222,7 +222,7 @@ class CourseTopicPage extends StatelessWidget {
                 : 'Освоено: ${s.done} из ${s.total}',
           ),
           const Margin.vertical(20),
-          const Text('Материал блока', style: UITextStyles.semiboldText),
+          Text('Материал блока', style: UITextStyles.semiboldText),
           const Margin.vertical(12),
           for (final atom in atoms)
             Padding(
@@ -246,7 +246,7 @@ class CourseTopicPage extends StatelessWidget {
           if (s.state != TopicState.locked) ...[
             const Margin.vertical(12),
             ExpansionTile(
-              title: const Text('Объяснения', style: UITextStyles.semiboldText),
+              title: Text('Объяснения', style: UITextStyles.semiboldText),
               children: [
                 for (final atom in atoms)
                   Padding(
@@ -259,7 +259,7 @@ class CourseTopicPage extends StatelessWidget {
                           : Text(
                               atom.display,
                               textDirection: TextDirection.rtl,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: UITextStyles.fontScheherazadeNew,
                                 fontSize: 64,
                                 color: UIColors.text,
@@ -271,7 +271,7 @@ class CourseTopicPage extends StatelessWidget {
             ),
           ] else ...[
             const Margin.vertical(16),
-            const Text(
+            Text(
               'Уже знакомы с этим материалом? Проверим необходимые знания. Подтверждённое сохранится, даже если останутся пробелы.',
               style: UITextStyles.regularText,
             ),

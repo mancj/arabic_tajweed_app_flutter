@@ -100,27 +100,11 @@ class _PlayControlState extends State<PlayControl> {
               isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
               key: ValueKey(isPlaying),
               size: 24,
-              color: UIColors.highlightArea,
+              color: UIColors.primaryButtonText,
             ),
           ),
         ),
       ),
-      if (widget.showHint) ...[
-        const Margin.vertical(8),
-        SizedBox(
-          width: 100,
-          child: Text(
-            isPlaying
-                ? 'Нажмите, чтобы остановить'
-                : 'Нажмите, чтобы воспроизвести',
-            textAlign: TextAlign.center,
-            style: UITextStyles.regular10.copyWith(
-              height: 1.1,
-              color: UIColors.secondary2,
-            ),
-          ),
-        ),
-      ],
     ],
   );
 }

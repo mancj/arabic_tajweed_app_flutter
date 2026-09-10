@@ -22,7 +22,7 @@ class AtomProgressPage extends GetView<AtomProgressController> {
       title: 'Атомы',
       builder: (_, insets) => Obx(() {
         if (controller.loading.value) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: UIColors.primary),
           );
         }
@@ -71,7 +71,7 @@ class _Summary extends StatelessWidget {
                   style: UITextStyles.hint,
                 ),
               ),
-              const Text('Скрыть fresh', style: UITextStyles.hint),
+              Text('Скрыть fresh', style: UITextStyles.hint),
               Switch(
                 value: controller.hideFresh.value,
                 activeThumbColor: UIColors.primary,
@@ -110,7 +110,7 @@ class _AtomTile extends StatelessWidget {
             child: Text(
               atom.display,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: UITextStyles.fontScheherazadeNew,
                 fontSize: 16,
                 color: UIColors.text,
@@ -127,9 +127,9 @@ class _AtomTile extends StatelessWidget {
                     Expanded(
                       child: Text(atom.id, style: UITextStyles.semibold17),
                     ),
-                    if (p.weak) const _Badge('weak', UIColors.secondary1),
+                    if (p.weak) _Badge('weak', UIColors.secondary1),
                     if (controller.isDeferred(p))
-                      const _Badge('deferred', UIColors.secondary1),
+                      _Badge('deferred', UIColors.secondary1),
                     _Badge(p.state.name, _stateColor(p.state)),
                   ],
                 ),

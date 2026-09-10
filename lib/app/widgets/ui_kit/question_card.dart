@@ -44,7 +44,7 @@ class QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const shape = SmoothRectangleBorder(
+    final shape = SmoothRectangleBorder(
       borderRadius: SmoothBorderRadius.all(
         SmoothRadius(cornerRadius: 24, cornerSmoothing: 1),
       ),
@@ -61,7 +61,7 @@ class QuestionCard extends StatelessWidget {
 
   /// Бледные формы буквы у правого края: крупная уходит за обрез.
   List<Widget> _ghosts() {
-    const style = TextStyle(color: UIColors.backgroundShapes1, height: 1);
+    final style = TextStyle(color: UIColors.backgroundShapes1, height: 1);
 
     return [
       Positioned(

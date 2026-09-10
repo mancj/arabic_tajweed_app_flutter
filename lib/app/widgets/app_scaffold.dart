@@ -50,7 +50,7 @@ class AppScaffold extends StatefulWidget {
   /// Показывать ли кнопку «назад» (на корневых экранах она не нужна).
   final bool showBackButton;
 
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   /// Боковые поля содержимого; вертикальные отступы прибавляются к ним.
   final EdgeInsets contentPadding;
@@ -64,7 +64,7 @@ class AppScaffold extends StatefulWidget {
     this.bottomBar,
     this.onBack,
     this.showBackButton = true,
-    this.backgroundColor = UIColors.pageBackground,
+    this.backgroundColor,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.edgeBlurSigma = 4,
     Key? key,
@@ -93,6 +93,9 @@ class _AppScaffoldState extends State<AppScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    // UIColors and UITextStyles follow the system brightness. This dependency
+    // makes the whole screen rebuild when the device theme changes.
+    MediaQuery.platformBrightnessOf(context);
     final insets = MediaQuery.paddingOf(context);
 
     final headerZone =
@@ -116,7 +119,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     );
 
     return Scaffold(
-      backgroundColor: widget.backgroundColor,
+      backgroundColor: widget.backgroundColor ?? UIColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -206,7 +209,7 @@ class _Header extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GlassIconButton(
-                  icon: const Icon(CupertinoIcons.back, color: UIColors.text),
+                  icon: Icon(CupertinoIcons.back, color: UIColors.text),
                   onPressed: onBack,
                   size: AppScaffold._headerHeight,
                   iconSize: 24,

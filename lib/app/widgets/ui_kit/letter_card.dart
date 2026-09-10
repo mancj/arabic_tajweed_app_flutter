@@ -43,8 +43,8 @@ class LetterCard extends StatelessWidget {
           decoration: SquircleBorders.squircleBorder(
             color: UIColors.backgroundShapes1,
             borderRadius: 30 * k,
-            borderSide: const BorderSide(color: UIColors.secondary1),
-            shadows: const [
+            borderSide: BorderSide(color: UIColors.secondary1),
+            shadows: [
               BoxShadow(
                 color: UIColors.shadows,
                 offset: Offset(0, 4),

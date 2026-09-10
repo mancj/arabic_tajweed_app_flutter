@@ -39,7 +39,7 @@ class LessonCard extends StatelessWidget {
         borderSide: BorderSide(
           color: UIColors.highlightArea.withValues(alpha: .3),
         ),
-        shadows: const [
+        shadows: [
           BoxShadow(
             color: UIColors.shadows,
             spreadRadius: 1,

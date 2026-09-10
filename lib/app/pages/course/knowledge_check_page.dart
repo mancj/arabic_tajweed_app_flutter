@@ -201,7 +201,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
                       ? TextDirection.rtl
                       : TextDirection.ltr,
                   style: question.reverse
-                      ? const TextStyle(
+                      ? TextStyle(
                           fontFamily: UITextStyles.fontScheherazadeNew,
                           fontSize: 32,
                           color: UIColors.text,

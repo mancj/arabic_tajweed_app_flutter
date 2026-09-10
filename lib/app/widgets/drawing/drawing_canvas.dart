@@ -62,7 +62,7 @@ class DrawingCanvas extends StatefulWidget {
 
   /// Цвет полностью собранной буквы. В него плавно переходит весь рисунок
   /// после последней правильно заполненной части.
-  final Color completedColor;
+  final Color? completedColor;
 
   /// Толщина пера в пикселях. Если не задана, перо берётся из фигуры
   /// ([TracingShape.strokeWidth], отмасштабированная под холст) — тогда
@@ -104,7 +104,7 @@ class DrawingCanvas extends StatefulWidget {
 
   /// Фигура-подсказка под штрихами: её пользователь обводит.
   final TracingShape? placeholder;
-  final Color placeholderColor;
+  final Color? placeholderColor;
   final double placeholderPadding;
 
   /// Правила, по которым ввод признаётся совпавшим с фигурой.
@@ -184,21 +184,21 @@ class DrawingCanvas extends StatefulWidget {
   const DrawingCanvas({
     Key? key,
     this.controller,
-    this.color = UIColors.text,
+    this.color,
     this.filledColor,
-    this.completedColor = UIColors.primary,
+    this.completedColor,
     this.strokeWidth,
     this.penScale = 1.1,
     this.bandScale = 1.5,
     this.backgroundColor = UIColors.transparent,
     this.mode = TracingMode.tracing,
     this.placeholder,
-    this.placeholderColor = UIColors.backgroundShapes1,
+    this.placeholderColor,
     this.placeholderPadding = 24,
     this.matcher = const TracingMatcher(),
     this.mergeDuration = const Duration(milliseconds: 250),
     this.showDemo = true,
-    this.demoColor = UIColors.secondary2,
+    this.demoColor,
     this.demoSpeed = 350,
     this.demoCurve = Curves.easeOut,
     this.demoPartGap = const Duration(milliseconds: 100),
@@ -762,13 +762,14 @@ class _DrawingCanvasState extends State<DrawingCanvas>
                       _completionColor,
                     ]),
                     guide: _showsGuide ? shape : null,
-                    placeholderColor: widget.placeholderColor,
+                    placeholderColor:
+                        widget.placeholderColor ?? UIColors.backgroundShapes1,
                     demo: _demo,
                     demoCurve: widget.demoCurve,
-                    demoColor: widget.demoColor ?? _controller.color,
+                    demoColor: widget.demoColor ?? UIColors.secondary2,
                     filled: List.of(_filled),
                     inkColor: widget.filledColor ?? _controller.color,
-                    completedColor: widget.completedColor,
+                    completedColor: widget.completedColor ?? UIColors.primary,
                     completionColor: _completionColor,
                     // Контур и собранные части — своей толщиной: перо шире
                     // только у пользователя.

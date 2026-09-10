@@ -4,7 +4,7 @@ import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 
 class CircleButton extends StatelessWidget {
   final double size;
-  final Color color;
+  final Color? color;
   final bool showBorder;
   final double borderWidth;
 
@@ -21,7 +21,7 @@ class CircleButton extends StatelessWidget {
     this.onPressStart,
     this.onPressEnd,
     this.size = 42,
-    this.color = UIColors.primary,
+    this.color,
     this.showBorder = true,
     this.borderWidth = 1,
     this.child,
@@ -40,7 +40,7 @@ class CircleButton extends StatelessWidget {
         padding: showBorder ? EdgeInsets.all(borderWidth) : EdgeInsets.zero,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [UIColors.primary, UIColors.circleButtonBottom],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -51,12 +51,11 @@ class CircleButton extends StatelessWidget {
                   width: borderWidth,
                 )
               : null,
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: UIColors.circleButtonShadow,
+              color: UIColors.shadows,
               spreadRadius: 1,
               blurRadius: 8,
-
               offset: Offset(0, 2),
             ),
           ],

@@ -35,7 +35,7 @@ class CourseLessonPreview extends StatelessWidget {
                     Container(
                       width: 6,
                       height: 6,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: UIColors.primary,
                         shape: BoxShape.circle,
                       ),
@@ -95,7 +95,7 @@ class CourseLessonPreview extends StatelessWidget {
                       if (atom?.kind == AtomKind.syllable ||
                           (atom?.form != null &&
                               atom?.form != LetterForm.isolated))
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 14),
                           child: Icon(
                             Icons.arrow_forward_rounded,
@@ -130,7 +130,7 @@ class CourseLessonPreview extends StatelessWidget {
                           ],
                         ),
                         child: atom == null
-                            ? const Icon(
+                            ? Icon(
                                 Icons.auto_stories_outlined,
                                 color: UIColors.highlightArea,
                                 size: 42,
@@ -233,16 +233,16 @@ class CourseActivityWeek extends StatelessWidget {
                   child: active
                       ? Icon(
                           Icons.check_rounded,
-                          size: 18,
+                          size: 24,
                           color: current
-                              ? UIColors.highlightArea
+                              ? UIColors.primaryButtonText
                               : UIColors.primary,
                         )
                       : Text(
                           '${date.day}',
                           style: UITextStyles.regular12.copyWith(
                             color: current
-                                ? UIColors.highlightArea
+                                ? UIColors.primaryButtonText
                                 : UIColors.secondary2,
                           ),
                         ),
@@ -351,7 +351,7 @@ class CourseOverview extends StatelessWidget {
               ),
             )
           else
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 9),
               child: Icon(
                 Icons.check_circle_outline_rounded,
@@ -436,7 +436,7 @@ class _OverviewTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.north_east_rounded,
                   size: 16,
                   color: UIColors.secondary2,
@@ -473,7 +473,7 @@ class _CourseSurface extends StatelessWidget {
       color: UIColors.cardBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
-        side: const BorderSide(color: UIColors.highlightArea),
+        side: BorderSide(color: UIColors.highlightArea),
       ),
       clipBehavior: Clip.antiAlias,
       child: onTap == null ? child : InkWell(onTap: onTap, child: child),

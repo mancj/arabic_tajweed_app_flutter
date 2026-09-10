@@ -6,9 +6,14 @@ import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 class BadgeLabel extends StatelessWidget {
   final String text;
   final Color color;
+  final Color? textColor;
 
-  const BadgeLabel({required this.text, required this.color, Key? key})
-    : super(key: key);
+  const BadgeLabel({
+    required this.text,
+    required this.color,
+    this.textColor,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +23,7 @@ class BadgeLabel extends StatelessWidget {
         color: color,
         borderRadius: 13,
       ),
-      child: Text(text, style: UITextStyles.badge),
+      child: Text(text, style: UITextStyles.badge.copyWith(color: textColor)),
     );
   }
 }

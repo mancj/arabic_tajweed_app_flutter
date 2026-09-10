@@ -25,7 +25,7 @@ class DrawingController extends ChangeNotifier {
   /// Толщины здесь нет намеренно: её знает только [DrawingCanvas], потому
   /// что перо масштабируется вместе с фигурой при раскладке.
   DrawingController({
-    Color color = UIColors.text,
+    Color? color,
     double smoothing = 0.3,
     double minDistance = 3,
   }) : assert(
@@ -33,7 +33,7 @@ class DrawingController extends ChangeNotifier {
          'smoothing — доля от 0 до 1, а не пиксели',
        ),
        assert(minDistance >= 0),
-       _color = color,
+       _color = color ?? UIColors.text,
        _smoothing = smoothing,
        _minDistance = minDistance;
 

@@ -199,8 +199,8 @@ class _CheckButton extends StatelessWidget {
         decoration: SquircleBorders.squircleBorder(
           color: UIColors.highlightArea,
           borderRadius: 16,
-          borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
-          shadows: const [
+          borderSide: BorderSide(color: UIColors.borders, width: 0.6),
+          shadows: [
             BoxShadow(
               color: UIColors.shadows,
               offset: Offset(0, 3),
@@ -208,7 +208,7 @@ class _CheckButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Text(
+        child: Text(
           'Проверить',
           style: TextStyle(
             fontFamily: UITextStyles.fontOnest,

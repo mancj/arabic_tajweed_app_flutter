@@ -148,7 +148,7 @@ class _ResultSheet extends StatelessWidget {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: UIColors.cardBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -166,8 +166,8 @@ class _ResultSheet extends StatelessWidget {
             const SizedBox(height: 18),
             Icon(
               correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
-              size: 46,
-              color: correct ? UIColors.primary : UIColors.secondary1,
+              size: 41,
+              color: correct ? UIColors.primary : UIColors.primaryButtonText,
             ),
             const SizedBox(height: 12),
             Text(
@@ -339,7 +339,7 @@ class _TracingBar extends GetView<LessonController> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: controller.giveUpTracing,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.only(bottom: 8, top: 6),
               child: Text('Не помню, показать', style: UITextStyles.hint),
             ),
@@ -379,7 +379,7 @@ class _RecordBar extends GetView<LessonController> {
             : GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: controller.skipExercise,
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text('Пропустить задание', style: UITextStyles.hint),
                 ),
@@ -481,7 +481,7 @@ class _Loader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const CircularProgressIndicator(color: UIColors.primary);
+      CircularProgressIndicator(color: UIColors.primary);
 }
 
 class _Centered extends StatelessWidget {
@@ -668,7 +668,14 @@ class _QuestionFor extends GetView<LessonController> {
             LetterWidgetCard(
               key: ValueKey('sound.${controller.exerciseIndex}'),
               letter: '?',
-              glyph: SvgPicture.asset(UISVGAssets.questionMark, height: 48),
+              glyph: SvgPicture.asset(
+                UISVGAssets.questionMark,
+                height: 48,
+                colorFilter: ColorFilter.mode(
+                  UIColors.primary,
+                  BlendMode.srcIn,
+                ),
+              ),
               isArabic: false,
               labelText: 'Вопрос',
               question: _promptFor(exercise),
@@ -681,7 +688,7 @@ class _QuestionFor extends GetView<LessonController> {
             if (!named)
               TextButton(
                 onPressed: controller.revealName,
-                child: const Text(
+                child: Text(
                   'Не слышно? Показать название',
                   style: UITextStyles.regular14,
                 ),
@@ -827,7 +834,7 @@ class _StubTask extends StatelessWidget {
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
         borderRadius: 20,
-        borderSide: const BorderSide(color: UIColors.secondary1),
+        borderSide: BorderSide(color: UIColors.secondary1),
       ),
       child: Column(
         children: [

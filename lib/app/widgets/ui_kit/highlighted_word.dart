@@ -12,16 +12,16 @@ class HighlightedWord extends StatelessWidget {
     required this.word,
     required this.index,
     this.fontSize = 64,
-    this.color = UIColors.text,
-    this.highlight = UIColors.primary,
+    this.color,
+    this.highlight,
     Key? key,
   }) : super(key: key);
 
   final String word;
   final int index;
   final double fontSize;
-  final Color color;
-  final Color highlight;
+  final Color? color;
+  final Color? highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +29,8 @@ class HighlightedWord extends StatelessWidget {
       word: word,
       index: index,
       fontSize: fontSize,
-      color: color,
-      highlight: highlight,
+      color: color ?? UIColors.text,
+      highlight: highlight ?? UIColors.primary,
     );
     return CustomPaint(size: painter.size, painter: painter);
   }

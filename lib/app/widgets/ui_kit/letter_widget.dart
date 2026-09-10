@@ -112,7 +112,7 @@ class LetterWidgetCard extends StatelessWidget {
         TextSpan(text: text.substring(0, at)),
         TextSpan(
           text: accent,
-          style: const TextStyle(color: UIColors.primary),
+          style: TextStyle(color: UIColors.primary),
         ),
         TextSpan(text: text.substring(at + accent!.length)),
       ],
@@ -131,7 +131,7 @@ class LetterWidgetCard extends StatelessWidget {
           border: Border.all(
             color: UIColors.highlightArea.withValues(alpha: .3),
           ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               color: UIColors.shadows,
               spreadRadius: 1,
@@ -344,48 +344,50 @@ class LetterWidgetCard extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Opacity(
-          opacity: .05,
-          child: Transform.scale(
-            scale: scaleFactor,
-            child: TiltParallax(
-              offset: const Offset(parallaxOffset1, parallaxOffset1),
-              child:
-                  DriftingRotation(
-                        child: Image.asset(shape.$2, fit: BoxFit.cover),
-                      )
-                      .animate()
-                      .fadeIn(duration: .5.seconds)
-                      .scaleXY(
-                        begin: 0.9,
-                        end: 1,
-                        duration: .8.seconds,
-                        curve: curve,
+        Transform.scale(
+          scale: scaleFactor,
+          child: TiltParallax(
+            offset: const Offset(parallaxOffset1, parallaxOffset1),
+            child:
+                DriftingRotation(
+                      child: Image.asset(
+                        shape.$2,
+                        fit: BoxFit.cover,
+                        color: UIColors.backgroundShapes2,
                       ),
-            ),
+                    )
+                    .animate()
+                    .fadeIn(duration: .5.seconds)
+                    .scaleXY(
+                      begin: 0.9,
+                      end: 1,
+                      duration: .8.seconds,
+                      curve: curve,
+                    ),
           ),
         ),
-        Opacity(
-          opacity: .1,
-          child: Transform.scale(
-            scale: scaleFactor,
-            child: TiltParallax(
-              offset: const Offset(parallaxOffset2, parallaxOffset2),
-              child:
-                  DriftingRotation(
-                        duration: const Duration(milliseconds: 3600),
-                        period: const Duration(seconds: 6),
-                        child: Image.asset(shape.$1, fit: BoxFit.cover),
-                      )
-                      .animate()
-                      .fadeIn(duration: .5.seconds)
-                      .scaleXY(
-                        begin: 1.1,
-                        end: 1,
-                        duration: .6.seconds,
-                        curve: curve,
+        Transform.scale(
+          scale: scaleFactor,
+          child: TiltParallax(
+            offset: const Offset(parallaxOffset2, parallaxOffset2),
+            child:
+                DriftingRotation(
+                      duration: const Duration(milliseconds: 3600),
+                      period: const Duration(seconds: 6),
+                      child: Image.asset(
+                        shape.$1,
+                        fit: BoxFit.cover,
+                        color: UIColors.backgroundShapes2,
                       ),
-            ),
+                    )
+                    .animate()
+                    .fadeIn(duration: .5.seconds)
+                    .scaleXY(
+                      begin: 1.1,
+                      end: 1,
+                      duration: .6.seconds,
+                      curve: curve,
+                    ),
           ),
         ),
         Opacity(

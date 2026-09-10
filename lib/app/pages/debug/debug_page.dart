@@ -169,7 +169,7 @@ class _DebugTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: UIColors.secondary2),
+              Icon(Icons.chevron_right, color: UIColors.secondary2),
             ],
           ),
         ),

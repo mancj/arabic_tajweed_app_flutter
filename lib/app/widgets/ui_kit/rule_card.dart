@@ -36,8 +36,8 @@ class RuleCard extends StatelessWidget {
         color: UIColors.cardBackground,
         borderRadius: 24,
         cornerSmoothing: 0,
-        borderSide: const BorderSide(color: UIColors.highlightArea),
-        shadows: const [
+        borderSide: BorderSide(color: UIColors.highlightArea),
+        shadows: [
           BoxShadow(
             color: UIColors.shadows,
             offset: Offset(0, 4),
@@ -49,7 +49,11 @@ class RuleCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (badge != null) ...[
-            BadgeLabel(text: badge, color: UIColors.primary),
+            BadgeLabel(
+              text: badge,
+              color: UIColors.primary,
+              textColor: UIColors.badgeText2,
+            ),
             const Margin.vertical(8),
           ],
           Text(title, style: UITextStyles.cardTitle),

@@ -38,7 +38,7 @@ class CoursePage extends GetView<CourseController> {
           padding: insets.copyWith(top: insets.top + 24),
           child: Column(
             children: [
-              const Text(
+              Text(
                 'Не удалось подготовить занятие',
                 style: UITextStyles.semiboldText,
               ),
@@ -84,7 +84,7 @@ class CoursePage extends GetView<CourseController> {
                   await Get.toNamed(DebugPage.routeName);
                   await controller.refreshBoard();
                 },
-                child: const Text('Меню отладки', style: UITextStyles.hint),
+                child: Text('Меню отладки', style: UITextStyles.hint),
               ),
             ],
           ],
