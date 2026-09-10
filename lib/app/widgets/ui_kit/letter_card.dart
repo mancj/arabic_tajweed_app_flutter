@@ -46,7 +46,7 @@ class LetterCard extends StatelessWidget {
             borderSide: const BorderSide(color: UIColors.secondary1),
             shadows: const [
               BoxShadow(
-                color: UIColors.borders,
+                color: UIColors.shadows,
                 offset: Offset(0, 4),
                 blurRadius: 3,
               ),

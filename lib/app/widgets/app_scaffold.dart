@@ -192,7 +192,7 @@ class _Header extends StatelessWidget {
                   color: UIColors.text,
                   shadows: [
                     Shadow(
-                      color: UIColors.highlightArea.withValues(alpha: .25),
+                      color: UIColors.shadows,
                       offset: Offset(0, 4),
                       blurRadius: 4,
                     ),

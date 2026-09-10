@@ -9,7 +9,7 @@ class UIColors {
   const UIColors._();
 
   static const pageBackground = Color(0xFFECECEC);
-  static const secondary1 = Color(0xFF8C92A2);
+  static const secondary1 = Color(0xFF8A91A4);
   static const secondary2 = Color(0xFF6F7F91);
   static const primary = Color(0xFFEE7740);
   static const primary40 = Color(0x66EE7740);
@@ -20,6 +20,7 @@ class UIColors {
   static const cardBackground = Color(0xFFF7F7F7);
   static const highlightArea = Color(0xFFFFFFFF);
   static const borders = Color(0xFFFFFFFF);
+  static const shadows = Color(0x0D0C233E);
 
   // Точные оттенки старого оформления кнопок.
   static const primaryButtonBottom = Color(0xFFE36024);

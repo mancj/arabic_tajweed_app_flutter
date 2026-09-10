@@ -133,7 +133,7 @@ class LetterWidgetCard extends StatelessWidget {
           ),
           boxShadow: const [
             BoxShadow(
-              color: UIColors.borders,
+              color: UIColors.shadows,
               spreadRadius: 1,
               blurRadius: 8,
               offset: Offset(0, 2),
@@ -277,7 +277,7 @@ class LetterWidgetCard extends StatelessWidget {
                       offset: const Offset(2, 2),
                       blurRadius: 16,
                       spreadRadius: 8,
-                      color: UIColors.cardBackground.withValues(alpha: 0.7),
+                      color: UIColors.shadows,
                     ),
                   ],
                 ),

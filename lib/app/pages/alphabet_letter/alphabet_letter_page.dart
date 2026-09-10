@@ -194,7 +194,7 @@ class _FormCard extends StatelessWidget {
             borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
             shadows: const [
               BoxShadow(
-                color: UIColors.borders,
+                color: UIColors.shadows,
                 offset: Offset(0, 3),
                 blurRadius: 1.5,
               ),
@@ -283,7 +283,7 @@ class _PronunciationCard extends StatelessWidget {
         borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
         shadows: const [
           BoxShadow(
-            color: UIColors.borders,
+            color: UIColors.shadows,
             offset: Offset(0, 4),
             blurRadius: 1.95,
           ),

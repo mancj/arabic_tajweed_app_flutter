@@ -41,7 +41,7 @@ class LessonCard extends StatelessWidget {
         ),
         shadows: const [
           BoxShadow(
-            color: UIColors.borders,
+            color: UIColors.shadows,
             spreadRadius: 1,
             blurRadius: 8,
             offset: Offset(0, 2),

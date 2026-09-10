@@ -463,7 +463,7 @@ class _CourseSurface extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: UIColors.text.withValues(alpha: .04),
+          color: UIColors.shadows,
           blurRadius: 14,
           offset: const Offset(0, 7),
         ),

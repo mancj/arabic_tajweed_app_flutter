@@ -39,7 +39,7 @@ class AnswerOption extends StatelessWidget {
           shadows: selected
               ? const [
                   BoxShadow(
-                    color: UIColors.borders,
+                    color: UIColors.shadows,
                     offset: Offset(0, 2),
                     blurRadius: 2,
                   ),

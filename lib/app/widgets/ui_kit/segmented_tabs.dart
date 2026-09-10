@@ -58,7 +58,7 @@ class SegmentedTabs extends StatelessWidget {
         borderSide: const BorderSide(color: UIColors.borders, width: 0.6),
         shadows: const [
           BoxShadow(
-            color: UIColors.borders,
+            color: UIColors.shadows,
             offset: Offset(0, 3),
             blurRadius: 1.5,
           ),
