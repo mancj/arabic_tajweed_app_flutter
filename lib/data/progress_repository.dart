@@ -29,6 +29,18 @@ class ProgressRepository {
   /// темпа, поэтому он считается из лога, а не хранится отдельно.
   Set<int> _sessions = const {};
   Set<int> _sessionsWithNew = const {};
+  Set<DateTime> _activityDays = const {};
+
+  /// Дни реальной работы по местному времени, включая незаконченные занятия.
+  Future<Set<DateTime>> activityDays() async {
+    if (!_loaded) await recompute();
+    return Set.unmodifiable(_activityDays);
+  }
+
+  static DateTime _localDay(DateTime at) {
+    final local = at.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
 
   Future<Map<String, AtomProgress>> progress() async {
     if (!_loaded) await recompute();
@@ -96,6 +108,10 @@ class ProgressRepository {
   }) async {
     await _db.completeTopic(topicId, sessionId: sessionId, byTest: byTest);
     _completions = await _db.readCompletions();
+    _activityDays = {
+      ..._activityDays,
+      ..._completions.map((c) => _localDay(c.at)),
+    };
   }
 
   /// Полный пересчёт из лога. Нужен при старте и после изменения порогов:
@@ -104,6 +120,10 @@ class ProgressRepository {
     final log = await _db.readAll();
     _cache = _fold.fold(log);
     _completions = await _db.readCompletions();
+    _activityDays = {
+      ...log.map((e) => _localDay(e.at)),
+      ..._completions.map((c) => _localDay(c.at)),
+    };
     _sessions = {
       ...log.map((e) => e.sessionId),
       ..._completions.map((c) => c.sessionId),
@@ -127,6 +147,7 @@ class ProgressRepository {
       for (final id in touched) id: _cache[id] ?? const AtomProgress(),
     };
     _cache = {..._cache, ..._fold.foldOnto(base, entries)};
+    _activityDays = {..._activityDays, ...entries.map((e) => _localDay(e.at))};
     _sessions = {..._sessions, ...entries.map((e) => e.sessionId)};
     _sessionsWithNew = {
       ..._sessionsWithNew,

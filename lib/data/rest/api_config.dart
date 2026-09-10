@@ -10,7 +10,7 @@ class ApiConfig {
   /// Адрес этой машины в домашнем Wi-Fi по умолчанию: телефон и эмулятор
   /// ходят на него по сети, поэтому localhost здесь не годится. При смене
   /// сети адрес можно изменить на экране Debug.
-  static const defaultBaseUrl = 'http://192.168.68.53:8765';
+  static const defaultBaseUrl = 'http://192.168.68.52:8765';
 
   static String get baseUrl {
     if (_useLocalServer) return defaultBaseUrl;

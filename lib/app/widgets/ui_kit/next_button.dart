@@ -12,6 +12,7 @@ class NextButton extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
+  final IconData? icon;
 
   /// Неактивная кнопка гасится, но остаётся на месте — иначе нижняя панель
   /// прыгает по высоте.
@@ -21,6 +22,7 @@ class NextButton extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.onTap,
+    this.icon,
     this.enabled = true,
     Key? key,
   }) : super(key: key);
@@ -65,7 +67,7 @@ class NextButton extends StatelessWidget {
             borderRadius: _borderRadius,
             shadows: [
               InnerShadow(
-                color: UIColors.buttonShadow.withOpacity(0.2),
+                color: UIColors.buttonShadow.withValues(alpha: 0.2),
                 offset: const Offset(0, -3),
                 blur: 6,
               ),
@@ -79,15 +81,26 @@ class NextButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: UITextStyles.fontOnest,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    height: 1.2,
-                    color: UIColors.white,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 20, color: UIColors.white),
+                      const SizedBox(width: 10),
+                    ],
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: UITextStyles.fontOnest,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          height: 1.2,
+                          color: UIColors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (subtitle != null)
                   Text(

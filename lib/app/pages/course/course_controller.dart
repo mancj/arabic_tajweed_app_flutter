@@ -7,6 +7,7 @@ import '../../../data/curriculum_loader.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
 import '../../../domain/atom.dart';
+import '../../../domain/atom_state.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/learning_rules.dart';
 import '../../../domain/planner.dart';
@@ -32,6 +33,8 @@ class CourseController extends GetxController {
   final loadError = RxnString();
   final statuses = <TopicStatus>[].obs;
   final nextPlan = Rxn<LessonPlan>();
+  final upcomingTopic = Rxn<TopicStatus>();
+  final activityDays = <DateTime>[].obs;
   late Curriculum curriculum;
   late ProgressRepository repository;
   late CurriculumContext context;
@@ -63,13 +66,15 @@ class CourseController extends GetxController {
       final plan = await planFor();
       final completions = await repository.completions();
       statuses.assignAll(
-        TopicBoard(curriculum).statuses(
+        TopicBoard(curriculum, rules: rules).statuses(
           context,
           completed: completions.map((id, c) => MapEntry(id, c.byTest)),
           currentId: plan.topicId,
         ),
       );
       nextPlan.value = plan;
+      activityDays.assignAll(await repository.activityDays());
+      upcomingTopic.value = await _upcomingAfter(plan);
     } catch (e) {
       loadError.value = '$e';
       nextPlan.value = null;
@@ -89,6 +94,131 @@ class CourseController extends GetxController {
   TopicStatus? get currentTopic =>
       statuses.firstWhereOrNull((s) => s.topic.id == nextPlan.value?.topicId);
   bool get allDone => statuses.isNotEmpty && statuses.every((s) => s.isDone);
+  bool get hasStarted => activityDays.isNotEmpty;
+
+  int get knownLetters => context.knownLetterCount;
+  int get totalLetters => curriculum.formsByLetter.length;
+
+  List<Atom> atomsFor(TopicStatus topic) => curriculum.nodes
+      .where((n) => topic.topic.counterOf.contains(n.atom.id))
+      .map((n) => n.atom)
+      .where((a) => a.kind != AtomKind.concept)
+      .toList();
+
+  List<Atom> get lessonAtoms {
+    final plan = nextPlan.value;
+    if (plan == null) return [];
+    final fresh = plan.newAtoms
+        .where((a) => a.kind != AtomKind.concept)
+        .toList();
+    return fresh.isNotEmpty
+        ? fresh
+        : curriculum.nodes
+              .where((n) => plan.reviewAtoms.contains(n.atom.id))
+              .map((n) => n.atom)
+              .where((a) => a.kind != AtomKind.concept)
+              .toList();
+  }
+
+  Atom? get featuredAtom => lessonAtoms.firstOrNull;
+
+  String get lessonSource {
+    final atom = featuredAtom;
+    if (atom == null) return '';
+    if (atom.kind == AtomKind.syllable) return atom.display.split('').join(' ');
+    if (atom.form != null && atom.form != LetterForm.isolated) {
+      return curriculum.nodes
+              .firstWhereOrNull(
+                (n) =>
+                    n.atom.letterId == atom.letterId &&
+                    n.atom.form == LetterForm.isolated,
+              )
+              ?.atom
+              .display ??
+          '';
+    }
+    return lessonAtoms.skip(1).take(2).map((a) => a.display).join(' ');
+  }
+
+  String get lessonFocus {
+    if (nextPlan.value?.isFocusedReview ?? false) return 'Короткое закрепление';
+    if (nextPlan.value?.newAtoms.isEmpty ?? true) {
+      return 'Тренируем знакомый материал';
+    }
+    if (lessonAtoms.any((a) => a.form == LetterForm.isolated)) {
+      return 'Пишем и называем вслух';
+    }
+    if (lessonAtoms.any((a) => a.form != null)) return 'Все формы этого блока';
+    if (featuredAtom?.kind == AtomKind.syllable) {
+      return 'Учимся читать соединения';
+    }
+    return 'Знакомимся с новым правилом';
+  }
+
+  String get lessonDetail {
+    final plan = nextPlan.value;
+    if (plan == null) return '';
+    if (plan.isFocusedReview) {
+      final count = plan.reviewCounts.values.sum;
+      final word = count == 1
+          ? 'задание'
+          : count < 5
+          ? 'задания'
+          : 'заданий';
+      return '$count $word по оставшимся пробелам';
+    }
+    if (plan.newAtoms.isEmpty) return 'Узнаём увереннее, вспоминаем быстрее';
+    if (plan.spacedReview.isNotEmpty || plan.reviewAtoms.isNotEmpty) {
+      return 'И повторяем знакомый материал';
+    }
+    if (lessonAtoms.any((a) => a.form == LetterForm.isolated)) {
+      return 'С обводкой и по памяти';
+    }
+    if (lessonAtoms.any((a) => a.form != null)) {
+      return 'Покажем и проверим каждую';
+    }
+    return 'Разбираем правило и тренируемся';
+  }
+
+  /// Прогноз после закрепления всего материала карточки. Используем тот же
+  /// планировщик: соединения могут открыться раньше следующей группы букв.
+  /// Это только витрина — записи прогресса здесь не меняются.
+  Future<TopicStatus?> _upcomingAfter(LessonPlan plan) async {
+    if (allDone) return null;
+    final ids = {...plan.newAtoms.map((a) => a.id), ...plan.reviewAtoms};
+    final projected = CurriculumContext(
+      formsByLetter: context.formsByLetter,
+      progress: {
+        ...context.progress,
+        for (final node in curriculum.nodes.where(
+          (n) => ids.contains(n.atom.id),
+        ))
+          node.atom.id: (context.progress[node.atom.id] ?? const AtomProgress())
+              .copyWith(
+                state: node.atom.kind == AtomKind.concept
+                    ? AtomState.introduced
+                    : AtomState.known,
+                successfulModes: {
+                  ...?context.progress[node.atom.id]?.successfulModes,
+                  ...rules.requiredPracticeModes(node.atom),
+                },
+                clearDeferred: true,
+              ),
+      },
+    );
+    final after = LessonPlanner(curriculum: curriculum, rules: rules).plan(
+      ctx: projected,
+      sessionId: await repository.nextSessionId(),
+      sessionsWithoutNew: rules.sessionsWithoutNewBeforeForcing,
+    );
+    return statuses.firstWhereOrNull(
+          (s) => s.topic.id == after.topicId && s.topic.id != plan.topicId,
+        ) ??
+        statuses.firstWhereOrNull(
+          (s) => !s.isDone && s.topic.id != plan.topicId,
+        );
+  }
+
   bool get canStart =>
       !loading.value &&
       !opening.value &&
@@ -100,6 +230,7 @@ class CourseController extends GetxController {
     final plan = nextPlan.value;
     if (plan == null) return 'Готовим занятие';
     if (plan.newAtoms.isEmpty) return 'Закрепим знакомое';
+    if (plan.topicId == 'm.join') return 'Соединяем первые буквы';
     return currentTopic?.topic.title ?? 'Познакомимся с новым';
   }
 

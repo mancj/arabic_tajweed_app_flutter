@@ -39,6 +39,60 @@ class LessonPage extends GetView<LessonController> {
 
   @override
   Widget build(BuildContext context) {
+    return _ResultSheetHost(controller: controller);
+  }
+}
+
+class _ResultSheetHost extends StatefulWidget {
+  const _ResultSheetHost({required this.controller});
+
+  final LessonController controller;
+
+  @override
+  State<_ResultSheetHost> createState() => _ResultSheetHostState();
+}
+
+class _ResultSheetHostState extends State<_ResultSheetHost> {
+  late final Worker _correctWorker;
+  late final Worker _wrongWorker;
+  bool _sheetOpen = false;
+
+  LessonController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _correctWorker = ever(controller.wasCorrect, (_) => _showResultSheet());
+    _wrongWorker = ever(controller.wasWrong, (_) => _showResultSheet());
+  }
+
+  void _showResultSheet() {
+    if (!mounted || _sheetOpen) return;
+    if (!controller.wasCorrect.value && !controller.wasWrong.value) return;
+
+    _sheetOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (_) => _ResultSheet(controller: controller),
+      );
+      _sheetOpen = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _correctWorker.dispose();
+    _wrongWorker.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AppScaffold(
       title: controller.isReviewOnly ? 'Повторение' : 'Урок',
       bottomBar: Obx(() => _BottomBar(stage: controller.stage.value)),
@@ -61,6 +115,90 @@ class LessonPage extends GetView<LessonController> {
   }
 }
 
+class _ResultSheet extends StatelessWidget {
+  const _ResultSheet({required this.controller});
+
+  final LessonController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final correct = controller.wasCorrect.value;
+    final exercise = controller.current;
+    final label = exercise?.atom.label ?? 'ответ';
+    final isPronunciation = exercise?.mode == ExerciseMode.sayName;
+    final check = controller.pronunciation.result.value;
+
+    final title = correct
+        ? (isPronunciation ? 'Правильно произнесено' : 'Верно!')
+        : 'Попробуйте ещё раз';
+    final text = correct
+        ? isPronunciation && check != null
+              ? 'Слышно: ${check.heard}.'
+              : isPronunciation
+              ? 'Ответ засчитан.'
+              : exercise?.mode.isTracing == true
+              ? 'Буква $label написана правильно.'
+              : 'Правильный ответ: $label.'
+        : isPronunciation && check != null
+        ? 'Услышано: ${check.heard}. Это буква $label.'
+        : exercise?.mode.isTracing == true
+        ? 'Попробуйте написать букву $label ещё раз.'
+        : 'Правильный ответ: $label.';
+
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        decoration: const BoxDecoration(
+          color: UIColors.ruleCardBackground,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: UIColors.secondary1,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Icon(
+              correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
+              size: 46,
+              color: correct ? UIColors.tracingCompleted : UIColors.coral,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: UITextStyles.cardTitle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              text,
+              style: UITextStyles.regularText,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: NextButton(
+                title: correct ? 'Продолжить' : 'Попробовать ещё раз',
+                onTap: () async {
+                  await controller.submit();
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BottomBar extends GetView<LessonController> {
   const _BottomBar({required this.stage});
 
@@ -75,6 +213,10 @@ class _BottomBar extends GetView<LessonController> {
         onTap: controller.nextIntro,
       ),
       LessonStage.exercise => Obx(() {
+        if (controller.wasWrong.value || controller.wasCorrect.value) {
+          return const SizedBox.shrink();
+        }
+
         // Карточка формы перекрывает задание: сначала объяснение,
         // потом вопрос про ту же букву.
         if (controller.card.value != null) {
@@ -82,9 +224,8 @@ class _BottomBar extends GetView<LessonController> {
         }
 
         final exercise = controller.current;
-        final revealed = controller.wasWrong.value;
-        final isTracing = controller.isTracingTask && !revealed;
-        final isSayName = controller.isSayNameTask && !revealed;
+        final isTracing = controller.isTracingTask;
+        final isSayName = controller.isSayNameTask;
 
         // У заглушки нет своей проверки — обе ветки задаёт человек.
         // TODO(stub): убрать вторую кнопку вместе с заглушками.
@@ -92,8 +233,7 @@ class _BottomBar extends GetView<LessonController> {
             exercise != null &&
             !exercise.isChoice &&
             !controller.isTracingTask &&
-            !controller.isSayNameTask &&
-            !revealed;
+            !controller.isSayNameTask;
 
         return Column(
           mainAxisSize: MainAxisSize.max,
@@ -320,6 +460,7 @@ class _TracingTask extends GetView<LessonController> {
         onAutoPlay: controller.hasVoice(atom)
             ? () => controller.startVoice(atom)
             : null,
+        autoPlay: false,
         track: controller.voiceTrack,
         playbackKey: atom.display,
         controller: controller.drawing,
@@ -534,6 +675,7 @@ class _QuestionFor extends GetView<LessonController> {
               subtitle: named ? atom.label : null,
               onPlay: hasVoice ? () => controller.playVoice(atom) : null,
               onAutoPlay: () => controller.startVoice(atom),
+              autoPlay: false,
               track: controller.voiceTrack,
             ),
             if (!named)
@@ -556,6 +698,7 @@ class _QuestionFor extends GetView<LessonController> {
         questionAccent: atom.form?.inWord,
         onPlay: hasVoice ? () => controller.playVoice(atom) : null,
         onAutoPlay: () => controller.startVoice(atom),
+        autoPlay: false,
         track: controller.voiceTrack,
       ),
       // Старые режимы с именем буквы: в уроках не строятся, см. ExerciseMode.
@@ -646,7 +789,7 @@ class _OptionTile extends GetView<LessonController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final selected = controller.selected.value == index;
-      final revealed = controller.wasWrong.value;
+      final revealed = controller.wasWrong.value || controller.wasCorrect.value;
       final isAnswer = index == exercise.answerIndex;
 
       // После ошибки верный ответ подсвечивается всегда, а выбранный
@@ -719,6 +862,7 @@ class _LetterCardFor extends GetView<LessonController> {
                 ? () => controller.playVoice(atom)
                 : null,
             onAutoPlay: () => controller.startVoice(atom),
+            autoPlay: false,
             track: controller.voiceTrack,
           )
           .animate()

@@ -67,7 +67,7 @@ class ExerciseGenerator {
         .where(_drillable)
         .toList();
 
-    final schedule = _schedule(fresh, review, spaced);
+    final schedule = _schedule(fresh, review, spaced, plan.reviewCounts);
     final slots = <Atom, int>{};
     for (final atom in schedule) {
       slots[atom] = (slots[atom] ?? 0) + 1;
@@ -97,6 +97,7 @@ class ExerciseGenerator {
         spoken: spoken,
         isReview: !plan.newAtoms.contains(atom),
         isTopicAtom: fresh.contains(atom) || review.contains(atom),
+        focused: plan.isFocusedReview,
       );
       if (ex != null) exercises.add(ex);
     }
@@ -114,7 +115,12 @@ class ExerciseGenerator {
   /// Новый атом встречается чаще старого: он в этом уроке и вводится.
   /// Если атомов меньше, чем слотов, круги повторяются — но не больше
   /// [_maxPerAtom] раз на атом, иначе урок вырождается в одну букву.
-  List<Atom> _schedule(List<Atom> fresh, List<Atom> review, List<Atom> spaced) {
+  List<Atom> _schedule(
+    List<Atom> fresh,
+    List<Atom> review,
+    List<Atom> spaced,
+    Map<String, int> reviewCounts,
+  ) {
     // Слоты под возврат старого резервируются первыми: иначе тема съедает
     // весь урок и буквы прошлых уроков не всплывают. А если тема сама
     // не заполняет урок, остаток тоже отдаётся повтору — урок не должен
@@ -126,7 +132,7 @@ class ExerciseGenerator {
     // проверена заранее: здесь ни одна форма уже не может исчезнуть.
     final remaining = {
       for (final atom in {...fresh, ...review})
-        atom: rules.minimumExercises(atom),
+        atom: reviewCounts[atom.id] ?? rules.minimumExercises(atom),
     };
     var available = forTopic - remaining.values.sum;
     if (remaining.isEmpty && spaced.isEmpty) return const [];
@@ -139,6 +145,8 @@ class ExerciseGenerator {
     }
     final cap = remaining.isEmpty
         ? 0
+        : reviewCounts.isNotEmpty
+        ? remaining.values.sum
         : min(forTopic, remaining.length * _maxPerAtom);
     final spacedSlots = spaced.take(rules.tasksPerSession - cap).toList();
 
@@ -216,6 +224,7 @@ class ExerciseGenerator {
     required Set<String> spoken,
     required bool isReview,
     required bool isTopicAtom,
+    required bool focused,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
     if (atom.kind == AtomKind.syllable) {
@@ -226,7 +235,24 @@ class ExerciseGenerator {
     // даже при повторном открытии темы. При пяти встречах между ними
     // узнавание; при трёх-четырёх сначала сохраняем обязательные режимы.
     // У новой буквы сессия переносит голос сразу после её объяснения.
-    final requiredPractice = isTopicAtom && _isBaseLetter(atom);
+    final p = ctx.progress[atom.id] ?? const AtomProgress();
+    final missingPractice = focused && !p.weak
+        ? rules
+              .requiredPracticeModes(atom)
+              .difference(p.successfulModes)
+              .toList()
+        : const <ExerciseMode>[];
+    if (slot.index < missingPractice.length) {
+      final mode = missingPractice[slot.index];
+      if (mode == ExerciseMode.sayName) spoken.add(atom.letterId!);
+      return Exercise.direct(
+        atom: atom,
+        mode: mode,
+        level: level,
+        isReview: true,
+      );
+    }
+    final requiredPractice = !focused && isTopicAtom && _isBaseLetter(atom);
     if (requiredPractice) {
       final mode = switch (slot.index) {
         0 when atom.tracing != null => ExerciseMode.trace,
@@ -252,9 +278,15 @@ class ExerciseGenerator {
     // в повторении слот один, и без этого назвать её вслух не просили бы
     // никогда. Первую встречу новой буквы голос не берёт: обводка по
     // контуру остаётся первой.
-    final p = ctx.progress[atom.id] ?? const AtomProgress();
     final active = !requiredPractice && _isActiveSlot(p, slot);
-    final tracing = active
+    final tracing =
+        focused &&
+            active &&
+            atom.tracing != null &&
+            !_isBaseLetter(atom) &&
+            !ctx.isKnown(atom.id)
+        ? ExerciseMode.trace
+        : active
         ? _tracingMode(atom, p, slot, traced, isReview: isReview)
         : null;
     if (_saysName(atom, slot, spoken, isReview: isReview, activeSlot: active)) {
@@ -286,7 +318,9 @@ class ExerciseGenerator {
     // смысла. Нужны хотя бы две формы кроме спрашиваемой, иначе вариант
     // всего один.
     final forms = _otherFormsOf(atom, pool);
-    if (forms.length >= 2 && _random.nextInt(3) == 0) {
+    if (forms.length >= 2 &&
+        ((focused && !p.modesInStreak.contains(ExerciseMode.positionToForm)) ||
+            _random.nextInt(3) == 0)) {
       final prompt =
           forms.firstWhereOrNull((f) => f.form == LetterForm.isolated) ??
           forms[_random.nextInt(forms.length)];

@@ -4,6 +4,7 @@ import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/topic_board.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,7 +16,15 @@ void main() {
 
   CurriculumContext ctxOf(Map<String, AtomState> states) => CurriculumContext(
     progress: {
-      for (final e in states.entries) e.key: AtomProgress(state: e.value),
+      for (final e in states.entries)
+        e.key: AtomProgress(
+          state: e.value,
+          successfulModes: e.value.index >= AtomState.known.index
+              ? const LearningRules().requiredPracticeModes(
+                  curriculum.nodes.firstWhere((n) => n.atom.id == e.key).atom,
+                )
+              : const {},
+        ),
     },
     formsByLetter: const {},
   );

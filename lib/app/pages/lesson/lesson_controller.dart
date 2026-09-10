@@ -80,6 +80,10 @@ class LessonController extends GetxController {
   final selected = Rxn<int>();
   final wasWrong = false.obs;
 
+  /// Правильный ответ показывается до перехода, чтобы человек успел увидеть
+  /// результат и понять, что именно засчиталось.
+  final wasCorrect = false.obs;
+
   /// Имя буквы в задании на слух показано по просьбе: звук выключен или
   /// не слышно. Само по себе оно в задании не появляется.
   final nameRevealed = false.obs;
@@ -156,7 +160,7 @@ class LessonController extends GetxController {
 
   bool get isSayNameTask {
     _refresh.value;
-    return _session?.current?.mode == ExerciseMode.sayName;
+    return current?.mode == ExerciseMode.sayName;
   }
 
   /// Палец лёг на кнопку: начать запись. После разбора ошибки не пишем —
@@ -201,6 +205,7 @@ class LessonController extends GetxController {
   late final Curriculum _curriculum;
   late final ProgressRepository _progress;
   LessonSession? _session;
+  Exercise? _answeredExercise;
   bool _returnToIntro = false;
   LessonPlan? _plan;
   DateTime _shownAt = DateTime.now();
@@ -218,7 +223,7 @@ class LessonController extends GetxController {
 
   Exercise? get current {
     _refresh.value;
-    return _session?.current;
+    return wasCorrect.value ? _answeredExercise : _session?.current;
   }
 
   double get progress {
@@ -268,7 +273,7 @@ class LessonController extends GetxController {
     _ownAtoms
       ..clear()
       ..addAll(
-        _topicId == null
+        _plan!.isFocusedReview || _topicId == null
             ? _plan!.newAtoms.map((a) => a.id)
             : _curriculum.topics
                       .firstWhereOrNull((t) => t.id == _topicId)
@@ -296,6 +301,7 @@ class LessonController extends GetxController {
   /// показываем её понятия: спросить их заданием нельзя, поэтому
   /// «повторить понятие» означает перечитать объяснение.
   List<Atom> _introFor(LessonPlan plan) {
+    if (plan.isFocusedReview) return const [];
     if (!isTopicLesson) return plan.newAtoms.where(_belongsToIntro).toList();
 
     // Урок по теме показывает её объяснения целиком — и новые, и знакомые.
@@ -415,6 +421,8 @@ class LessonController extends GetxController {
   Future<void> _afterExercise() async {
     selected.value = null;
     wasWrong.value = false;
+    wasCorrect.value = false;
+    _answeredExercise = null;
     if (_returnToIntro) {
       _returnToIntro = false;
       if (introAtom != null) {
@@ -539,7 +547,7 @@ class LessonController extends GetxController {
   /// Задание, где вместо вариантов холст.
   bool get isTracingTask {
     _refresh.value;
-    final exercise = _session?.current;
+    final exercise = current;
     return exercise != null &&
         exercise.mode.isTracing &&
         tracingShape.value != null;
@@ -549,7 +557,7 @@ class LessonController extends GetxController {
   /// после ошибки, когда контур и есть показ верного ответа.
   TracingMode get canvasMode {
     _refresh.value;
-    return _session?.current?.mode == ExerciseMode.trace || wasWrong.value
+    return current?.mode == ExerciseMode.trace || wasWrong.value
         ? TracingMode.tracing
         : TracingMode.freehand;
   }
@@ -606,8 +614,9 @@ class LessonController extends GetxController {
   /// целиком, независимо от того, был ли перед глазами контур.
   bool get canSubmit {
     _refresh.value;
-    final exercise = _session?.current;
+    final exercise = current;
     if (exercise == null) return false;
+    if (wasCorrect.value) return true;
     if (exercise.isChoice) return selected.value != null;
     if (exercise.mode.isTracing && tracingShape.value != null) {
       return tracingDone.value || wasWrong.value;
@@ -618,7 +627,7 @@ class LessonController extends GetxController {
   }
 
   void select(int index) {
-    if (wasWrong.value) return;
+    if (wasWrong.value || wasCorrect.value) return;
     selected.value = index;
   }
 
@@ -630,6 +639,9 @@ class LessonController extends GetxController {
     if (exercise == null) return;
     if (exercise.isChoice) selected.value = exercise.answerIndex;
     await submit(directOutcome: true);
+    // Отладочная кнопка нужна для быстрого прогона курса и не должна
+    // оставлять тестовый проход на экране обратной связи.
+    if (wasCorrect.value) await submit();
   }
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
@@ -658,6 +670,11 @@ class LessonController extends GetxController {
   /// а у оставшихся заглушек его задаёт кнопка.
   Future<void> submit({bool? directOutcome}) async {
     if (stage.value != LessonStage.exercise) return;
+    if (wasCorrect.value) {
+      await _afterExercise();
+      return;
+    }
+
     final session = _session;
     final exercise = session?.current;
     if (session == null || exercise == null) return;
@@ -685,6 +702,7 @@ class LessonController extends GetxController {
     }
 
     final elapsed = DateTime.now().difference(_shownAt);
+    _answeredExercise = exercise;
     final outcome = session.answer(
       exercise,
       choice,
@@ -696,12 +714,17 @@ class LessonController extends GetxController {
     await _progress.record(session.log.last);
 
     if (outcome == AnswerOutcome.wrong) {
+      unawaited(_audio.stop());
       _refresh.value++;
       wasWrong.value = true;
       return;
     }
 
-    await _afterExercise();
+    // После проверки звук вопроса больше не должен звучать поверх обратной
+    // связи — следующий запуск возможен только по ручной кнопке.
+    unawaited(_audio.stop());
+    wasCorrect.value = true;
+    _refresh.value++;
   }
 
   /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они

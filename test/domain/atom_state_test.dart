@@ -4,7 +4,7 @@ import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 const rules = LearningRules();
-final fold = const ProgressFold(rules: rules);
+const fold = ProgressFold(rules: rules);
 final t0 = DateTime(2026, 1, 1);
 
 ProgressEvent answer({
@@ -50,10 +50,20 @@ void main() {
     expect(p.state, AtomState.known);
   });
 
-  test('медленный верный ответ не растит серию, но переводит в learning', () {
-    final p = run([answer(fast: false), answer(fast: false)]);
-    expect(p.cleanStreak, 0);
-    expect(p.state, AtomState.learning, reason: 'спросили — уже не «показан»');
+  // Медленное правильное письмо не должно запирать начальное обучение.
+  // При этом автоматизм и подтверждения после known требуют скорости.
+  test('медленные верные ответы дают known, но не ускоряют интервалы', () {
+    final p = run([
+      answer(fast: false, mode: ExerciseMode.trace),
+      answer(fast: false, mode: ExerciseMode.traceFromMemory),
+      answer(fast: false, mode: ExerciseMode.sayName),
+      answer(fast: false, session: 2, offset: const Duration(days: 2)),
+    ]);
+    expect(p.cleanStreak, 3);
+    expect(p.state, AtomState.known);
+    expect(p.cleanSinceKnown, 0);
+    expect(p.confirmations, 0);
+    expect(p.reviewIntervalFor(rules), rules.reviewIntervalBase);
   });
 
   test('чистые повторы в known удваивают интервал, ошибка обнуляет', () {

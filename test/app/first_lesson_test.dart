@@ -95,12 +95,110 @@ void main() {
       expect(controller.current!.mode, ExerciseMode.sayName);
       expect(find.text('Назовите эту букву вслух'), findsOneWidget);
       expect(find.text('№ ${index + 1} из 20'), findsOneWidget);
-      await tester.runAsync(controller.answerCorrectly);
+      await tester.runAsync(() => controller.submit(directOutcome: true));
+      await settle(tester);
+      await tester.tap(find.text('Продолжить'));
       await settle(tester);
     }
     expect(controller.stage.value, LessonStage.exercise);
     expect(controller.current!.mode, isNot(ExerciseMode.sayName));
     expect(find.text('№ 5 из 20'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await settle(tester);
+  });
+
+  // Автоматическое закрепление не должно превращаться в повтор всех
+  // объяснений лишь потому, что у плана указан id темы.
+  testWidgets('один пропущенный режим открывается сразу без карточек темы', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => db.appendAll([
+        for (final id in curriculum.topics.first.counterOf)
+          if (id.startsWith('concept.'))
+            AtomIntroduced(atomId: id, sessionId: 1, at: DateTime(2026))
+          else if (id != 'ba.isolated')
+            KnowledgeConfirmed(atomId: id, sessionId: 1, at: DateTime(2026)),
+        for (final mode in [
+          ExerciseMode.trace,
+          ExerciseMode.traceFromMemory,
+          ExerciseMode.soundToLetter,
+        ])
+          ProgressEvent(
+            atomId: 'ba.isolated',
+            sessionId: 1,
+            at: DateTime(2026),
+            mode: mode,
+            correct: true,
+            attempt: 1,
+            fastEnough: true,
+          ),
+      ]),
+    );
+    final controller = Get.put(
+      LessonController(
+        database: db,
+        curriculum: curriculum,
+        shapeLoader: shapeFromDisk,
+        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
+      ),
+    );
+    await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
+    await settle(tester);
+    expect(controller.loadError.value, isNull);
+    expect(controller.introAtoms, isEmpty);
+    expect(controller.card.value, isNull);
+    expect(controller.stage.value, LessonStage.exercise);
+    expect(controller.current!.atom.id, 'ba.isolated');
+    expect(controller.current!.mode, ExerciseMode.sayName);
+    expect(find.text('№ 1 из 1'), findsOneWidget);
+    await tester.runAsync(() => controller.submit(directOutcome: true));
+    await settle(tester);
+    await tester.tap(find.text('Продолжить'));
+    await settle(tester);
+    expect(controller.stage.value, LessonStage.finished);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await settle(tester);
+  });
+
+  // У повторения соединённой формы не должны вновь открываться карточки
+  // ни самой формы, ни уже знакомых вариантов ответа.
+  testWidgets('закрепление формы не повторяет её объяснение', (tester) async {
+    await tester.runAsync(
+      () => db.appendAll([
+        for (final topic in curriculum.topics.take(2))
+          for (final id in topic.counterOf)
+            if (id.startsWith('concept.'))
+              AtomIntroduced(atomId: id, sessionId: 1, at: DateTime(2026))
+            else
+              KnowledgeConfirmed(atomId: id, sessionId: 1, at: DateTime(2026)),
+        ProgressEvent(
+          atomId: 'ba.finalForm',
+          sessionId: 2,
+          at: DateTime(2026),
+          mode: ExerciseMode.soundToLetter,
+          correct: false,
+          attempt: 1,
+          fastEnough: true,
+        ),
+      ]),
+    );
+    final controller = Get.put(
+      LessonController(
+        database: db,
+        curriculum: curriculum,
+        shapeLoader: shapeFromDisk,
+        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
+      ),
+    );
+    await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
+    await settle(tester);
+    expect(controller.loadError.value, isNull);
+    expect(controller.stage.value, LessonStage.exercise);
+    expect(controller.introAtoms, isEmpty);
+    expect(controller.card.value, isNull);
+    expect(controller.current!.atom.id, 'ba.finalForm');
+    expect(find.text('Понятно'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     await settle(tester);
   });

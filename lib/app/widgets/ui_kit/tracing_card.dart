@@ -39,6 +39,7 @@ class TracingCard extends StatelessWidget {
   final VoidCallback? onAutoPlay;
   final ValueListenable<AudioTrack>? track;
   final String? playbackKey;
+  final bool autoPlay;
 
   final DrawingController controller;
 
@@ -69,6 +70,7 @@ class TracingCard extends StatelessWidget {
     this.onAutoPlay,
     this.track,
     this.playbackKey,
+    this.autoPlay = true,
     this.onProgress,
     this.onChecked,
     this.onReveal,
@@ -90,7 +92,7 @@ class TracingCard extends StatelessWidget {
               onTap: play,
               onAutoPlay: onAutoPlay,
               track: track,
-              autoPlay: true,
+              autoPlay: autoPlay,
               size: _actionButtonSize,
               showHint: false,
             ),
@@ -119,7 +121,7 @@ class TracingCard extends StatelessWidget {
                     height: 100,
                     child: IgnorePointer(
                       child: WaveformWidget(
-                          strokeColor: UIColors.orange.withValues(alpha: .5),
+                        strokeColor: UIColors.orange.withValues(alpha: .5),
                         fillColor: UIColors.orange.withValues(alpha: .1),
                         height: 100,
                         layers: 3,

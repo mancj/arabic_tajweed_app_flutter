@@ -97,6 +97,34 @@ void main() {
     expect((await restarted.of('ba.isolated')).cleanStreak, 0);
   });
 
+  // Выполненные режимы не теряются при ошибке или перезапуске и не
+  // засчитываются за один лишь показ задания либо неверный ответ.
+  test(
+    'обязательная практика восстанавливается из существующего журнала',
+    () async {
+      await repo.recordAll([
+        AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: t0),
+        answer(mode: ExerciseMode.trace),
+        answer(mode: ExerciseMode.traceFromMemory, session: 2),
+        answer(mode: ExerciseMode.sayName, correct: false, session: 2),
+      ]);
+      final expected = {ExerciseMode.trace, ExerciseMode.traceFromMemory};
+      expect((await repo.of('ba.isolated')).successfulModes, expected);
+      final restarted = ProgressRepository(database: db);
+      expect((await restarted.of('ba.isolated')).successfulModes, expected);
+      await restarted.record(answer(mode: ExerciseMode.sayName, session: 3));
+      expect((await restarted.of('ba.isolated')).successfulModes, {
+        ...expected,
+        ExerciseMode.sayName,
+      });
+      await restarted.recompute();
+      expect((await restarted.of('ba.isolated')).successfulModes, {
+        ...expected,
+        ExerciseMode.sayName,
+      });
+    },
+  );
+
   test('порядок чтения — по порядку записи, а не по времени', () async {
     await repo.recordAll([
       ProgressEvent(
@@ -112,5 +140,22 @@ void main() {
     ]);
     final log = await db.readAll();
     expect(log.map((e) => e.atomId), ['a', 'ba.isolated']);
+  });
+
+  // Неделя не должна терять незаконченные занятия после перезапуска,
+  // считать каждый ответ отдельным днём или оставаться после сброса.
+  test('дни активности берутся из лога по местному календарю', () async {
+    expect(await repo.activityDays(), isEmpty);
+    final utc = DateTime.utc(2026, 9, 9, 23, 40);
+    final local = utc.toLocal();
+    final day = DateTime(local.year, local.month, local.day);
+    await repo.recordAll([
+      AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: utc),
+      KnowledgeConfirmed(atomId: 'ba.isolated', sessionId: 1, at: utc),
+    ]);
+    expect(await repo.activityDays(), {day});
+    expect(await ProgressRepository(database: db).activityDays(), {day});
+    await repo.clear();
+    expect(await repo.activityDays(), isEmpty);
   });
 }

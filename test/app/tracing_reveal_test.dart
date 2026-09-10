@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
-import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/letter_audio.dart';
@@ -95,6 +94,14 @@ void main() {
     await c.submit();
     await settle(tester);
     expect(c.wasWrong.value, isFalse);
+    expect(c.wasCorrect.value, isTrue);
+    expect(
+      c.current,
+      same(before),
+      reason: 'результат показывается до перехода',
+    );
+    await c.submit();
+    await settle(tester);
     expect(c.current, isNot(same(before)), reason: 'урок пошёл дальше');
   });
 }

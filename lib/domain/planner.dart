@@ -20,6 +20,7 @@ class LessonPlan {
     required this.reason,
     this.spacedReview = const [],
     this.topicId,
+    this.reviewCounts = const {},
   });
 
   /// Небольшой цельный блок материала; оглавление может объединять их.
@@ -29,6 +30,11 @@ class LessonPlan {
 
   /// Атомы урока, которые уже знакомы: они идут в закрепление вместе с новыми.
   final List<String> reviewAtoms;
+
+  /// Короткое закрепление пробелов: точное число встреч с каждым атомом.
+  /// Пусто у знакомства с новым материалом и полного повтора выбранной темы.
+  final Map<String, int> reviewCounts;
+  bool get isFocusedReview => reviewCounts.isNotEmpty;
 
   /// Возврат старого из общей очереди — блок «повтор» по ТЗ §6.2.
   /// Это буквы из других тем, иначе они не всплывали бы никогда.
@@ -50,7 +56,9 @@ class LessonPlan {
             byId[id] ??
             (throw StateError('Неизвестный атом $id в плане урока')),
     };
-    final minimum = own.values.map(rules.minimumExercises).sum;
+    final minimum = own.values
+        .map((atom) => reviewCounts[atom.id] ?? rules.minimumExercises(atom))
+        .sum;
     final reserved = min(
       rules.reviewPerSession,
       spacedReview
@@ -169,15 +177,40 @@ class LessonPlanner {
     List<String> review,
     Set<String>? topicIds,
   ) {
-    final board = TopicBoard(curriculum);
+    final board = TopicBoard(curriculum, rules: rules);
     final candidates = board
         .statuses(ctx)
         .where(
           (s) =>
               s.canPractice &&
+              // Пауза после серии ошибок остаётся паузой: полный блок
+              // с отложенным элементом пока не предлагаем автоматически.
+              !s.topic.counterOf.any(
+                (id) =>
+                    ctx.progress[id]?.isDeferredAt(sessionId, rules) ?? false,
+              ) &&
               (topicIds == null || topicIds.contains(s.topic.id)),
         )
         .toList();
+    // Просмотр карточки и несколько ответов ещё не завершают материал.
+    // Продолжаем начатый блок по знаниям, без сохранения очереди занятия.
+    // Гарантия темпа не позволяет перескочить обязательную практику.
+    final unfinished = candidates.firstWhereOrNull(
+      (s) => s.started && !s.isDone,
+    );
+    if (unfinished != null) {
+      if (unfinished.topic.counterOf.every(
+        (id) => ctx.stateOf(id) != AtomState.fresh,
+      )) {
+        return _focusOnGaps(unfinished.topic, board, ctx);
+      }
+      return board.planFor(
+        unfinished.topic,
+        ctx,
+        sessionId: sessionId,
+        rules: rules,
+      );
+    }
     final fresh = candidates
         .where(
           (s) =>
@@ -217,6 +250,8 @@ class LessonPlanner {
           (n) =>
               n.atom.kind != AtomKind.concept &&
               ctx.stateOf(n.atom.id) != AtomState.fresh &&
+              !(ctx.progress[n.atom.id]?.isDeferredAt(sessionId, rules) ??
+                  false) &&
               (scope == null || scope.contains(n.atom.id)),
         )
         .map((n) => n.atom.id);
@@ -228,6 +263,50 @@ class LessonPlanner {
           ? 'закрепление перед новым материалом'
           : 'повторение знакомого',
     );
+  }
+
+  LessonPlan _focusOnGaps(
+    Topic topic,
+    TopicBoard board,
+    CurriculumContext ctx,
+  ) {
+    final counts = <String, int>{};
+    var remaining = min(rules.focusedReviewTasks, rules.tasksPerSession);
+    final gaps = topic.counterOf
+        .where((id) => !board.isDone(id, ctx))
+        .sortedBy<num>((id) => ctx.progress[id]?.lastSeenSession ?? 0);
+    for (final id in gaps) {
+      final atom = curriculum.nodes.firstWhere((n) => n.atom.id == id).atom;
+      final p = ctx.progress[id]!;
+      final missing = p.weak
+          ? 0
+          : rules
+                .requiredPracticeModes(atom)
+                .difference(p.successfulModes)
+                .length;
+      // Две встречи позволяют проверить разные умения. Когда знание уже
+      // подтверждено, достаточно только пропущенного обязательного режима.
+      final count = max(
+        missing,
+        ctx.isKnown(id) ? 0 : max(2, rules.cleanStreakForKnown - p.cleanStreak),
+      );
+      if (count > remaining) continue;
+      counts[id] = count;
+      remaining -= count;
+    }
+    if (counts.isEmpty) {
+      throw StateError('Лимит закрепления не вмещает обязательную практику');
+    }
+    final plan = LessonPlan(
+      topicId: topic.id,
+      template: LessonTemplate.review,
+      newAtoms: const [],
+      reviewAtoms: counts.keys.toList(),
+      reviewCounts: counts,
+      reason: 'короткое закрепление пробелов в «${topic.title}»',
+    );
+    plan.validate(curriculum, rules);
+    return plan;
   }
 
   /// Общая очередь — кандидаты, а не обещанный материал урока. Выбираем

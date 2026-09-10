@@ -122,4 +122,33 @@ void main() {
     ]);
     expect(find.textContaining('28 букв'), findsOneWidget);
   });
+
+  testWidgets('верный ответ по произношению сначала показывает результат', (
+    tester,
+  ) async {
+    await pumpLesson(tester, topicId: 'm.first');
+    final controller = Get.find<LessonController>();
+
+    while (controller.introAtom?.id != 'alif.isolated') {
+      await controller.nextIntro();
+      await settle(tester);
+    }
+    await controller.nextIntro();
+    await settle(tester);
+
+    expect(controller.isSayNameTask, isTrue);
+    final current = controller.current;
+    await controller.submit(directOutcome: true);
+    await settle(tester);
+
+    expect(controller.wasCorrect.value, isTrue);
+    expect(controller.current, same(current));
+    expect(find.text('Правильно произнесено'), findsOneWidget);
+    expect(find.text('Продолжить'), findsOneWidget);
+
+    await tester.tap(find.text('Продолжить'));
+    await settle(tester);
+    expect(controller.wasCorrect.value, isFalse);
+    expect(controller.current, isNot(same(current)));
+  });
 }

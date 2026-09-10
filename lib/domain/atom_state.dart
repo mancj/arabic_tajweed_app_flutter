@@ -12,6 +12,7 @@ class AtomProgress {
     this.state = AtomState.fresh,
     this.cleanStreak = 0,
     this.modesInStreak = const {},
+    this.successfulModes = const {},
     this.totalErrors = 0,
     this.failedSessions = const {},
     this.hadActiveSuccess = false,
@@ -27,6 +28,11 @@ class AtomProgress {
   final AtomState state;
   final int cleanStreak;
   final Set<ExerciseMode> modesInStreak;
+
+  /// Режимы, в которых уже был верный ответ за всю историю. Нужны для
+  /// обязательной практики: выход из приложения и ошибка не стирают
+  /// ранее выполненную обводку, письмо по памяти или произношение.
+  final Set<ExerciseMode> successfulModes;
   final int totalErrors;
   final Set<int> failedSessions;
 
@@ -84,6 +90,7 @@ class AtomProgress {
     AtomState? state,
     int? cleanStreak,
     Set<ExerciseMode>? modesInStreak,
+    Set<ExerciseMode>? successfulModes,
     int? totalErrors,
     Set<int>? failedSessions,
     bool? hadActiveSuccess,
@@ -99,6 +106,7 @@ class AtomProgress {
     state: state ?? this.state,
     cleanStreak: cleanStreak ?? this.cleanStreak,
     modesInStreak: modesInStreak ?? this.modesInStreak,
+    successfulModes: successfulModes ?? this.successfulModes,
     totalErrors: totalErrors ?? this.totalErrors,
     failedSessions: failedSessions ?? this.failedSessions,
     hadActiveSuccess: hadActiveSuccess ?? this.hadActiveSuccess,
@@ -158,12 +166,14 @@ class ProgressFold {
   AtomProgress _applyAnswer(AtomProgress p, ProgressEvent e) {
     if (!e.correct) return _applyError(p, e);
 
+    p = p.copyWith(successfulModes: {...p.successfulModes, e.mode});
     final active = p.hadActiveSuccess || e.mode.isActive;
 
-    // Медленный или со второй попытки: засчитан, серию не растит и в known
-    // не ведёт. Но «показан» → «учится» всё же переводит: атом спросили
-    // и он ответил, а иначе медленный человек вечно висел бы в introduced.
-    if (!e.isClean) {
+    // При знакомстве проверяем правильность, а не скорость. Иначе верное
+    // письмо дольше 40 секунд заставляло проходить один блок бесконечно.
+    // Для дальнейшего закрепления known/mastered скорость остаётся важна.
+    final learning = p.state.index < AtomState.known.index;
+    if (e.attempt != 1 || (!learning && !e.fastEnough)) {
       return p.copyWith(
         state: p.state == AtomState.fresh || p.state == AtomState.introduced
             ? AtomState.learning

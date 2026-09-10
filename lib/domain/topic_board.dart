@@ -71,9 +71,10 @@ class TopicStatus {
 /// Список тем для главного экрана. Он и есть замена списку уроков:
 /// уроки генерируются, а понятия известны заранее. См. SPEC.md §8.
 class TopicBoard {
-  const TopicBoard(this.curriculum);
+  const TopicBoard(this.curriculum, {this.rules = const LearningRules()});
 
   final Curriculum curriculum;
+  final LearningRules rules;
 
   /// [completed] — id закрытых уроков и способ закрытия: true, если сдан
   /// тестом. [currentId] — урок, которым занимались последним.
@@ -227,9 +228,16 @@ class TopicBoard {
   bool isDone(String atomId, CurriculumContext ctx) {
     final atom = _atom(atomId);
     final state = ctx.stateOf(atomId);
-    return atom?.kind == AtomKind.concept
-        ? state.index >= AtomState.introduced.index
-        : state.index >= AtomState.known.index;
+    if (atom == null) return false;
+    if (atom.kind == AtomKind.concept) {
+      return state.index >= AtomState.introduced.index;
+    }
+    if (state.index < AtomState.known.index) return false;
+    final progress = ctx.progress[atomId]!;
+    // Входная проверка и облегчённый зачёт уже подтверждают знания
+    // отдельным способом; обязательную учебную практику не навязываем.
+    return progress.weak ||
+        progress.successfulModes.containsAll(rules.requiredPracticeModes(atom));
   }
 
   String missingHint(Requirement requirement, CurriculumContext ctx) {

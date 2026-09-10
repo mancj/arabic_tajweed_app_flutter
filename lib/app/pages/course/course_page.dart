@@ -6,10 +6,9 @@ import '../../resources/ui_resources.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/next_button.dart';
-import '../../widgets/ui_kit/rule_card.dart';
 import '../debug/debug_page.dart';
 import 'course_controller.dart';
-import 'course_path_page.dart';
+import 'course_dashboard.dart';
 
 export 'course_binding.dart';
 export 'course_controller.dart';
@@ -25,6 +24,7 @@ class CoursePage extends GetView<CourseController> {
     bottomBar: Obx(
       () => NextButton(
         title: 'Начать занятие',
+        icon: Icons.play_arrow_rounded,
         enabled: controller.canStart,
         onTap: controller.continueCourse,
       ),
@@ -56,22 +56,27 @@ class CoursePage extends GetView<CourseController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Сегодня', style: UITextStyles.hint),
-            const Margin.vertical(12),
-            RuleCard(
-              title: controller.lessonTitle,
-              badge: controller.nextPlan.value?.newAtoms.isEmpty ?? true
-                  ? 'Закрепление'
-                  : 'Новое и повторение',
-              text: controller.lessonDescription,
+            Text(
+              controller.allDone
+                  ? 'Сохраним знания\nв практике'
+                  : controller.hasStarted
+                  ? 'Продолжим знакомство с буквами'
+                  : 'Познакомимся\nс первыми буквами',
+              style: UITextStyles.pageTitleSemibold.copyWith(
+                fontSize: 29,
+                height: 1.16,
+                letterSpacing: -.8,
+              ),
+            ),
+            const Margin.vertical(20),
+            CourseActivityWeek(
+              days: controller.activityDays.toSet(),
+              today: DateTime.now(),
             ),
             const Margin.vertical(24),
-            CourseLink(
-              title: 'Мой путь',
-              subtitle: 'Темы и ваши знания',
-              icon: Icons.route_rounded,
-              onTap: () => Get.to(() => CoursePathPage(controller: controller)),
-            ),
+            CourseLessonPreview(controller: controller),
+            const Margin.vertical(14),
+            CourseOverview(controller: controller),
             if (kDebugMode) ...[
               const Margin.vertical(24),
               TextButton(

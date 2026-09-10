@@ -1,4 +1,5 @@
 import 'atom.dart';
+import 'progress_event.dart';
 
 /// Все пороги курса в одном месте. Каждое число здесь — гипотеза,
 /// подлежащая калибровке на реальных данных; лог событий как раз и
@@ -21,6 +22,7 @@ class LearningRules {
     this.maxDeferred = 4,
     this.reviewQueueCap = 25,
     this.reviewPerSession = 4,
+    this.focusedReviewTasks = 8,
     this.sessionsWithoutNewBeforeForcing = 2,
     this.tasksPerSession = 20,
     this.maxTasksPerSession = 26,
@@ -30,7 +32,8 @@ class LearningRules {
     this.reviewIntervalCap = 16,
   });
 
-  /// Верных подряд с первой попытки для перехода learning → known.
+  /// Верных подряд с первой попытки для перехода learning → known,
+  /// независимо от скорости. Быстрота нужна для дальнейшего закрепления.
   final int cleanStreakForKnown;
 
   /// В скольких разных режимах должна набраться эта серия. Одного режима
@@ -65,6 +68,9 @@ class LearningRules {
   /// очереди повторений. Из двадцати: не меньше четырёх на возврат,
   /// остальные — на тему урока; чего тема не заполнила, добирает повтор.
   final int reviewPerSession;
+
+  /// Закрепление пробелов не раздувается до полного занятия.
+  final int focusedReviewTasks;
   final int sessionsWithoutNewBeforeForcing;
 
   /// Сколько заданий в уроке. Ошибки уходят в конец очереди, поэтому
@@ -78,6 +84,19 @@ class LearningRules {
     Atom(kind: AtomKind.concept) => 0,
     Atom(letterId: String(), form: LetterForm.isolated) => 3,
     _ => 1,
+  };
+
+  /// Базовую букву недостаточно узнать в тестах: до продвижения дальше
+  /// нужно успешно назвать её и выполнить оба доступных режима письма.
+  Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
+    Atom(letterId: String(), form: LetterForm.isolated) => {
+      if (atom.tracing != null) ...{
+        ExerciseMode.trace,
+        ExerciseMode.traceFromMemory,
+      },
+      ExerciseMode.sayName,
+    },
+    _ => const {},
   };
 
   /// После скольких промахов подряд по одной части буквы холст показывает,
