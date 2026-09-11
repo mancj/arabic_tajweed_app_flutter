@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:arabic_tajweed_app/data/rest/api_config.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
@@ -15,6 +16,7 @@ import 'form_sequence_debug_page.dart';
 
 class DebugController extends GetxController {
   final serverUrl = ''.obs;
+  final pronunciationEnabled = true.obs;
 
   SharedPreferenceManager get _preferences =>
       Get.find<SharedPreferenceManager>();
@@ -23,6 +25,22 @@ class DebugController extends GetxController {
   void onInit() {
     super.onInit();
     serverUrl.value = _preferences.serverUrl.get() ?? ApiConfig.baseUrl;
+    pronunciationEnabled.value = !PronunciationPreference(
+      _preferences,
+    ).isDisabled;
+  }
+
+  Future<void> togglePronunciation() async {
+    final preference = PronunciationPreference(_preferences);
+    if (preference.isDisabled) {
+      await preference.enable();
+      pronunciationEnabled.value = true;
+      Get.snackbar('Произношение включено', 'Задания вернутся в новых уроках');
+    } else {
+      await preference.disable();
+      pronunciationEnabled.value = false;
+      Get.snackbar('Произношение отключено', 'Оно не мешает завершать темы');
+    }
   }
 
   /// Сохраняет адрес и сразу переключает уже созданный API-клиент.

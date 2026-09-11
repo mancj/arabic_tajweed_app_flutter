@@ -14,4 +14,18 @@ class SharedPreferenceManager {
     _prefs,
     defaultValue: ApiConfig.baseUrl,
   );
+  late final pronunciationDisabled = BoolSharedPref(
+    'pronunciationDisabled',
+    _prefs,
+    defaultValue: false,
+  );
+  late final pronunciationTechnicalSkipSessions = StringListSharedPref(
+    'pronunciationTechnicalSkipSessions',
+    _prefs,
+  );
+  late final pronunciationSessionCounter = IntSharedPref(
+    'pronunciationSessionCounter',
+    _prefs,
+    defaultValue: 0,
+  );
 }

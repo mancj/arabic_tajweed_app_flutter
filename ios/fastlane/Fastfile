@@ -5,6 +5,7 @@ FLUTTER_ROOT = File.expand_path("../..", __dir__)
 
 TEAM_ID = "W875G9YWT7"
 BUNDLE_ID = "tajweed.app"
+APP_STORE_PROFILE = "Tajweed App Store 34 20260911"
 
 platform :ios do
   desc "Проверить настройку: версия из pubspec и ключ App Store Connect"
@@ -57,9 +58,12 @@ platform :ios do
       output_directory: File.join(FLUTTER_ROOT, "build", "ios", "fastlane"),
       output_name: "Runner.ipa",
       export_options: {
-        signingStyle: "automatic",
+        signingStyle: "manual",
         teamID: TEAM_ID,
         uploadSymbols: true,
+        provisioningProfiles: {
+          BUNDLE_ID => APP_STORE_PROFILE
+        },
         # Без этого Xcode при экспорте сам поднимает номер сборки выше того,
         # что уже лежит в App Store Connect, и в ipa уезжает не то, что в pubspec.yaml.
         manageAppVersionAndBuildNumber: false
@@ -101,9 +105,12 @@ platform :ios do
       output_directory: File.join(FLUTTER_ROOT, "build", "ios", "fastlane"),
       output_name: "Runner.ipa",
       export_options: {
-        signingStyle: "automatic",
+        signingStyle: "manual",
         teamID: TEAM_ID,
         uploadSymbols: true,
+        provisioningProfiles: {
+          BUNDLE_ID => APP_STORE_PROFILE
+        },
         # Без этого Xcode при экспорте сам поднимает номер сборки выше того,
         # что уже лежит в App Store Connect, и в ipa уезжает не то, что в pubspec.yaml.
         manageAppVersionAndBuildNumber: false

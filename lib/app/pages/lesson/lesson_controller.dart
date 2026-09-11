@@ -8,8 +8,10 @@ import '../../../data/letter_audio.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
 import '../../../data/pronunciation_checker.dart';
+import '../../../data/pronunciation_preference.dart';
 import '../../../data/rest/letter_check.dart';
 import '../../../data/rest/pronunciation_rest_client.dart';
+import '../../../data/shared_preference_manager.dart';
 import '../../../data/voice_recorder.dart';
 import '../../../domain/atom.dart';
 import '../../../domain/atom_state.dart';
@@ -40,11 +42,13 @@ class LessonController extends GetxController {
     LetterAudio? audio,
     VoiceRecorder? recorder,
     PronunciationRestClient? pronunciation,
-  }) : rules = rules ?? const LearningRules(),
+    PronunciationPreference? pronunciationPreference,
+  }) : _baseRules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
        _topicId = topicId,
        _previewPlan = plan,
+       _injectedPronunciationPreference = pronunciationPreference,
        _shapeLoader = shapeLoader ?? _loadShapeAsset,
        _audio = audio ?? LetterAudio(),
        pronunciation = PronunciationChecker(
@@ -52,7 +56,14 @@ class LessonController extends GetxController {
          client: pronunciation,
        );
 
-  final LearningRules rules;
+  final LearningRules _baseRules;
+
+  LearningRules get rules => _baseRules.copyWith(
+    requirePronunciation:
+        _baseRules.requirePronunciation &&
+        _pronunciationRequired &&
+        _pronunciationAvailable,
+  );
 
   /// Обычное занятие может добирать готовые блоки и повторение до общего
   /// бюджета. Узкий блок из двух букв заканчивается после старого повтора:
@@ -64,6 +75,7 @@ class LessonController extends GetxController {
 
   /// Готовый граф вместо чтения ассета — нужен тестам.
   final Curriculum? _injectedCurriculum;
+  final PronunciationPreference? _injectedPronunciationPreference;
 
   /// Если задан, урок собирается по конкретной теме, а не спрашивается
   /// у планировщика: нажали на строку — работаем с этой темой.
@@ -225,7 +237,10 @@ class LessonController extends GetxController {
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
   bool _hasNewMaterial = false;
+  bool _pronunciationRequired = true;
   bool _pronunciationAvailable = true;
+  late final PronunciationPreference? _pronunciationPreference;
+  int? _pronunciationSessionId;
   bool _currentBlockEndsSession = false;
   int? _sessionTarget;
 
@@ -278,6 +293,18 @@ class LessonController extends GetxController {
   }
 
   Future<void> _start() async {
+    _pronunciationPreference =
+        _injectedPronunciationPreference ??
+        (Get.isRegistered<SharedPreferenceManager>()
+            ? PronunciationPreference(Get.find<SharedPreferenceManager>())
+            : null);
+    final pronunciationDisabled = _pronunciationPreference?.isDisabled ?? false;
+    _pronunciationRequired =
+        _baseRules.requirePronunciation && !pronunciationDisabled;
+    _pronunciationAvailable = _pronunciationRequired;
+    if (_pronunciationAvailable) {
+      _pronunciationSessionId = await _pronunciationPreference?.beginSession();
+    }
     _curriculum = _injectedCurriculum ?? await const CurriculumLoader().load();
     _progress = ProgressRepository(
       database: _database ?? Get.find<ProgressDatabase>(),
@@ -414,22 +441,8 @@ class LessonController extends GetxController {
     ).planFor(topic, ctx, sessionId: _sessionId, rules: rules);
   }
 
-  Future<CurriculumContext> _context({bool forSessionPlanning = false}) async {
-    var progress = await _progress.progress();
-    if (forSessionPlanning && !_pronunciationAvailable) {
-      // Технически недоступный режим считаем закрытым только для выбора
-      // следующего блока этой сессии. В журнал и постоянный прогресс
-      // ничего не записывается.
-      progress = {
-        for (final entry in progress.entries)
-          entry.key: entry.value.copyWith(
-            successfulModes: {
-              ...entry.value.successfulModes,
-              ExerciseMode.sayName,
-            },
-          ),
-      };
-    }
+  Future<CurriculumContext> _context() async {
+    final progress = await _progress.progress();
     return CurriculumContext(
       progress: progress,
       formsByLetter: _formsByLetter(),
@@ -527,7 +540,7 @@ class LessonController extends GetxController {
     }
 
     final remaining = rules.tasksPerSession - _completedExercises;
-    final ctx = await _context(forSessionPlanning: true);
+    final ctx = await _context();
     final planner = LessonPlanner(curriculum: _curriculum, rules: rules);
     var next = planner.plan(
       ctx: ctx,
@@ -564,7 +577,7 @@ class LessonController extends GetxController {
     if (_pronunciationAvailable || _completedExercises >= target) return false;
 
     final remaining = target - _completedExercises;
-    final ctx = await _context(forSessionPlanning: true);
+    final ctx = await _context();
     final topicIds = _curriculum.topics
         .firstWhereOrNull((topic) => topic.id == _topicId)
         ?.counterOf
@@ -862,7 +875,7 @@ class LessonController extends GetxController {
   /// прогресс букв не искажается. В отладке — чтобы быстро дойти до нужного
   /// экрана; в бою — когда сервер проверки голоса недоступен и задание
   /// «назови букву» выполнить нечем.
-  Future<void> skipExercise() async {
+  Future<void> skipExercise({bool disablePronunciation = false}) async {
     if (stage.value != LessonStage.exercise) return;
     final session = _session;
     if (session == null || session.current == null) return;
@@ -871,6 +884,15 @@ class LessonController extends GetxController {
     final mode = exercise.mode;
     session.skip();
     if (mode == ExerciseMode.sayName) {
+      if (disablePronunciation) _pronunciationRequired = false;
+      final disabled =
+          await _pronunciationPreference?.recordSkip(
+            sessionId: _pronunciationSessionId ?? _sessionId,
+            failure: pronunciation.failure.value,
+            explicitOptOut: disablePronunciation,
+          ) ??
+          false;
+      if (disabled) _pronunciationRequired = false;
       _pronunciationAvailable = false;
       session.discardPendingMode(ExerciseMode.sayName);
     }
@@ -881,6 +903,11 @@ class LessonController extends GetxController {
     _countAsked(exercise.resultAtoms);
     await _afterExercise();
   }
+
+  /// Явный отказ действует и в следующих занятиях, пока человек сам не
+  /// включит голос обратно в настройках.
+  Future<void> optOutOfPronunciation() =>
+      skipExercise(disablePronunciation: true);
 
   void _countAsked(Iterable<Atom> atoms) {
     for (final atom in atoms) {

@@ -5,6 +5,7 @@ import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/domain/learning_rules.dart';
+import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/domain/topic_board.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -76,6 +77,27 @@ void main() {
     expect(
       statusOf('m.first', ctxOf({'ba.isolated': AtomState.known})).done,
       1,
+    );
+  });
+
+  test('отключённый голос не мешает завершить освоенную букву', () {
+    final ctx = CurriculumContext(
+      progress: {
+        'ba.isolated': const AtomProgress(
+          state: AtomState.known,
+          successfulModes: {ExerciseMode.trace, ExerciseMode.traceFromMemory},
+        ),
+      },
+      formsByLetter: const {},
+    );
+
+    expect(board.isDone('ba.isolated', ctx), isFalse);
+    expect(
+      TopicBoard(
+        curriculum,
+        rules: const LearningRules(requirePronunciation: false),
+      ).isDone('ba.isolated', ctx),
+      isTrue,
     );
   });
 

@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import '../../../data/curriculum_loader.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
+import '../../../data/pronunciation_preference.dart';
+import '../../../data/shared_preference_manager.dart';
 import '../../../domain/atom.dart';
 import '../../../domain/atom_state.dart';
 import '../../../domain/curriculum.dart';
@@ -21,13 +23,22 @@ class CourseController extends GetxController {
     LearningRules? rules,
     ProgressDatabase? database,
     Curriculum? curriculum,
-  }) : rules = rules ?? const LearningRules(),
+    PronunciationPreference? pronunciationPreference,
+  }) : _baseRules = rules ?? const LearningRules(),
        _database = database,
-       _injectedCurriculum = curriculum;
+       _injectedCurriculum = curriculum,
+       _injectedPronunciationPreference = pronunciationPreference;
 
-  final LearningRules rules;
+  final LearningRules _baseRules;
   final ProgressDatabase? _database;
   final Curriculum? _injectedCurriculum;
+  final PronunciationPreference? _injectedPronunciationPreference;
+  bool _pronunciationRequired = true;
+
+  LearningRules get rules => _baseRules.copyWith(
+    requirePronunciation:
+        _baseRules.requirePronunciation && _pronunciationRequired,
+  );
   final loading = true.obs;
   final opening = false.obs;
   final loadError = RxnString();
@@ -49,6 +60,14 @@ class CourseController extends GetxController {
   Future<void> refreshBoard() async {
     loadError.value = null;
     try {
+      final pronunciationPreference =
+          _injectedPronunciationPreference ??
+          (Get.isRegistered<SharedPreferenceManager>()
+              ? PronunciationPreference(Get.find<SharedPreferenceManager>())
+              : null);
+      _pronunciationRequired =
+          _baseRules.requirePronunciation &&
+          !(pronunciationPreference?.isDisabled ?? false);
       if (!_ready) {
         curriculum =
             _injectedCurriculum ?? await const CurriculumLoader().load();

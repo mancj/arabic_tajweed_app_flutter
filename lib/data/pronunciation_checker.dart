@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'rest/api_exception.dart';
 import 'rest/letter_check.dart';
 import 'rest/pronunciation_rest_client.dart';
+import 'pronunciation_preference.dart';
 import 'voice_recorder.dart';
 
 /// Одна цепочка «нажал — сказал — отпустил — ответ сервера». Экран урока
@@ -35,18 +36,25 @@ class PronunciationChecker {
   /// Записать или проверить не удалось: текст для экрана.
   final error = RxnString();
 
+  /// Техническая причина пропуска. Ответ сервера с несовпавшей буквой —
+  /// обычная учебная ошибка и здесь никогда не появляется.
+  final failure = Rxn<PronunciationFailureKind>();
+
   /// Палец лёг на кнопку: начать запись.
   Future<void> start() async {
     if (isRecording.value || isChecking.value) return;
     error.value = null;
+    failure.value = null;
     try {
       if (!await _recorder.start()) {
         error.value = 'Нет доступа к микрофону';
+        failure.value = PronunciationFailureKind.microphoneDenied;
         return;
       }
       isRecording.value = true;
     } catch (_) {
       error.value = 'Запись не удалась';
+      failure.value = PronunciationFailureKind.recordingFailed;
     }
   }
 
@@ -60,6 +68,7 @@ class PronunciationChecker {
     final file = await _recorder.stop().catchError((_) => null);
     if (file == null) {
       error.value = 'Запись не удалась';
+      failure.value = PronunciationFailureKind.recordingFailed;
       return null;
     }
 
@@ -68,12 +77,14 @@ class PronunciationChecker {
       _client ??= Get.find<PronunciationRestClient>();
       final check = await _client!.checkLetter(audio: file, expected: expected);
       result.value = check;
+      failure.value = null;
       return check;
     } on ApiException catch (e) {
       error.value = switch (e) {
         NoConnectionException() => 'Сервер проверки недоступен',
         _ => 'Проверка не удалась: ${e.message}',
       };
+      failure.value = PronunciationFailureKind.serviceUnavailable;
       return null;
     } finally {
       isChecking.value = false;
@@ -85,6 +96,7 @@ class PronunciationChecker {
   void reset() {
     result.value = null;
     error.value = null;
+    failure.value = null;
   }
 
   void dispose() => _recorder.dispose();

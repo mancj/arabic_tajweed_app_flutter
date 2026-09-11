@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -211,7 +210,7 @@ class _ResultSheetState extends State<_ResultSheet>
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         decoration: BoxDecoration(
           color: UIColors.cardBackground,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -428,7 +427,7 @@ class _TracingBar extends GetView<LessonController> {
             behavior: HitTestBehavior.opaque,
             onTap: controller.giveUpTracing,
             child: Padding(
-              padding: EdgeInsets.only(bottom: 8, top: 6),
+              padding: const EdgeInsets.only(bottom: 8, top: 6),
               child: Text('Не помню, показать', style: UITextStyles.hint),
             ),
           ),
@@ -464,16 +463,32 @@ class _RecordBar extends GetView<LessonController> {
         onPressEnd: controller.stopRecording,
         footer: checker.error.value == null
             ? null
-            : GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: controller.skipExercise,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    'Продолжить без произношения',
-                    style: UITextStyles.hint,
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: controller.skipExercise,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        'Продолжить без произношения',
+                        style: UITextStyles.hint,
+                      ),
+                    ),
                   ),
-                ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: controller.optOutOfPronunciation,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        'Больше не предлагать произношение',
+                        style: UITextStyles.hint,
+                      ),
+                    ),
+                  ),
+                ],
               ),
       );
     });

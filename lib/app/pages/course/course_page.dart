@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -77,16 +76,14 @@ class CoursePage extends GetView<CourseController> {
             CourseLessonPreview(controller: controller),
             const Margin.vertical(14),
             CourseOverview(controller: controller),
-            if (kDebugMode) ...[
-              const Margin.vertical(24),
-              TextButton(
-                onPressed: () async {
-                  await Get.toNamed(DebugPage.routeName);
-                  await controller.refreshBoard();
-                },
-                child: Text('Меню отладки', style: UITextStyles.hint),
-              ),
-            ],
+            const Margin.vertical(24),
+            TextButton(
+              onPressed: () async {
+                await Get.toNamed(DebugPage.routeName);
+                await controller.refreshBoard();
+              },
+              child: Text('Меню отладки', style: UITextStyles.hint),
+            ),
           ],
         ),
       );

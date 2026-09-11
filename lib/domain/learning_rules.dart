@@ -31,6 +31,7 @@ class LearningRules {
     this.letterReviewIntervals = const [1, 2, 4],
     this.reviewIntervalBase = 2,
     this.reviewIntervalCap = 16,
+    this.requirePronunciation = true,
   });
 
   /// Верных подряд с первой попытки для перехода learning → known,
@@ -98,7 +99,7 @@ class LearningRules {
         ExerciseMode.trace,
         ExerciseMode.traceFromMemory,
       },
-      ExerciseMode.sayName,
+      if (requirePronunciation) ExerciseMode.sayName,
     },
     _ => const {},
   };
@@ -129,4 +130,31 @@ class LearningRules {
   /// часто, как буква из прошлого урока. См. SPEC.md §6.2.
   final int reviewIntervalBase;
   final int reviewIntervalCap;
+
+  /// Голос входит в обязательную практику, только пока человек может и
+  /// хочет им пользоваться. Отключение не создаёт поддельного ответа.
+  final bool requirePronunciation;
+
+  LearningRules copyWith({bool? requirePronunciation}) => LearningRules(
+    cleanStreakForKnown: cleanStreakForKnown,
+    distinctModesForKnown: distinctModesForKnown,
+    confirmDelays: confirmDelays,
+    errorsBeforeDefer: errorsBeforeDefer,
+    failedSessionsBeforeDefer: failedSessionsBeforeDefer,
+    deferSessions: deferSessions,
+    defersBeforeLenient: defersBeforeLenient,
+    maxDeferred: maxDeferred,
+    reviewQueueCap: reviewQueueCap,
+    reviewPerSession: reviewPerSession,
+    focusedReviewTasks: focusedReviewTasks,
+    sessionsWithoutNewBeforeForcing: sessionsWithoutNewBeforeForcing,
+    tasksPerSession: tasksPerSession,
+    narrowLetterExercises: narrowLetterExercises,
+    tracingMissesBeforeReveal: tracingMissesBeforeReveal,
+    sayNameAttempts: sayNameAttempts,
+    letterReviewIntervals: letterReviewIntervals,
+    reviewIntervalBase: reviewIntervalBase,
+    reviewIntervalCap: reviewIntervalCap,
+    requirePronunciation: requirePronunciation ?? this.requirePronunciation,
+  );
 }

@@ -11,8 +11,7 @@ import 'debug_page_controller.dart';
 export 'debug_page_binding.dart';
 export 'debug_page_controller.dart';
 
-/// Точка входа после сплэша в дебажных сборках: отсюда открываются экраны,
-/// на которые ещё нет обычной навигации.
+/// Меню служебных экранов, на которые ещё нет обычной навигации.
 class DebugPage extends GetView<DebugController> {
   static const routeName = '/debug';
 
@@ -34,6 +33,15 @@ class DebugPage extends GetView<DebugController> {
                     title: 'Адрес сервера',
                     subtitle: controller.serverUrl.value,
                     onTap: () => _editServerUrl(context),
+                  ),
+                ),
+                Obx(
+                  () => _DebugTile(
+                    title: 'Произношение в уроках',
+                    subtitle: controller.pronunciationEnabled.value
+                        ? 'Включено · обязательное задание'
+                        : 'Отключено · не влияет на завершение темы',
+                    onTap: controller.togglePronunciation,
                   ),
                 ),
                 _DebugTile(

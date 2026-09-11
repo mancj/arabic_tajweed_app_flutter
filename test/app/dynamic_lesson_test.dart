@@ -5,12 +5,15 @@ import 'package:arabic_tajweed_app/app/pages/lesson/lesson_controller.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/progress_repository.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
+import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:arabic_tajweed_app/data/voice_recorder.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Недоученная буква раньше превращала 2–3 вопроса во всю сессию.
 /// Проверяем, что после закрытия пробела контроллер тут же
@@ -190,11 +193,16 @@ void main() {
   );
 
   test('технический пропуск отключает произношение до конца сессии', () async {
+    SharedPreferences.setMockInitialValues({});
+    final pronunciationPreference = PronunciationPreference(
+      SharedPreferenceManager(await SharedPreferences.getInstance()),
+    );
     final controller = LessonController(
       database: database,
       curriculum: curriculum,
       continuePlanning: true,
       recorder: _DeniedRecorder(),
+      pronunciationPreference: pronunciationPreference,
       shapeLoader: (_) async =>
           throw UnsupportedError('Холст тут не проверяем'),
     );
@@ -217,6 +225,7 @@ void main() {
     expect((await database.readAll()).whereType<ProgressEvent>(), isEmpty);
 
     await controller.skipExercise();
+    expect(pronunciationPreference.isDisabled, isTrue);
     var seenExercises = 1;
     while (controller.stage.value != LessonStage.finished) {
       if (controller.stage.value == LessonStage.intro) {
