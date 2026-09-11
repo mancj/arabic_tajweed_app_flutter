@@ -858,15 +858,15 @@ class LessonController extends GetxController {
   }
 
   /// Только для отладки: засчитать текущее задание верным, каким бы оно
-  /// ни было. В отличие от пропуска ответ пишется в лог как чистый —
-  /// так можно быстро прогнать курс с настоящим прогрессом букв, сохранив
-  /// обычное окно подтверждения ответа.
-  Future<void> answerCorrectly() async {
+  /// ни было. В отличие от пропуска ответ пишется в лог как чистый.
+  /// Обычная кнопка оставляет окно подтверждения; [advance] нужен только
+  /// программным прогонам курса без интерфейса.
+  Future<void> answerCorrectly({bool advance = false}) async {
     final exercise = _session?.current;
     if (exercise == null) return;
     if (exercise.isChoice) selected.value = exercise.answerIndex;
     await submit(directOutcome: true);
-    if (wasCorrect.value) await submit();
+    if (advance && wasCorrect.value) await submit();
   }
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:

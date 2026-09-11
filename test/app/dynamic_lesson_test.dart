@@ -100,7 +100,7 @@ void main() {
 
       for (var i = 0; i < 3; i++) {
         expect(controller.current!.atom.id, 'tha.isolated');
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
       }
       expect(controller.stage.value, LessonStage.intro);
       expect(controller.introAtom!.id, 'concept.forms');
@@ -114,7 +114,7 @@ void main() {
         while (controller.card.value != null) {
           await controller.dismissCard();
         }
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
         answered++;
       }
       expect(answered, 20);
@@ -171,7 +171,7 @@ void main() {
           await controller.nextIntro();
           continue;
         }
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
         answered++;
       }
 
@@ -236,7 +236,7 @@ void main() {
         await controller.dismissCard();
       }
       expect(controller.current!.mode, isNot(ExerciseMode.sayName));
-      await controller.answerCorrectly();
+      await controller.answerCorrectly(advance: true);
       seenExercises++;
     }
 

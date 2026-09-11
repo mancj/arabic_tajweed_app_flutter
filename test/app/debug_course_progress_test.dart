@@ -65,7 +65,7 @@ void main() {
         while (controller.card.value != null) {
           await controller.dismissCard();
         }
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
       }
       controller.onClose();
     }

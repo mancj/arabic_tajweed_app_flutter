@@ -99,7 +99,7 @@ void main() {
         for (final future in letters.skip(index + 1)) {
           expect(introduced, isNot(contains(future.id)));
         }
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
         if (index < letters.length - 1) {
           expect(controller.stage.value, LessonStage.intro);
           expect(controller.introAtom!.id, letters[index + 1].id);
@@ -111,7 +111,7 @@ void main() {
       while (controller.stage.value == LessonStage.exercise) {
         expect(++remaining, lessThanOrEqualTo(16));
         expect(controller.current!.mode, isNot(ExerciseMode.sayName));
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
       }
       expect(remaining, 16);
       expect(controller.stage.value, LessonStage.finished);
@@ -134,7 +134,7 @@ void main() {
     expect(controller.totalExercises, 20);
     await controller.submit(); // Закрыть разбор ошибки.
     expect(controller.current, same(first));
-    await controller.answerCorrectly();
+    await controller.answerCorrectly(advance: true);
     expect(controller.stage.value, LessonStage.intro);
     expect(controller.introAtom!.id, 'ba.isolated');
     await controller.nextIntro();
@@ -158,7 +158,7 @@ void main() {
         if (controller.current!.mode == ExerciseMode.sayName) {
           pronunciationAfterSkip++;
         }
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
       }
     }
     expect(pronunciationAfterSkip, 0);
@@ -205,7 +205,7 @@ void main() {
       }
       final completed = await database.readCompletions();
       expect(completed.map((c) => c.topicId), isNot(contains('m.forms')));
-      await controller.answerCorrectly();
+      await controller.answerCorrectly(advance: true);
     }
     expect(asked, hasLength(20));
     expect(asked.toSet(), containsAll(formIds));
@@ -257,7 +257,7 @@ void main() {
           reason: 'третий урок спрашивает необъяснённую ${a.id}',
         );
       }
-      await next.answerCorrectly();
+      await next.answerCorrectly(advance: true);
     }
   });
 
@@ -282,7 +282,7 @@ void main() {
       while (controller.stage.value == LessonStage.exercise) {
         await readCards(controller);
         asked.add(controller.current!.atom.id);
-        await controller.answerCorrectly();
+        await controller.answerCorrectly(advance: true);
       }
       expect(asked, containsAll(formIds));
       final log = await database.readAll();
@@ -336,7 +336,7 @@ void main() {
                 );
               }
               (asked[ex.atom.id] ??= []).add(ex.mode);
-              await controller.answerCorrectly();
+              await controller.answerCorrectly(advance: true);
             }
             for (final id in topic.counterOf) {
               final atom = byId[id]!;

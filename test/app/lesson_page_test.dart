@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
@@ -159,5 +160,44 @@ void main() {
       find.byKey(const ValueKey('correct-answer-auto-progress')),
       findsNothing,
     );
+  });
+
+  // Окно открывается на следующем кадре: если отладочная кнопка успеет
+  // перейти дальше, сохранённый верный ответ выглядит на экране ошибкой.
+  testWidgets('отладочный верный ответ на произношение показывает успех', (
+    tester,
+  ) async {
+    await pumpLesson(tester, topicId: 'm.first');
+    final controller = Get.find<LessonController>();
+
+    while (controller.introAtom?.id != 'alif.isolated') {
+      await controller.nextIntro();
+      await settle(tester);
+    }
+    await controller.nextIntro();
+    await settle(tester);
+
+    expect(controller.isSayNameTask, isTrue);
+    final exercise = controller.current!;
+    await tester.tap(find.text('Ответить верно'));
+    await settle(tester);
+
+    expect(controller.wasCorrect.value, isTrue);
+    expect(controller.current, same(exercise));
+    expect(find.text('Правильно произнесено'), findsOneWidget);
+    expect(find.text('Попробуйте ещё раз'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 5));
+    await settle(tester);
+    expect(controller.wasCorrect.value, isFalse);
+    expect(controller.current, isNot(same(exercise)));
+
+    final answers = (await db.readAll()).whereType<ProgressEvent>().toList();
+    final answer = answers.singleWhere(
+      (event) => event.mode == ExerciseMode.sayName,
+    );
+    expect(answers, hasLength(1));
+    expect(answer.atomId, exercise.atom.id);
+    expect(answer.correct, isTrue);
   });
 }
