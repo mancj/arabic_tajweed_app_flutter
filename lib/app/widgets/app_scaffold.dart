@@ -50,6 +50,9 @@ class AppScaffold extends StatefulWidget {
   /// Показывать ли кнопку «назад» (на корневых экранах она не нужна).
   final bool showBackButton;
 
+  /// Показывать бренд вместо заголовка экрана.
+  final bool showBrand;
+
   final Color? backgroundColor;
 
   /// Боковые поля содержимого; вертикальные отступы прибавляются к ним.
@@ -64,6 +67,7 @@ class AppScaffold extends StatefulWidget {
     this.bottomBar,
     this.onBack,
     this.showBackButton = true,
+    this.showBrand = false,
     this.backgroundColor,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.edgeBlurSigma = 4,
@@ -123,12 +127,12 @@ class _AppScaffoldState extends State<AppScaffold> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/img/background_grid_pattern.png',
-              fit: BoxFit.cover,
-            ),
-          ),
+          // Positioned.fill(
+          //   child: Image.asset(
+          //     'assets/img/background_grid_pattern.png',
+          //     fit: BoxFit.cover,
+          //   ),
+          // ),
           Positioned.fill(
             child: Builder(
               builder: (context) => widget.builder(context, contentInsets),
@@ -140,6 +144,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             right: 0,
             child: _Header(
               title: widget.title,
+              showBrand: widget.showBrand,
               onBack: widget.showBackButton
                   ? (widget.onBack ?? Get.back)
                   : null,
@@ -161,12 +166,13 @@ class _AppScaffoldState extends State<AppScaffold> {
   }
 }
 
-/// Шапка: заголовок по центру и стеклянная кнопка «назад» слева.
+/// Шапка: заголовок по центру или бренд слева.
 class _Header extends StatelessWidget {
   final String? title;
+  final bool showBrand;
   final VoidCallback? onBack;
 
-  const _Header({this.title, this.onBack});
+  const _Header({this.title, this.showBrand = false, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +180,35 @@ class _Header extends StatelessWidget {
       height: AppScaffold._headerHeight,
       child: Stack(
         children: [
-          if (title != null)
+          if (showBrand)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'tajweed',
+                        style: TextStyle(
+                          fontFamily: UITextStyles.fontOnest,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                          color: UIColors.text,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: UIColors.primary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          if (title != null && !showBrand)
             Center(
               child: Text(
                 title!,

@@ -1,9 +1,12 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:flutter_tilt/flutter_tilt.dart';
 
 import '../../../domain/atom.dart';
 import '../../resources/ui_resources.dart';
+import '../../widgets/ui_kit/animated_background_shapes.dart';
 import 'course_controller.dart';
 import 'course_path_page.dart';
 
@@ -12,6 +15,15 @@ import 'course_path_page.dart';
 class CourseLessonPreview extends StatelessWidget {
   const CourseLessonPreview({required this.controller, super.key});
   final CourseController controller;
+
+  static const _tiltConfig = TiltConfig(
+    enableGestureTouch: false,
+    enableReverse: false,
+    leaveCurve: Curves.easeOutCubic,
+    leaveDuration: Duration(milliseconds: 1500),
+    sensorFactor: 3,
+    sensorRevertFactor: .02,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -22,161 +34,256 @@ class CourseLessonPreview extends StatelessWidget {
         controller.nextPlan.value!.spacedReview.isNotEmpty;
     final label = isNew
         ? hasReview
-              ? 'СЕГОДНЯ · НОВОЕ И ПОВТОРЕНИЕ'
-              : 'СЕГОДНЯ · НОВЫЙ МАТЕРИАЛ'
+              ? 'Сегодня: НОВОЕ И ПОВТОРЕНИЕ'
+              : 'Сегодня: НОВЫЙ МАТЕРИАЛ'
         : controller.nextPlan.value!.isFocusedReview
-        ? 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ И НОВОЕ'
-        : 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ';
-    return _CourseSurface(
-      radius: 28,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        ? 'Сегодня · ЗАКРЕПЛЕНИЕ И НОВОЕ'
+        : 'Сегодня · ЗАКРЕПЛЕНИЕ';
+    return Tilt(
+      tiltConfig: _tiltConfig,
+      child: _CourseSurface(
+        radius: 28,
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF7F7F7), Color(0xFFF7F7F7), Color(0xFFEAEAEA)],
+          stops: [0, .54615, 1],
+        ),
+        child: Stack(
+          children: [
+            ExcludeSemantics(
+              child: IgnorePointer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: UIColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: UITextStyles.regular12.copyWith(
-                          color: UIColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
-                          letterSpacing: .8,
-                        ),
-                      ),
+                    Opacity(opacity: 0, child: _header(label)),
+                    _CourseLessonTransformation(
+                      atom: atom,
+                      source: controller.lessonSource,
+                      showBackground: true,
+                      showContent: false,
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  controller.lessonTitle,
-                  style: UITextStyles.pageTitleSemibold.copyWith(
-                    fontSize: 27,
-                    height: 1.12,
-                    letterSpacing: -.6,
-                    fontFamilyFallback: const [
-                      UITextStyles.fontScheherazadeNew,
-                    ],
-                  ),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _header(label),
+                _CourseLessonTransformation(
+                  atom: atom,
+                  source: controller.lessonSource,
+                  showBackground: false,
+                  showContent: true,
                 ),
+                _footer(),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _header(String label) => Container(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: UIColors.text,
+            borderRadius: BorderRadius.circular(12),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-            child: ExcludeSemantics(
-              child: SizedBox(
-                height: 116,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (controller.lessonSource.isNotEmpty) ...[
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: _Glyph(
-                            controller.lessonSource,
-                            size: 48,
-                            color: UIColors.secondary2,
-                          ),
-                        ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: UIColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: UITextStyles.regular10.copyWith(
+                  color: UIColors.primaryButtonText,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  letterSpacing: .8,
+                  fontFamily: UITextStyles.fontJetBrainsMono,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          controller.lessonTitle,
+          style: UITextStyles.pageTitleSemibold.copyWith(
+            fontSize: 27,
+            height: 1.12,
+            letterSpacing: -.6,
+            fontFamilyFallback: const [UITextStyles.fontDGFaseh],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _footer() => Container(
+    margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+    decoration: BoxDecoration(
+      color: UIColors.highlightArea,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(controller.lessonFocus, style: UITextStyles.medium17),
+          const SizedBox(height: 4),
+          Text(
+            controller.lessonDetail,
+            style: UITextStyles.hint.copyWith(fontSize: 13),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _CourseLessonTransformation extends StatelessWidget {
+  const _CourseLessonTransformation({
+    required this.atom,
+    required this.source,
+    required this.showBackground,
+    required this.showContent,
+  });
+
+  final Atom? atom;
+  final String source;
+  final bool showBackground;
+  final bool showContent;
+
+  Widget _content(Widget child) =>
+      showContent ? child : Opacity(opacity: 0, child: child);
+
+  @override
+  Widget build(BuildContext context) {
+    final decorSide = MediaQuery.sizeOf(context).width;
+    final showArrow =
+        atom?.kind == AtomKind.syllable ||
+        (atom?.form != null && atom?.form != LetterForm.isolated);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      child: ExcludeSemantics(
+        child: SizedBox(
+          height: 116,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (source.isNotEmpty) ...[
+                Flexible(
+                  child: _content(
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: _Glyph(
+                        source,
+                        size: 48,
+                        color: UIColors.secondary2,
                       ),
-                      if (atom?.kind == AtomKind.syllable ||
-                          (atom?.form != null &&
-                              atom?.form != LetterForm.isolated))
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                  ),
+                ),
+                _content(
+                  showArrow
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Icon(
                             Icons.arrow_forward_rounded,
                             size: 18,
                             color: UIColors.secondary2,
                           ),
                         )
-                      else
-                        const SizedBox(width: 24),
-                    ],
-                    Container(
-                      width: 116,
-                      height: 116,
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: UIColors.primary20),
+                      : const SizedBox(width: 24),
+                ),
+              ],
+              SizedBox(
+                width: 116,
+                height: 116,
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    if (showBackground)
+                      Positioned.fill(
+                        child: OverflowBox(
+                          alignment: Alignment.center,
+                          maxWidth: decorSide,
+                          maxHeight: decorSide,
+                          child: SizedBox.square(
+                            dimension: decorSide,
+                            child: const AnimatedBackgroundShapes(),
+                          ),
+                        ),
                       ),
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(12),
+                    if (showContent)
+                      Container(
+                        width: 116,
+                        height: 116,
+                        padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: UIColors.primary,
-                          border: Border.all(color: UIColors.primary, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: UIColors.primary20,
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                          border: Border.all(color: UIColors.primary20),
                         ),
-                        child: atom == null
-                            ? Icon(
-                                Icons.auto_stories_outlined,
-                                color: UIColors.highlightArea,
-                                size: 42,
-                              )
-                            : FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: _Glyph(
-                                  atom.display,
-                                  size: 70,
-                                  color: UIColors.highlightArea,
-                                ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: UIColors.primary,
+                            border: Border.all(
+                              color: UIColors.cardBackground,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: UIColors.primary20,
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
+                            ],
+                          ),
+                          child: atom == null
+                              ? Icon(
+                                  Icons.auto_stories_outlined,
+                                  color: UIColors.highlightArea,
+                                  size: 42,
+                                )
+                              : FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: _Glyph(
+                                    atom!.display,
+                                    size: 70,
+                                    color: UIColors.highlightArea,
+                                  ),
+                                ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-          ColoredBox(
-            color: UIColors.highlightArea,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    controller.lessonFocus,
-                    style: UITextStyles.regular14.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    controller.lessonDetail,
-                    style: UITextStyles.hint.copyWith(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -201,60 +308,105 @@ class CourseActivityWeek extends StatelessWidget {
       today.day - today.weekday + 1,
     );
     const labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: labels.mapIndexed((index, label) {
-        final date = DateTime(monday.year, monday.month, monday.day + index);
-        final active = days.contains(date);
-        final current = DateUtils.isSameDay(date, today);
-        return Semantics(
-          label:
-              '$label, ${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
-          child: ExcludeSemantics(
-            child: Column(
+    return _CourseSurface(
+      radius: 24,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Icon(
+                  Icons.calendar_month_outlined,
+                  size: 18,
+                  color: UIColors.primary,
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  label,
-                  style: UITextStyles.hint.copyWith(
-                    fontSize: 11,
-                    color: current ? UIColors.text : UIColors.secondary2,
+                  'Эта неделя',
+                  style: UITextStyles.regular14.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: UITextStyles.fontJetBrainsMono,
+                    letterSpacing: 0,
                   ),
                 ),
-                const SizedBox(height: 7),
-                Container(
-                  width: 32,
-                  height: 32,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: current
-                        ? UIColors.primary
-                        : active
-                        ? UIColors.primary20
-                        : UIColors.backgroundShapes1,
+                const Spacer(),
+                Text(
+                  'Ваш ритм',
+                  style: UITextStyles.hint.copyWith(
+                    fontFamily: UITextStyles.fontJetBrainsMono,
+                    letterSpacing: 0,
                   ),
-                  child: active
-                      ? Icon(
-                          Icons.check_rounded,
-                          size: 24,
-                          color: current
-                              ? UIColors.primaryButtonText
-                              : UIColors.primary,
-                        )
-                      : Text(
-                          '${date.day}',
-                          style: UITextStyles.regular12.copyWith(
-                            color: current
-                                ? UIColors.primaryButtonText
-                                : UIColors.secondary2,
-                          ),
-                        ),
                 ),
               ],
             ),
-          ),
-        );
-      }).toList(),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: labels.mapIndexed((index, label) {
+                final date = DateTime(
+                  monday.year,
+                  monday.month,
+                  monday.day + index,
+                );
+                final active = days.contains(date);
+                final current = DateUtils.isSameDay(date, today);
+                return Semantics(
+                  label:
+                      '$label, ${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
+                  child: ExcludeSemantics(
+                    child: Column(
+                      children: [
+                        Text(
+                          label,
+                          style: UITextStyles.hint.copyWith(
+                            fontSize: 11,
+                            color: current
+                                ? UIColors.text
+                                : UIColors.secondary2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: current
+                                ? UIColors.primary
+                                : active
+                                ? UIColors.primary20
+                                : UIColors.backgroundShapes1,
+                          ),
+                          child: active
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  size: 20,
+                                  color: current
+                                      ? UIColors.primaryButtonText
+                                      : UIColors.primary,
+                                )
+                              : Text(
+                                  '${date.day}',
+                                  style: UITextStyles.medium12.copyWith(
+                                    color: current
+                                        ? UIColors.primaryButtonText
+                                        : UIColors.secondary2,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -276,11 +428,15 @@ class CourseOverview extends StatelessWidget {
         : controller.knownLetters / controller.totalLetters;
     final path = _OverviewTile(
       title: 'Мой путь',
+      icon: SvgPicture.asset(
+        UISVGAssets.solarRouteLinear,
+        colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
+      ),
       onTap: _path,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           Semantics(
             label:
                 'Освоено букв: ${controller.knownLetters} из ${controller.totalLetters}',
@@ -310,7 +466,7 @@ class CourseOverview extends StatelessWidget {
                         ],
                       ),
                       style: UITextStyles.pageTitleSemibold.copyWith(
-                        fontSize: 26,
+                        fontSize: 28,
                       ),
                     ),
                   ),
@@ -330,6 +486,12 @@ class CourseOverview extends StatelessWidget {
     );
     final next = _OverviewTile(
       title: upcoming == null ? 'Практика' : 'Далее',
+      icon: Icon(
+        upcoming == null
+            ? Icons.auto_awesome_rounded
+            : Icons.arrow_outward_rounded,
+        color: UIColors.primary,
+      ),
       onTap: upcoming == null
           ? _path
           : () => Get.to(
@@ -341,7 +503,7 @@ class CourseOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           if (nextAtom != null)
             ExcludeSemantics(
               child: SizedBox(
@@ -355,7 +517,7 @@ class CourseOverview extends StatelessWidget {
             )
           else
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 9),
+              padding: const EdgeInsets.symmetric(vertical: 9),
               child: Icon(
                 Icons.check_circle_outline_rounded,
                 color: UIColors.primary,
@@ -397,7 +559,7 @@ class CourseOverview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: path),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(child: next),
             ],
           ),
@@ -412,23 +574,26 @@ class _OverviewTile extends StatelessWidget {
     required this.title,
     required this.onTap,
     required this.child,
+    required this.icon,
   });
   final String title;
   final VoidCallback onTap;
   final Widget child;
+  final Widget icon;
 
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
     child: _CourseSurface(
-      radius: 23,
+      radius: 24,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
@@ -436,13 +601,19 @@ class _OverviewTile extends StatelessWidget {
                     style: UITextStyles.regular14.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      fontFamily: UITextStyles.fontJetBrainsMono,
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.north_east_rounded,
-                  size: 16,
-                  color: UIColors.secondary2,
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: UIColors.primary10,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: icon,
                 ),
               ],
             ),
@@ -455,25 +626,34 @@ class _OverviewTile extends StatelessWidget {
 }
 
 class _CourseSurface extends StatelessWidget {
-  const _CourseSurface({required this.child, required this.radius, this.onTap});
+  const _CourseSurface({
+    required this.child,
+    required this.radius,
+    this.gradient,
+    this.onTap,
+  });
   final Widget child;
   final double radius;
+  final Gradient? gradient;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
+      color: gradient == null ? UIColors.cardBackground : null,
+      gradient: gradient,
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
           color: UIColors.shadows,
-          blurRadius: 14,
-          offset: const Offset(0, 7),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
         ),
       ],
     ),
     child: Material(
-      color: UIColors.cardBackground,
+      color: gradient == null ? UIColors.cardBackground : Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius),
         side: BorderSide(color: UIColors.highlightArea),
@@ -495,7 +675,7 @@ class _Glyph extends StatelessWidget {
     text,
     textDirection: TextDirection.rtl,
     style: TextStyle(
-      fontFamily: UITextStyles.fontScheherazadeNew,
+      fontFamily: UITextStyles.fontDGFaseh,
       fontSize: size,
       height: 1,
       color: color,

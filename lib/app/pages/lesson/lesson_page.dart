@@ -14,6 +14,7 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_forms_overview.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/record_bar.dart';
@@ -413,9 +414,8 @@ class _DebugAction extends StatelessWidget {
 
 /// Нижняя панель заданий на письмо.
 ///
-/// В обводке после последней части сразу открывается результат, поэтому
-/// нижняя кнопка не нужна. Письмо по памяти сохраняет явное подтверждение
-/// и выход для того, кто букву не вспомнил.
+/// После последней части результат открывается сразу в обоих режимах.
+/// В письме по памяти остаётся только выход для того, кто букву не вспомнил.
 class _TracingBar extends GetView<LessonController> {
   const _TracingBar({required this.mode});
 
@@ -435,16 +435,6 @@ class _TracingBar extends GetView<LessonController> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8, top: 6),
             child: Text('Не помню, показать', style: UITextStyles.hint),
-          ),
-        ),
-        SizedBox(
-          width: double.infinity,
-          child: Obx(
-            () => NextButton(
-              title: 'Готово',
-              enabled: controller.canSubmit,
-              onTap: controller.canSubmit ? () => controller.submit() : null,
-            ),
           ),
         ),
       ],
@@ -559,9 +549,13 @@ class _TracingTask extends GetView<LessonController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final atom = controller.current!.atom;
+      final exercise = controller.current!;
+      final atom = exercise.atom;
       return TracingCard(
-        key: ValueKey('tracing.${_visibleExerciseIndex(controller)}'),
+        // Успешный ответ сразу сдвигает очередь, но эта карточка остаётся
+        // видна до закрытия результата. Ключ привязан к самому заданию,
+        // чтобы не потерять состояние слияния при смене индекса очереди.
+        key: ObjectKey(exercise),
         badge: 'Задание',
         title: prompt,
         hint: controller.tracingHint.value,
@@ -579,6 +573,7 @@ class _TracingTask extends GetView<LessonController> {
         matcher: LessonController.tracingMatcher,
         mode: controller.canvasMode,
         shape: controller.tracingShape.value,
+        enabled: !controller.wasCorrect.value,
         missesBeforeReveal: controller.rules.tracingMissesBeforeReveal,
         onProgress: controller.onTracingProgress,
         onReveal: controller.onTracingRevealed,
@@ -673,10 +668,44 @@ class _FormCard extends GetView<LessonController> {
             final example? => HighlightedWord(
               word: example.word,
               index: example.index,
+              form: atom.form,
               fontSize: 48,
             ),
             null => null,
           },
+        ),
+      ],
+    );
+  }
+}
+
+/// Общая картина перед разбором отдельных соединённых форм буквы.
+class _FormsOverviewCard extends StatelessWidget {
+  const _FormsOverviewCard({required this.forms});
+
+  final List<Atom> forms;
+
+  @override
+  Widget build(BuildContext context) {
+    final isolated = forms.firstWhereOrNull(
+      (form) => form.form == LetterForm.isolated,
+    );
+    return Column(
+      key: ValueKey('forms-overview-${isolated?.letterId}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _LessonProgress(),
+        const Margin.vertical(16),
+        RuleCard(
+          badge: 'Соединение',
+          title: 'Все формы буквы ${isolated?.label ?? ''}',
+          text:
+              'Сначала посмотрите на букву целиком. Дальше разберём '
+              'каждую форму отдельно и увидим её в слове.',
+          child: SizedBox(
+            height: 112,
+            child: LetterFormsOverview(forms: forms),
+          ),
         ),
       ],
     );
@@ -690,6 +719,11 @@ class _ExerciseBlock extends GetView<LessonController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final card = controller.card.value;
+      if (controller.formsOverview.isNotEmpty) {
+        return _FormsOverviewCard(
+          forms: List.unmodifiable(controller.formsOverview),
+        );
+      }
       if (card != null) return _FormCard(atom: card);
 
       final exercise = controller.current;

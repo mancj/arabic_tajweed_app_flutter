@@ -125,6 +125,37 @@ void main() {
     expect(find.textContaining('28 букв'), findsOneWidget);
   });
 
+  testWidgets('перед первой формой буквы показан общий обзор', (tester) async {
+    await tester.runAsync(
+      () => db.appendAll([
+        for (final id in curriculum.topics.first.counterOf)
+          AtomIntroduced(atomId: id, sessionId: 1, at: DateTime(2026)),
+      ]),
+    );
+    await pumpLesson(tester, topicId: 'm.forms');
+    final controller = Get.find<LessonController>();
+
+    while (controller.stage.value == LessonStage.intro) {
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+    }
+
+    final detail = controller.card.value!;
+    final forms = controller.formsOverview.toList();
+    expect(forms, isNotEmpty);
+    expect(
+      find.byKey(ValueKey('forms-overview-${detail.letterId}')),
+      findsOneWidget,
+    );
+    expect(find.text('Все формы буквы ${forms.first.label}'), findsOneWidget);
+
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    expect(controller.formsOverview, isEmpty);
+    expect(controller.card.value, same(detail));
+    expect(find.text(detail.label), findsOneWidget);
+  });
+
   testWidgets('верный ответ сам переходит дальше через пять секунд', (
     tester,
   ) async {

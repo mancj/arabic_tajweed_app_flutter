@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/letter_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +50,10 @@ void main() {
   }
 
   /// Доходит до первого задания на письмо.
-  Future<LessonController> openAtTracing(WidgetTester tester) async {
+  Future<LessonController> openAtTracing(
+    WidgetTester tester, {
+    ExerciseMode mode = ExerciseMode.trace,
+  }) async {
     Get.put(
       LessonController(
         shapeLoader: (asset) async => TracingShapeSvg.parse(
@@ -71,14 +76,14 @@ void main() {
       } else if (c.card.value != null) {
         await tester.runAsync(c.dismissCard);
       } else {
-        if (c.isTracingTask) break;
+        if (c.isTracingTask && c.current!.mode == mode) break;
         await tester.runAsync(c.answerCorrectly);
         await settle(tester);
         await tester.tap(find.text('Продолжить'));
       }
       await settle(tester);
     }
-    expect(c.isTracingTask, isTrue, reason: 'в уроке нет письма');
+    expect(c.current?.mode, mode, reason: 'в уроке нет нужного письма');
     return c;
   }
 
@@ -98,6 +103,11 @@ void main() {
     await settle(tester);
     expect(c.wasWrong.value, isFalse);
     expect(c.wasCorrect.value, isTrue);
+    expect(
+      tester.widget<DrawingCanvas>(find.byType(DrawingCanvas)).enabled,
+      isFalse,
+      reason: 'после правильной обводки добавлять штрихи уже нельзя',
+    );
     expect(find.text('Верно!'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);
     expect(
@@ -108,5 +118,18 @@ void main() {
     await tester.tap(find.text('Продолжить'));
     await settle(tester);
     expect(c.current, isNot(same(before)), reason: 'урок пошёл дальше');
+  });
+
+  testWidgets('письмо по памяти открывает результат без кнопки «Готово»', (
+    tester,
+  ) async {
+    final c = await openAtTracing(tester, mode: ExerciseMode.traceFromMemory);
+
+    expect(find.text('Готово'), findsNothing);
+    await c.onTracingMerged();
+    await settle(tester);
+
+    expect(c.wasCorrect.value, isTrue);
+    expect(find.text('Верно!'), findsOneWidget);
   });
 }

@@ -16,7 +16,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Второй урок раньше закрывался после конечных форм. Проверяем настоящий
 /// контроллер с базой: все десять форм объяснены и спрошены за один сеанс,
-/// а варианты ответа не показывают незнакомые формы без объяснений.
+/// перед деталями каждая буква один раз показана целиком, а варианты ответа
+/// не показывают незнакомые формы без объяснений. Обзор не должен менять
+/// прогресс: иначе просмотр заранее засчитает ещё не разобранные формы.
 /// Экран и плагины здесь не нужны: проверяется порядок обучения и запись
 /// прогресса, а не рисование и запись звука.
 void main() {
@@ -172,12 +174,44 @@ void main() {
     final shown = curriculum.topics.first.counterOf.toSet();
     final asked = <String>[];
     final positions = <LetterForm>[];
+    final overviewCounts = <String, int>{};
     const order = [LetterForm.finalForm, LetterForm.initial, LetterForm.medial];
     while (controller.stage.value == LessonStage.exercise) {
       expect(asked.length, lessThan(26), reason: 'урок должен завершиться');
       final exercise = controller.current!;
       while (controller.card.value != null) {
         final card = controller.card.value!;
+        if (controller.formsOverview.isNotEmpty) {
+          final forms = controller.formsOverview.toList();
+          final letterId = card.letterId!;
+          overviewCounts.update(
+            letterId,
+            (count) => count + 1,
+            ifAbsent: () => 1,
+          );
+          expect(forms.every((form) => form.letterId == letterId), isTrue);
+          expect(
+            forms.map((form) => form.form),
+            letterId == 'alif'
+                ? [LetterForm.isolated, LetterForm.finalForm]
+                : [
+                    LetterForm.isolated,
+                    LetterForm.finalForm,
+                    LetterForm.initial,
+                    LetterForm.medial,
+                  ],
+          );
+          final logLength = (await database.readAll()).length;
+          await controller.dismissCard();
+          expect(controller.card.value, same(card));
+          expect(controller.formsOverview, isEmpty);
+          expect(
+            await database.readAll(),
+            hasLength(logLength),
+            reason: 'обзор не должен записывать знакомство с формой',
+          );
+          continue;
+        }
         shown.add(card.id);
         if (card.form != null && formIds.contains(card.id)) {
           expect(
@@ -210,6 +244,8 @@ void main() {
     expect(asked, hasLength(20));
     expect(asked.toSet(), containsAll(formIds));
     expect(shown, containsAll(formIds));
+    expect(overviewCounts.keys, unorderedEquals(['alif', 'ba', 'ta', 'tha']));
+    expect(overviewCounts.values, everyElement(1));
     expect(
       positions.map(order.indexOf),
       orderedEquals(positions.map(order.indexOf).toList()..sort()),

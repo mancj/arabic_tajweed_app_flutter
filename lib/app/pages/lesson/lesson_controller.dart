@@ -145,6 +145,12 @@ class LessonController extends GetxController {
   /// не десять правил подряд, а одно правило на каждую новую связку.
   final card = Rxn<Atom>();
 
+  /// Перед первой подробной карточкой буквы показываем все её формы вместе.
+  /// Это обзор, а не атом: он не пишет событие и не влияет на прогресс.
+  final formsOverview = <Atom>[].obs;
+
+  final _shownFormsOverviews = <String>{};
+
   /// Чьи карточки в этом уроке уже показаны.
   final _shownCards = <String>{};
 
@@ -271,7 +277,11 @@ class LessonController extends GetxController {
 
   Exercise? get current {
     _refresh.value;
-    return wasCorrect.value ? _answeredExercise : _session?.current;
+    // После ответа сессия уже указывает на следующее задание, но экран ещё
+    // показывает прежнее — включая анимацию слияния и окно результата.
+    // Иначе холст пересоздаётся, теряет собранные SVG-части и показывает
+    // сохранённые штрихи пользователя.
+    return _answeredExercise ?? _session?.current;
   }
 
   double get progress {
@@ -368,6 +378,7 @@ class LessonController extends GetxController {
     _session = null;
     _returnToIntro = false;
     card.value = null;
+    formsOverview.clear();
     if (introAtoms.isEmpty) {
       // Сначала готовим объяснение первой формы и холст, затем открываем
       // задание. Иначе темы без intro успевали показать вопрос без карточки.
@@ -719,14 +730,51 @@ class LessonController extends GetxController {
     _nextCard();
   }
 
-  void _nextCard() =>
-      card.value = _pendingCards.isEmpty ? null : _pendingCards.removeAt(0);
+  static const _formsOverviewOrder = [
+    LetterForm.isolated,
+    LetterForm.finalForm,
+    LetterForm.initial,
+    LetterForm.medial,
+  ];
+
+  void _nextCard() {
+    final next = _pendingCards.isEmpty ? null : _pendingCards.removeAt(0);
+    card.value = next;
+    formsOverview.assignAll(_formsOverviewBefore(next));
+  }
+
+  List<Atom> _formsOverviewBefore(Atom? atom) {
+    final letterId = atom?.letterId;
+    if (letterId == null ||
+        atom?.form == null ||
+        atom?.form == LetterForm.isolated ||
+        _shownFormsOverviews.contains(letterId)) {
+      return const [];
+    }
+
+    final forms = [
+      for (final id in _curriculum.formsByLetter[letterId] ?? const <String>[])
+        if (_atomById(id) case final form?) form,
+    ];
+    return [
+      for (final position in _formsOverviewOrder)
+        ...forms.where((form) => form.form == position),
+    ];
+  }
 
   /// Карточка прочитана: атом записывается как показанный, и урок
   /// возвращается к заданию.
   Future<void> dismissCard() async {
     final atom = card.value;
     if (atom == null) return;
+
+    if (formsOverview.isNotEmpty) {
+      final letterId = atom.letterId;
+      if (letterId != null) _shownFormsOverviews.add(letterId);
+      formsOverview.clear();
+      _shownAt = DateTime.now();
+      return;
+    }
 
     await _progress.record(
       AtomIntroduced(
@@ -795,16 +843,13 @@ class LessonController extends GetxController {
         : 'Нарисуйте: ${progress.nextLabel ?? 'букву'}';
   }
 
-  /// В обводке последняя часть означает, что холст уже полностью проверил
-  /// букву: отдельное подтверждение кнопкой не нужно. Письмо по памяти
-  /// сохраняет своё явное подтверждение.
+  /// Последняя часть означает, что холст уже полностью проверил букву —
+  /// и по контуру, и по памяти. Отдельное подтверждение кнопкой не нужно.
   Future<void> onTracingMerged() async {
     if (wasWrong.value) return;
     tracingDone.value = true;
     tracingHint.value = 'Буква собрана';
-    if (current?.mode == ExerciseMode.trace) {
-      await submit(directOutcome: true);
-    }
+    await submit(directOutcome: true);
   }
 
   /// Холст сам показал, как пишется, после серии промахов, см.

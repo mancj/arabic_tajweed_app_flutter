@@ -2,6 +2,9 @@
 
 class UISVGAssets {
   static final search = _path("search");
+  static final solarRouteLinear = _path("solar--route-linear");
+  static final reiconRouteSquareFilled = _path("reicon--route-square-filled");
+  static final hugeiconsRoad01 = _path("hugeicons--road-01");
 
   // Экран буквы алфавита.
   static final letterGuides = _path("letter_guides");

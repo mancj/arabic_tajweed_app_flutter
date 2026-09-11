@@ -2,7 +2,7 @@ name: arabic_tajweed_app
 description: "Your app description here"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+37
+version: 1.0.0+38
 
 environment:
   sdk: '^3.8.0'
@@ -94,3 +94,50 @@ flutter:
           weight: 600
         - asset: assets/fonts/ScheherazadeNew/ScheherazadeNew-Bold.ttf
           weight: 700
+    - family: DGFaseh
+      fonts:
+        - asset: assets/fonts/DGFaseh/DG-Faseh-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/DGFaseh/DG-Faseh-Bold.ttf
+          weight: 700
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Light.ttf
+          weight: 300
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-Italic.ttf
+          style: italic
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-MediumItalic.ttf
+          style: italic
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-SemiBoldItalic.ttf
+          style: italic
+          weight: 600
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-BoldItalic.ttf
+          style: italic
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-ExtraLightItalic.ttf
+          style: italic
+          weight: 200
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-LightItalic.ttf
+          style: italic
+          weight: 300
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-ExtraBoldItalic.ttf
+          style: italic
+          weight: 800
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMonoNL-ThinItalic.ttf
+          style: italic
+          weight: 100

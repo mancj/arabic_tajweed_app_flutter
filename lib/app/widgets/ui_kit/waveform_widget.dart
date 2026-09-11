@@ -17,6 +17,48 @@ import 'package:flutter/widgets.dart';
 /// Громкость берётся из пиков записи в точке воспроизведения. Пики снимает
 /// нативный разбор файла, а он есть не везде; без них холмы просто
 /// раскачиваются ровнее, но «звучат» тоже.
+//
+/// Настройка точек, поднимающихся над волной.
+class WaveformParticles {
+  /// Сколько точек может одновременно находиться над волной. Ноль отключает
+  /// эффект.
+  final int count;
+
+  /// Сколько точки продолжают лететь и исчезать после остановки
+  /// воспроизведения.
+  final Duration duration;
+
+  /// Длительность плавного появления точки в начале её полёта.
+  final Duration fadeInDuration;
+
+  /// Цвет точек, включая прозрачность. Если не задан, берётся цвет контура
+  /// волны.
+  final Color? color;
+
+  /// Размер точки в логических пикселях. У каждой точки свой размер внутри
+  /// этого диапазона.
+  final double minRadius;
+  final double maxRadius;
+
+  const WaveformParticles({
+    this.count = 14,
+    this.duration = const Duration(seconds: 2),
+    this.fadeInDuration = const Duration(milliseconds: 160),
+    this.color,
+    this.minRadius = 1.2,
+    this.maxRadius = 2.4,
+  }) : assert(count >= 0, 'Количество частиц не может быть отрицательным'),
+       assert(
+         minRadius > 0,
+         'Минимальный размер частицы должен быть больше нуля',
+       ),
+       assert(
+         minRadius <= maxRadius,
+         'Минимальный размер частицы не больше максимального',
+       );
+}
+
+/// Декоративная анимированная волна, связанная со звуком записи.
 class WaveformWidget extends StatefulWidget {
   /// Высота полосы вместе с линией-основанием.
   final double height;
@@ -69,6 +111,9 @@ class WaveformWidget extends StatefulWidget {
 
   final bool animate;
 
+  /// Настройка поднимающихся точек над волной.
+  final WaveformParticles particles;
+
   /// Форма холмов детерминирована сидом: один и тот же сид — один и тот же
   /// силуэт.
   final int seed;
@@ -91,6 +136,7 @@ class WaveformWidget extends StatefulWidget {
     this.maxBumpHeight = 0.7,
     this.track,
     this.animate = true,
+    this.particles = const WaveformParticles(),
     this.seed = 7,
   }) : assert(restHeight <= loudHeight, 'В тишине волна не выше, чем на пике'),
        assert(strokeWidth > 0, 'Толщина контура должна быть больше нуля'),
@@ -115,7 +161,9 @@ class _WaveformWidgetState extends State<WaveformWidget>
   /// прыгнула бы, и холмы дёрнулись.
   late final Ticker _ticker = createTicker(_onFrame);
 
-  final _pulse = ValueNotifier<_Pulse>(const _Pulse(clock: 0, level: 0));
+  final _pulse = ValueNotifier<_Pulse>(
+    const _Pulse(clock: 0, level: 0, particleLevel: 0),
+  );
 
   /// Разгон резче спада: звук начинается мгновенно, а обрывать хвост так же
   /// резко нельзя — читается как сбой отрисовки.
@@ -132,6 +180,7 @@ class _WaveformWidgetState extends State<WaveformWidget>
   Duration _lastTick = Duration.zero;
 
   late List<List<_Bump>> _layers = _buildLayers();
+  late List<_Particle> _particleSeeds = _buildParticleSeeds();
 
   @override
   void initState() {
@@ -151,6 +200,12 @@ class _WaveformWidgetState extends State<WaveformWidget>
         widget.minBumpHeight != oldWidget.minBumpHeight ||
         widget.maxBumpHeight != oldWidget.maxBumpHeight) {
       _layers = _buildLayers();
+    }
+    if (widget.seed != oldWidget.seed ||
+        widget.particles.count != oldWidget.particles.count ||
+        widget.particles.minRadius != oldWidget.particles.minRadius ||
+        widget.particles.maxRadius != oldWidget.particles.maxRadius) {
+      _particleSeeds = _buildParticleSeeds();
     }
     if (widget.animate != oldWidget.animate) {
       widget.animate ? _ticker.start() : _ticker.stop();
@@ -175,10 +230,20 @@ class _WaveformWidgetState extends State<WaveformWidget>
     final rate = target > previous.level ? _attack : _release;
     final level =
         previous.level + (target - previous.level) * (1 - math.exp(-rate * dt));
+    final particleDuration =
+        widget.particles.duration.inMicroseconds /
+        Duration.microsecondsPerSecond;
+    final fadeInDuration =
+        widget.particles.fadeInDuration.inMicroseconds /
+        Duration.microsecondsPerSecond;
+    final particleLevel = track.isPlaying
+        ? math.min(1.0, previous.particleLevel + dt / fadeInDuration)
+        : math.max(0.0, previous.particleLevel - dt / particleDuration);
 
     _pulse.value = _Pulse(
       clock: previous.clock + dt * (1 + _speedGain * level),
       level: level,
+      particleLevel: particleLevel,
     );
   }
 
@@ -237,6 +302,25 @@ class _WaveformWidgetState extends State<WaveformWidget>
     });
   }
 
+  List<_Particle> _buildParticleSeeds() {
+    final random = math.Random(widget.seed ^ 0x51a7);
+
+    double between(double min, double max) =>
+        min + random.nextDouble() * (max - min);
+
+    return List.generate(
+      widget.particles.count,
+      (_) => _Particle(
+        anchor: between(0.06, 0.94),
+        phase: random.nextDouble(),
+        duration: between(2.4, 3.2),
+        drift: between(-0.045, 0.045),
+        rise: between(0.22, 0.46),
+        radius: between(widget.particles.minRadius, widget.particles.maxRadius),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -245,9 +329,11 @@ class _WaveformWidgetState extends State<WaveformWidget>
       child: CustomPaint(
         painter: _WaveformPainter(
           layers: _layers,
+          particleSeeds: _particleSeeds,
           pulse: _pulse,
           strokeColor: widget.strokeColor ?? UIColors.primary60,
           fillColor: widget.fillColor ?? UIColors.primary20,
+          particles: widget.particles,
           strokeWidth: widget.strokeWidth,
           amplitude: widget.amplitude,
           restHeight: widget.restHeight,
@@ -259,12 +345,17 @@ class _WaveformWidgetState extends State<WaveformWidget>
 }
 
 /// Кадр жизни волны: сколько прошло по её собственным часам и насколько
-/// громко звучит запись прямо сейчас.
+/// громко звучит запись прямо сейчас и сколько ещё виден след частиц.
 class _Pulse {
   final double clock;
   final double level;
+  final double particleLevel;
 
-  const _Pulse({required this.clock, required this.level});
+  const _Pulse({
+    required this.clock,
+    required this.level,
+    required this.particleLevel,
+  });
 }
 
 class _Bump {
@@ -305,6 +396,26 @@ class _Bump {
   }
 }
 
+/// Одна точка не хранит изменяемого состояния: её фаза вычисляется из часов
+/// волны. Поэтому для эффекта не нужны отдельные контроллеры или виджеты.
+class _Particle {
+  final double anchor;
+  final double phase;
+  final double duration;
+  final double drift;
+  final double rise;
+  final double radius;
+
+  const _Particle({
+    required this.anchor,
+    required this.phase,
+    required this.duration,
+    required this.drift,
+    required this.rise,
+    required this.radius,
+  });
+}
+
 class _WaveformPainter extends CustomPainter {
   static const _step = 2.0;
 
@@ -317,9 +428,11 @@ class _WaveformPainter extends CustomPainter {
   static const _depthResponse = 0.45;
 
   final List<List<_Bump>> layers;
+  final List<_Particle> particleSeeds;
   final ValueListenable<_Pulse> pulse;
   final Color strokeColor;
   final Color? fillColor;
+  final WaveformParticles particles;
   final double strokeWidth;
   final double amplitude;
   final double restHeight;
@@ -327,9 +440,11 @@ class _WaveformPainter extends CustomPainter {
 
   _WaveformPainter({
     required this.layers,
+    required this.particleSeeds,
     required this.pulse,
     required this.strokeColor,
     required this.fillColor,
+    required this.particles,
     required this.strokeWidth,
     required this.amplitude,
     required this.restHeight,
@@ -377,7 +492,46 @@ class _WaveformPainter extends CustomPainter {
       canvas.drawPath(layerPath, strokePaint);
     }
 
+    _paintParticles(canvas, size, baseline, frame);
     _paintBaseline(canvas, size, baseline);
+  }
+
+  void _paintParticles(
+    Canvas canvas,
+    Size size,
+    double baseline,
+    _Pulse frame,
+  ) {
+    if (frame.particleLevel <= 0.01) return;
+
+    final paint = Paint()..isAntiAlias = true;
+    final color = particles.color ?? strokeColor;
+    final fadeInDuration =
+        particles.fadeInDuration.inMicroseconds /
+        Duration.microsecondsPerSecond;
+    for (final particle in particleSeeds) {
+      final progress = (frame.clock / particle.duration + particle.phase) % 1;
+      // Появление короткое, а перемещение быстрое уже в первом кадре: точка
+      // не задерживается статично у основания. В конце она растворяется.
+      final fadeIn = (progress * particle.duration / fadeInDuration).clamp(
+        0.0,
+        1.0,
+      );
+      final fadeOut = ((1 - progress) / 0.28).clamp(0.0, 1.0);
+      final opacity = fadeIn * fadeOut * frame.particleLevel;
+      if (opacity <= 0.01) continue;
+
+      final x =
+          size.width *
+          (particle.anchor + particle.drift * math.sin(math.pi * progress))
+              .clamp(0.02, 0.98);
+      // Точка приходит из нижней границы и больше к ней не возвращается.
+      final startY = baseline;
+      final rise = 1 - math.pow(1 - progress, 3);
+      final y = startY - size.height * particle.rise * rise;
+      paint.color = color.withValues(alpha: color.a * opacity);
+      canvas.drawCircle(Offset(x, y), particle.radius, paint);
+    }
   }
 
   Path _layerPath(
@@ -428,8 +582,10 @@ class _WaveformPainter extends CustomPainter {
   @override
   bool shouldRepaint(_WaveformPainter old) =>
       old.layers != layers ||
+      old.particleSeeds != particleSeeds ||
       old.strokeColor != strokeColor ||
       old.fillColor != fillColor ||
+      old.particles != particles ||
       old.strokeWidth != strokeWidth ||
       old.amplitude != amplitude ||
       old.restHeight != restHeight ||

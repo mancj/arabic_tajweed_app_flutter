@@ -251,7 +251,11 @@ class CourseController extends GetxController {
     if (plan == null) return 'Готовим занятие';
     if (plan.newAtoms.isEmpty) return 'Закрепим знакомое';
     if (plan.topicId == 'm.join') return 'Соединяем первые буквы';
-    return currentTopic?.topic.title ?? 'Познакомимся с новым';
+    if (currentTopic?.topic.title != null) {
+      return 'Изучим ${currentTopic!.topic.title}';
+    }
+
+    return 'Познакомимся с новым';
   }
 
   String get lessonDescription {

@@ -18,7 +18,7 @@ class CoursePage extends GetView<CourseController> {
 
   @override
   Widget build(BuildContext context) => AppScaffold(
-    title: 'Моё обучение',
+    showBrand: true,
     showBackButton: false,
     bottomBar: Obx(
       () => NextButton(
@@ -34,7 +34,7 @@ class CoursePage extends GetView<CourseController> {
       }
       if (controller.loadError.value != null) {
         return Padding(
-          padding: insets.copyWith(top: insets.top + 24),
+          padding: insets,
           child: Column(
             children: [
               Text(
@@ -51,7 +51,7 @@ class CoursePage extends GetView<CourseController> {
         );
       }
       return SingleChildScrollView(
-        padding: insets.copyWith(top: insets.top + 24),
+        padding: insets.copyWith(top: insets.top + 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -67,16 +67,16 @@ class CoursePage extends GetView<CourseController> {
                 letterSpacing: -.8,
               ),
             ),
-            const Margin.vertical(20),
+            const Margin.vertical(16),
             CourseActivityWeek(
               days: controller.activityDays.toSet(),
               today: DateTime.now(),
             ),
-            const Margin.vertical(24),
+            const Margin.vertical(8),
             CourseLessonPreview(controller: controller),
-            const Margin.vertical(14),
+            const Margin.vertical(8),
             CourseOverview(controller: controller),
-            const Margin.vertical(24),
+            const Margin.vertical(8),
             TextButton(
               onPressed: () async {
                 await Get.toNamed(DebugPage.routeName);

@@ -1,8 +1,8 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/animated_background_shapes.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/drifting_rotation.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:figma_squircle/figma_squircle.dart';
@@ -10,7 +10,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
-import 'package:collection/collection.dart';
 
 class LetterWidgetCard extends StatelessWidget {
   static const _shape = SmoothBorderRadius.all(
@@ -128,15 +127,13 @@ class LetterWidgetCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: UIColors.cardBackground,
           borderRadius: _shape,
-          border: Border.all(
-            color: UIColors.borders,
-          ),
+          border: Border.all(color: UIColors.borders),
           boxShadow: [
             BoxShadow(
               color: UIColors.shadows,
               spreadRadius: 1,
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -170,7 +167,7 @@ class LetterWidgetCard extends StatelessWidget {
                           maxHeight: decorSide,
                           child: SizedBox.square(
                             dimension: decorSide,
-                            child: _backgroundShapes(),
+                            child: const AnimatedBackgroundShapes(),
                           ),
                         ),
                       ),
@@ -183,14 +180,19 @@ class LetterWidgetCard extends StatelessWidget {
                       bottom: 0,
                       child: WaveformWidget(
                         strokeWidth: .5,
-                        height: 100,
+                        height: 150,
                         layers: 3,
                         track: track,
-                        restHeight: .55,
+                        restHeight: .4,
                         minBumps: 3,
                         maxBumps: 4,
-                        // minBumpWidth: 0.015,
-                        // maxBumpWidth: 0.3,
+                        particles: WaveformParticles(
+                          minRadius: .5,
+                          color: UIColors.primary,
+                          maxRadius: 1,
+                          duration: 1.seconds,
+                          fadeInDuration: .2.seconds,
+                        ),
                       ),
                     ),
                   Padding(
@@ -334,88 +336,4 @@ class LetterWidgetCard extends StatelessWidget {
       ],
     ),
   );
-
-  Widget _backgroundShapes() {
-    const curve = Curves.easeInOut;
-    const scaleFactor = 0.8;
-    const parallaxOffset1 = -16.0;
-    const parallaxOffset2 = -8.0;
-    const parallaxOffset3 = -1.0;
-    final (String, String) shape = [
-      UIImages.background_shape_1,
-      UIImages.background_shape_2,
-    ].shuffled().first;
-
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Transform.scale(
-          scale: scaleFactor,
-          child: TiltParallax(
-            offset: const Offset(parallaxOffset1, parallaxOffset1),
-            child:
-                DriftingRotation(
-                      child: Image.asset(
-                        shape.$2,
-                        fit: BoxFit.cover,
-                        color: UIColors.backgroundShapes2,
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(duration: .5.seconds)
-                    .scaleXY(
-                      begin: 0.9,
-                      end: 1,
-                      duration: .8.seconds,
-                      curve: curve,
-                    ),
-          ),
-        ),
-        Transform.scale(
-          scale: scaleFactor,
-          child: TiltParallax(
-            offset: const Offset(parallaxOffset2, parallaxOffset2),
-            child:
-                DriftingRotation(
-                      duration: const Duration(milliseconds: 3600),
-                      period: const Duration(seconds: 6),
-                      child: Image.asset(
-                        shape.$1,
-                        fit: BoxFit.cover,
-                        color: UIColors.backgroundShapes2,
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(duration: .5.seconds)
-                    .scaleXY(
-                      begin: 1.1,
-                      end: 1,
-                      duration: .6.seconds,
-                      curve: curve,
-                    ),
-          ),
-        ),
-        Opacity(
-          opacity: 1,
-          child: TiltParallax(
-            offset: const Offset(parallaxOffset3, parallaxOffset3),
-            child: Container(
-              width: scaleFactor * 100,
-              height: scaleFactor * 100,
-              alignment: Alignment.center,
-              decoration: ShapeDecoration(
-                shape: CircleBorder(
-                  side: BorderSide(
-                    color: UIColors.text.withValues(alpha: .1),
-                    width: 1,
-                  ),
-                ),
-                color: UIColors.cardBackground,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

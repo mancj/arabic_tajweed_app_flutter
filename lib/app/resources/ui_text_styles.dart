@@ -11,6 +11,12 @@ class UITextStyles {
   /// Шрифт для арабского текста.
   static const fontScheherazadeNew = 'ScheherazadeNew';
 
+  /// Дополнительный шрифт для арабского текста.
+  static const fontDGFaseh = 'DGFaseh';
+
+  /// Моноширинный шрифт для технических значений и чисел.
+  static const fontJetBrainsMono = 'JetBrainsMono';
+
   /// Вариативный шрифт, которым в макете набрана крупная арабская буква.
   /// Начертание задаётся через [fontVariations] — статических файлов нет.
   static const fontRubik = 'Rubik';
@@ -78,7 +84,7 @@ class UITextStyles {
 
   static TextStyle get hint => TextStyle(
     color: UIColors.secondary2,
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: fontOnest,
   );
 
@@ -134,6 +140,20 @@ class UITextStyles {
     color: UIColors.text,
     fontWeight: FontWeight.w700,
     fontSize: 17,
+    fontFamily: fontOnest,
+  );
+
+  static TextStyle get medium17 => TextStyle(
+    color: UIColors.text,
+    fontWeight: FontWeight.w600,
+    fontSize: 17,
+    fontFamily: fontOnest,
+  );
+
+  static TextStyle get medium12 => TextStyle(
+    color: UIColors.text,
+    fontWeight: FontWeight.w600,
+    fontSize: 12,
     fontFamily: fontOnest,
   );
 }

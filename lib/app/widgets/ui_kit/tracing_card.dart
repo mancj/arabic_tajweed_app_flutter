@@ -8,6 +8,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get_utils/src/extensions/num_extensions.dart';
 
 /// Карточка обводки: шапка [LessonCard] с кнопкой «стереть», под ней
 /// прописная сетка с холстом и строка обратной связи.
@@ -48,6 +49,9 @@ class TracingCard extends StatelessWidget {
   final TracingMode mode;
   final TracingShape? shape;
 
+  /// После принятого ответа холст остаётся виден, но больше не рисует.
+  final bool enabled;
+
   /// См. [DrawingCanvas.missesBeforeReveal].
   final int missesBeforeReveal;
 
@@ -66,6 +70,7 @@ class TracingCard extends StatelessWidget {
     required this.mode,
     required this.shape,
     required this.missesBeforeReveal,
+    this.enabled = true,
     this.onPlay,
     this.onAutoPlay,
     this.track,
@@ -121,12 +126,20 @@ class TracingCard extends StatelessWidget {
                     height: 100,
                     child: IgnorePointer(
                       child: WaveformWidget(
-                        height: 100,
+                        strokeWidth: .5,
+                        height: 200,
                         layers: 3,
                         track: track,
-                        restHeight: .55,
+                        restHeight: .4,
                         minBumps: 3,
                         maxBumps: 4,
+                        particles: WaveformParticles(
+                          minRadius: .5,
+                          color: UIColors.primary,
+                          maxRadius: 1,
+                          duration: 1.seconds,
+                          fadeInDuration: .2.seconds,
+                        ),
                       ),
                     ),
                   ),
@@ -143,10 +156,11 @@ class TracingCard extends StatelessWidget {
                     matcher: matcher,
                     mode: mode,
                     placeholder: shape,
+                    enabled: enabled,
                     // Четыре слоя, четыре цвета: контур под всем,
                     // поверх него показ, дальше чернила руки, и собранная
                     // буква вместо них, когда часть сошлась.
-                    strokeWidth: 16,
+                    strokeWidth: 12,
                     placeholderPadding: 0,
                     missesBeforeReveal: missesBeforeReveal,
                     onProgress: onProgress,
