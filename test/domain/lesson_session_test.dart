@@ -16,6 +16,31 @@ Exercise ex(String id) => Exercise(
   level: DistractorLevel.distant,
 );
 
+Atom form(String id, LetterForm form) => Atom(
+  id: 'ba.$id',
+  kind: AtomKind.letterForm,
+  display: id,
+  letterId: 'ba',
+  form: form,
+);
+
+Exercise formSequence() {
+  final forms = [
+    form('isolated', LetterForm.isolated),
+    form('initial', LetterForm.initial),
+    form('medial', LetterForm.medial),
+    form('final', LetterForm.finalForm),
+  ];
+  return Exercise(
+    atom: forms.first,
+    mode: ExerciseMode.positionToForm,
+    options: forms,
+    answerIndex: 0,
+    level: DistractorLevel.mixed,
+    prompt: forms.first,
+  );
+}
+
 LessonSession session(int count) => LessonSession(
   exercises: [for (var i = 0; i < count; i++) ex('a$i')],
   sessionId: 1,
@@ -27,6 +52,50 @@ void main() {
     final s = session(3);
     expect(s.answer(s.current!, 0, fastEnough: true), AnswerOutcome.correct);
     expect(s.current!.atom.id, 'a1');
+  });
+
+  test('верная сборка пишет успех всем четырём формам', () {
+    final exercise = formSequence();
+    final s = LessonSession(
+      exercises: [exercise],
+      sessionId: 2,
+      now: () => DateTime(2026, 1, 2),
+    );
+
+    expect(
+      s.answer(exercise, exercise.answerIndex, fastEnough: true),
+      AnswerOutcome.correct,
+    );
+    final events = s.log.cast<ProgressEvent>();
+    expect(events, hasLength(4));
+    expect(events.map((event) => event.atomId).toSet(), {
+      for (final atom in exercise.options) atom.id,
+    });
+    expect(events.every((event) => event.correct), isTrue);
+  });
+
+  test('ошибка сборки записывается отдельно для каждой формы', () {
+    final exercise = formSequence();
+    final s = LessonSession(
+      exercises: [exercise],
+      sessionId: 2,
+      now: () => DateTime(2026, 1, 2),
+    );
+    final results = {
+      exercise.options[0].id: true,
+      exercise.options[1].id: false,
+      exercise.options[2].id: false,
+      exercise.options[3].id: true,
+    };
+
+    expect(
+      s.answer(exercise, 1, fastEnough: true, atomResults: results),
+      AnswerOutcome.wrong,
+    );
+    expect({
+      for (final event in s.log.cast<ProgressEvent>())
+        event.atomId: event.correct,
+    }, results);
   });
 
   test('несколько промахов подряд не плодят копии задания', () {
@@ -42,6 +111,20 @@ void main() {
 
     final ids = s.queueIds;
     expect(ids.where((id) => id == first.atom.id), hasLength(2));
+  });
+
+  test('ошибка не добавляет третью одинаковую проверку буквы', () {
+    final s = LessonSession(
+      exercises: [ex('a'), ex('b'), ex('a'), ex('c')],
+      sessionId: 1,
+      now: () => DateTime(2026, 1, 1),
+    );
+    final first = s.current!;
+
+    s.answer(first, 1, fastEnough: true);
+    s.answer(first, 0, fastEnough: true);
+
+    expect(s.queueIds.where((id) => id == 'a'), hasLength(2));
   });
 
   test('провал возвращается через несколько заданий, а не в конец', () {
@@ -85,7 +168,7 @@ void main() {
     expect(events.map((e) => e.correct), [false, true]);
   });
 
-  test('очередь не растёт выше потолка', () {
+  test('ошибки не раздувают бюджет сессии', () {
     const rules = LearningRules();
     final s = LessonSession(
       exercises: [for (var i = 0; i < rules.tasksPerSession; i++) ex('a$i')],
@@ -98,7 +181,7 @@ void main() {
       s.answer(e, 1, fastEnough: true);
       s.answer(e, 0, fastEnough: true);
     }
-    expect(s.total, rules.maxTasksPerSession);
+    expect(s.total, rules.tasksPerSession);
   });
 
   test('сессия заканчивается, когда очередь пройдена', () {

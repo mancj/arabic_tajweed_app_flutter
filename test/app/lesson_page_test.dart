@@ -9,6 +9,7 @@ import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -123,7 +124,7 @@ void main() {
     expect(find.textContaining('28 букв'), findsOneWidget);
   });
 
-  testWidgets('верный ответ по произношению сначала показывает результат', (
+  testWidgets('верный ответ сам переходит дальше через пять секунд', (
     tester,
   ) async {
     await pumpLesson(tester, topicId: 'm.first');
@@ -145,10 +146,18 @@ void main() {
     expect(controller.current, same(current));
     expect(find.text('Правильно произнесено'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('correct-answer-auto-progress')),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.text('Продолжить'));
+    await tester.pump(const Duration(seconds: 5));
     await settle(tester);
     expect(controller.wasCorrect.value, isFalse);
     expect(controller.current, isNot(same(current)));
+    expect(
+      find.byKey(const ValueKey('correct-answer-auto-progress')),
+      findsNothing,
+    );
   });
 }

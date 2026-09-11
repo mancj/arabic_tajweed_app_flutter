@@ -32,6 +32,7 @@ class LessonCard extends StatelessWidget {
     final action = this.action;
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(16),
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
@@ -44,7 +45,7 @@ class LessonCard extends StatelessWidget {
             color: UIColors.shadows,
             spreadRadius: 1,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),

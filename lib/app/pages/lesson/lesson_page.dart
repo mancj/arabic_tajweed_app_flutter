@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -128,25 +129,50 @@ class _ResultSheet extends StatefulWidget {
   State<_ResultSheet> createState() => _ResultSheetState();
 }
 
-class _ResultSheetState extends State<_ResultSheet> {
-  SingleSoundEffect? _correctAnswerSound;
+class _ResultSheetState extends State<_ResultSheet>
+    with SingleTickerProviderStateMixin {
+  static const _autoAdvanceDuration = Duration(seconds: 5);
+
+  late final SingleSoundEffect _answerSound;
+  AnimationController? _autoAdvanceController;
+  bool _advancing = false;
 
   LessonController get controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
+    _answerSound = SingleSoundEffect(
+      assetPath: controller.wasCorrect.value
+          ? 'audio/correct_answer.m4a'
+          : 'audio/incorrect.m4a',
+    );
+    unawaited(_answerSound.play());
     if (controller.wasCorrect.value) {
-      _correctAnswerSound = SingleSoundEffect(
-        assetPath: 'audio/correct_answer.m4a',
-      );
-      unawaited(_correctAnswerSound!.play());
+      _autoAdvanceController = AnimationController(
+        vsync: this,
+        duration: _autoAdvanceDuration,
+      )..addStatusListener(_handleAutoAdvanceStatus);
+      _autoAdvanceController!.forward();
     }
+  }
+
+  void _handleAutoAdvanceStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) unawaited(_advance());
+  }
+
+  Future<void> _advance() async {
+    if (_advancing || !mounted) return;
+    setState(() => _advancing = true);
+    _autoAdvanceController?.stop();
+    await controller.submit();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
-    unawaited(_correctAnswerSound?.dispose());
+    _autoAdvanceController?.dispose();
+    unawaited(_answerSound.dispose());
     super.dispose();
   }
 
@@ -198,11 +224,11 @@ class _ResultSheetState extends State<_ResultSheet> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Icon(
               correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
               size: 41,
-              color: correct ? UIColors.primary : UIColors.primaryButtonText,
+              color: correct ? UIColors.primary : UIColors.text,
             ),
             const SizedBox(height: 12),
             Text(
@@ -216,15 +242,39 @@ class _ResultSheetState extends State<_ResultSheet> {
               style: UITextStyles.regularText,
               textAlign: TextAlign.center,
             ),
+            if (correct) ...[
+              const SizedBox(height: 16),
+              AnimatedBuilder(
+                animation: _autoAdvanceController!,
+                builder: (context, _) {
+                  final progress = _autoAdvanceController!.value;
+                  final secondsLeft =
+                      (_autoAdvanceDuration.inSeconds * (1 - progress)).ceil();
+                  return Semantics(
+                    label: 'Автоматический переход',
+                    value: 'Через $secondsLeft секунд',
+                    child: Column(
+                      key: const ValueKey('correct-answer-auto-progress'),
+                      children: [
+                        Text(
+                          'Далее автоматически через $secondsLeft сек.',
+                          style: UITextStyles.hint,
+                        ),
+                        const SizedBox(height: 8),
+                        LessonProgressBar(value: progress, height: 8),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: NextButton(
                 title: correct ? 'Продолжить' : 'Попробовать ещё раз',
-                onTap: () async {
-                  await controller.submit();
-                  if (context.mounted) Navigator.of(context).pop();
-                },
+                enabled: !_advancing,
+                onTap: _advance,
               ),
             ),
           ],
@@ -419,7 +469,10 @@ class _RecordBar extends GetView<LessonController> {
                 onTap: controller.skipExercise,
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text('Пропустить задание', style: UITextStyles.hint),
+                  child: Text(
+                    'Продолжить без произношения',
+                    style: UITextStyles.hint,
+                  ),
                 ),
               ),
       );
@@ -442,7 +495,7 @@ class _SayNameFeedback extends GetView<LessonController> {
         return RuleCard(
           badge: 'Не вышло',
           title: error,
-          text: 'Попробуйте ещё раз или пропустите задание.',
+          text: 'Попробуйте ещё раз или продолжите занятие без произношения.',
         );
       }
 
@@ -690,7 +743,7 @@ class _LessonProgress extends GetView<LessonController> {
 
 /// Карточка вопроса. Задание с выбором строится на звуке и арабских
 /// буквах, без русского имени: на слух буква звучит, а вместо глифа стоит
-/// знак вопроса; в вопросе о позиции показана другая форма той же буквы.
+/// знак вопроса; в раскладке форм отдельная форма остаётся образцом.
 /// Имя появляется только как подмена, если звука нет или его не слышно.
 class _QuestionFor extends GetView<LessonController> {
   const _QuestionFor({required this.exercise});
@@ -971,7 +1024,7 @@ class _FinishBlock extends GetView<LessonController> {
 
   @override
   Widget build(BuildContext context) {
-    final introduced = controller.introAtoms;
+    final introduced = controller.sessionIntroduced;
 
     return Column(
       children: [

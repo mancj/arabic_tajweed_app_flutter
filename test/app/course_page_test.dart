@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_path_page.dart';
+import 'package:arabic_tajweed_app/app/pages/lesson/lesson_binding.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
@@ -78,6 +79,7 @@ void main() {
       await tester.tap(find.text('Начать занятие'));
       await settle(tester);
       expect((Get.arguments as Map)['plan'], same(plan));
+      expect((Get.arguments as Map)[LessonBinding.continuePlanningArg], isTrue);
       expect(c.opening.value, isTrue);
       Get.back();
       await settle(tester);
@@ -137,8 +139,8 @@ void main() {
     expect(c.nextPlan.value!.newAtoms, isEmpty);
     expect(c.nextPlan.value!.isFocusedReview, isTrue);
     expect(c.nextPlan.value!.reviewAtoms, isNotEmpty);
-    expect(c.lessonFocus, 'Короткое закрепление');
-    expect(c.lessonDetail, contains('по оставшимся пробелам'));
+    expect(c.lessonFocus, 'Закрепление и новое');
+    expect(c.lessonDetail, contains('по пробелам'));
     expect(c.currentTopic!.isDone, isFalse);
     final restarted = CourseController(database: db, curriculum: curriculum);
     await tester.runAsync(restarted.refreshBoard);
@@ -168,9 +170,9 @@ void main() {
     expect(c.statuses.first.isDone, isTrue);
     expect(c.nextPlan.value!.topicId, 'm.forms');
     expect(c.nextPlan.value!.newAtoms.where((a) => a.form != null).length, 10);
-    // Прогноз должен учитывать раннее соединение букв, а не просто брать
-    // следующую строку программы. Сам прогноз не записывает знания.
-    expect(c.upcomingTopic.value!.topic.id, 'm.join');
+    // Даже уже доступный модуль соединений не обгоняет следующую группу
+    // букв в программе. Сам прогноз не записывает знания.
+    expect(c.upcomingTopic.value!.topic.id, 'm.jim');
     expect(
       (await db.readAll()).length,
       curriculum.topics.first.counterOf.length,

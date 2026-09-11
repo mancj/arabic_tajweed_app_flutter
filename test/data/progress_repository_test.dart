@@ -12,7 +12,10 @@ void main() {
 
   setUp(() {
     db = ProgressDatabase(NativeDatabase.memory());
-    repo = ProgressRepository(database: db);
+    repo = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+    );
   });
 
   tearDown(() => db.close());
@@ -92,9 +95,32 @@ void main() {
   test('состояние восстанавливается из лога после перезапуска', () async {
     await repo.recordAll([answer(), answer(correct: false, session: 2)]);
 
-    final restarted = ProgressRepository(database: db);
+    final restarted = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+    );
     expect((await restarted.of('ba.isolated')).totalErrors, 1);
     expect((await restarted.of('ba.isolated')).cleanStreak, 0);
+  });
+
+  // Правило букв должно одинаково работать в живом кэше и после полного
+  // пересчёта журнала при следующем запуске приложения.
+  test('три интервальных сессии закрепляют букву после перезапуска', () async {
+    await repo.recordAll([
+      answer(mode: ExerciseMode.trace),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(mode: ExerciseMode.trace),
+      answer(session: 2),
+      answer(session: 4),
+      answer(session: 8),
+    ]);
+    expect((await repo.of('ba.isolated')).state, AtomState.mastered);
+
+    final restarted = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+    );
+    expect((await restarted.of('ba.isolated')).state, AtomState.mastered);
   });
 
   // Выполненные режимы не теряются при ошибке или перезапуске и не
@@ -110,7 +136,10 @@ void main() {
       ]);
       final expected = {ExerciseMode.trace, ExerciseMode.traceFromMemory};
       expect((await repo.of('ba.isolated')).successfulModes, expected);
-      final restarted = ProgressRepository(database: db);
+      final restarted = ProgressRepository(
+        database: db,
+        letterFormIds: const {'ba.isolated'},
+      );
       expect((await restarted.of('ba.isolated')).successfulModes, expected);
       await restarted.record(answer(mode: ExerciseMode.sayName, session: 3));
       expect((await restarted.of('ba.isolated')).successfulModes, {
@@ -154,7 +183,13 @@ void main() {
       KnowledgeConfirmed(atomId: 'ba.isolated', sessionId: 1, at: utc),
     ]);
     expect(await repo.activityDays(), {day});
-    expect(await ProgressRepository(database: db).activityDays(), {day});
+    expect(
+      await ProgressRepository(
+        database: db,
+        letterFormIds: const {'ba.isolated'},
+      ).activityDays(),
+      {day},
+    );
     await repo.clear();
     expect(await repo.activityDays(), isEmpty);
   });

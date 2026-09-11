@@ -27,6 +27,7 @@ class Exercise {
     this.options = const [],
     this.answerIndex = -1,
     this.isReview = false,
+    this.isRequired = false,
     this.prompt,
   });
 
@@ -42,6 +43,7 @@ class Exercise {
     required this.mode,
     this.level = DistractorLevel.distant,
     this.isReview = false,
+    this.isRequired = false,
   }) : options = const [],
        answerIndex = directAnswer,
        prompt = null;
@@ -52,7 +54,8 @@ class Exercise {
   /// Индекс, которым отмечается ошибка в задании без выбора.
   static const directMiss = -1;
 
-  /// Атом, о котором это задание. Именно он получит результат в лог.
+  /// Основной атом задания. Обычное упражнение пишет результат только ему;
+  /// раскладка форм пишет отдельный результат каждой форме из [resultAtoms].
   final Atom atom;
   final ExerciseMode mode;
 
@@ -67,13 +70,23 @@ class Exercise {
   /// Задание из блока повторения, а не по новому атому.
   final bool isReview;
 
-  /// Что показано в карточке вопроса, если не сам [atom]. В вопросе
-  /// о позиции это другая форма той же буквы: показывать спрашиваемую
-  /// значило бы показать ответ.
+  /// Обязательная встреча из плана. При ошибке повтор может заменить только
+  /// добавочное задание: обязательный режим или форму выкидывать нельзя.
+  final bool isRequired;
+
+  /// Что показано в карточке вопроса, если не сам [atom]. В раскладке форм
+  /// это отдельная форма той же буквы: она остаётся образцом и при этом
+  /// также участвует в упражнении.
   final Atom? prompt;
 
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;
 
   Atom get answer => isChoice ? options[answerIndex] : atom;
+
+  /// Какие элементы действительно проверяет задание. Сборка раскладывает
+  /// все четыре формы, поэтому учитывать только [atom] было бы потерей
+  /// трёх четвертей результата.
+  List<Atom> get resultAtoms =>
+      mode == ExerciseMode.positionToForm ? List.unmodifiable(options) : [atom];
 }

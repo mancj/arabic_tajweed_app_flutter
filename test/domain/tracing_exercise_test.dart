@@ -176,48 +176,80 @@ void main() {
     expect(modes, [ExerciseMode.sayName]);
   });
 
-  // Сокращение урока раньше могло вытеснить
-  // письмо по памяти. Все три режима нужны каждой букве темы, даже при
-  // плотном плане и уже накопленном прогрессе.
-  test('три обязательных режима сохраняются при 3–5 встречах', () {
-    for (final count in [3, 4, 5]) {
-      for (final state in AtomState.values) {
-        for (var seed = 0; seed < 30; seed++) {
-          final ex =
-              ExerciseGenerator(
-                curriculum: curriculum,
-                rules: LearningRules(tasksPerSession: count * 2 + 1),
-                random: Random(seed),
-              ).build(
-                plan: planOf(
-                  newAtoms: state == AtomState.fresh ? [ba, ta] : [],
-                  review: state == AtomState.fresh ? [] : [ba.id, ta.id],
-                  spaced: [siin.id],
-                ),
-                ctx: ctxOf({
-                  ...others,
-                  for (final a in [ba, ta])
-                    a.id: AtomProgress(
+  // Пара букв раньше раздувалась до пяти встреч на каждую и давала
+  // механическое A/B/A/B. Проверяем и первый вход, и продолжение темы:
+  // обязательные умения остаются, одинаковый тест встречается один раз.
+  test('узкий блок даёт четыре разных задания на каждую букву', () {
+    for (final state in AtomState.values) {
+      for (var seed = 0; seed < 30; seed++) {
+        final ex =
+            ExerciseGenerator(
+              curriculum: curriculum,
+              random: Random(seed),
+            ).build(
+              plan: planOf(
+                newAtoms: state == AtomState.fresh ? [ba, ta] : [],
+                review: state == AtomState.fresh ? [] : [ba.id, ta.id],
+                spaced: [siin.id],
+              ),
+              ctx: ctxOf({
+                siin.id: introduced,
+                miim.id: introduced,
+                if (state != AtomState.fresh)
+                  for (final atom in [ba, ta])
+                    atom.id: AtomProgress(
                       state: state,
                       hadActiveSuccess: state.index >= AtomState.learning.index,
                     ),
-                }),
-                sessionId: 2,
-              );
-          expect(ex, hasLength(count * 2 + 1));
-          expect(ex.last.atom, siin);
-          for (final atom in [ba, ta]) {
-            final modes = modesOf(ex, atom);
-            expect(modes, hasLength(count));
-            expect(modes.where((m) => m.isActive), [
-              ExerciseMode.trace,
-              ExerciseMode.traceFromMemory,
-              ExerciseMode.sayName,
-            ]);
-          }
+              }),
+              sessionId: 2,
+            );
+
+        expect(ex, hasLength(9));
+        expect(ex.last.atom, siin);
+        for (final atom in [ba, ta]) {
+          expect(modesOf(ex, atom), [
+            ExerciseMode.trace,
+            ExerciseMode.soundToLetter,
+            ExerciseMode.traceFromMemory,
+            ExerciseMode.sayName,
+          ]);
         }
       }
     }
+  });
+
+  test('без голоса у пары не больше двух тестов выбора на букву', () {
+    final ex = gen().build(
+      plan: planOf(newAtoms: [ba, ta]),
+      ctx: ctxOf({siin.id: introduced, miim.id: introduced}),
+      sessionId: 2,
+      unavailableModes: {ExerciseMode.sayName},
+    );
+
+    for (final atom in [ba, ta]) {
+      final modes = modesOf(ex, atom);
+      expect(
+        modes.where((mode) => mode == ExerciseMode.soundToLetter),
+        hasLength(2),
+      );
+      expect(modes, hasLength(4));
+    }
+  });
+
+  test('пара не помещается в остаток меньше восьми заданий', () {
+    final plan = planOf(newAtoms: [ba, ta]);
+
+    expect(plan.minimumTaskCount(curriculum, const LearningRules()), 8);
+    expect(
+      () => gen().build(
+        plan: plan,
+        ctx: ctxOf({siin.id: introduced, miim.id: introduced}),
+        sessionId: 2,
+        taskLimit: 7,
+      ),
+      throwsStateError,
+    );
   });
 
   // Раньше генератор молча удалял часть обещанных букв из широкого плана.

@@ -29,6 +29,7 @@ const baFinal = Atom(
   display: 'ـب',
   letterId: 'ba',
   form: LetterForm.finalForm,
+  tracing: 'ba_end',
 );
 const baInitial = Atom(
   id: 'ba.initial',
@@ -36,6 +37,7 @@ const baInitial = Atom(
   display: 'بـ',
   letterId: 'ba',
   form: LetterForm.initial,
+  tracing: 'ba_init',
 );
 const baMedial = Atom(
   id: 'ba.medial',
@@ -43,6 +45,7 @@ const baMedial = Atom(
   display: 'ـبـ',
   letterId: 'ba',
   form: LetterForm.medial,
+  tracing: 'ba_mid',
 );
 const concept = Atom(
   id: 'concept.dots',
@@ -306,7 +309,7 @@ void main() {
     expect(ex.length, lessThanOrEqualTo(20));
   });
 
-  test('в задании всегда три варианта ответа', () {
+  test('обычный выбор даёт три варианта, раскладка форм — четыре', () {
     final ex = gen().build(
       plan: planOf(newAtoms: [ba], review: [ta.id, tha.id, siin.id]),
       ctx: ctxOf({
@@ -318,8 +321,9 @@ void main() {
     final choices = ex.where((e) => e.isChoice);
     expect(choices, isNotEmpty);
     for (final e in choices) {
-      expect(e.options, hasLength(3));
-      expect(e.options.toSet(), hasLength(3), reason: 'без повторов');
+      final optionCount = e.mode == ExerciseMode.positionToForm ? 4 : 3;
+      expect(e.options, hasLength(optionCount));
+      expect(e.options.toSet(), hasLength(optionCount), reason: 'без повторов');
     }
   });
 
@@ -351,19 +355,20 @@ void main() {
       }
     });
 
-    test('формы буквы раскладываются по трём позициям', () {
+    test('все формы буквы раскладываются по четырём позициям', () {
       final byPosition = many().where(
         (e) => e.mode == ExerciseMode.positionToForm,
       );
-      expect(byPosition, isNotEmpty, reason: 'у ба введены три формы');
+      expect(byPosition, isNotEmpty, reason: 'у ба введены все формы');
       for (final e in byPosition) {
         final prompt = e.prompt;
         expect(prompt, isNotNull, reason: 'в вопросе показана форма буквы');
         expect(prompt!.letterId, e.atom.letterId);
         expect(prompt.form, LetterForm.isolated);
         expect(e.options.map((o) => o.letterId).toSet(), {e.atom.letterId});
-        expect(e.options, hasLength(3));
+        expect(e.options, hasLength(4));
         expect(e.options.map((o) => o.form).toSet(), {
+          LetterForm.isolated,
           LetterForm.initial,
           LetterForm.medial,
           LetterForm.finalForm,
@@ -372,6 +377,7 @@ void main() {
           e.options.map((o) => o.form),
           isNot(
             orderedEquals(const [
+              LetterForm.isolated,
               LetterForm.initial,
               LetterForm.medial,
               LetterForm.finalForm,
@@ -381,10 +387,71 @@ void main() {
         );
         expect(
           e.options.map((o) => o.id),
-          isNot(contains(prompt.id)),
-          reason: 'отдельная форма остаётся только образцом',
+          contains(prompt.id),
+          reason: 'отдельная форма остаётся образцом и участвует в раскладке',
         );
       }
+    });
+
+    test('сборка форм возвращается один раз на букву в каждой сессии', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final generator = ExerciseGenerator(
+          curriculum: curriculum,
+          random: Random(seed),
+        );
+        final plans = [
+          planOf(review: [baFinal.id, baInitial.id, baMedial.id]),
+          planOf(spaced: [baFinal.id]),
+        ];
+        for (var index = 0; index < plans.length; index++) {
+          final sessionId = index + 2;
+          final exercises = generator.build(
+            plan: plans[index],
+            ctx: ctx,
+            sessionId: sessionId,
+          );
+          expect(
+            exercises.where((e) => e.mode == ExerciseMode.positionToForm),
+            hasLength(1),
+            reason: 'seed=$seed, session=$sessionId',
+          );
+        }
+      }
+    });
+
+    test('интервальный повтор сворачивает семейство в одну сборку', () {
+      const learned = AtomProgress(
+        state: AtomState.known,
+        hadActiveSuccess: true,
+        lastSeenSession: 1,
+      );
+      final oldCtx = ctxOf({
+        for (final atom in [ba, baFinal, baInitial, baMedial]) atom.id: learned,
+      });
+      final plan = planOf(
+        spaced: [ba.id, baFinal.id, baInitial.id, baMedial.id],
+      );
+
+      final exercises = gen().build(plan: plan, ctx: oldCtx, sessionId: 2);
+      expect(exercises, hasLength(1));
+      expect(exercises.single.mode, ExerciseMode.positionToForm);
+      expect(exercises.single.resultAtoms.map((atom) => atom.id).toSet(), {
+        ba.id,
+        baFinal.id,
+        baInitial.id,
+        baMedial.id,
+      });
+
+      final afterSequence = gen().build(
+        plan: plan,
+        ctx: oldCtx,
+        sessionId: 2,
+        previousFormSequences: const {'ba'},
+      );
+      expect(
+        afterSequence.map((exercise) => exercise.mode),
+        isNot(contains(ExerciseMode.positionToForm)),
+      );
     });
 
     test('старые режимы с именем буквы не строятся', () {

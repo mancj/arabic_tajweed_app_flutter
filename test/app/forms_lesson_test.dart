@@ -32,7 +32,10 @@ void main() {
 
   setUp(() async {
     database = ProgressDatabase(NativeDatabase.memory());
-    progress = ProgressRepository(database: database);
+    progress = ProgressRepository(
+      database: database,
+      letterFormIds: curriculum.letterFormIds,
+    );
   });
   tearDown(() => database.close());
 
@@ -121,49 +124,46 @@ void main() {
 
   // Ошибка оставляет человека на произношении, пропуск возвращает
   // к следующей карточке. Очередь повторов при этом должна сохраниться.
-  test(
-    'ошибка и пропуск произношения не теряют следующие объяснения',
-    () async {
-      final controller = await open('m.first');
-      addTearDown(controller.onClose);
-      final first = controller.current!;
-      await controller.submit(directOutcome: false);
-      expect(controller.current, same(first));
-      expect(controller.stage.value, LessonStage.exercise);
-      expect(controller.totalExercises, 21);
-      await controller.submit(); // Закрыть разбор ошибки.
-      expect(controller.current, same(first));
-      await controller.answerCorrectly();
-      expect(controller.stage.value, LessonStage.intro);
-      expect(controller.introAtom!.id, 'ba.isolated');
-      await controller.nextIntro();
-      expect(controller.current!.atom.id, 'ba.isolated');
-      expect(controller.current!.mode, ExerciseMode.sayName);
-      final before = (await database.readAll())
-          .whereType<ProgressEvent>()
-          .length;
-      await controller.skipExercise();
-      expect(
-        (await database.readAll()).whereType<ProgressEvent>(),
-        hasLength(before),
-      );
-      expect(controller.stage.value, LessonStage.intro);
-      expect(controller.introAtom!.id, 'ta.isolated');
-      var steps = 0;
-      var repeatedFirst = 0;
-      while (controller.stage.value != LessonStage.finished) {
-        expect(++steps, lessThan(30));
-        if (controller.stage.value == LessonStage.intro) {
-          await controller.nextIntro();
-        } else {
-          if (identical(controller.current, first)) repeatedFirst++;
-          await controller.answerCorrectly();
+  test('ошибка и технический пропуск не теряют следующие объяснения', () async {
+    final controller = await open('m.first');
+    addTearDown(controller.onClose);
+    final first = controller.current!;
+    await controller.submit(directOutcome: false);
+    expect(controller.current, same(first));
+    expect(controller.stage.value, LessonStage.exercise);
+    expect(controller.totalExercises, 20);
+    await controller.submit(); // Закрыть разбор ошибки.
+    expect(controller.current, same(first));
+    await controller.answerCorrectly();
+    expect(controller.stage.value, LessonStage.intro);
+    expect(controller.introAtom!.id, 'ba.isolated');
+    await controller.nextIntro();
+    expect(controller.current!.atom.id, 'ba.isolated');
+    expect(controller.current!.mode, ExerciseMode.sayName);
+    final before = (await database.readAll()).whereType<ProgressEvent>().length;
+    await controller.skipExercise();
+    expect(
+      (await database.readAll()).whereType<ProgressEvent>(),
+      hasLength(before),
+    );
+    expect(controller.stage.value, LessonStage.intro);
+    expect(controller.introAtom!.id, 'ta.isolated');
+    var steps = 0;
+    var pronunciationAfterSkip = 0;
+    while (controller.stage.value != LessonStage.finished) {
+      expect(++steps, lessThan(30));
+      if (controller.stage.value == LessonStage.intro) {
+        await controller.nextIntro();
+      } else {
+        if (controller.current!.mode == ExerciseMode.sayName) {
+          pronunciationAfterSkip++;
         }
+        await controller.answerCorrectly();
       }
-      expect(repeatedFirst, 1);
-      expect(controller.totalExercises, 21);
-    },
-  );
+    }
+    expect(pronunciationAfterSkip, 0);
+    expect(controller.totalExercises, 20);
+  });
 
   test('второй урок обучает всем формам до открытия третьего', () async {
     await seedFirstLesson();

@@ -20,6 +20,13 @@ class CourseLessonPreview extends StatelessWidget {
     final hasReview =
         controller.nextPlan.value!.reviewAtoms.isNotEmpty ||
         controller.nextPlan.value!.spacedReview.isNotEmpty;
+    final label = isNew
+        ? hasReview
+              ? 'СЕГОДНЯ · НОВОЕ И ПОВТОРЕНИЕ'
+              : 'СЕГОДНЯ · НОВЫЙ МАТЕРИАЛ'
+        : controller.nextPlan.value!.isFocusedReview
+        ? 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ И НОВОЕ'
+        : 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ';
     return _CourseSurface(
       radius: 28,
       child: Column(
@@ -43,11 +50,7 @@ class CourseLessonPreview extends StatelessWidget {
                     const SizedBox(width: 7),
                     Expanded(
                       child: Text(
-                        isNew
-                            ? hasReview
-                                  ? 'СЕГОДНЯ · НОВОЕ И ПОВТОРЕНИЕ'
-                                  : 'СЕГОДНЯ · НОВЫЙ МАТЕРИАЛ'
-                            : 'СЕГОДНЯ · ЗАКРЕПЛЕНИЕ',
+                        label,
                         style: UITextStyles.regular12.copyWith(
                           color: UIColors.primary,
                           fontWeight: FontWeight.w600,

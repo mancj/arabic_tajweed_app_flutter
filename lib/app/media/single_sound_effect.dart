@@ -7,7 +7,7 @@ class SingleSoundEffect {
 
   final String assetPath;
   final double volume;
-  final AudioPlayer _player = AudioPlayer();
+  AudioPlayer? _player;
   bool _disposed = false;
   bool _initialized = false;
 
@@ -16,9 +16,10 @@ class SingleSoundEffect {
 
     try {
       await AudioCache.instance.load(assetPath);
-      await _player.setReleaseMode(ReleaseMode.release);
-      _player.audioCache = AudioCache.instance;
-      await _player.setAudioContext(
+      final player = _player = AudioPlayer();
+      await player.setReleaseMode(ReleaseMode.release);
+      player.audioCache = AudioCache.instance;
+      await player.setAudioContext(
         AudioContext(
           android: const AudioContextAndroid(
             usageType: AndroidUsageType.game,
@@ -29,6 +30,8 @@ class SingleSoundEffect {
       );
       _initialized = true;
     } catch (error) {
+      await _player?.dispose();
+      _player = null;
       debugPrint('SingleSoundEffect init failed for $assetPath: $error');
     }
   }
@@ -36,10 +39,12 @@ class SingleSoundEffect {
   Future<void> play() async {
     if (_disposed) return;
     if (!_initialized) await init();
+    final player = _player;
+    if (!_initialized || _disposed || player == null) return;
 
     try {
-      await _player.stop();
-      await _player.play(AssetSource(assetPath), volume: volume);
+      await player.stop();
+      await player.play(AssetSource(assetPath), volume: volume);
     } catch (error) {
       debugPrint('Failed to play sound $assetPath: $error');
     }
@@ -48,7 +53,8 @@ class SingleSoundEffect {
   Future<void> dispose() async {
     _disposed = true;
     try {
-      await _player.dispose();
+      await _player?.dispose();
+      _player = null;
     } catch (_) {}
   }
 }

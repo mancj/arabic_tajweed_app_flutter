@@ -183,6 +183,11 @@ class Curriculum {
     (CurriculumNode n) => n.atom.letterId!,
   ).map((id, nodes) => MapEntry(id, nodes.map((n) => n.atom.id).toList()));
 
+  Set<String> get letterFormIds => {
+    for (final node in nodes)
+      if (node.atom.kind == AtomKind.letterForm) node.atom.id,
+  };
+
   List<Topic> openTopics(CurriculumContext ctx) =>
       topics.where((m) => m.requirement.isMet(ctx)).toList();
 }

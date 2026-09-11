@@ -24,6 +24,7 @@ void main() {
         File('assets/curriculum/$s.json').readAsStringSync(),
       ),
   ]);
+  final fold = ProgressFold(letterFormIds: course.letterFormIds);
   CurriculumContext ctx(Map<String, AtomProgress> p) =>
       CurriculumContext(progress: p, formsByLetter: course.formsByLetter);
   final now = DateTime(2026, 9, 9);
@@ -85,15 +86,21 @@ void main() {
     () async {
       final db = ProgressDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      final repo = ProgressRepository(database: db);
+      final repo = ProgressRepository(
+        database: db,
+        letterFormIds: course.letterFormIds,
+      );
       await repo.record(
         KnowledgeConfirmed(atomId: 'ba.initial', sessionId: 3, at: now),
       );
-      final restored = await ProgressRepository(database: db).of('ba.initial');
+      final restored = await ProgressRepository(
+        database: db,
+        letterFormIds: course.letterFormIds,
+      ).of('ba.initial');
       expect(restored.state, AtomState.known);
       expect(restored.weak, isTrue);
       expect(restored.knownAt, now);
-      final result = const ProgressFold().foldOnto(
+      final result = fold.foldOnto(
         {'ba.initial': const AtomProgress(state: AtomState.mastered)},
         [KnowledgeConfirmed(atomId: 'ba.initial', sessionId: 4, at: now)],
       );
@@ -111,7 +118,17 @@ void main() {
       final plan = LessonPlanner(
         curriculum: course,
       ).plan(ctx: ctx(p), sessionId: session, sessionsWithoutNew: withoutNew);
-      if (plan.topicId == 'm.join') connectionSession ??= session;
+      if (plan.topicId == 'm.join') {
+        connectionSession ??= session;
+        expect(
+          TopicBoard(course)
+              .statuses(ctx(p))
+              .where((s) => s.topic.stage == 1)
+              .every((s) => s.isDone),
+          isTrue,
+          reason: 'модуль соединений начался до завершения алфавита',
+        );
+      }
       if (plan.newAtoms.any((a) => a.id == 'ya.isolated')) {
         lastBaseSession ??= session;
       }
@@ -130,7 +147,7 @@ void main() {
             at: now.add(Duration(days: session)),
           ),
       ];
-      p = const ProgressFold().foldOnto(p, intro);
+      p = fold.foldOnto(p, intro);
       final exercises = ExerciseGenerator(
         curriculum: course,
         random: Random(session),
@@ -152,7 +169,7 @@ void main() {
         final e = lesson.current!;
         lesson.answer(e, e.answerIndex, fastEnough: true);
       }
-      p = const ProgressFold().foldOnto(p, lesson.log);
+      p = fold.foldOnto(p, lesson.log);
       withoutNew = plan.newAtoms.isEmpty ? withoutNew + 1 : 0;
       complete = TopicBoard(course).statuses(ctx(p)).every((s) => s.isDone);
       if (complete) break;
@@ -164,6 +181,6 @@ void main() {
           'не освоены: ${p.entries.where((e) => e.value.state.index < AtomState.known.index && !e.key.startsWith('concept.')).map((e) => '${e.key}: ${e.value.state} streak=${e.value.cleanStreak} modes=${e.value.modesInStreak}')} ',
     );
     expect(connectionSession, isNotNull);
-    expect(connectionSession!, lessThan(lastBaseSession!));
+    expect(connectionSession!, greaterThan(lastBaseSession!));
   });
 }

@@ -35,6 +35,7 @@ class LessonController extends GetxController {
     Curriculum? curriculum,
     String? topicId,
     LessonPlan? plan,
+    this.continuePlanning = false,
     Future<TracingShape> Function(String asset)? shapeLoader,
     LetterAudio? audio,
     VoiceRecorder? recorder,
@@ -52,6 +53,11 @@ class LessonController extends GetxController {
        );
 
   final LearningRules rules;
+
+  /// Обычное занятие может добирать готовые блоки и повторение до общего
+  /// бюджета. Узкий блок из двух букв заканчивается после старого повтора:
+  /// следующую пару ради длины в ту же сессию не добавляем.
+  final bool continuePlanning;
 
   /// В тестах база подставляется в памяти; в приложении берётся из Get.
   final ProgressDatabase? _database;
@@ -80,7 +86,7 @@ class LessonController extends GetxController {
   final selected = Rxn<int>();
   final wasWrong = false.obs;
 
-  /// Номер попытки в задании с тремя формами. После разбора ошибки виджет
+  /// Номер попытки в задании с четырьмя формами. После разбора ошибки виджет
   /// получает новый ключ и снова начинает с первого слота.
   final formSequenceAttempt = 0.obs;
 
@@ -213,6 +219,15 @@ class LessonController extends GetxController {
   bool _returnToIntro = false;
   LessonPlan? _plan;
   DateTime _shownAt = DateTime.now();
+  int _completedExercises = 0;
+  final _askedCounts = <String, int>{};
+  final _formSequenceLetters = <String>{};
+  final _sessionIntroduced = <String, Atom>{};
+  final _planReasons = <String>[];
+  bool _hasNewMaterial = false;
+  bool _pronunciationAvailable = true;
+  bool _currentBlockEndsSession = false;
+  int? _sessionTarget;
 
   /// Номер сессии — следующий за последним в логе. От него зависят очередь
   /// повторений, откладывание атомов и гарантия темпа.
@@ -223,7 +238,12 @@ class LessonController extends GetxController {
 
   /// Заголовок экрана: повторением урок считается, только если ничего
   /// нового в нём нет.
-  bool get isReviewOnly => _plan?.newAtoms.isEmpty ?? false;
+  bool get isReviewOnly {
+    _refresh.value;
+    return !_hasNewMaterial;
+  }
+
+  List<Atom> get sessionIntroduced => _sessionIntroduced.values.toList();
 
   Exercise? get current {
     _refresh.value;
@@ -232,7 +252,11 @@ class LessonController extends GetxController {
 
   double get progress {
     _refresh.value;
-    return _session?.progress ?? 0;
+    if (!continuePlanning && _pronunciationAvailable) {
+      return _session?.progress ?? 0;
+    }
+    final done = _completedExercises + (_session?.position ?? 0);
+    return (done / (_sessionTarget ?? rules.tasksPerSession)).clamp(0, 1);
   }
 
   Atom? get introAtom => introIndex.value < introAtoms.length
@@ -258,11 +282,12 @@ class LessonController extends GetxController {
     _progress = ProgressRepository(
       database: _database ?? Get.find<ProgressDatabase>(),
       rules: rules,
+      letterFormIds: _curriculum.letterFormIds,
     );
 
     final ctx = await _context();
     _sessionId = await _progress.nextSessionId();
-    _plan =
+    final initialPlan =
         _previewPlan ??
         (_topicId == null
             ? LessonPlanner(curriculum: _curriculum, rules: rules).plan(
@@ -271,32 +296,52 @@ class LessonController extends GetxController {
                 sessionsWithoutNew: await _progress.sessionsWithoutNew(),
               )
             : _topicPlan(ctx));
-    _plan!.validate(_curriculum, rules);
-    _topicId ??= _plan!.topicId;
+    await _activatePlan(initialPlan, taskLimit: rules.tasksPerSession);
+    _shownAt = DateTime.now();
+  }
 
-    _ownAtoms
-      ..clear()
-      ..addAll(
-        _plan!.isFocusedReview || _topicId == null
-            ? _plan!.newAtoms.map((a) => a.id)
-            : _curriculum.topics
-                      .firstWhereOrNull((t) => t.id == _topicId)
-                      ?.counterOf ??
-                  const [],
-      );
+  Future<void> _activatePlan(
+    LessonPlan plan, {
+    required int taskLimit,
+    bool? endsSession,
+  }) async {
+    plan.validate(_curriculum, rules, taskLimit: taskLimit);
+    _plan = plan;
+    _currentBlockEndsSession =
+        endsSession ??
+        (continuePlanning && plan.isNarrowBaseLetterBlock(_curriculum));
+    _topicId = plan.topicId ?? _topicId;
+    _planReasons.add(plan.reason);
+    _hasNewMaterial = _hasNewMaterial || plan.newAtoms.isNotEmpty;
 
-    introAtoms.assignAll(_introFor(_plan!));
+    _ownAtoms.addAll(
+      plan.isFocusedReview || _topicId == null
+          ? plan.newAtoms.map((atom) => atom.id)
+          : _curriculum.topics
+                    .firstWhereOrNull((topic) => topic.id == _topicId)
+                    ?.counterOf ??
+                const [],
+    );
+
+    final intro = _introFor(plan);
+    introAtoms.assignAll(intro);
+    introIndex.value = 0;
+    for (final atom in intro) {
+      _sessionIntroduced[atom.id] = atom;
+    }
+    _session = null;
+    _returnToIntro = false;
+    card.value = null;
     if (introAtoms.isEmpty) {
       // Сначала готовим объяснение первой формы и холст, затем открываем
       // задание. Иначе темы без intro успевали показать вопрос без карточки.
-      await _buildSession();
+      await _buildSession(taskLimit: taskLimit);
       if (stage.value != LessonStage.finished) {
         stage.value = LessonStage.exercise;
       }
     } else {
       stage.value = LessonStage.intro;
     }
-    _shownAt = DateTime.now();
   }
 
   /// Что показать в блоке «новое».
@@ -344,19 +389,21 @@ class LessonController extends GetxController {
   /// не отличил бы одно задание от следующего.
   int get exerciseIndex {
     _refresh.value;
-    return _session?.position ?? 0;
+    return _completedExercises + (_session?.position ?? 0);
   }
 
   /// Номер текущего задания для отладочной подписи у прогресс-бара.
   int get exerciseNumber {
     _refresh.value;
-    return (_session?.position ?? 0) + 1;
+    return exerciseIndex + 1;
   }
 
   /// Общее число заданий в текущей сессии для отладочной подписи.
   int get totalExercises {
     _refresh.value;
-    return _session?.total ?? 0;
+    return continuePlanning || !_pronunciationAvailable
+        ? _sessionTarget ?? rules.tasksPerSession
+        : _session?.total ?? 0;
   }
 
   /// Урок по теме: набор атомов задан ею, планировщик не нужен.
@@ -367,10 +414,27 @@ class LessonController extends GetxController {
     ).planFor(topic, ctx, sessionId: _sessionId, rules: rules);
   }
 
-  Future<CurriculumContext> _context() async => CurriculumContext(
-    progress: await _progress.progress(),
-    formsByLetter: _formsByLetter(),
-  );
+  Future<CurriculumContext> _context({bool forSessionPlanning = false}) async {
+    var progress = await _progress.progress();
+    if (forSessionPlanning && !_pronunciationAvailable) {
+      // Технически недоступный режим считаем закрытым только для выбора
+      // следующего блока этой сессии. В журнал и постоянный прогресс
+      // ничего не записывается.
+      progress = {
+        for (final entry in progress.entries)
+          entry.key: entry.value.copyWith(
+            successfulModes: {
+              ...entry.value.successfulModes,
+              ExerciseMode.sayName,
+            },
+          ),
+      };
+    }
+    return CurriculumContext(
+      progress: progress,
+      formsByLetter: _formsByLetter(),
+    );
+  }
 
   /// Какая буква из каких форм состоит — нужно, чтобы считать «буква
   /// в known» как «все её формы в known».
@@ -391,6 +455,7 @@ class LessonController extends GetxController {
     }
     introIndex.value++;
     final pronounceNow =
+        _pronunciationAvailable &&
         atom != null &&
         atom.letterId != null &&
         atom.form == LetterForm.isolated &&
@@ -437,30 +502,144 @@ class LessonController extends GetxController {
       }
     }
     if (_session!.isFinished) {
-      await _finish();
+      await _finishBlock();
     } else {
       _showExercise();
     }
   }
 
-  Future<void> _buildSession() async {
+  Future<void> _finishBlock() async {
+    _completedExercises += _session?.position ?? 0;
+    if (!continuePlanning) {
+      if (await _replaceUnavailablePronunciation(endsSession: false)) return;
+      await _finish();
+      return;
+    }
+    _session = null;
+    if (_currentBlockEndsSession) {
+      if (await _replaceUnavailablePronunciation(endsSession: true)) return;
+      await _finish();
+      return;
+    }
+    if (_completedExercises >= rules.tasksPerSession) {
+      await _finish();
+      return;
+    }
+
+    final remaining = rules.tasksPerSession - _completedExercises;
+    final ctx = await _context(forSessionPlanning: true);
+    final planner = LessonPlanner(curriculum: _curriculum, rules: rules);
+    var next = planner.plan(
+      ctx: ctx,
+      sessionId: _sessionId,
+      sessionsWithoutNew: await _progress.sessionsWithoutNew(),
+    );
+
+    // Новый блок вводим только целиком. Если обязательные задания
+    // не помещаются, остаток сессии отдаём знакомому материалу.
+    if (next.minimumTaskCount(_curriculum, rules) > remaining) {
+      next = planner.practicePlan(
+        ctx: ctx,
+        sessionId: _sessionId,
+        taskLimit: remaining,
+        previousCounts: _askedCounts,
+      );
+    }
+
+    if (next.minimumTaskCount(_curriculum, rules) == 0 &&
+        next.newAtoms.isEmpty &&
+        next.reviewAtoms.isEmpty) {
+      await _finish();
+      return;
+    }
+    await _activatePlan(next, taskLimit: remaining);
+  }
+
+  /// Технически недоступный голос не оставляет дыру в занятии: удалённые
+  /// задания заменяются доступной практикой, но новый материал не вводится.
+  Future<bool> _replaceUnavailablePronunciation({
+    required bool endsSession,
+  }) async {
+    final target = _sessionTarget ?? _completedExercises;
+    if (_pronunciationAvailable || _completedExercises >= target) return false;
+
+    final remaining = target - _completedExercises;
+    final ctx = await _context(forSessionPlanning: true);
+    final topicIds = _curriculum.topics
+        .firstWhereOrNull((topic) => topic.id == _topicId)
+        ?.counterOf
+        .toSet();
+    final replacement = LessonPlanner(curriculum: _curriculum, rules: rules)
+        .practicePlan(
+          ctx: ctx,
+          sessionId: _sessionId,
+          taskLimit: remaining,
+          previousCounts: _askedCounts,
+          atomIds: topicIds,
+        );
+    if (replacement.minimumTaskCount(_curriculum, rules) == 0) return false;
+
+    await _activatePlan(
+      replacement,
+      taskLimit: remaining,
+      endsSession: endsSession,
+    );
+    return true;
+  }
+
+  Future<void> _buildSession({int? taskLimit}) async {
     final ctx = await _context();
-    final exercises = ExerciseGenerator(
-      curriculum: _curriculum,
-      rules: rules,
-    ).build(plan: _plan!, ctx: ctx, sessionId: _sessionId);
+    final limit =
+        taskLimit ??
+        (continuePlanning
+            ? rules.tasksPerSession - _completedExercises
+            : rules.tasksPerSession);
+    final exercises = ExerciseGenerator(curriculum: _curriculum, rules: rules)
+        .build(
+          plan: _plan!,
+          ctx: ctx,
+          sessionId: _sessionId,
+          taskLimit: limit,
+          previousCounts: _askedCounts,
+          previousFormSequences: _formSequenceLetters,
+          unavailableModes: {
+            if (!_pronunciationAvailable) ExerciseMode.sayName,
+          },
+        );
+    _sessionTarget ??= continuePlanning
+        ? rules.tasksPerSession
+        : exercises.length;
 
     _session = LessonSession(
       exercises: exercises,
       sessionId: _sessionId,
       rules: rules,
+      taskLimit: limit,
     );
+    _syncShortSessionTarget(allowShorter: true);
     await _loadShapes(exercises);
-    if (exercises.isEmpty) stage.value = LessonStage.finished;
+    if (exercises.isEmpty) {
+      if (continuePlanning) {
+        await _finishBlock();
+      } else {
+        stage.value = LessonStage.finished;
+      }
+    }
     _refresh.value++;
     _syncCard();
     _syncTracing();
     _syncPronunciation();
+  }
+
+  /// У пары букв фактическая длина известна после генерации: если старого
+  /// материала мало, прогресс-бар не должен обещать 20 заданий.
+  void _syncShortSessionTarget({bool allowShorter = false}) {
+    final session = _session;
+    if (!_currentBlockEndsSession || session == null) return;
+    final actual = _completedExercises + session.total;
+    if (allowShorter || _sessionTarget == null || actual > _sessionTarget!) {
+      _sessionTarget = actual;
+    }
   }
 
   /// Фигуры разбираются один раз на урок, до первого задания: иначе холст
@@ -527,6 +706,7 @@ class LessonController extends GetxController {
       ),
     );
     _shownCards.add(atom.id);
+    _sessionIntroduced[atom.id] = atom;
     _nextCard();
     // Время на ответ считается с закрытия карточки: чтение объяснения
     // не должно превращать верный ответ в медленный.
@@ -635,7 +815,7 @@ class LessonController extends GetxController {
     selected.value = index;
   }
 
-  /// Три слота проверяются только вместе, после заполнения последнего.
+  /// Четыре слота проверяются только вместе, после заполнения последнего.
   Future<void> submitFormSequence(List<Atom> placed) async {
     final exercise = _session?.current;
     if (exercise == null ||
@@ -644,18 +824,24 @@ class LessonController extends GetxController {
         wasCorrect.value) {
       return;
     }
-    const expected = [
-      LetterForm.initial,
-      LetterForm.medial,
-      LetterForm.finalForm,
-    ];
+    const expected = LetterForm.values;
+    final atomResults = {
+      for (final option in exercise.options)
+        option.id: switch (placed.indexWhere(
+          (placed) => placed.id == option.id,
+        )) {
+          final index when index >= 0 && index < expected.length =>
+            option.form == expected[index],
+          _ => false,
+        },
+    };
     final correct =
-        placed.length == expected.length &&
-        listEquals(placed.map((atom) => atom.form).toList(), expected);
+        atomResults.length == expected.length &&
+        atomResults.values.every((value) => value);
     selected.value = correct
         ? exercise.answerIndex
         : (exercise.answerIndex + 1) % exercise.options.length;
-    await submit();
+    await submit(atomResults: atomResults);
   }
 
   /// Только для отладки: засчитать текущее задание верным, каким бы оно
@@ -667,6 +853,7 @@ class LessonController extends GetxController {
     if (exercise == null) return;
     if (exercise.isChoice) selected.value = exercise.answerIndex;
     await submit(directOutcome: true);
+    if (wasCorrect.value) await submit();
   }
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
@@ -680,8 +867,25 @@ class LessonController extends GetxController {
     final session = _session;
     if (session == null || session.current == null) return;
 
+    final exercise = session.current!;
+    final mode = exercise.mode;
     session.skip();
+    if (mode == ExerciseMode.sayName) {
+      _pronunciationAvailable = false;
+      session.discardPendingMode(ExerciseMode.sayName);
+    }
+    if (mode == ExerciseMode.positionToForm) {
+      final letterId = exercise.atom.letterId;
+      if (letterId != null) _formSequenceLetters.add(letterId);
+    }
+    _countAsked(exercise.resultAtoms);
     await _afterExercise();
+  }
+
+  void _countAsked(Iterable<Atom> atoms) {
+    for (final atom in atoms) {
+      _askedCounts.update(atom.id, (count) => count + 1, ifAbsent: () => 1);
+    }
   }
 
   /// ВРЕМЕННОЕ. У заданий-заглушек нет своей проверки, поэтому исход
@@ -693,7 +897,10 @@ class LessonController extends GetxController {
 
   /// [directOutcome] — исход задания без вариантов: обводку судит холст,
   /// а у оставшихся заглушек его задаёт кнопка.
-  Future<void> submit({bool? directOutcome}) async {
+  Future<void> submit({
+    bool? directOutcome,
+    Map<String, bool>? atomResults,
+  }) async {
     if (stage.value != LessonStage.exercise) return;
     if (wasCorrect.value) {
       await _afterExercise();
@@ -731,15 +938,22 @@ class LessonController extends GetxController {
 
     final elapsed = DateTime.now().difference(_shownAt);
     _answeredExercise = exercise;
+    final logLength = session.log.length;
     final outcome = session.answer(
       exercise,
       choice,
       fastEnough: elapsed <= _speedLimit(exercise.mode),
+      atomResults: atomResults,
     );
+    _syncShortSessionTarget();
 
     // Пишем сразу, а не в конце сессии: лог должен пережить убитое
     // приложение, иначе ответы теряются молча.
-    await _progress.record(session.log.last);
+    await _progress.recordAll(session.log.skip(logLength));
+    if (exercise.mode == ExerciseMode.positionToForm) {
+      final letterId = exercise.atom.letterId;
+      if (letterId != null) _formSequenceLetters.add(letterId);
+    }
 
     if (outcome == AnswerOutcome.wrong) {
       unawaited(_audio.stop());
@@ -747,6 +961,8 @@ class LessonController extends GetxController {
       wasWrong.value = true;
       return;
     }
+
+    _countAsked(exercise.resultAtoms);
 
     // После проверки звук вопроса больше не должен звучать поверх обратной
     // связи — следующий запуск возможен только по ручной кнопке.
@@ -769,7 +985,7 @@ class LessonController extends GetxController {
     // сессии. Освоенность букв добирается повторениями и на отметку
     // не влияет — иначе закрытый урок выглядит недоделанным.
     final topicId = _topicId;
-    if (topicId != null && _previewPlan == null) {
+    if (topicId != null && _previewPlan == null && !continuePlanning) {
       await _progress.completeTopic(topicId, sessionId: _sessionId);
     }
     stage.value = LessonStage.finished;
@@ -778,7 +994,7 @@ class LessonController extends GetxController {
   /// Итог урока: какие атомы поднялись до известных.
   Future<List<Atom>> learned() async {
     final progress = await _progress.progress();
-    return introAtoms
+    return sessionIntroduced
         .where(
           (a) =>
               (progress[a.id]?.state ?? AtomState.fresh).index >=
@@ -787,7 +1003,7 @@ class LessonController extends GetxController {
         .toList();
   }
 
-  String get planReason => _plan?.reason ?? '';
+  String get planReason => _planReasons.join(' → ');
 
   @override
   void onClose() {

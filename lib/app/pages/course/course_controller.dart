@@ -55,6 +55,7 @@ class CourseController extends GetxController {
         repository = ProgressRepository(
           database: _database ?? Get.find<ProgressDatabase>(),
           rules: rules,
+          letterFormIds: curriculum.letterFormIds,
         );
         _ready = true;
       }
@@ -141,7 +142,7 @@ class CourseController extends GetxController {
   }
 
   String get lessonFocus {
-    if (nextPlan.value?.isFocusedReview ?? false) return 'Короткое закрепление';
+    if (nextPlan.value?.isFocusedReview ?? false) return 'Закрепление и новое';
     if (nextPlan.value?.newAtoms.isEmpty ?? true) {
       return 'Тренируем знакомый материал';
     }
@@ -165,7 +166,7 @@ class CourseController extends GetxController {
           : count < 5
           ? 'задания'
           : 'заданий';
-      return '$count $word по оставшимся пробелам';
+      return '$count $word по пробелам, затем новое и повторение';
     }
     if (plan.newAtoms.isEmpty) return 'Узнаём увереннее, вспоминаем быстрее';
     if (plan.spacedReview.isNotEmpty || plan.reviewAtoms.isNotEmpty) {
@@ -181,7 +182,7 @@ class CourseController extends GetxController {
   }
 
   /// Прогноз после закрепления всего материала карточки. Используем тот же
-  /// планировщик: соединения могут открыться раньше следующей группы букв.
+  /// планировщик, поэтому прогноз сохраняет порядок оглавления и этапов.
   /// Это только витрина — записи прогресса здесь не меняются.
   Future<TopicStatus?> _upcomingAfter(LessonPlan plan) async {
     if (allDone) return null;
@@ -265,7 +266,7 @@ class CourseController extends GetxController {
 
   Future<void> continueCourse() async {
     if (!canStart) return;
-    await _openPlan(nextPlan.value!);
+    await _openPlan(nextPlan.value!, continuePlanning: true);
   }
 
   Future<void> open(TopicStatus status) async {
@@ -291,11 +292,20 @@ class CourseController extends GetxController {
     );
   }
 
-  Future<void> _openPlan(LessonPlan plan) async {
+  Future<void> _openPlan(
+    LessonPlan plan, {
+    bool continuePlanning = false,
+  }) async {
     if (opening.value) return;
     opening.value = true;
     try {
-      await Get.toNamed('/lesson', arguments: {LessonBinding.planArg: plan});
+      await Get.toNamed(
+        '/lesson',
+        arguments: {
+          LessonBinding.planArg: plan,
+          LessonBinding.continuePlanningArg: continuePlanning,
+        },
+      );
       await refreshBoard();
     } finally {
       opening.value = false;

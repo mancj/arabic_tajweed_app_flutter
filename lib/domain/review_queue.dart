@@ -29,6 +29,7 @@ class ReviewQueue {
     Set<String> exclude = const {},
     Curriculum? curriculum,
   }) {
+    final letterFormIds = curriculum?.letterFormIds ?? const <String>{};
     final drillable = curriculum == null
         ? null
         : {
@@ -43,13 +44,24 @@ class ReviewQueue {
               e.value.state != AtomState.fresh &&
               e.value.state != AtomState.mastered &&
               !e.value.isDeferredAt(sessionId, rules) &&
-              e.value.isDueAt(sessionId, rules) &&
+              e.value.isDueAt(
+                sessionId,
+                rules,
+                isLetterForm: letterFormIds.contains(e.key),
+              ) &&
               (drillable?.contains(e.key) ?? true),
         )
         .sorted((a, b) {
           final byState = _urgency(a.value).compareTo(_urgency(b.value));
           if (byState != 0) return byState;
-          return a.value.dueSession(rules).compareTo(b.value.dueSession(rules));
+          return a.value
+              .dueSession(rules, isLetterForm: letterFormIds.contains(a.key))
+              .compareTo(
+                b.value.dueSession(
+                  rules,
+                  isLetterForm: letterFormIds.contains(b.key),
+                ),
+              );
         })
         .take(rules.reviewQueueCap)
         .map((e) => e.key)

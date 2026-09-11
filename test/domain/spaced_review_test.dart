@@ -23,8 +23,7 @@ void main() {
       CurriculumContext(progress: progress, formsByLetter: const {});
 
   // Первый урок пройден: четыре буквы выучены, но не доведены до mastered.
-  // Интервал только что выученного — две сессии, поэтому тесты ниже
-  // смотрят на третью сессию, а не на вторую.
+  // Буква возвращается уже в следующей сессии: первый интервал равен 1.
   final afterFirstLesson = ctxOf({
     for (final id in [
       'alif.isolated',
@@ -41,7 +40,7 @@ void main() {
     final plan = board.planFor(
       topicOf('m.forms'),
       afterFirstLesson,
-      sessionId: 3,
+      sessionId: 2,
     );
 
     expect(plan.spacedReview, isNotEmpty);
@@ -50,7 +49,7 @@ void main() {
 
   test('в повтор не попадают буквы самой темы', () {
     final topic = topicOf('m.forms');
-    final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
 
     expect(
       plan.spacedReview.where(topic.counterOf.contains),
@@ -61,7 +60,7 @@ void main() {
 
   test('в уроке действительно появляются задания по старым буквам', () {
     final topic = topicOf('m.forms');
-    final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
+    final plan = board.planFor(topic, afterFirstLesson, sessionId: 2);
 
     final exercises = ExerciseGenerator(
       curriculum: curriculum,
@@ -126,7 +125,10 @@ void main() {
       'tha.isolated': const AtomProgress(state: AtomState.known),
     });
 
-    expect(const ReviewQueue().build(ctx, sessionId: 9), ['tha.isolated']);
+    expect(
+      const ReviewQueue().build(ctx, sessionId: 9, curriculum: curriculum),
+      ['tha.isolated'],
+    );
   });
 
   test('недоученные идут раньше освоенных, даже если показаны позже', () {
@@ -141,12 +143,16 @@ void main() {
       ),
     });
 
-    final queue = const ReviewQueue().build(ctx, sessionId: 9);
+    final queue = const ReviewQueue().build(
+      ctx,
+      sessionId: 9,
+      curriculum: curriculum,
+    );
     expect(queue, ['jim.isolated', 'ba.isolated']);
   });
 
-  test('узкая тема добирается повтором до полного урока', () {
-    // Восемь букв известны, тема «айн» вводит только две.
+  test('узкая тема отдаёт свободные места старым буквам', () {
+    // Двенадцать старых букв созрели для повтора, тема «айн» вводит две.
     final ctx = ctxOf({
       for (final id in [
         'alif.isolated',
@@ -157,6 +163,8 @@ void main() {
         'hha.isolated',
         'kha.isolated',
         'sin.isolated',
+        'shin.isolated',
+        'sod.isolated',
         'to.isolated',
         'zho.isolated',
       ])
@@ -172,7 +180,9 @@ void main() {
     ).build(plan: plan, ctx: ctx, sessionId: 5);
 
     final own = exercises.where((e) => topic.counterOf.contains(e.atom.id));
-    expect(own, hasLength(10), reason: 'два новых атома, потолок пять на атом');
+    final old = exercises.where((e) => !topic.counterOf.contains(e.atom.id));
+    expect(own, hasLength(8), reason: 'по четыре разных задания на букву');
+    expect(old, hasLength(12), reason: 'остаток получает созревший повтор');
     expect(exercises.length, rules.tasksPerSession);
   });
 
@@ -185,16 +195,22 @@ void main() {
       'ta.isolated': const AtomProgress(
         state: AtomState.known,
         lastSeenSession: 4,
-        cleanSinceKnown: 2,
+        confirmations: 2,
       ),
     });
 
-    expect(const ReviewQueue().build(ctx, sessionId: 5), isEmpty);
-    expect(const ReviewQueue().build(ctx, sessionId: 6), ['ba.isolated']);
     expect(
-      const ReviewQueue().build(ctx, sessionId: 12),
+      const ReviewQueue().build(ctx, sessionId: 4, curriculum: curriculum),
+      isEmpty,
+    );
+    expect(
+      const ReviewQueue().build(ctx, sessionId: 5, curriculum: curriculum),
+      ['ba.isolated'],
+      reason: 'первая ждёт 1 сессию, после двух подтверждений интервал 4',
+    );
+    expect(
+      const ReviewQueue().build(ctx, sessionId: 8, curriculum: curriculum),
       ['ba.isolated', 'ta.isolated'],
-      reason: 'после двух чистых повторов интервал 8',
     );
   });
 }

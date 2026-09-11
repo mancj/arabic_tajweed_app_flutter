@@ -22,7 +22,7 @@ void main() {
         File('assets/curriculum/$stage.json').readAsStringSync(),
       ),
   ]);
-  const fold = ProgressFold();
+  final fold = ProgressFold(letterFormIds: course.letterFormIds);
   const rules = LearningRules();
   final at = DateTime(2026, 9, 10);
   final board = TopicBoard(course);
@@ -213,15 +213,56 @@ void main() {
     expect(manual.reviewAtoms.toSet(), course.topics.first.counterOf.toSet());
   });
 
-  test('новое правило не вытесняет непроверенные сочетания', () {
+  test('остаток в одно задание заполняется без шестого повтора буквы', () {
+    final progress = confirmed([course.topics.first]);
+    final previous = {
+      'alif.isolated': 5,
+      'ba.isolated': 4,
+      'ta.isolated': 5,
+      'tha.isolated': 5,
+    };
+    final filler = planner.practicePlan(
+      ctx: context(progress),
+      sessionId: 2,
+      taskLimit: 1,
+      previousCounts: previous,
+    );
+    expect(filler.reviewCounts, {'ba.isolated': 1});
+    final exercises = ExerciseGenerator(curriculum: course, random: Random(9))
+        .build(
+          plan: filler,
+          ctx: context(progress),
+          sessionId: 2,
+          taskLimit: 1,
+          previousCounts: previous,
+        );
+    expect(exercises, hasLength(1));
+    expect(exercises.single.atom.id, 'ba.isolated');
+  });
+
+  test('начатая будущая тема не обгоняет текущий этап курса', () {
     final progress = fold.foldOnto(confirmed(course.topics.take(2)), [
       introduce('concept.join'),
     ]);
-    expect(plan(progress).topicId, 'm.join');
+    expect(plan(progress).topicId, 'm.jim');
     expect(plan(progress).newAtoms.map((a) => a.id), [
-      'syl.ba_ta',
-      'syl.ta_ba',
+      'jim.isolated',
+      'hha.isolated',
+      'kha.isolated',
     ]);
+  });
+
+  test('каждая следующая новая тема следует порядку реального курса', () {
+    for (var index = 0; index < course.topics.length; index++) {
+      final expected = course.topics[index];
+      final next = plan(confirmed(course.topics.take(index)));
+      expect(
+        next.topicId,
+        expected.id,
+        reason:
+            'после ${course.topics.take(index).map((t) => t.id).join(', ')}',
+      );
+    }
   });
 
   test('ошибка возвращает закрепление, но не закрывает уже открытые формы', () {

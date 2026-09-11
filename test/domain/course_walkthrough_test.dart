@@ -33,7 +33,10 @@ void main() {
   ({Map<String, AtomProgress> progress, int lessons, int stalled}) walk(
     int lessons,
   ) {
-    final fold = const ProgressFold(rules: rules);
+    final fold = ProgressFold(
+      rules: rules,
+      letterFormIds: curriculum.letterFormIds,
+    );
     var progress = <String, AtomProgress>{};
     var sessionsWithoutNew = 0;
     var stalled = 0;

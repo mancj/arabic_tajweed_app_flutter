@@ -76,6 +76,11 @@ class DebugPage extends GetView<DebugController> {
                   subtitle: 'Демо виджетов приложения',
                   onTap: controller.openAppWidgetsPage,
                 ),
+                _DebugTile(
+                  title: 'Формы буквы',
+                  subtitle: 'Тест слотов, плиток и анимаций',
+                  onTap: controller.openFormSequence,
+                ),
               ],
             ),
           ),

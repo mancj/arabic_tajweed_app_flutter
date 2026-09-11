@@ -4,7 +4,8 @@ import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 const rules = LearningRules();
-const fold = ProgressFold(rules: rules);
+const fold = ProgressFold(rules: rules, letterFormIds: {});
+const letterFold = ProgressFold(rules: rules, letterFormIds: {'ba.isolated'});
 final t0 = DateTime(2026, 1, 1);
 
 ProgressEvent answer({
@@ -25,6 +26,8 @@ ProgressEvent answer({
 );
 
 AtomProgress run(List<LogEntry> log) => fold.fold(log)['ba.isolated']!;
+AtomProgress runLetter(List<LogEntry> log) =>
+    letterFold.fold(log)['ba.isolated']!;
 
 void main() {
   test('введённый атом переходит в learning с первого ответа', () {
@@ -98,6 +101,49 @@ void main() {
       0,
       reason: 'недоученный — каждый урок',
     );
+  });
+
+  // Буквы закрепляются встречами в разных занятиях, а не числом ответов
+  // внутри одного урока или прошедшими календарными днями.
+  test('буква доходит до mastered через интервалы 1, 2 и 4 сессии', () {
+    final known = <LogEntry>[
+      answer(mode: ExerciseMode.trace),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(mode: ExerciseMode.trace),
+    ];
+    final first = runLetter([...known, answer(session: 2), answer(session: 2)]);
+    expect(first.confirmations, 1);
+    expect(first.reviewIntervalFor(rules, isLetterForm: true), 2);
+
+    final second = runLetter([
+      ...known,
+      answer(session: 2),
+      answer(session: 2),
+      answer(session: 4),
+    ]);
+    expect(second.confirmations, 2);
+    expect(second.state, AtomState.known);
+
+    final mastered = runLetter([
+      ...known,
+      answer(session: 2),
+      answer(session: 4),
+      answer(session: 8),
+    ]);
+    expect(mastered.confirmations, 3);
+    expect(mastered.state, AtomState.mastered);
+  });
+
+  test('ошибка обнуляет подтверждения буквы', () {
+    final p = runLetter([
+      answer(mode: ExerciseMode.trace),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(mode: ExerciseMode.trace),
+      answer(session: 2),
+      answer(correct: false, session: 3),
+    ]);
+    expect(p.state, AtomState.learning);
+    expect(p.confirmations, 0);
   });
 
   test('ответ со второй попытки не двигает вперёд', () {

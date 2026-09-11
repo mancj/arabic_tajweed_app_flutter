@@ -47,18 +47,52 @@ class LessonPlan {
 
   /// Проверяем до объяснений: генератор обязан спросить весь материал
   /// плана. Слишком большую тему нужно разделить в программе курса.
-  void validate(Curriculum curriculum, LearningRules rules) {
+  int minimumTaskCount(Curriculum curriculum, LearningRules rules) {
+    final own = _ownAtoms(curriculum);
+    final narrowLetters = isNarrowBaseLetterBlock(curriculum);
+    final minimum = own.values
+        .map(
+          (atom) =>
+              reviewCounts[atom.id] ??
+              (narrowLetters && atom.kind != AtomKind.concept
+                  ? max(
+                      rules.minimumExercises(atom),
+                      rules.narrowLetterExercises,
+                    )
+                  : rules.minimumExercises(atom)),
+        )
+        .sum;
+    return minimum;
+  }
+
+  /// Полный блок ровно из двух отдельных букв. Для него не нужны пятые
+  /// встречи только ради общего бюджета: разнообразие даёт старый материал.
+  bool isNarrowBaseLetterBlock(Curriculum curriculum) {
+    if (isFocusedReview) return false;
+    final drillable = _ownAtoms(
+      curriculum,
+    ).values.where((atom) => atom.kind != AtomKind.concept).toList();
+    return drillable.length == 2 &&
+        drillable.every(
+          (atom) => atom.letterId != null && atom.form == LetterForm.isolated,
+        );
+  }
+
+  Map<String, Atom> _ownAtoms(Curriculum curriculum) {
     final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
-    final own = {
+    return {
       for (final atom in newAtoms) atom.id: atom,
       for (final id in reviewAtoms)
         id:
             byId[id] ??
             (throw StateError('Неизвестный атом $id в плане урока')),
     };
-    final minimum = own.values
-        .map((atom) => reviewCounts[atom.id] ?? rules.minimumExercises(atom))
-        .sum;
+  }
+
+  void validate(Curriculum curriculum, LearningRules rules, {int? taskLimit}) {
+    final minimum = minimumTaskCount(curriculum, rules);
+    final limit = taskLimit ?? rules.tasksPerSession;
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
     final reserved = min(
       rules.reviewPerSession,
       spacedReview
@@ -67,10 +101,19 @@ class LessonPlan {
           .where((atom) => atom.kind != AtomKind.concept)
           .length,
     );
-    if (minimum + reserved > rules.tasksPerSession) {
+    if (minimum > limit) {
+      throw StateError(
+        'План «$reason» требует минимум $minimum заданий '
+        'при лимите $limit. Разделите материал на уроки; '
+        'пропускать формы нельзя.',
+      );
+    }
+    // В коротком остатке сессии возврат старого может сжаться:
+    // цельный новый материал важнее резерва повторения.
+    if (taskLimit == null && minimum + reserved > limit) {
       throw StateError(
         'План «$reason» требует минимум ${minimum + reserved} заданий '
-        'при лимите ${rules.tasksPerSession}. Разделите материал на уроки; '
+        'при лимите $limit. Разделите материал на уроки; '
         'пропускать формы нельзя.',
       );
     }
@@ -170,6 +213,60 @@ class LessonPlanner {
     );
   }
 
+  /// Заполнение остатка сессии, когда цельный новый блок уже не
+  /// помещается. Сначала берём то, что пора повторить, затем любой
+  /// знакомый материал. Новых атомов этот план не вводит.
+  LessonPlan practicePlan({
+    required CurriculumContext ctx,
+    required int sessionId,
+    required int taskLimit,
+    Map<String, int> previousCounts = const {},
+    Set<String>? atomIds,
+  }) {
+    final due = _reviewQueue(
+      ctx,
+      sessionId,
+    ).where((id) => atomIds == null || atomIds.contains(id));
+    final familiar = curriculum.nodes
+        .where(
+          (node) =>
+              node.atom.kind != AtomKind.concept &&
+              (atomIds == null || atomIds.contains(node.atom.id)) &&
+              ctx.stateOf(node.atom.id) != AtomState.fresh &&
+              !(ctx.progress[node.atom.id]?.isDeferredAt(sessionId, rules) ??
+                  false),
+        )
+        .map((node) => node.atom.id);
+    final candidates = {
+      ...due,
+      ...familiar,
+    }.where((id) => (previousCounts[id] ?? 0) < _maxDrillsPerAtom);
+    final counts = <String, int>{};
+    var remaining = taskLimit;
+    while (remaining > 0) {
+      var added = false;
+      for (final id in candidates) {
+        final available =
+            _maxDrillsPerAtom - (previousCounts[id] ?? 0) - (counts[id] ?? 0);
+        if (available <= 0) continue;
+        counts.update(id, (count) => count + 1, ifAbsent: () => 1);
+        remaining--;
+        added = true;
+        if (remaining == 0) break;
+      }
+      if (!added) break;
+    }
+    final plan = LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: const [],
+      reviewAtoms: counts.keys.toList(),
+      reviewCounts: counts,
+      reason: 'заполняем остаток занятия',
+    );
+    plan.validate(curriculum, rules, taskLimit: taskLimit);
+    return plan;
+  }
+
   LessonPlan _planByTopics(
     CurriculumContext ctx,
     int sessionId,
@@ -178,26 +275,29 @@ class LessonPlanner {
     Set<String>? topicIds,
   ) {
     final board = TopicBoard(curriculum, rules: rules);
-    final candidates = board
+    final ordered = board
         .statuses(ctx)
-        .where(
-          (s) =>
-              s.canPractice &&
-              // Пауза после серии ошибок остаётся паузой: полный блок
-              // с отложенным элементом пока не предлагаем автоматически.
-              !s.topic.counterOf.any(
-                (id) =>
-                    ctx.progress[id]?.isDeferredAt(sessionId, rules) ?? false,
-              ) &&
-              (topicIds == null || topicIds.contains(s.topic.id)),
-        )
+        .where((s) => topicIds == null || topicIds.contains(s.topic.id))
         .toList();
+    // Оглавление — это программа курса, а не просто витрина. Даже если
+    // широкое условие более поздней темы уже выполнено, она не обгоняет
+    // первую незавершённую тему. Так следующий модуль не начинается до
+    // завершения предыдущего.
+    final frontier = ordered.firstWhereOrNull((s) => !s.isDone);
+    final candidate =
+        frontier != null &&
+            frontier.canPractice &&
+            // Пауза после серии ошибок остаётся паузой: вместо перехода
+            // вперёд даём доступное повторение до окончания паузы.
+            !frontier.topic.counterOf.any(
+              (id) => ctx.progress[id]?.isDeferredAt(sessionId, rules) ?? false,
+            )
+        ? frontier
+        : null;
     // Просмотр карточки и несколько ответов ещё не завершают материал.
     // Продолжаем начатый блок по знаниям, без сохранения очереди занятия.
     // Гарантия темпа не позволяет перескочить обязательную практику.
-    final unfinished = candidates.firstWhereOrNull(
-      (s) => s.started && !s.isDone,
-    );
+    final unfinished = candidate?.started == true ? candidate : null;
     if (unfinished != null) {
       if (unfinished.topic.counterOf.every(
         (id) => ctx.stateOf(id) != AtomState.fresh,
@@ -211,23 +311,13 @@ class LessonPlanner {
         rules: rules,
       );
     }
-    final fresh = candidates
-        .where(
-          (s) =>
-              s.topic.counterOf.any((id) => ctx.stateOf(id) == AtomState.fresh),
-        )
-        .toList();
-    // Новое понятие, к которому уже готовы, не ждёт конца алфавита.
     final next =
-        fresh.firstWhereOrNull(
-          (s) => curriculum.nodes.any(
-            (n) =>
-                s.topic.counterOf.contains(n.atom.id) &&
-                n.atom.kind == AtomKind.concept &&
-                ctx.stateOf(n.atom.id) == AtomState.fresh,
-          ),
-        ) ??
-        fresh.firstOrNull;
+        candidate != null &&
+            candidate.topic.counterOf.any(
+              (id) => ctx.stateOf(id) == AtomState.fresh,
+            )
+        ? candidate
+        : null;
     final overloaded = _load(ctx, sessionId) > loadThreshold;
     final force = sessionsWithoutNew >= rules.sessionsWithoutNewBeforeForcing;
     if (next != null && (!overloaded || force)) {
@@ -316,9 +406,10 @@ class LessonPlanner {
     required List<Atom> newAtoms,
     required List<String> reviewAtoms,
     required String reason,
+    int? taskLimit,
   }) {
-    var remaining =
-        rules.tasksPerSession - newAtoms.map(rules.minimumExercises).sum;
+    final limit = taskLimit ?? rules.tasksPerSession;
+    var remaining = limit - newAtoms.map(rules.minimumExercises).sum;
     final selected = <String>[];
     final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
     for (final id in reviewAtoms.toSet()) {
@@ -335,7 +426,7 @@ class LessonPlanner {
       reviewAtoms: selected,
       reason: reason,
     );
-    plan.validate(curriculum, rules);
+    plan.validate(curriculum, rules, taskLimit: taskLimit);
     return plan;
   }
 

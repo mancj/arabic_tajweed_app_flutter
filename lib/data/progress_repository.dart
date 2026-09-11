@@ -13,9 +13,10 @@ import 'progress_database.dart';
 class ProgressRepository {
   ProgressRepository({
     required ProgressDatabase database,
+    required Set<String> letterFormIds,
     LearningRules rules = const LearningRules(),
   }) : _db = database,
-       _fold = ProgressFold(rules: rules);
+       _fold = ProgressFold(rules: rules, letterFormIds: letterFormIds);
 
   final ProgressDatabase _db;
   final ProgressFold _fold;

@@ -32,17 +32,22 @@ class ExerciseGenerator {
   /// читается быстрее и на узких экранах помещается без прокрутки.
   static const _distractorCount = 2;
 
-  /// Потолок повторов одного атома за сессию. Добивать урок до двенадцати
+  /// Потолок повторов одного атома за сессию. Добивать урок до двадцати
   /// заданий по одной и той же букве — не тренировка, а издевательство:
-  /// лучше короткий урок, чем двенадцать раз подряд одно и то же.
+  /// лучше короткий урок, чем двадцать раз подряд одно и то же.
   static const _maxPerAtom = 5;
 
   List<Exercise> build({
     required LessonPlan plan,
     required CurriculumContext ctx,
     required int sessionId,
+    int? taskLimit,
+    Map<String, int> previousCounts = const {},
+    Set<String> previousFormSequences = const {},
+    Set<ExerciseMode> unavailableModes = const {},
   }) {
-    plan.validate(curriculum, rules);
+    final limit = taskLimit ?? rules.tasksPerSession;
+    plan.validate(curriculum, rules, taskLimit: taskLimit);
     // Отдельные буквы объяснены в начале. Соединённые формы добавляем
     // только при переходе к их блоку: срединная не должна стать вариантом
     // ответа, пока урок ещё знакомит с конечными.
@@ -61,15 +66,29 @@ class ExerciseGenerator {
         .toList();
     final fresh = plan.newAtoms.where(_drillable).toList();
 
-    final spaced = plan.spacedReview
-        .map(_atomById)
-        .nonNulls
-        .where(_drillable)
-        .toList();
+    final spaced = _prepareSpacedReview(
+      plan.spacedReview
+          .map(_atomById)
+          .nonNulls
+          .where(_drillable)
+          .where((atom) => (previousCounts[atom.id] ?? 0) < _maxPerAtom)
+          .toList(),
+      ctx,
+      previousFormSequences,
+    );
 
-    final schedule = _schedule(fresh, review, spaced, plan.reviewCounts);
+    final schedule = _schedule(
+      fresh,
+      review,
+      spaced,
+      plan.reviewCounts,
+      limit,
+      previousCounts,
+      narrowBaseLetters: plan.isNarrowBaseLetterBlock(curriculum),
+    );
     final slots = <Atom, int>{};
-    for (final atom in schedule) {
+    for (final scheduled in schedule) {
+      final atom = scheduled.atom;
       slots[atom] = (slots[atom] ?? 0) + 1;
     }
 
@@ -79,10 +98,15 @@ class ExerciseGenerator {
 
     // Кого в этом уроке уже просили назвать вслух: ровно раз на букву за урок.
     final spoken = <String>{};
+
+    // Сборка четырёх форм возвращается в каждом новом занятии, но одна
+    // и та же буква не должна занимать этим упражнением несколько слотов.
+    final sequenced = {...previousFormSequences};
     final seen = <Atom, int>{};
 
     final exercises = <Exercise>[];
-    for (final atom in schedule) {
+    for (final scheduled in schedule) {
+      final atom = scheduled.atom;
       pool.addAll(fresh.where((a) => a.form == atom.form));
       final index = seen[atom] ?? 0;
       seen[atom] = index + 1;
@@ -95,9 +119,13 @@ class ExerciseGenerator {
         slot: _Slot(index: index, count: slots[atom]!),
         traced: traced,
         spoken: spoken,
+        sequenced: sequenced,
         isReview: !plan.newAtoms.contains(atom),
         isTopicAtom: fresh.contains(atom) || review.contains(atom),
         focused: plan.isFocusedReview,
+        isRequired: scheduled.isRequired,
+        forceFormSequence: scheduled.forceFormSequence,
+        allowPronunciation: !unavailableModes.contains(ExerciseMode.sayName),
       );
       if (ex != null) exercises.add(ex);
     }
@@ -114,49 +142,72 @@ class ExerciseGenerator {
   ///
   /// Новый атом встречается чаще старого: он в этом уроке и вводится.
   /// Если атомов меньше, чем слотов, круги повторяются — но не больше
-  /// [_maxPerAtom] раз на атом, иначе урок вырождается в одну букву.
-  List<Atom> _schedule(
+  /// [_maxPerAtom] раз на атом. У пары отдельных букв предел ещё ниже:
+  /// четыре разных задания на каждую.
+  List<_ScheduledAtom> _schedule(
     List<Atom> fresh,
     List<Atom> review,
-    List<Atom> spaced,
+    _SpacedReview spaced,
     Map<String, int> reviewCounts,
-  ) {
+    int taskLimit,
+    Map<String, int> previousCounts, {
+    required bool narrowBaseLetters,
+  }) {
     // Слоты под возврат старого резервируются первыми: иначе тема съедает
-    // весь урок и буквы прошлых уроков не всплывают. А если тема сама
-    // не заполняет урок, остаток тоже отдаётся повтору — урок не должен
-    // кончаться на десятом задании только потому, что тема узкая. ТЗ §6.2.
-    final reserved = min(rules.reviewPerSession, spaced.length);
-    final forTopic = max(0, rules.tasksPerSession - reserved);
-
+    // весь урок и буквы прошлых уроков не всплывают. Если тема сама
+    // не заполняет урок, остаток тоже отдаётся созревшему повтору. Для пары
+    // букв нехватка такого материала означает короткий урок. ТЗ §6.2.
     // Весь материал плана получает обязательные задания. Вместимость
     // проверена заранее: здесь ни одна форма уже не может исчезнуть.
     final remaining = {
       for (final atom in {...fresh, ...review})
-        atom: reviewCounts[atom.id] ?? rules.minimumExercises(atom),
+        atom:
+            reviewCounts[atom.id] ??
+            (narrowBaseLetters
+                ? max(rules.minimumExercises(atom), rules.narrowLetterExercises)
+                : rules.minimumExercises(atom)),
     };
+    final required = {...remaining};
+    final requiredCount = remaining.values.sum;
+    final reserved = min(
+      min(rules.reviewPerSession, spaced.atoms.length),
+      max(0, taskLimit - requiredCount),
+    );
+    final forTopic = max(0, taskLimit - reserved);
     var available = forTopic - remaining.values.sum;
-    if (remaining.isEmpty && spaced.isEmpty) return const [];
+    if (remaining.isEmpty && spaced.atoms.isEmpty) return const [];
 
     // Новым небазовым формам тоже даём три встречи, если есть место.
     for (final atom in fresh.where(remaining.containsKey)) {
-      final extra = min(available, _drillsPerNewAtom - remaining[atom]!);
+      final extra = min(
+        available,
+        max(0, _drillsPerNewAtom - remaining[atom]!),
+      );
       remaining[atom] = remaining[atom]! + extra;
       available -= extra;
     }
+    final perAtomCaps = {
+      for (final atom in remaining.keys)
+        atom: max(
+          required[atom]!,
+          (narrowBaseLetters ? rules.narrowLetterExercises : _maxPerAtom) -
+              (previousCounts[atom.id] ?? 0),
+        ),
+    };
     final cap = remaining.isEmpty
         ? 0
         : reviewCounts.isNotEmpty
         ? remaining.values.sum
-        : min(forTopic, remaining.length * _maxPerAtom);
-    final spacedSlots = spaced.take(rules.tasksPerSession - cap).toList();
+        : min(forTopic, perAtomCaps.values.sum);
+    final spacedSlots = spaced.atoms.take(taskLimit - cap).toList();
 
-    // Добираем до полного урока по кругу, пока не упрёмся в потолок.
+    // Добираем тематический блок по кругу, пока не упрёмся в его потолок.
     final atoms = remaining.keys.toList();
     var i = 0;
     var planned = remaining.values.sum;
     while (planned < cap) {
       final atom = atoms[i % atoms.length];
-      if (remaining[atom]! < _maxPerAtom) {
+      if (remaining[atom]! < perAtomCaps[atom]!) {
         remaining[atom] = remaining[atom]! + 1;
         planned++;
       }
@@ -166,20 +217,24 @@ class ExerciseGenerator {
 
     // Раскладываем по кругу: за один проход по атому, порядок внутри
     // прохода случайный, чтобы уроки не выглядели одинаково.
-    final result = <Atom>[];
+    final result = <_ScheduledAtom>[];
     while (result.length < cap && remaining.values.any((n) => n > 0)) {
       final pass = remaining.keys.where((a) => remaining[a]! > 0).toList()
         ..shuffle(_random);
 
       // На стыке кругов случайный порядок может повторить последнюю букву
       // предыдущего прохода — тогда меняем её местами со следующей.
-      if (pass.length > 1 && result.isNotEmpty && pass.first == result.last) {
+      if (pass.length > 1 &&
+          result.isNotEmpty &&
+          pass.first == result.last.atom) {
         pass.swap(0, 1);
       }
 
       for (final atom in pass) {
         if (result.length >= cap) break;
-        result.add(atom);
+        final isRequired = required[atom]! > 0;
+        result.add(_ScheduledAtom(atom, isRequired: isRequired));
+        if (isRequired) required[atom] = required[atom]! - 1;
         remaining[atom] = remaining[atom]! - 1;
       }
     }
@@ -190,7 +245,7 @@ class ExerciseGenerator {
     if (fresh.any(_isConnectedForm)) {
       // Все формы входят в один сеанс, но изучаются последовательными
       // блоками. Внутри блока сохраняется чередование букв.
-      final byForm = result.groupListsBy((a) => a.form);
+      final byForm = result.groupListsBy((item) => item.atom.form);
       return [
         for (final form in [
           null,
@@ -200,10 +255,67 @@ class ExerciseGenerator {
           LetterForm.medial,
         ])
           ...?byForm[form],
-        ...spacedSlots,
+        ...spacedSlots.map(
+          (atom) => _ScheduledAtom(
+            atom,
+            isRequired: true,
+            forceFormSequence: spaced.formSequenceAtomIds.contains(atom.id),
+          ),
+        ),
       ];
     }
-    return [...result, ...spacedSlots];
+    return [
+      ...result,
+      ...spacedSlots.map(
+        (atom) => _ScheduledAtom(
+          atom,
+          isRequired: true,
+          forceFormSequence: spaced.formSequenceAtomIds.contains(atom.id),
+        ),
+      ),
+    ];
+  }
+
+  /// Созревшие формы одной старой буквы сворачиваются в одну сборку.
+  /// Она проверяет всё семейство за один слот, поэтому оставлять рядом ещё
+  /// три отдельных задания по тем же формам было бы лишним повторением.
+  _SpacedReview _prepareSpacedReview(
+    List<Atom> candidates,
+    CurriculumContext ctx,
+    Set<String> previousFormSequences,
+  ) {
+    final introducedByLetter = _introducedAtoms(ctx)
+        .where((atom) => atom.kind == AtomKind.letterForm)
+        .where((atom) => atom.letterId != null && atom.form != null)
+        .groupListsBy((atom) => atom.letterId!);
+    final completeLetters = {
+      for (final entry in introducedByLetter.entries)
+        if (LetterForm.values.every(
+          (form) => entry.value.any((atom) => atom.form == form),
+        ))
+          entry.key,
+    };
+    final collapsedLetters = <String>{};
+    final formSequenceAtomIds = <String>{};
+    final atoms = <Atom>[];
+
+    for (final atom in candidates) {
+      final letterId = atom.letterId;
+      final canSequence =
+          atom.kind == AtomKind.letterForm &&
+          atom.form != null &&
+          letterId != null &&
+          completeLetters.contains(letterId) &&
+          !previousFormSequences.contains(letterId);
+      if (!canSequence) {
+        atoms.add(atom);
+        continue;
+      }
+      if (!collapsedLetters.add(letterId)) continue;
+      atoms.add(atom);
+      formSequenceAtomIds.add(atom.id);
+    }
+    return _SpacedReview(atoms, formSequenceAtomIds);
   }
 
   static bool _drillable(Atom atom) => atom.kind != AtomKind.concept;
@@ -222,13 +334,29 @@ class ExerciseGenerator {
     required _Slot slot,
     required Set<String> traced,
     required Set<String> spoken,
+    required Set<String> sequenced,
     required bool isReview,
     required bool isTopicAtom,
     required bool focused,
+    required bool isRequired,
+    required bool forceFormSequence,
+    required bool allowPronunciation,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
     if (atom.kind == AtomKind.syllable) {
-      return _connectionQuestion(atom, slot.index, isReview);
+      return _connectionQuestion(atom, slot.index, isReview, isRequired);
+    }
+
+    if (forceFormSequence) {
+      final sequence = _formSequenceExercise(
+        atom,
+        pool,
+        sequenced,
+        level: level,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+      if (sequence != null) return sequence;
     }
 
     // Базовая буква темы обязательно проходит оба вида письма и голос,
@@ -240,6 +368,9 @@ class ExerciseGenerator {
         ? rules
               .requiredPracticeModes(atom)
               .difference(p.successfulModes)
+              .where(
+                (mode) => allowPronunciation || mode != ExerciseMode.sayName,
+              )
               .toList()
         : const <ExerciseMode>[];
     if (slot.index < missingPractice.length) {
@@ -250,13 +381,14 @@ class ExerciseGenerator {
         mode: mode,
         level: level,
         isReview: true,
+        isRequired: isRequired,
       );
     }
     final requiredPractice = !focused && isTopicAtom && _isBaseLetter(atom);
     if (requiredPractice) {
       final mode = switch (slot.index) {
         0 when atom.tracing != null => ExerciseMode.trace,
-        _ when slot.isLast => ExerciseMode.sayName,
+        _ when slot.isLast && allowPronunciation => ExerciseMode.sayName,
         _ when atom.tracing != null && slot.index == min(2, slot.count - 2) =>
           ExerciseMode.traceFromMemory,
         _ => null,
@@ -268,6 +400,9 @@ class ExerciseGenerator {
           mode: mode,
           level: level,
           isReview: isReview,
+          // Голос и оба вида письма нельзя вытеснить повтором
+          // ошибки, даже если этот режим стоит в конце слотов буквы.
+          isRequired: true,
         );
       }
     }
@@ -289,12 +424,14 @@ class ExerciseGenerator {
         : active
         ? _tracingMode(atom, p, slot, traced, isReview: isReview)
         : null;
-    if (_saysName(atom, slot, spoken, isReview: isReview, activeSlot: active)) {
+    if (allowPronunciation &&
+        _saysName(atom, slot, spoken, isReview: isReview, activeSlot: active)) {
       return Exercise.direct(
         atom: atom,
         mode: ExerciseMode.sayName,
         level: level,
         isReview: isReview,
+        isRequired: isRequired,
       );
     }
 
@@ -308,44 +445,19 @@ class ExerciseGenerator {
         mode: tracing,
         level: level,
         isReview: isReview,
+        isRequired: isRequired,
       );
     }
 
-    // Позиционные формы одной буквы собираются в одном задании: отдельная
-    // форма остаётся образцом, а начальную, срединную и конечную человек
-    // последовательно раскладывает по трём слотам. Пока хотя бы одна форма
-    // не введена, это упражнение не показываем.
-    final family = [atom, ..._otherFormsOf(atom, pool)];
-    final prompt = family.firstWhereOrNull(
-      (form) => form.form == LetterForm.isolated,
+    final sequence = _formSequenceExercise(
+      atom,
+      pool,
+      sequenced,
+      level: level,
+      isReview: isReview,
+      isRequired: isRequired,
     );
-    final forms = [
-      for (final position in const [
-        LetterForm.initial,
-        LetterForm.medial,
-        LetterForm.finalForm,
-      ])
-        family.firstWhereOrNull((form) => form.form == position),
-    ].nonNulls.toList();
-    if (prompt != null &&
-        forms.length == 3 &&
-        forms.contains(atom) &&
-        ((focused && !p.modesInStreak.contains(ExerciseMode.positionToForm)) ||
-            _random.nextInt(3) == 0)) {
-      final options = [...forms]..shuffle(_random);
-      if (const ListEquality<Atom>().equals(options, forms)) {
-        options.swap(0, 1);
-      }
-      return Exercise(
-        atom: atom,
-        mode: ExerciseMode.positionToForm,
-        options: options,
-        answerIndex: options.indexOf(atom),
-        level: level,
-        isReview: isReview,
-        prompt: prompt,
-      );
-    }
+    if (sequence != null) return sequence;
 
     if (atom.kind == AtomKind.sign || atom.kind == AtomKind.haraka) {
       final options = [atom, ..._pickDistractors(atom, pool, level).distractors]
@@ -359,6 +471,7 @@ class ExerciseGenerator {
         answerIndex: options.indexOf(atom),
         level: level,
         isReview: isReview,
+        isRequired: isRequired,
       );
     }
 
@@ -373,6 +486,7 @@ class ExerciseGenerator {
         mode: ExerciseMode.trace,
         level: level,
         isReview: isReview,
+        isRequired: isRequired,
       );
     }
 
@@ -384,12 +498,62 @@ class ExerciseGenerator {
       answerIndex: options.indexOf(atom),
       level: picked.level,
       isReview: isReview,
+      isRequired: isRequired,
     );
+  }
+
+  /// Все формы одной буквы собираются в одном задании. Отдельная форма
+  /// остаётся образцом в вопросе и одновременно участвует в раскладке.
+  /// Пока хотя бы одна из четырёх форм не введена, упражнение не показываем.
+  Exercise? _formSequenceExercise(
+    Atom atom,
+    List<Atom> pool,
+    Set<String> sequenced, {
+    required DistractorLevel level,
+    required bool isReview,
+    required bool isRequired,
+  }) {
+    final family = [atom, ..._otherFormsOf(atom, pool)];
+    final prompt = family.firstWhereOrNull(
+      (form) => form.form == LetterForm.isolated,
+    );
+    final forms = [
+      for (final position in LetterForm.values)
+        family.firstWhereOrNull((form) => form.form == position),
+    ].nonNulls.toList();
+    final letterId = atom.letterId;
+    if (letterId != null &&
+        prompt != null &&
+        forms.length == LetterForm.values.length &&
+        forms.contains(atom) &&
+        !sequenced.contains(letterId)) {
+      sequenced.add(letterId);
+      final options = [...forms]..shuffle(_random);
+      if (const ListEquality<Atom>().equals(options, forms)) {
+        options.swap(0, 1);
+      }
+      return Exercise(
+        atom: atom,
+        mode: ExerciseMode.positionToForm,
+        options: options,
+        answerIndex: options.indexOf(atom),
+        level: level,
+        isReview: isReview,
+        isRequired: isRequired,
+        prompt: prompt,
+      );
+    }
+    return null;
   }
 
   /// Сочетания строятся из уже знакомых букв. Для первого блока
   /// соединения не нужны три заранее выученных слога или пустой холст.
-  Exercise _connectionQuestion(Atom atom, int index, bool isReview) {
+  Exercise _connectionQuestion(
+    Atom atom,
+    int index,
+    bool isReview,
+    bool isRequired,
+  ) {
     final letters = curriculum.nodes
         .map((n) => n.atom)
         .where((a) => a.form == LetterForm.isolated)
@@ -421,6 +585,7 @@ class ExerciseGenerator {
       options: variants,
       answerIndex: variants.indexOf(atom),
       isReview: isReview,
+      isRequired: isRequired,
     );
   }
 
@@ -573,6 +738,25 @@ class _Slot {
 
   bool get isFirst => index == 0;
   bool get isLast => index == count - 1;
+}
+
+class _ScheduledAtom {
+  const _ScheduledAtom(
+    this.atom, {
+    required this.isRequired,
+    this.forceFormSequence = false,
+  });
+
+  final Atom atom;
+  final bool isRequired;
+  final bool forceFormSequence;
+}
+
+class _SpacedReview {
+  const _SpacedReview(this.atoms, this.formSequenceAtomIds);
+
+  final List<Atom> atoms;
+  final Set<String> formSequenceAtomIds;
 }
 
 class _Picked {

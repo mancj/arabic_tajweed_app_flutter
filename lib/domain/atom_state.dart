@@ -48,8 +48,8 @@ class AtomProgress {
   final int deferCount;
   final int? lastSeenSession;
 
-  /// Чистых ответов подряд с тех пор, как атом в `known`. От этого растёт
-  /// интервал повтора; ошибка обнуляет вместе с откатом состояния.
+  /// Чистых ответов подряд с тех пор, как небуквенный атом в `known`.
+  /// У букв интервал растёт по подтверждениям в разных сессиях.
   final int cleanSinceKnown;
 
   /// Атом засчитан по облегчённому критерию после двух откладываний.
@@ -69,8 +69,15 @@ class AtomProgress {
 
   /// Через сколько сессий после последнего показа атом просится в повтор.
   /// Недоученный — сразу, выученный — по растущему интервалу.
-  int reviewIntervalFor(LearningRules rules) {
+  int reviewIntervalFor(LearningRules rules, {bool isLetterForm = false}) {
     if (state.index < AtomState.known.index) return 0;
+    if (isLetterForm) {
+      final index = confirmations.clamp(
+        0,
+        rules.letterReviewIntervals.length - 1,
+      );
+      return rules.letterReviewIntervals[index];
+    }
     final doubled = rules.reviewIntervalBase << cleanSinceKnown;
     return doubled < rules.reviewIntervalCap
         ? doubled
@@ -78,11 +85,12 @@ class AtomProgress {
   }
 
   /// Сессия, с которой атом пора повторять.
-  int dueSession(LearningRules rules) =>
-      (lastSeenSession ?? 0) + reviewIntervalFor(rules);
+  int dueSession(LearningRules rules, {bool isLetterForm = false}) =>
+      (lastSeenSession ?? 0) +
+      reviewIntervalFor(rules, isLetterForm: isLetterForm);
 
-  bool isDueAt(int session, LearningRules rules) =>
-      session >= dueSession(rules);
+  bool isDueAt(int session, LearningRules rules, {bool isLetterForm = false}) =>
+      session >= dueSession(rules, isLetterForm: isLetterForm);
 
   /// `clearDeferred` отдельным флагом, потому что в `copyWith` null означает
   /// «не менять поле» — иначе снять отложенность было бы нечем.
@@ -124,9 +132,13 @@ class AtomProgress {
 
 /// Свёртка лога в состояния атомов.
 class ProgressFold {
-  const ProgressFold({this.rules = const LearningRules()});
+  const ProgressFold({
+    required this.letterFormIds,
+    this.rules = const LearningRules(),
+  });
 
   final LearningRules rules;
+  final Set<String> letterFormIds;
 
   Map<String, AtomProgress> fold(Iterable<LogEntry> log) =>
       foldOnto(const {}, log);
@@ -164,7 +176,8 @@ class ProgressFold {
   };
 
   AtomProgress _applyAnswer(AtomProgress p, ProgressEvent e) {
-    if (!e.correct) return _applyError(p, e);
+    final isLetterForm = letterFormIds.contains(e.atomId);
+    if (!e.correct) return _applyError(p, e, isLetterForm: isLetterForm);
 
     p = p.copyWith(successfulModes: {...p.successfulModes, e.mode});
     final active = p.hadActiveSuccess || e.mode.isActive;
@@ -203,9 +216,9 @@ class ProgressFold {
         : p.state;
     next = next.copyWith(state: state);
 
-    // Выученный ответил чисто ещё раз — интервал до следующего повтора
-    // удваивается.
-    if (state.index >= AtomState.known.index) {
+    // У небуквенного материала каждый чистый ответ увеличивает интервал.
+    // У букв ниже считается одна своевременная сессия, а не каждый ответ.
+    if (state.index >= AtomState.known.index && !isLetterForm) {
       next = next.copyWith(cleanSinceKnown: p.cleanSinceKnown + 1);
     }
 
@@ -215,7 +228,14 @@ class ProgressFold {
         knownAt: e.at,
         weak: _isLenient(next),
       ),
-      AtomState.known when _confirmed(p, e) => _confirm(next, e),
+      AtomState.known
+          when isLetterForm &&
+              e.sessionId >= p.dueSession(rules, isLetterForm: true) =>
+        _confirmLetter(next),
+      AtomState.known when !isLetterForm && _confirmed(p, e) => _confirmByDate(
+        next,
+        e,
+      ),
       _ => next,
     };
   }
@@ -241,7 +261,16 @@ class ProgressFold {
     return e.at.difference(knownAt) >= rules.confirmDelays[index];
   }
 
-  AtomProgress _confirm(AtomProgress p, ProgressEvent e) {
+  AtomProgress _confirmLetter(AtomProgress p) {
+    final confirmations = p.confirmations + 1;
+    final done = confirmations >= rules.letterReviewIntervals.length;
+    return p.copyWith(
+      confirmations: confirmations,
+      state: done && p.hadActiveSuccess ? AtomState.mastered : AtomState.known,
+    );
+  }
+
+  AtomProgress _confirmByDate(AtomProgress p, ProgressEvent e) {
     final confirmations = p.confirmations + 1;
     final done = confirmations >= rules.confirmDelays.length;
     // Одних тапов по вариантам мало: без успеха в активной механике
@@ -254,7 +283,11 @@ class ProgressFold {
     );
   }
 
-  AtomProgress _applyError(AtomProgress p, ProgressEvent e) {
+  AtomProgress _applyError(
+    AtomProgress p,
+    ProgressEvent e, {
+    required bool isLetterForm,
+  }) {
     final errors = p.totalErrors + 1;
     final failed = {...p.failedSessions, e.sessionId};
     final shouldDefer =
@@ -265,6 +298,7 @@ class ProgressFold {
       state: _stepBack(p.state),
       cleanStreak: 0,
       cleanSinceKnown: 0,
+      confirmations: isLetterForm ? 0 : p.confirmations,
       modesInStreak: const {},
       // При откладывании счётчики обнуляются: иначе атом, однажды перешедший
       // порог, откладывался бы после каждой следующей ошибки.

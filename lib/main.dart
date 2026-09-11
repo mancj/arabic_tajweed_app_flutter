@@ -9,6 +9,7 @@ import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_pag
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
@@ -95,6 +96,10 @@ class MyApp extends StatelessWidget {
           name: DebugPage.routeName,
           page: () => const DebugPage(),
           binding: DebugPageBinding(),
+        ),
+        GetPage(
+          name: FormSequenceDebugPage.routeName,
+          page: () => const FormSequenceDebugPage(),
         ),
         GetPage(
           name: AtomProgressPage.routeName,

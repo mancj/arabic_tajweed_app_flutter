@@ -27,4 +27,5 @@ class AppHaptics {
   static void tick() {
     if (_supported) Gaimon.selection();
   }
+
 }

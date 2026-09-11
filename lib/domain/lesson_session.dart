@@ -7,21 +7,23 @@ import 'progress_event.dart';
 /// Результат ответа на текущее задание.
 enum AnswerOutcome { correct, wrong }
 
-/// Одна сессия. Двенадцать заданий, ошибка не блокирует прохождение:
-/// показываем верный ответ и отправляем задание в конец очереди.
-/// Очередь растёт максимум до шестнадцати — иначе в плохой день сессия
-/// становится бесконечной. См. SPEC.md §5.
+/// Один блок сессии. Ошибка не раздувает общий бюджет: показываем верный
+/// ответ и, если есть добавочное задание, заменяем его повтором ошибки.
+/// Обязательный материал при этом не исчезает. См. SPEC.md §5.
 class LessonSession {
   LessonSession({
     required List<Exercise> exercises,
     required this.sessionId,
     this.rules = const LearningRules(),
+    int? taskLimit,
     DateTime Function()? now,
   }) : _queue = List.of(exercises),
+       _taskLimit = taskLimit ?? rules.tasksPerSession,
        _now = now ?? DateTime.now;
 
   final int sessionId;
   final LearningRules rules;
+  final int _taskLimit;
   final DateTime Function() _now;
 
   final List<Exercise> _queue;
@@ -65,20 +67,35 @@ class LessonSession {
     Exercise exercise,
     int optionIndex, {
     required bool fastEnough,
+    Map<String, bool>? atomResults,
   }) {
     final correct = optionIndex == exercise.answerIndex;
+    final resultAtoms = exercise.resultAtoms;
+    final results =
+        atomResults ?? {for (final atom in resultAtoms) atom.id: correct};
+    if (results.length != resultAtoms.length ||
+        resultAtoms.any((atom) => !results.containsKey(atom.id)) ||
+        correct != results.values.every((value) => value)) {
+      throw ArgumentError.value(
+        atomResults,
+        'atomResults',
+        'Результаты должны точно соответствовать элементам задания',
+      );
+    }
 
-    _log.add(
-      ProgressEvent(
-        atomId: exercise.atom.id,
-        sessionId: sessionId,
-        at: _now(),
-        mode: exercise.mode,
-        correct: correct,
-        attempt: _attempt,
-        fastEnough: fastEnough,
-      ),
-    );
+    final at = _now();
+    _log.addAll([
+      for (final atom in resultAtoms)
+        ProgressEvent(
+          atomId: atom.id,
+          sessionId: sessionId,
+          at: at,
+          mode: exercise.mode,
+          correct: results[atom.id]!,
+          attempt: _attempt,
+          fastEnough: fastEnough,
+        ),
+    ]);
 
     if (!correct) {
       _attempt++;
@@ -99,12 +116,47 @@ class LessonSession {
     _index++;
   }
 
+  /// Убирает ещё не показанные задания режима, который технически
+  /// недоступен до конца сессии. Уже пройденные позиции не трогаем,
+  /// чтобы общий счётчик не откатывался назад.
+  int discardPendingMode(ExerciseMode mode) {
+    var removed = 0;
+    for (var i = _queue.length - 1; i >= _index; i--) {
+      if (_queue[i].mode != mode) continue;
+      _queue.removeAt(i);
+      removed++;
+    }
+    return removed;
+  }
+
   /// Провалённое задание возвращается в очередь — один раз и не в самый
   /// конец, а через несколько шагов: так оно попадётся, пока разбор ещё
   /// свежий, и не соберётся в хвост из одинаковых вопросов.
   void _requeue(Exercise exercise) {
-    if (_queue.length >= rules.maxTasksPerSession) return;
     if (!_requeuedOnce.add(exercise)) return;
+
+    // Если такая же проверка этой буквы уже встретится ещё раз, она и будет
+    // отложенным повтором. Третья копия снова превращала пару букв в A/B/A/B.
+    final equivalentCount = _queue
+        .where(
+          (candidate) =>
+              candidate.atom.id == exercise.atom.id &&
+              candidate.mode == exercise.mode,
+        )
+        .length;
+    if (equivalentCount >= _maxEquivalentExercises) return;
+
+    // Повтор ошибки не раздувает занятие сверх его бюджета. Если
+    // очередь уже полна, он вытесняет последнее добавочное задание.
+    // Обязательную форму или режим выкидывать нельзя.
+    if (_queue.length >= _taskLimit) {
+      final removable = _queue.lastIndexWhere(
+        (candidate) => !candidate.isRequired,
+        _queue.length - 1,
+      );
+      if (removable <= _index) return;
+      _queue.removeAt(removable);
+    }
 
     final at = min(_index + _requeueGap, _queue.length);
     _queue.insert(at, exercise);
@@ -114,6 +166,7 @@ class LessonSession {
   /// Через сколько заданий провал вернётся. Сразу — человек ответит по
   /// памяти, в самый конец — забудет разбор.
   static const _requeueGap = 3;
+  static const _maxEquivalentExercises = 2;
 
   int get requeuedCount => _requeued;
 

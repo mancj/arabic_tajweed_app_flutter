@@ -8,6 +8,7 @@ class LessonBinding extends Bindings {
   /// Без него урок собирается планировщиком как обычно.
   static const topicArg = 'topicId';
   static const planArg = 'plan';
+  static const continuePlanningArg = 'continuePlanning';
 
   @override
   void dependencies() {
@@ -19,6 +20,9 @@ class LessonBinding extends Bindings {
       LessonController(
         topicId: topicId,
         plan: args is Map ? args[planArg] as LessonPlan? : null,
+        continuePlanning: args is Map
+            ? args[continuePlanningArg] as bool? ?? false
+            : true,
       ),
     );
   }

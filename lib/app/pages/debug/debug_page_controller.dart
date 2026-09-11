@@ -11,6 +11,8 @@ import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 
+import 'form_sequence_debug_page.dart';
+
 class DebugController extends GetxController {
   final serverUrl = ''.obs;
 
@@ -63,4 +65,6 @@ class DebugController extends GetxController {
   void openAlphabetLetter() => Get.toNamed(AlphabetLetterPage.routeName);
 
   void openAppWidgetsPage() => Get.toNamed(AppWidgetsPage.routeName);
+
+  void openFormSequence() => Get.toNamed(FormSequenceDebugPage.routeName);
 }
