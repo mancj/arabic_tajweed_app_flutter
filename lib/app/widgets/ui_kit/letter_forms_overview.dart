@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 
@@ -22,7 +23,7 @@ class LetterFormsOverview extends StatelessWidget {
         for (final form in forms)
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: _FormTile(atom: form),
             ),
           ),
@@ -40,7 +41,7 @@ class _FormTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: ValueKey('letter-form-overview-${atom.form?.name}'),
-      padding: const EdgeInsets.fromLTRB(6, 0, 4, 8),
+      padding: const EdgeInsets.fromLTRB(8, 0, 4, 8),
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.highlightArea,
         borderRadius: 16,
@@ -56,12 +57,16 @@ class _FormTile extends StatelessWidget {
               child: Text(
                 atom.form?.title ?? '',
                 maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: UITextStyles.hint,
+                style: UITextStyles.hint.copyWith(
+                  fontFamily: UITextStyles.fontJetBrainsMono,
+                  fontSize: 11,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const Margin.vertical(4),
           SizedBox(
             height: 44,
             child: FittedBox(

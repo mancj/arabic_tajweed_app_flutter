@@ -300,7 +300,7 @@ class _PronunciationCard extends StatelessWidget {
               ),
             ),
           ),
-          const Margin.horizontal(10),
+          const Margin.horizontal(8),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -326,7 +326,7 @@ class _PronunciationCard extends StatelessWidget {
               ],
             ),
           ),
-          const Margin.horizontal(10),
+          const Margin.horizontal(8),
           SvgPicture.asset(UISVGAssets.waveform, width: 38, height: 19),
         ],
       ),
@@ -370,7 +370,7 @@ class _TajweedCard extends StatelessWidget {
               color: UIColors.text,
             ),
           ),
-          const Margin.vertical(20),
+          const Margin.vertical(24),
           Text(
             text,
             style: TextStyle(

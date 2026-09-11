@@ -1,5 +1,6 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
@@ -84,13 +85,13 @@ class _FormSequenceDebugPageState extends State<FormSequenceDebugPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Расставьте формы буквы «Ба»', style: UITextStyles.semibold17),
-            const SizedBox(height: 20),
+            const Margin.vertical(24),
             FormSequenceExercise(
               key: ValueKey('form-sequence-debug-$_round'),
               options: _options,
               onCompleted: (answer) => setState(() => _answer = answer),
             ),
-            const SizedBox(height: 20),
+            const Margin.vertical(24),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 180),
               child: _answer == null

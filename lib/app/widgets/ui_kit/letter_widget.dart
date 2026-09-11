@@ -318,7 +318,7 @@ class LetterWidgetCard extends StatelessWidget {
             child: TiltParallax(
               offset: const Offset(8, 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                 decoration: BoxDecoration(
                   color: UIColors.cardBackground,
                   borderRadius: BorderRadius.circular(6),

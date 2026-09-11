@@ -25,6 +25,8 @@ class UIColors {
     backgroundShapes1: Color.fromARGB(255, 231, 231, 231),
     text: Color(0xFF0C233E),
     cardBackground: Color(0xFFF7F7F7),
+    coursePreviewGradientStart: Color(0xFFF7F7F7),
+    coursePreviewGradientEnd: Color(0xFFEAEAEA),
     highlightArea: Color(0xFFFFFFFF),
     borders: Color(0xFFFFFFFF),
     shadows: Color(0x0D0C233E),
@@ -56,6 +58,8 @@ class UIColors {
     backgroundShapes1: Color(0xFF223B5B),
     text: Color(0xFFFFFFFF),
     cardBackground: Color(0xFF132235),
+    coursePreviewGradientStart: Color(0xFF102038),
+    coursePreviewGradientEnd: Color(0xFF102038),
     highlightArea: Color(0xFF183252),
     borders: Color(0xFF243A54),
     shadows: Color(0x0D0C233E),
@@ -92,6 +96,9 @@ class UIColors {
   static Color get backgroundShapes1 => _active.backgroundShapes1;
   static Color get text => _active.text;
   static Color get cardBackground => _active.cardBackground;
+  static Color get coursePreviewGradientStart =>
+      _active.coursePreviewGradientStart;
+  static Color get coursePreviewGradientEnd => _active.coursePreviewGradientEnd;
   static Color get highlightArea => _active.highlightArea;
   static Color get borders => _active.borders;
   static Color get shadows => _active.shadows;
@@ -137,6 +144,8 @@ class UIColorPalette {
   final Color backgroundShapes1;
   final Color text;
   final Color cardBackground;
+  final Color coursePreviewGradientStart;
+  final Color coursePreviewGradientEnd;
   final Color highlightArea;
   final Color borders;
   final Color shadows;
@@ -178,6 +187,8 @@ class UIColorPalette {
     required this.backgroundShapes1,
     required this.text,
     required this.cardBackground,
+    required this.coursePreviewGradientStart,
+    required this.coursePreviewGradientEnd,
     required this.highlightArea,
     required this.borders,
     required this.shadows,

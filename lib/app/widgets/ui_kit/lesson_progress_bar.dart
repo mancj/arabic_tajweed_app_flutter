@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 
 /// Полоса прогресса урока под шапкой: сколько букв набора уже пройдено.
 class LessonProgressBar extends StatelessWidget {
@@ -23,7 +24,7 @@ class LessonProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bar = Container(
       height: height,
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: UIColors.backgroundShapes2,
         borderRadius: BorderRadius.circular(height / 2),
@@ -47,7 +48,7 @@ class LessonProgressBar extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: bar),
-        const SizedBox(width: 8),
+        const Margin.horizontal(8),
         Text(debugLabel!, style: UITextStyles.hint),
       ],
     );

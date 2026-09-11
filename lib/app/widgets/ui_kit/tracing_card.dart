@@ -1,6 +1,7 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
@@ -101,7 +102,7 @@ class TracingCard extends StatelessWidget {
               size: _actionButtonSize,
               showHint: false,
             ),
-            const SizedBox(width: 8),
+            const Margin.horizontal(8),
           ],
           _ClearButton(onTap: onClear),
         ],

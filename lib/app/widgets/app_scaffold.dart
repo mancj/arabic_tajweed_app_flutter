@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 
 /// Строит содержимое экрана [AppScaffold].
 ///
@@ -58,7 +59,7 @@ class AppScaffold extends StatefulWidget {
   /// Боковые поля содержимого; вертикальные отступы прибавляются к ним.
   final EdgeInsets contentPadding;
 
-  /// Сила прогрессивного размытия контента под шапкой и панелью.
+  /// Сила прогрессивного размытия контента под шапкой.
   final double edgeBlurSigma;
 
   const AppScaffold({
@@ -84,6 +85,9 @@ class AppScaffold extends StatefulWidget {
 
   /// Отступ содержимого от шапки и от нижней панели.
   static const _contentGap = 16.0;
+
+  /// Насколько нижняя граница блюра уходит ниже шапки.
+  static const _topBlurFadeExtension = 16.0;
 
   @override
   State<AppScaffold> createState() => _AppScaffoldState();
@@ -134,8 +138,20 @@ class _AppScaffoldState extends State<AppScaffold> {
           //   ),
           // ),
           Positioned.fill(
-            child: Builder(
-              builder: (context) => widget.builder(context, contentInsets),
+            child: GlassScrollEdgeEffect(
+              // Контент под шапкой плавно размывается, чтобы стеклянный хром
+              // оставался читаемым. Снизу блюра нет: панель не затемняет
+              // контент за собой.
+              style: GlassScrollEdgeStyle.blur,
+              maxSigma: widget.edgeBlurSigma,
+              topFadeHeight:
+                  headerZone +
+                  AppScaffold._headerHeight +
+                  AppScaffold._topBlurFadeExtension,
+              bottomFadeHeight: 0,
+              child: Builder(
+                builder: (context) => widget.builder(context, contentInsets),
+              ),
             ),
           ),
           Positioned(
@@ -197,7 +213,7 @@ class _Header extends StatelessWidget {
                           color: UIColors.text,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const Margin.horizontal(4),
                       Icon(
                         Icons.auto_awesome,
                         size: 14,

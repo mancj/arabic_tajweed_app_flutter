@@ -9,6 +9,7 @@ import 'package:arabic_tajweed_app/app/media/single_sound_effect.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 
@@ -532,7 +533,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final (index, position) in _positions.indexed) ...[
-              if (index > 0) const SizedBox(width: 8),
+              if (index > 0) const Margin.horizontal(8),
               Expanded(
                 child: _withLandingPulse(
                   target: 'slot-$index',
@@ -556,7 +557,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
             ],
           ],
         ),
-        const SizedBox(height: 16),
+        const Margin.vertical(16),
         Text(
           _revealingAnswer
               ? 'Запомните правильный порядок'
@@ -566,11 +567,11 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
           ),
           style: UITextStyles.hint,
         ),
-        const SizedBox(height: 8),
+        const Margin.vertical(8),
         Row(
           children: [
             for (final (index, atom) in widget.options.indexed) ...[
-              if (index > 0) const SizedBox(width: 8),
+              if (index > 0) const Margin.horizontal(8),
               Expanded(
                 child: _withLandingPulse(
                   target: 'tile-${atom.id}',
@@ -694,7 +695,7 @@ class _FormSlotSurface extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       height: 108,
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
       decoration: SquircleBorders.squircleBorder(
         color:
             feedbackColor?.withValues(alpha: .12) ??

@@ -35,7 +35,7 @@ class CourseLink extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: SquircleBorders.squircleBorder(
             color: UIColors.cardBackground,
             borderRadius: 20,
@@ -47,7 +47,7 @@ class CourseLink extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: UITextStyles.semiboldText),
-                    const Margin.vertical(6),
+                    const Margin.vertical(8),
                     Text(subtitle, style: UITextStyles.hint),
                   ],
                 ),
@@ -221,12 +221,12 @@ class CourseTopicPage extends StatelessWidget {
                 ? s.hint
                 : 'Освоено: ${s.done} из ${s.total}',
           ),
-          const Margin.vertical(20),
+          const Margin.vertical(24),
           Text('Материал блока', style: UITextStyles.semiboldText),
           const Margin.vertical(12),
           for (final atom in atoms)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
                   Expanded(

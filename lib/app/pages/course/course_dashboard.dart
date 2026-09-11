@@ -6,6 +6,7 @@ import 'package:flutter_tilt/flutter_tilt.dart';
 
 import '../../../domain/atom.dart';
 import '../../resources/ui_resources.dart';
+import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/animated_background_shapes.dart';
 import 'course_controller.dart';
 import 'course_path_page.dart';
@@ -43,10 +44,14 @@ class CourseLessonPreview extends StatelessWidget {
       tiltConfig: _tiltConfig,
       child: _CourseSurface(
         radius: 28,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF7F7F7), Color(0xFFF7F7F7), Color(0xFFEAEAEA)],
+          colors: [
+            UIColors.coursePreviewGradientStart,
+            UIColors.coursePreviewGradientStart,
+            UIColors.coursePreviewGradientEnd,
+          ],
           stops: [0, .54615, 1],
         ),
         child: Stack(
@@ -108,11 +113,11 @@ class CourseLessonPreview extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 7),
+              const Margin.horizontal(8),
               Text(
                 label,
                 style: UITextStyles.regular10.copyWith(
-                  color: UIColors.primaryButtonText,
+                  color: UIColors.badgeText1,
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                   letterSpacing: .8,
@@ -122,7 +127,7 @@ class CourseLessonPreview extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const Margin.vertical(12),
         Text(
           controller.lessonTitle,
           style: UITextStyles.pageTitleSemibold.copyWith(
@@ -148,7 +153,7 @@ class CourseLessonPreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(controller.lessonFocus, style: UITextStyles.medium17),
-          const SizedBox(height: 4),
+          const Margin.vertical(4),
           Text(
             controller.lessonDetail,
             style: UITextStyles.hint.copyWith(fontSize: 13),
@@ -183,7 +188,7 @@ class _CourseLessonTransformation extends StatelessWidget {
         (atom?.form != null && atom?.form != LetterForm.isolated);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: ExcludeSemantics(
         child: SizedBox(
           height: 116,
@@ -206,14 +211,14 @@ class _CourseLessonTransformation extends StatelessWidget {
                 _content(
                   showArrow
                       ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Icon(
                             Icons.arrow_forward_rounded,
                             size: 18,
                             color: UIColors.secondary2,
                           ),
                         )
-                      : const SizedBox(width: 24),
+                      : const Margin.horizontal(24),
                 ),
               ],
               SizedBox(
@@ -239,7 +244,7 @@ class _CourseLessonTransformation extends StatelessWidget {
                       Container(
                         width: 116,
                         height: 116,
-                        padding: const EdgeInsets.all(7),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: UIColors.primary20),
@@ -323,7 +328,7 @@ class CourseActivityWeek extends StatelessWidget {
                   size: 18,
                   color: UIColors.primary,
                 ),
-                const SizedBox(width: 8),
+                const Margin.horizontal(8),
                 Text(
                   'Эта неделя',
                   style: UITextStyles.regular14.copyWith(
@@ -342,7 +347,7 @@ class CourseActivityWeek extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const Margin.vertical(16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: labels.mapIndexed((index, label) {
@@ -368,7 +373,7 @@ class CourseActivityWeek extends StatelessWidget {
                                 : UIColors.secondary2,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const Margin.vertical(8),
                         Container(
                           width: 32,
                           height: 32,
@@ -386,7 +391,7 @@ class CourseActivityWeek extends StatelessWidget {
                                   Icons.check_rounded,
                                   size: 20,
                                   color: current
-                                      ? UIColors.primaryButtonText
+                                      ? UIColors.badgeText1
                                       : UIColors.primary,
                                 )
                               : Text(
@@ -436,7 +441,7 @@ class CourseOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 22),
+          const Margin.vertical(24),
           Semantics(
             label:
                 'Освоено букв: ${controller.knownLetters} из ${controller.totalLetters}',
@@ -453,7 +458,7 @@ class CourseOverview extends StatelessWidget {
                       backgroundColor: UIColors.backgroundShapes1,
                     ),
                   ),
-                  const SizedBox(width: 9),
+                  const Margin.horizontal(8),
                   Flexible(
                     child: Text.rich(
                       TextSpan(
@@ -474,7 +479,7 @@ class CourseOverview extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 13),
+          const Margin.vertical(12),
           Text(
             controller.hasStarted
                 ? 'букв освоено\nВсе темы и знания'
@@ -503,7 +508,7 @@ class CourseOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
+          const Margin.vertical(12),
           if (nextAtom != null)
             ExcludeSemantics(
               child: SizedBox(
@@ -517,14 +522,14 @@ class CourseOverview extends StatelessWidget {
             )
           else
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 9),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Icon(
                 Icons.check_circle_outline_rounded,
                 color: UIColors.primary,
                 size: 28,
               ),
             ),
-          const SizedBox(height: 5),
+          const Margin.vertical(4),
           Text(
             upcoming?.topic.title ??
                 (controller.allDone ? 'Весь курс знаком' : 'Закрепляем знания'),
@@ -533,7 +538,7 @@ class CourseOverview extends StatelessWidget {
               height: 1.25,
             ),
           ),
-          const SizedBox(height: 7),
+          const Margin.vertical(8),
           Text(
             upcoming == null
                 ? 'Возвращайтесь к темам\nи закрепляйте знания'
@@ -551,7 +556,7 @@ class CourseOverview extends StatelessWidget {
             MediaQuery.textScalerOf(context).scale(14) > 20) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [path, const SizedBox(height: 12), next],
+            children: [path, const Margin.vertical(12), next],
           );
         }
         return IntrinsicHeight(
@@ -559,7 +564,7 @@ class CourseOverview extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: path),
-              const SizedBox(width: 8),
+              const Margin.horizontal(8),
               Expanded(child: next),
             ],
           ),

@@ -212,7 +212,7 @@ class _ResultSheetState extends State<_ResultSheet>
 
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         decoration: BoxDecoration(
           color: UIColors.cardBackground,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -228,26 +228,26 @@ class _ResultSheetState extends State<_ResultSheet>
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const SizedBox(height: 16),
+            const Margin.vertical(16),
             Icon(
               correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
               size: 41,
               color: correct ? UIColors.primary : UIColors.text,
             ),
-            const SizedBox(height: 12),
+            const Margin.vertical(12),
             Text(
               title,
               style: UITextStyles.cardTitle,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const Margin.vertical(8),
             Text(
               text,
               style: UITextStyles.regularText,
               textAlign: TextAlign.center,
             ),
             if (correct) ...[
-              const SizedBox(height: 16),
+              const Margin.vertical(16),
               AnimatedBuilder(
                 animation: _autoAdvanceController!,
                 builder: (context, _) {
@@ -264,7 +264,7 @@ class _ResultSheetState extends State<_ResultSheet>
                           'Далее автоматически через $secondsLeft сек.',
                           style: UITextStyles.hint,
                         ),
-                        const SizedBox(height: 8),
+                        const Margin.vertical(8),
                         LessonProgressBar(value: progress, height: 8),
                       ],
                     ),
@@ -272,7 +272,7 @@ class _ResultSheetState extends State<_ResultSheet>
                 },
               ),
             ],
-            const SizedBox(height: 20),
+            const Margin.vertical(24),
             SizedBox(
               width: double.infinity,
               child: NextButton(
@@ -348,7 +348,7 @@ class _BottomBar extends GetView<LessonController> {
                       onTap: () => controller.submitStub(correct: true),
                     ),
                   ),
-                  const Margin.horizontal(10),
+                  const Margin.horizontal(8),
                   Expanded(
                     child: NextButton(
                       title: 'Ошибиться',
@@ -406,7 +406,7 @@ class _DebugAction extends StatelessWidget {
     behavior: HitTestBehavior.opaque,
     onTap: onTap,
     child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Text(text, style: UITextStyles.hint),
     ),
   );
@@ -433,7 +433,7 @@ class _TracingBar extends GetView<LessonController> {
           behavior: HitTestBehavior.opaque,
           onTap: controller.giveUpTracing,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 8, top: 6),
+            padding: const EdgeInsets.only(bottom: 8, top: 8),
             child: Text('Не помню, показать', style: UITextStyles.hint),
           ),
         ),
@@ -466,7 +466,7 @@ class _RecordBar extends GetView<LessonController> {
                     behavior: HitTestBehavior.opaque,
                     onTap: controller.skipExercise,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Продолжить без произношения',
                         style: UITextStyles.hint,
@@ -477,7 +477,7 @@ class _RecordBar extends GetView<LessonController> {
                     behavior: HitTestBehavior.opaque,
                     onTap: controller.optOutOfPronunciation,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Больше не предлагать произношение',
                         style: UITextStyles.hint,
@@ -996,7 +996,7 @@ class _StubTask extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
         borderRadius: 20,
@@ -1124,7 +1124,7 @@ class _LearnedChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
         borderRadius: 16,
@@ -1134,7 +1134,7 @@ class _LearnedChip extends StatelessWidget {
         children: [
           if (atom.kind != AtomKind.concept) ...[
             _Glyph(atom: atom, size: 28),
-            const Margin.horizontal(10),
+            const Margin.horizontal(8),
           ],
           Text(atom.label, style: UITextStyles.semiboldText),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/inner_shadow.dart';
+import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 
 /// Кнопка перехода к следующему шагу. Стиль один в один с макетом: градиент
 /// сверху вниз, мягкая многослойная тень под кнопкой и две внутренние тени —
@@ -86,7 +87,7 @@ class NextButton extends StatelessWidget {
                   children: [
                     if (icon != null) ...[
                       Icon(icon, size: 20, color: UIColors.primaryButtonText),
-                      const SizedBox(width: 10),
+                      const Margin.horizontal(8),
                     ],
                     Flexible(
                       child: Text(
@@ -96,7 +97,7 @@ class NextButton extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                           height: 1.2,
-                          color: UIColors.primaryButtonText ,
+                          color: UIColors.primaryButtonText,
                         ),
                       ),
                     ),
