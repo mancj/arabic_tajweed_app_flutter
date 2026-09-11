@@ -14,7 +14,7 @@ import '../helpers/plugin_mocks.dart';
 
 /// Промахи считает сам холст и после серии показывает, как пишется. Для
 /// урока это подсказка, а не ошибка: человек обводит по контуру, и собранная
-/// буква засчитывается верным ответом. См. SPEC.md §5.
+/// буква сразу засчитывается верным ответом с окном успеха. См. SPEC.md §5.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ProgressDatabase db;
@@ -68,9 +68,13 @@ void main() {
     while (c.stage.value != LessonStage.finished) {
       if (c.stage.value == LessonStage.intro) {
         await tester.runAsync(c.nextIntro);
+      } else if (c.card.value != null) {
+        await tester.runAsync(c.dismissCard);
       } else {
         if (c.isTracingTask) break;
         await tester.runAsync(c.answerCorrectly);
+        await settle(tester);
+        await tester.tap(find.text('Продолжить'));
       }
       await settle(tester);
     }
@@ -83,24 +87,25 @@ void main() {
   ) async {
     final c = await openAtTracing(tester);
     final before = c.current;
+    expect(find.text('Готово'), findsNothing);
     c.onTracingRevealed();
     await settle(tester);
     expect(c.wasWrong.value, isFalse, reason: 'разбора с кнопкой «Ясно» нет');
     expect(c.tracingHint.value, 'Обведите по подсказке');
 
     // Человек обвёл по контуру: холст собрал букву — ответ верный.
-    c.onTracingMerged();
-    expect(c.canSubmit, isTrue);
-    await c.submit();
+    await c.onTracingMerged();
     await settle(tester);
     expect(c.wasWrong.value, isFalse);
     expect(c.wasCorrect.value, isTrue);
+    expect(find.text('Верно!'), findsOneWidget);
+    expect(find.text('Продолжить'), findsOneWidget);
     expect(
       c.current,
       same(before),
       reason: 'результат показывается до перехода',
     );
-    await c.submit();
+    await tester.tap(find.text('Продолжить'));
     await settle(tester);
     expect(c.current, isNot(same(before)), reason: 'урок пошёл дальше');
   });

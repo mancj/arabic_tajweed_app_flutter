@@ -413,9 +413,9 @@ class _DebugAction extends StatelessWidget {
 
 /// Нижняя панель заданий на письмо.
 ///
-/// Части засчитываются сами, поэтому кнопка только подтверждает готовое.
-/// По памяти рядом стоит выход для того, кто букву не вспомнил; по контуру
-/// он не нужен — буква и так перед глазами.
+/// В обводке после последней части сразу открывается результат, поэтому
+/// нижняя кнопка не нужна. Письмо по памяти сохраняет явное подтверждение
+/// и выход для того, кто букву не вспомнил.
 class _TracingBar extends GetView<LessonController> {
   const _TracingBar({required this.mode});
 
@@ -423,18 +423,20 @@ class _TracingBar extends GetView<LessonController> {
 
   @override
   Widget build(BuildContext context) {
+    if (mode == ExerciseMode.trace) {
+      return const SizedBox.shrink();
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (mode == ExerciseMode.traceFromMemory)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: controller.giveUpTracing,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8, top: 6),
-              child: Text('Не помню, показать', style: UITextStyles.hint),
-            ),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: controller.giveUpTracing,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8, top: 6),
+            child: Text('Не помню, показать', style: UITextStyles.hint),
           ),
+        ),
         SizedBox(
           width: double.infinity,
           child: Obx(

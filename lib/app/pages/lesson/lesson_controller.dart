@@ -795,10 +795,16 @@ class LessonController extends GetxController {
         : 'Нарисуйте: ${progress.nextLabel ?? 'букву'}';
   }
 
-  void onTracingMerged() {
+  /// В обводке последняя часть означает, что холст уже полностью проверил
+  /// букву: отдельное подтверждение кнопкой не нужно. Письмо по памяти
+  /// сохраняет своё явное подтверждение.
+  Future<void> onTracingMerged() async {
     if (wasWrong.value) return;
     tracingDone.value = true;
     tracingHint.value = 'Буква собрана';
+    if (current?.mode == ExerciseMode.trace) {
+      await submit(directOutcome: true);
+    }
   }
 
   /// Холст сам показал, как пишется, после серии промахов, см.
