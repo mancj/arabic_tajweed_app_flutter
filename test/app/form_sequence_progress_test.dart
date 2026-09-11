@@ -109,5 +109,30 @@ void main() {
     expect(results[placed[1].id], isFalse);
     expect(results[placed[2].id], isFalse);
     expect(results[placed[3].id], isTrue);
+    expect(controller.formSequenceCorrectCount, 2);
+    expect(controller.formSequenceSlotResults, [true, false, false, true]);
+    expect(controller.formSequenceInitialPlaced, [
+      placed[0],
+      null,
+      null,
+      placed[3],
+    ]);
+    expect(controller.revealFormSequenceAnswer, isFalse);
+  });
+
+  test('третья ошибка включает краткий показ правильного порядка', () async {
+    final controller = await openOldRepeat();
+    final placed = correctOrder(controller);
+    final swapped = [...placed]..swap(1, 2);
+
+    for (var mistake = 1; mistake <= 3; mistake++) {
+      await controller.submitFormSequence(swapped);
+      expect(
+        controller.revealFormSequenceAnswer,
+        mistake == 3,
+        reason: 'подсказка на ошибке $mistake',
+      );
+      if (mistake < 3) await controller.submit();
+    }
   });
 }

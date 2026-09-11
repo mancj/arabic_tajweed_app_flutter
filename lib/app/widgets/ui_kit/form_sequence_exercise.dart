@@ -72,12 +72,24 @@ class FormSequenceExercise extends StatefulWidget {
   const FormSequenceExercise({
     required this.options,
     required this.onCompleted,
+    this.initialPlaced = const [],
+    this.slotResults,
+    this.revealCorrectOrder = false,
     this.motion = const FormSequenceMotion(),
     super.key,
-  });
+  }) : assert(
+         initialPlaced.length == 0 ||
+             initialPlaced.length == LetterForm.values.length,
+       ),
+       assert(
+         slotResults == null || slotResults.length == LetterForm.values.length,
+       );
 
   final List<Atom> options;
   final ValueChanged<List<Atom>> onCompleted;
+  final List<Atom?> initialPlaced;
+  final List<bool>? slotResults;
+  final bool revealCorrectOrder;
   final FormSequenceMotion motion;
 
   @override
@@ -86,7 +98,8 @@ class FormSequenceExercise extends StatefulWidget {
 
 class _FormSequenceExerciseState extends State<FormSequenceExercise>
     with TickerProviderStateMixin {
-  final _placed = List<Atom?>.filled(_positions.length, null);
+  late final List<Atom?> _placed;
+  late final Set<int> _lockedPositions;
   final _tileAnchors = <String, GlobalKey>{};
   final _tileSnapshots = <String, ui.Image>{};
   late final List<GlobalKey> _slotAnchors;
@@ -98,17 +111,49 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
   String? _landingTarget;
   int _landingRevision = 0;
   bool _completed = false;
+  bool _revealingAnswer = false;
+  Timer? _answerRevealTimer;
 
   @override
   void initState() {
     super.initState();
+    _placed = widget.initialPlaced.isEmpty
+        ? List.filled(_positions.length, null)
+        : List.of(widget.initialPlaced);
+    _lockedPositions = {
+      for (final (index, atom) in _placed.indexed)
+        if (atom != null) index,
+    };
     _slotAnchors = List.generate(_positions.length, (_) => GlobalKey());
     _landingSound = SingleSoundEffect(assetPath: 'audio/crispy_click.m4a');
     unawaited(_landingSound.init());
+    if (widget.revealCorrectOrder) _startAnswerReveal();
+  }
+
+  void _startAnswerReveal() {
+    _revealingAnswer = true;
+    _lockedPositions.clear();
+    for (final (index, position) in _positions.indexed) {
+      _placed[index] = widget.options.firstWhere(
+        (atom) => atom.form == position,
+      );
+    }
+    _answerRevealTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() {
+        _placed.fillRange(0, _placed.length, null);
+        _revealingAnswer = false;
+      });
+    });
   }
 
   Future<void> _place(Atom atom) async {
-    if (_completed || _interactionLocked || _placed.contains(atom)) return;
+    if (_completed ||
+        _revealingAnswer ||
+        _interactionLocked ||
+        _placed.contains(atom)) {
+      return;
+    }
     final activeIndex = _placed.indexWhere((placed) => placed == null);
     if (activeIndex == -1) return;
 
@@ -176,7 +221,13 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
 
   Future<void> _remove(int index) async {
     final atom = _placed[index];
-    if (_completed || _interactionLocked || atom == null) return;
+    if (_completed ||
+        _revealingAnswer ||
+        _interactionLocked ||
+        _lockedPositions.contains(index) ||
+        atom == null) {
+      return;
+    }
 
     _lockInteractions();
     final tileAnchor = _tileAnchors[atom.id];
@@ -453,6 +504,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
 
   @override
   void dispose() {
+    _answerRevealTimer?.cancel();
     for (final entry in _flightOverlays) {
       if (entry.mounted) entry.remove();
       entry.dispose();
@@ -488,8 +540,16 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
                     position: position,
                     anchorKey: _slotAnchors[index],
                     atom: _placed[index],
-                    active: index == activeIndex && !_completed,
-                    onTap: () => _remove(index),
+                    active:
+                        index == activeIndex &&
+                        !_completed &&
+                        !_revealingAnswer,
+                    locked: _lockedPositions.contains(index),
+                    result: widget.slotResults?[index],
+                    revealingAnswer: _revealingAnswer,
+                    onTap: _lockedPositions.contains(index)
+                        ? null
+                        : () => _remove(index),
                   ),
                 ),
               ),
@@ -497,7 +557,15 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
           ],
         ),
         const SizedBox(height: 16),
-        Text('Выберите форму для выделенного слота', style: UITextStyles.hint),
+        Text(
+          _revealingAnswer
+              ? 'Запомните правильный порядок'
+              : 'Выберите форму для выделенного слота',
+          key: ValueKey(
+            _revealingAnswer ? 'form-answer-reveal' : 'form-instruction',
+          ),
+          style: UITextStyles.hint,
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -552,6 +620,9 @@ class _FormSlot extends StatelessWidget {
     required this.position,
     required this.atom,
     required this.active,
+    required this.locked,
+    required this.result,
+    required this.revealingAnswer,
     required this.onTap,
   });
 
@@ -559,7 +630,10 @@ class _FormSlot extends StatelessWidget {
   final LetterForm position;
   final Atom? atom;
   final bool active;
-  final VoidCallback onTap;
+  final bool locked;
+  final bool? result;
+  final bool revealingAnswer;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -569,17 +643,28 @@ class _FormSlot extends StatelessWidget {
       position: position,
       atom: placedAtom,
       active: active,
+      feedback: revealingAnswer || locked
+          ? _FormSlotFeedback.correct
+          : switch (result) {
+              true => _FormSlotFeedback.correct,
+              false => _FormSlotFeedback.wrong,
+              null => _FormSlotFeedback.none,
+            },
     );
     return RepaintBoundary(
       key: anchorKey,
       child: Semantics(
         label: 'Слот: ${position.title}',
-        hint: placedAtom == null ? null : 'Нажмите, чтобы убрать форму',
+        hint: placedAtom == null
+            ? null
+            : locked
+            ? 'Форма уже на правильном месте'
+            : 'Нажмите, чтобы убрать форму',
         selected: active,
-        button: placedAtom != null,
-        child: placedAtom == null
+        button: placedAtom != null && onTap != null,
+        child: placedAtom == null || onTap == null
             ? slot
-            : AppGestureDetector(onTap: onTap, child: slot),
+            : AppGestureDetector(onTap: onTap!, child: slot),
       ),
     );
   }
@@ -590,25 +675,35 @@ class _FormSlotSurface extends StatelessWidget {
     required this.position,
     required this.atom,
     required this.active,
+    this.feedback = _FormSlotFeedback.none,
     super.key,
   });
 
   final LetterForm position;
   final Atom? atom;
   final bool active;
+  final _FormSlotFeedback feedback;
 
   @override
   Widget build(BuildContext context) {
+    final feedbackColor = switch (feedback) {
+      _FormSlotFeedback.correct => UIColors.success,
+      _FormSlotFeedback.wrong => UIColors.error,
+      _FormSlotFeedback.none => null,
+    };
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       height: 108,
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
       decoration: SquircleBorders.squircleBorder(
-        color: active ? UIColors.primary10 : UIColors.cardBackground,
+        color:
+            feedbackColor?.withValues(alpha: .12) ??
+            (active ? UIColors.primary10 : UIColors.cardBackground),
         borderRadius: 18,
         borderSide: BorderSide(
-          color: active ? UIColors.primary : UIColors.borders,
-          width: active ? 2 : 1,
+          color:
+              feedbackColor ?? (active ? UIColors.primary : UIColors.borders),
+          width: active || feedbackColor != null ? 2 : 1,
         ),
         shadows: active
             ? [
@@ -649,11 +744,25 @@ class _FormSlotSurface extends StatelessWidget {
                   )
                 : _Glyph(atom!.display),
           ),
+          if (feedback != _FormSlotFeedback.none)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Icon(
+                feedback == _FormSlotFeedback.correct
+                    ? Icons.check_circle_rounded
+                    : Icons.cancel_rounded,
+                key: ValueKey('form-slot-${feedback.name}-${position.name}'),
+                size: 16,
+                color: feedbackColor,
+              ),
+            ),
         ],
       ),
     );
   }
 }
+
+enum _FormSlotFeedback { none, correct, wrong }
 
 class _FormTile extends StatelessWidget {
   const _FormTile({

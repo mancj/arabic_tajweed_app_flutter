@@ -32,6 +32,8 @@ class UIColors {
     primaryButtonHighlight: Color(0xFFE66E37),
     primaryButtonShadow: Color(0xFFA04823),
     circleButtonBottom: Color(0xFFF19D77),
+    success: Color(0xFF2E9D61),
+    error: Color(0xFFD94F4F),
     badgeText1: Color(0xFFFFFFFF),
     badgeText2: Color(0xFF0C233E),
   );
@@ -61,6 +63,8 @@ class UIColors {
     primaryButtonHighlight: Color(0xFFE66E37),
     primaryButtonShadow: Color(0xFFA04823),
     circleButtonBottom: Color(0xFFF19D77),
+    success: Color(0xFF54C887),
+    error: Color(0xFFFF7777),
     badgeText1: Color(0xFF0C233E),
     badgeText2: Color(0xFFFFFFFF),
   );
@@ -95,6 +99,8 @@ class UIColors {
   static Color get primaryButtonHighlight => _active.primaryButtonHighlight;
   static Color get primaryButtonShadow => _active.primaryButtonShadow;
   static Color get circleButtonBottom => _active.circleButtonBottom;
+  static Color get success => _active.success;
+  static Color get error => _active.error;
   static Color get badgeText1 => _active.badgeText1;
   static Color get primaryButtonText => _active.primaryButtonText;
   static Color get badgeText2 => _active.badgeText2;
@@ -138,6 +144,8 @@ class UIColorPalette {
   final Color primaryButtonHighlight;
   final Color primaryButtonShadow;
   final Color circleButtonBottom;
+  final Color success;
+  final Color error;
   final Color primaryButtonText = const Color(0xFFFFFFFF);
   final Color badgeText1;
   final Color badgeText2;
@@ -177,6 +185,8 @@ class UIColorPalette {
     required this.primaryButtonHighlight,
     required this.primaryButtonShadow,
     required this.circleButtonBottom,
+    required this.success,
+    required this.error,
     required this.badgeText1,
     required this.badgeText2,
   });

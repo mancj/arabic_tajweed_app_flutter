@@ -200,7 +200,11 @@ class _ResultSheetState extends State<_ResultSheet>
         : isPronunciation && check != null
         ? 'Услышано: ${check.heard}. Это буква $label.'
         : isFormSequence
-        ? 'Проверьте порядок форм и попробуйте ещё раз.'
+        ? controller.revealFormSequenceAnswer
+              ? 'Правильно ${controller.formSequenceCorrectCount} из 4. '
+                    'Сейчас покажем весь порядок, затем соберите его сами.'
+              : 'Правильно ${controller.formSequenceCorrectCount} из 4. '
+                    'Верные формы останутся на своих местах.'
         : exercise?.mode.isTracing == true
         ? 'Попробуйте написать букву $label ещё раз.'
         : 'Правильный ответ: $label.';
@@ -719,6 +723,11 @@ class _ExerciseBlock extends GetView<LessonController> {
                 '${controller.formSequenceAttempt.value}',
               ),
               options: exercise.options,
+              initialPlaced: controller.formSequenceInitialPlaced,
+              slotResults: controller.wasWrong.value
+                  ? controller.formSequenceSlotResults
+                  : null,
+              revealCorrectOrder: controller.revealFormSequenceAnswer,
               onCompleted: controller.submitFormSequence,
             )
           else if (exercise.isChoice)

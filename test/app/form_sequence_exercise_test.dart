@@ -5,7 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Защищает механику режима форм: будущая правка плиток не должна вернуть
 // проверку после каждого тапа, нарушить арабский порядок слотов справа налево,
-// порядок их заполнения или запускать отклик цели только после исчезновения
+// порядок их заполнения, потерять верные позиции между попытками, убрать
+// поэтапную подсказку или запускать отклик цели только после исчезновения
 // летящей плитки.
 void main() {
   final isolated = _form('isolated', 'ب', LetterForm.isolated);
@@ -257,6 +258,125 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 220));
     expect(answer, [finalForm, isolated, initial, medial]);
+  });
+
+  testWidgets('после ошибки слоты показывают правильность каждой формы', (
+    tester,
+  ) async {
+    const exerciseKey = ValueKey('feedback-sequence');
+    const results = [true, false, false, true];
+
+    Widget exercise({List<bool>? slotResults}) => MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 288,
+          child: FormSequenceExercise(
+            key: exerciseKey,
+            options: [finalForm, isolated, initial, medial],
+            slotResults: slotResults,
+            onCompleted: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(exercise());
+    for (final id in ['isolated', 'medial', 'initial', 'final']) {
+      await tester.tap(find.byKey(ValueKey('form-tile-$id')));
+      await tester.pumpAndSettle();
+    }
+    await tester.pumpWidget(exercise(slotResults: results));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('form-slot-correct-isolated')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('form-slot-wrong-initial')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('form-slot-wrong-medial')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('form-slot-correct-finalForm')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('верные формы закрепляются, а ошибочные собираются заново', (
+    tester,
+  ) async {
+    List<Atom>? answer;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 288,
+            child: FormSequenceExercise(
+              options: [finalForm, isolated, initial, medial],
+              initialPlaced: [isolated, null, null, finalForm],
+              onCompleted: (placed) => answer = placed,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('form-slot-isolated')));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('form-slot-isolated')),
+        matching: find.text('ب'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('form-tile-initial')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('form-tile-medial')));
+    await tester.pumpAndSettle();
+    expect(answer, [isolated, initial, medial, finalForm]);
+  });
+
+  testWidgets('после третьей ошибки ответ показывается и очищается', (
+    tester,
+  ) async {
+    List<Atom>? answer;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 288,
+            child: FormSequenceExercise(
+              options: [finalForm, isolated, initial, medial],
+              initialPlaced: [isolated, null, null, finalForm],
+              revealCorrectOrder: true,
+              onCompleted: (placed) => answer = placed,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('form-answer-reveal')), findsOneWidget);
+    expect(find.text('?'), findsNothing);
+    expect(find.byIcon(Icons.check_circle_rounded), findsNWidgets(4));
+
+    await tester.pump(const Duration(milliseconds: 1999));
+    expect(find.byKey(const ValueKey('form-answer-reveal')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.byKey(const ValueKey('form-instruction')), findsOneWidget);
+    expect(find.text('?'), findsNWidgets(4));
+
+    for (final id in ['isolated', 'initial', 'medial', 'final']) {
+      await tester.tap(find.byKey(ValueKey('form-tile-$id')));
+      await tester.pumpAndSettle();
+    }
+    expect(answer, [isolated, initial, medial, finalForm]);
   });
 }
 

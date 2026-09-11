@@ -98,9 +98,18 @@ class LessonController extends GetxController {
   final selected = Rxn<int>();
   final wasWrong = false.obs;
 
-  /// Номер попытки в задании с четырьмя формами. После разбора ошибки виджет
-  /// получает новый ключ и снова начинает с первого слота.
+  /// Номер ошибки в задании с четырьмя формами. После разбора виджет получает
+  /// новый ключ и начинает следующую попытку с сохранёнными подсказками.
   final formSequenceAttempt = 0.obs;
+  List<bool>? _formSequenceSlotResults;
+  List<Atom?> _formSequenceInitialPlaced = const [];
+  bool _revealFormSequenceAnswer = false;
+
+  List<bool>? get formSequenceSlotResults => _formSequenceSlotResults;
+  List<Atom?> get formSequenceInitialPlaced => _formSequenceInitialPlaced;
+  bool get revealFormSequenceAnswer => _revealFormSequenceAnswer;
+  int get formSequenceCorrectCount =>
+      _formSequenceSlotResults?.where((result) => result).length ?? 0;
 
   /// Правильный ответ показывается до перехода, чтобы человек успел увидеть
   /// результат и понять, что именно засчиталось.
@@ -492,11 +501,19 @@ class LessonController extends GetxController {
 
   void _showExercise() {
     _shownAt = DateTime.now();
+    _resetFormSequenceHelp();
     _refresh.value++;
     _syncCard();
     _syncTracing();
     _syncPronunciation();
     stage.value = LessonStage.exercise;
+  }
+
+  void _resetFormSequenceHelp() {
+    formSequenceAttempt.value = 0;
+    _formSequenceSlotResults = null;
+    _formSequenceInitialPlaced = const [];
+    _revealFormSequenceAnswer = false;
   }
 
   /// После первого произношения продолжаем знакомство с остальными буквами.
@@ -851,6 +868,18 @@ class LessonController extends GetxController {
     final correct =
         atomResults.length == expected.length &&
         atomResults.values.every((value) => value);
+    final slotResults = [
+      for (final (index, position) in expected.indexed)
+        index < placed.length && placed[index].form == position,
+    ];
+    _formSequenceSlotResults = correct ? null : List.unmodifiable(slotResults);
+    _formSequenceInitialPlaced = correct
+        ? const []
+        : List.unmodifiable([
+            for (final (index, atom) in placed.indexed)
+              slotResults[index] ? atom : null,
+          ]);
+    _revealFormSequenceAnswer = !correct && formSequenceAttempt.value == 2;
     selected.value = correct
         ? exercise.answerIndex
         : (exercise.answerIndex + 1) % exercise.options.length;
