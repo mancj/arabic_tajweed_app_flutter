@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Защищает механику режима форм: будущая правка плиток не должна вернуть
-// проверку после каждого тапа, нарушить порядок заполнения четырёх слотов или
-// запускать отклик цели только после исчезновения летящей плитки.
+// проверку после каждого тапа, нарушить арабский порядок слотов справа налево,
+// порядок их заполнения или запускать отклик цели только после исчезновения
+// летящей плитки.
 void main() {
   final isolated = _form('isolated', 'ب', LetterForm.isolated);
   final initial = _form('initial', 'بـ', LetterForm.initial);
@@ -21,6 +22,35 @@ void main() {
     expect(motion.timeAt(.8), const Duration(milliseconds: 1600));
     expect(motion.durationBetween(.9, 1), const Duration(milliseconds: 200));
     expect(motion.interactionLockDuration, const Duration(milliseconds: 700));
+  });
+
+  testWidgets('позиции форм идут справа налево', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 288,
+            child: FormSequenceExercise(
+              options: [finalForm, isolated, initial, medial],
+              onCompleted: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final centers = LetterForm.values
+        .map(
+          (form) => tester
+              .getCenter(find.byKey(ValueKey('form-slot-${form.name}')))
+              .dx,
+        )
+        .toList();
+
+    expect(
+      centers,
+      orderedEquals(centers.toList()..sort((a, b) => b.compareTo(a))),
+    );
   });
 
   testWidgets('блокировка тапов заканчивается на заданной доле анимации', (

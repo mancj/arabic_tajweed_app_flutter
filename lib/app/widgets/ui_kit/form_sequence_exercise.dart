@@ -476,6 +476,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
+          textDirection: TextDirection.rtl,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final (index, position) in _positions.indexed) ...[
