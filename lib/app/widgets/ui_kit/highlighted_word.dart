@@ -113,6 +113,7 @@ class _Painter extends CustomPainter {
             fontFamily: UITextStyles.fontScheherazadeNew,
             fontSize: fontSize,
             color: color,
+            height: 1,
           ),
         ),
         textDirection: TextDirection.rtl,

@@ -698,14 +698,11 @@ class _FormsOverviewCard extends StatelessWidget {
         const Margin.vertical(16),
         RuleCard(
           badge: 'Соединение',
-          title: 'Все формы буквы ${isolated?.label ?? ''}',
+          title: 'Все формы буквы ${isolated?.display ?? ''}',
           text:
-              'Сначала посмотрите на букву целиком. Дальше разберём '
-              'каждую форму отдельно и увидим её в слове.',
-          child: SizedBox(
-            height: 112,
-            child: LetterFormsOverview(forms: forms),
-          ),
+              'Посмотрите на формы и примеры в словах. Дальше разберём '
+              'каждую форму отдельно.',
+          child: LetterFormsOverview(forms: forms),
         ),
       ],
     );
@@ -850,7 +847,9 @@ class _QuestionFor extends GetView<LessonController> {
                 onPressed: controller.revealName,
                 child: Text(
                   'Не слышно? Показать название',
-                  style: UITextStyles.regular14,
+                  style: UITextStyles.regular14.copyWith(
+                    fontFamily: UITextStyles.fontJetBrainsMono,
+                  ),
                 ),
               ),
           ],

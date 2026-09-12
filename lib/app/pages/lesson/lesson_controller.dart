@@ -732,9 +732,9 @@ class LessonController extends GetxController {
 
   static const _formsOverviewOrder = [
     LetterForm.isolated,
-    LetterForm.finalForm,
     LetterForm.initial,
     LetterForm.medial,
+    LetterForm.finalForm,
   ];
 
   void _nextCard() {

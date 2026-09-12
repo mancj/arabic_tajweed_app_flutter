@@ -419,7 +419,9 @@ void main() {
       }
     });
 
-    test('интервальный повтор сворачивает семейство в одну сборку', () {
+    /// Полное семейство в старом материале должно проверяться двумя разными
+    /// умениями, а не превращать хвост урока в одни плитки.
+    test('интервальный повтор даёт узнавание буквы и сборку её форм', () {
       const learned = AtomProgress(
         state: AtomState.known,
         hadActiveSuccess: true,
@@ -427,15 +429,25 @@ void main() {
       );
       final oldCtx = ctxOf({
         for (final atom in [ba, baFinal, baInitial, baMedial]) atom.id: learned,
+        for (final atom in [ta, tha]) atom.id: introduced,
       });
       final plan = planOf(
         spaced: [ba.id, baFinal.id, baInitial.id, baMedial.id],
       );
 
       final exercises = gen().build(plan: plan, ctx: oldCtx, sessionId: 2);
-      expect(exercises, hasLength(1));
-      expect(exercises.single.mode, ExerciseMode.positionToForm);
-      expect(exercises.single.resultAtoms.map((atom) => atom.id).toSet(), {
+      expect(exercises.map((exercise) => exercise.mode), [
+        ExerciseMode.soundToLetter,
+        ExerciseMode.positionToForm,
+      ]);
+      final recognition = exercises.first;
+      expect(recognition.atom, ba);
+      expect(recognition.options, hasLength(3));
+      expect(recognition.options.map((atom) => atom.form).toSet(), {
+        LetterForm.isolated,
+      });
+      final sequence = exercises.last;
+      expect(sequence.resultAtoms.map((atom) => atom.id).toSet(), {
         ba.id,
         baFinal.id,
         baInitial.id,

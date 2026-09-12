@@ -147,7 +147,7 @@ void main() {
       find.byKey(ValueKey('forms-overview-${detail.letterId}')),
       findsOneWidget,
     );
-    expect(find.text('Все формы буквы ${forms.first.label}'), findsOneWidget);
+    expect(find.text('Все формы буквы ${forms.first.display}'), findsOneWidget);
 
     await tester.tap(find.text('Понятно'));
     await settle(tester);

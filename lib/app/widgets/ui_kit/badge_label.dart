@@ -23,7 +23,13 @@ class BadgeLabel extends StatelessWidget {
         color: color,
         borderRadius: 13,
       ),
-      child: Text(text, style: UITextStyles.badge.copyWith(color: textColor)),
+      child: Text(
+        text,
+        style: UITextStyles.badge.copyWith(
+          color: textColor,
+          fontFamily: UITextStyles.fontJetBrainsMono,
+        ),
+      ),
     );
   }
 }

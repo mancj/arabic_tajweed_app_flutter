@@ -196,9 +196,9 @@ void main() {
                 ? [LetterForm.isolated, LetterForm.finalForm]
                 : [
                     LetterForm.isolated,
-                    LetterForm.finalForm,
                     LetterForm.initial,
                     LetterForm.medial,
+                    LetterForm.finalForm,
                   ],
           );
           final logLength = (await database.readAll()).length;

@@ -116,6 +116,7 @@ class UITextStyles {
     fontSize: 22,
     fontWeight: FontWeight.w600,
     fontFamily: fontOnest,
+    fontFamilyFallback: const [fontDGFaseh],
   );
 
   /// Тело правила: в макете набрано засечками, кегль и интерлиньяж оттуда же.

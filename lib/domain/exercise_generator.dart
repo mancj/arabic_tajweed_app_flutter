@@ -74,6 +74,7 @@ class ExerciseGenerator {
           .where((atom) => (previousCounts[atom.id] ?? 0) < _maxPerAtom)
           .toList(),
       ctx,
+      pool,
       previousFormSequences,
     );
 
@@ -125,6 +126,7 @@ class ExerciseGenerator {
         focused: plan.isFocusedReview,
         isRequired: scheduled.isRequired,
         forceFormSequence: scheduled.forceFormSequence,
+        forceSoundToLetter: scheduled.forceSoundToLetter,
         allowPronunciation: !unavailableModes.contains(ExerciseMode.sayName),
       );
       if (ex != null) exercises.add(ex);
@@ -170,12 +172,12 @@ class ExerciseGenerator {
     final required = {...remaining};
     final requiredCount = remaining.values.sum;
     final reserved = min(
-      min(rules.reviewPerSession, spaced.atoms.length),
+      min(rules.reviewPerSession, spaced.slotCount),
       max(0, taskLimit - requiredCount),
     );
     final forTopic = max(0, taskLimit - reserved);
     var available = forTopic - remaining.values.sum;
-    if (remaining.isEmpty && spaced.atoms.isEmpty) return const [];
+    if (remaining.isEmpty && spaced.items.isEmpty) return const [];
 
     // Новым небазовым формам тоже даём три встречи, если есть место.
     for (final atom in fresh.where(remaining.containsKey)) {
@@ -199,7 +201,7 @@ class ExerciseGenerator {
         : reviewCounts.isNotEmpty
         ? remaining.values.sum
         : min(forTopic, perAtomCaps.values.sum);
-    final spacedSlots = spaced.atoms.take(taskLimit - cap).toList();
+    final spacedSlots = spaced.takeSlots(taskLimit - cap);
 
     // Добираем тематический блок по кругу, пока не упрёмся в его потолок.
     final atoms = remaining.keys.toList();
@@ -255,33 +257,19 @@ class ExerciseGenerator {
           LetterForm.medial,
         ])
           ...?byForm[form],
-        ...spacedSlots.map(
-          (atom) => _ScheduledAtom(
-            atom,
-            isRequired: true,
-            forceFormSequence: spaced.formSequenceAtomIds.contains(atom.id),
-          ),
-        ),
+        ...spacedSlots,
       ];
     }
-    return [
-      ...result,
-      ...spacedSlots.map(
-        (atom) => _ScheduledAtom(
-          atom,
-          isRequired: true,
-          forceFormSequence: spaced.formSequenceAtomIds.contains(atom.id),
-        ),
-      ),
-    ];
+    return [...result, ...spacedSlots];
   }
 
-  /// Созревшие формы одной старой буквы сворачиваются в одну сборку.
-  /// Она проверяет всё семейство за один слот, поэтому оставлять рядом ещё
-  /// три отдельных задания по тем же формам было бы лишним повторением.
+  /// Созревшие формы старой буквы получают компактную пару: узнавание её
+  /// отдельной формы на слух и сборку всех позиций. Так обе проверки не
+  /// размазываются на четыре одинаковых задания.
   _SpacedReview _prepareSpacedReview(
     List<Atom> candidates,
     CurriculumContext ctx,
+    Set<Atom> pool,
     Set<String> previousFormSequences,
   ) {
     final introducedByLetter = _introducedAtoms(ctx)
@@ -296,8 +284,7 @@ class ExerciseGenerator {
           entry.key,
     };
     final collapsedLetters = <String>{};
-    final formSequenceAtomIds = <String>{};
-    final atoms = <Atom>[];
+    final items = <_SpacedReviewItem>[];
 
     for (final atom in candidates) {
       final letterId = atom.letterId;
@@ -308,15 +295,37 @@ class ExerciseGenerator {
           completeLetters.contains(letterId) &&
           !previousFormSequences.contains(letterId);
       if (!canSequence) {
-        atoms.add(atom);
+        items.add(_SpacedReviewItem(atom));
         continue;
       }
       if (!collapsedLetters.add(letterId)) continue;
-      atoms.add(atom);
-      formSequenceAtomIds.add(atom.id);
+      final isolated = introducedByLetter[letterId]!.firstWhereOrNull(
+        (form) => form.form == LetterForm.isolated,
+      );
+      items.add(
+        _SpacedReviewItem(
+          atom,
+          recognitionAtom:
+              isolated != null && _canRecognizeBySound(isolated, pool)
+              ? isolated
+              : null,
+          forceFormSequence: true,
+        ),
+      );
     }
-    return _SpacedReview(atoms, formSequenceAtomIds);
+    return _SpacedReview(items);
   }
+
+  bool _canRecognizeBySound(Atom atom, Set<Atom> pool) =>
+      pool
+          .where(
+            (candidate) =>
+                candidate.id != atom.id &&
+                candidate.form == atom.form &&
+                candidate.kind == atom.kind,
+          )
+          .length >=
+      _distractorCount;
 
   static bool _drillable(Atom atom) => atom.kind != AtomKind.concept;
 
@@ -340,6 +349,7 @@ class ExerciseGenerator {
     required bool focused,
     required bool isRequired,
     required bool forceFormSequence,
+    required bool forceSoundToLetter,
     required bool allowPronunciation,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
@@ -357,6 +367,16 @@ class ExerciseGenerator {
         isRequired: isRequired,
       );
       if (sequence != null) return sequence;
+    }
+
+    if (forceSoundToLetter) {
+      return _soundToLetterQuestion(
+        atom,
+        pool,
+        level: level,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
     }
 
     // Базовая буква темы обязательно проходит оба вида письма и голос,
@@ -475,8 +495,27 @@ class ExerciseGenerator {
       );
     }
 
-    final picked = _pickDistractors(atom, pool, level);
+    return _soundToLetterQuestion(
+      atom,
+      pool,
+      level: level,
+      isReview: isReview,
+      isRequired: isRequired,
+    );
+  }
 
+  /// Слуховой тест отдельной формы и сборка её семейства идут парой в
+  /// интервальном повторении: первый проверяет связь звука с буквой, вторая —
+  /// понимание всех позиций. Когда вариантов пока не хватает, сохраняем
+  /// обычную безопасную замену на обводку.
+  Exercise _soundToLetterQuestion(
+    Atom atom,
+    List<Atom> pool, {
+    required DistractorLevel level,
+    required bool isReview,
+    required bool isRequired,
+  }) {
+    final picked = _pickDistractors(atom, pool, level);
     // Вариантов не набирается — на старте курса введённых букв просто мало.
     // Вместо пустого урока даём задание без выбора: обводку. Она работает
     // с одной буквой и заодно тренирует воспроизведение, а не узнавание.
@@ -489,7 +528,6 @@ class ExerciseGenerator {
         isRequired: isRequired,
       );
     }
-
     final options = [atom, ...picked.distractors]..shuffle(_random);
     return Exercise(
       atom: atom,
@@ -745,18 +783,60 @@ class _ScheduledAtom {
     this.atom, {
     required this.isRequired,
     this.forceFormSequence = false,
+    this.forceSoundToLetter = false,
   });
 
   final Atom atom;
   final bool isRequired;
   final bool forceFormSequence;
+  final bool forceSoundToLetter;
 }
 
 class _SpacedReview {
-  const _SpacedReview(this.atoms, this.formSequenceAtomIds);
+  const _SpacedReview(this.items);
 
-  final List<Atom> atoms;
-  final Set<String> formSequenceAtomIds;
+  final List<_SpacedReviewItem> items;
+
+  int get slotCount => items.map((item) => item.slotCount).sum;
+
+  List<_ScheduledAtom> takeSlots(int limit) {
+    final scheduled = <_ScheduledAtom>[];
+    for (final item in items) {
+      if (scheduled.length + item.slotCount > limit) continue;
+      final recognition = item.recognitionAtom;
+      if (recognition != null) {
+        scheduled.add(
+          _ScheduledAtom(
+            recognition,
+            isRequired: true,
+            forceSoundToLetter: true,
+          ),
+        );
+      }
+      scheduled.add(
+        _ScheduledAtom(
+          item.atom,
+          isRequired: true,
+          forceFormSequence: item.forceFormSequence,
+        ),
+      );
+    }
+    return scheduled;
+  }
+}
+
+class _SpacedReviewItem {
+  const _SpacedReviewItem(
+    this.atom, {
+    this.recognitionAtom,
+    this.forceFormSequence = false,
+  });
+
+  final Atom atom;
+  final Atom? recognitionAtom;
+  final bool forceFormSequence;
+
+  int get slotCount => recognitionAtom == null ? 1 : 2;
 }
 
 class _Picked {
