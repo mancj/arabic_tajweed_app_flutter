@@ -56,10 +56,10 @@ class RuleCard extends StatelessWidget {
             ),
             const Margin.vertical(8),
           ],
-          Text(title, style: UITextStyles.cardTitle),
+          Text(title, style: UITextStyles.semibold22),
           if (text != null && text.isNotEmpty) ...[
             const Margin.vertical(16),
-            Text(text, style: UITextStyles.ruleBody),
+            Text(text, style: UITextStyles.serifRegular16),
           ],
           if (child != null) ...[
             const Margin.vertical(16),

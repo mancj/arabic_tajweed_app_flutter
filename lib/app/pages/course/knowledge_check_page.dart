@@ -142,7 +142,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
         padding: insets.copyWith(top: insets.top + 24),
         children: [
           if (error != null) ...[
-            Text(error!, style: UITextStyles.regularText),
+            Text(error!, style: UITextStyles.regular17),
             const Margin.vertical(12),
           ],
           if (finished)
@@ -171,7 +171,9 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
           else if (question != null) ...[
             Text(
               'Задание ${index + 1} из ${check.questions.length}',
-              style: UITextStyles.hint,
+              style: UITextStyles.regular12.copyWith(
+                color: UIColors.secondary2,
+              ),
             ),
             const Margin.vertical(12),
             QuestionCard(
@@ -201,12 +203,8 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
                       ? TextDirection.rtl
                       : TextDirection.ltr,
                   style: question.reverse
-                      ? TextStyle(
-                          fontFamily: UITextStyles.fontScheherazadeNew,
-                          fontSize: 32,
-                          color: UIColors.text,
-                        )
-                      : UITextStyles.regularText,
+                      ? UITextStyles.arabicRegular32
+                      : UITextStyles.regular17,
                 ),
               ),
               const Margin.vertical(8),

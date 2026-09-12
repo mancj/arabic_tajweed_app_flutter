@@ -17,9 +17,7 @@ class LetterTabs extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
-  static final _style = TextStyle(
-    fontFamily: UITextStyles.fontScheherazadeNew,
-    fontSize: 22,
+  static final _style = UITextStyles.arabicRegular22.copyWith(
     color: UIColors.secondary2,
   );
 

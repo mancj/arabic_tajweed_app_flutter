@@ -181,8 +181,8 @@ class TracingCard extends StatelessWidget {
                     child: Text(
                       hint,
                       textAlign: TextAlign.center,
-                      style: UITextStyles.hint.copyWith(
-                        fontFamily: UITextStyles.fontJetBrainsMono,
+                      style: UITextStyles.monoRegular12.copyWith(
+                        color: UIColors.secondary2,
                       ),
                     ),
                   ),

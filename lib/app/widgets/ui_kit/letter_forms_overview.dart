@@ -41,11 +41,11 @@ class LetterFormsOverview extends StatelessWidget {
           const Margin.vertical(24),
           Divider(height: 1, color: UIColors.backgroundShapes2),
           const Margin.vertical(8),
-          Text('Примеры слов', style: UITextStyles.cardTitle),
+          Text('Примеры слов', style: UITextStyles.semibold22),
           const Margin.vertical(8),
           Text(
             'Посмотрите, как буква соединяется с соседними буквами в словах:',
-            style: UITextStyles.ruleBody,
+            style: UITextStyles.serifRegular16,
           ),
           const Margin.vertical(8),
           SizedBox(child: _WordExamples(forms: examples)),
@@ -98,9 +98,8 @@ class _WordExample extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: UITextStyles.hint.copyWith(
-            fontFamily: UITextStyles.fontJetBrainsMono,
-            fontSize: 11,
+          style: UITextStyles.monoRegular11.copyWith(
+            color: UIColors.secondary2,
           ),
         ),
         const Margin.vertical(8),
@@ -142,9 +141,8 @@ class _FormTile extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: UITextStyles.hint.copyWith(
-                  fontFamily: UITextStyles.fontJetBrainsMono,
-                  fontSize: 11,
+                style: UITextStyles.monoRegular11.copyWith(
+                  color: UIColors.secondary2,
                 ),
               ),
             ),
@@ -157,12 +155,7 @@ class _FormTile extends StatelessWidget {
               child: Text(
                 atom.display,
                 textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  color: UIColors.text,
-                  fontFamily: UITextStyles.fontScheherazadeNew,
-                  fontSize: 48,
-                  height: 1,
-                ),
+                style: UITextStyles.arabicRegular48Compact,
               ),
             ),
           ),

@@ -92,11 +92,7 @@ class NextButton extends StatelessWidget {
                     Flexible(
                       child: Text(
                         title,
-                        style: TextStyle(
-                          fontFamily: UITextStyles.fontOnest,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          height: 1.2,
+                        style: UITextStyles.semibold16Compact.copyWith(
                           color: UIColors.primaryButtonText,
                         ),
                       ),
@@ -106,11 +102,7 @@ class NextButton extends StatelessWidget {
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: TextStyle(
-                      fontFamily: UITextStyles.fontOnest,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      height: 1.2,
+                    style: UITextStyles.semibold13.copyWith(
                       color: UIColors.highlightArea.withValues(alpha: .5),
                     ),
                   ),

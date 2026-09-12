@@ -237,13 +237,13 @@ class _ResultSheetState extends State<_ResultSheet>
             const Margin.vertical(12),
             Text(
               title,
-              style: UITextStyles.cardTitle,
+              style: UITextStyles.semibold22,
               textAlign: TextAlign.center,
             ),
             const Margin.vertical(8),
             Text(
               text,
-              style: UITextStyles.regularText,
+              style: UITextStyles.regular17,
               textAlign: TextAlign.center,
             ),
             if (correct) ...[
@@ -262,7 +262,9 @@ class _ResultSheetState extends State<_ResultSheet>
                       children: [
                         Text(
                           'Далее автоматически через $secondsLeft сек.',
-                          style: UITextStyles.hint,
+                          style: UITextStyles.regular12.copyWith(
+                            color: UIColors.secondary2,
+                          ),
                         ),
                         const Margin.vertical(8),
                         LessonProgressBar(value: progress, height: 8),
@@ -407,7 +409,10 @@ class _DebugAction extends StatelessWidget {
     onTap: onTap,
     child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(text, style: UITextStyles.hint),
+      child: Text(
+        text,
+        style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+      ),
     ),
   );
 }
@@ -434,7 +439,12 @@ class _TracingBar extends GetView<LessonController> {
           onTap: controller.giveUpTracing,
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8, top: 8),
-            child: Text('Не помню, показать', style: UITextStyles.hint),
+            child: Text(
+              'Не помню, показать',
+              style: UITextStyles.regular12.copyWith(
+                color: UIColors.secondary2,
+              ),
+            ),
           ),
         ),
       ],
@@ -469,7 +479,9 @@ class _RecordBar extends GetView<LessonController> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Продолжить без произношения',
-                        style: UITextStyles.hint,
+                        style: UITextStyles.regular12.copyWith(
+                          color: UIColors.secondary2,
+                        ),
                       ),
                     ),
                   ),
@@ -480,7 +492,9 @@ class _RecordBar extends GetView<LessonController> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Больше не предлагать произношение',
-                        style: UITextStyles.hint,
+                        style: UITextStyles.regular12.copyWith(
+                          color: UIColors.secondary2,
+                        ),
                       ),
                     ),
                   ),
@@ -847,9 +861,7 @@ class _QuestionFor extends GetView<LessonController> {
                 onPressed: controller.revealName,
                 child: Text(
                   'Не слышно? Показать название',
-                  style: UITextStyles.regular14.copyWith(
-                    fontFamily: UITextStyles.fontJetBrainsMono,
-                  ),
+                  style: UITextStyles.monoRegular14,
                 ),
               ),
           ],
@@ -978,7 +990,7 @@ class _OptionTile extends GetView<LessonController> {
         onTap: () => controller.select(index),
         child: _optionsAreGlyphs(exercise.mode)
             ? _Glyph(atom: option, size: 28)
-            : Text(option.label, style: UITextStyles.regularTextDark),
+            : Text(option.label, style: UITextStyles.regular17),
       );
     });
   }
@@ -1007,7 +1019,7 @@ class _StubTask extends StatelessWidget {
           const Margin.vertical(12),
           Text(
             _stubHintOf(exercise.mode),
-            style: UITextStyles.regularText,
+            style: UITextStyles.regular17,
             textAlign: TextAlign.center,
           ),
         ],
@@ -1053,11 +1065,7 @@ class _Glyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     atom.display,
-    style: TextStyle(
-      fontFamily: UITextStyles.fontScheherazadeNew,
-      fontSize: size,
-      color: UIColors.text,
-    ),
+    style: UITextStyles.arabicRegular(size),
     textDirection: TextDirection.rtl,
   );
 }
@@ -1072,7 +1080,7 @@ class _Hint extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Text(
       text,
-      style: UITextStyles.regularText,
+      style: UITextStyles.regular17,
       textAlign: TextAlign.center,
     ),
   );
@@ -1090,13 +1098,13 @@ class _FinishBlock extends GetView<LessonController> {
         const Margin.vertical(48),
         Text(
           controller.isReviewOnly ? 'Повторили' : 'Урок пройден',
-          style: UITextStyles.pageTitleSemibold,
+          style: UITextStyles.semibold32,
         ),
         const Margin.vertical(16),
         if (introduced.isNotEmpty) ...[
           Text(
             controller.isReviewOnly ? 'Повторили' : 'Сегодня разобрали',
-            style: UITextStyles.regularText,
+            style: UITextStyles.regular17,
           ),
           const Margin.vertical(12),
           Wrap(
@@ -1135,7 +1143,7 @@ class _LearnedChip extends StatelessWidget {
             _Glyph(atom: atom, size: 28),
             const Margin.horizontal(8),
           ],
-          Text(atom.label, style: UITextStyles.semiboldText),
+          Text(atom.label, style: UITextStyles.semibold14),
         ],
       ),
     );

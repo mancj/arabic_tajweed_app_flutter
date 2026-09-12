@@ -39,7 +39,7 @@ class CoursePage extends GetView<CourseController> {
             children: [
               Text(
                 'Не удалось подготовить занятие',
-                style: UITextStyles.semiboldText,
+                style: UITextStyles.semibold14,
               ),
               const Margin.vertical(16),
               NextButton(
@@ -61,11 +61,7 @@ class CoursePage extends GetView<CourseController> {
                   : controller.hasStarted
                   ? 'Продолжим знакомство с буквами'
                   : 'Познакомимся\nс первыми буквами',
-              style: UITextStyles.pageTitleSemibold.copyWith(
-                fontSize: 29,
-                height: 1.16,
-                letterSpacing: -.8,
-              ),
+              style: UITextStyles.semibold29,
             ),
             const Margin.vertical(16),
             CourseActivityWeek(
@@ -82,7 +78,12 @@ class CoursePage extends GetView<CourseController> {
                 await Get.toNamed(DebugPage.routeName);
                 await controller.refreshBoard();
               },
-              child: Text('Меню отладки', style: UITextStyles.hint),
+              child: Text(
+                'Меню отладки',
+                style: UITextStyles.regular12.copyWith(
+                  color: UIColors.secondary2,
+                ),
+              ),
             ),
           ],
         ),

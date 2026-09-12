@@ -68,10 +68,17 @@ class _Summary extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Следующая сессия: ${controller.nextSession.value}',
-                  style: UITextStyles.hint,
+                  style: UITextStyles.regular12.copyWith(
+                    color: UIColors.secondary2,
+                  ),
                 ),
               ),
-              Text('Скрыть fresh', style: UITextStyles.hint),
+              Text(
+                'Скрыть fresh',
+                style: UITextStyles.regular12.copyWith(
+                  color: UIColors.secondary2,
+                ),
+              ),
               Switch(
                 value: controller.hideFresh.value,
                 activeThumbColor: UIColors.primary,
@@ -110,11 +117,7 @@ class _AtomTile extends StatelessWidget {
             child: Text(
               atom.display,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: UITextStyles.fontScheherazadeNew,
-                fontSize: 16,
-                color: UIColors.text,
-              ),
+              style: UITextStyles.arabicRegular16,
             ),
           ),
           const Margin.horizontal(8),
@@ -124,9 +127,7 @@ class _AtomTile extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Text(atom.id, style: UITextStyles.semibold17),
-                    ),
+                    Expanded(child: Text(atom.id, style: UITextStyles.bold17)),
                     if (p.weak) _Badge('weak', UIColors.secondary1),
                     if (controller.isDeferred(p))
                       _Badge('deferred', UIColors.secondary1),
@@ -134,7 +135,12 @@ class _AtomTile extends StatelessWidget {
                   ],
                 ),
                 const Margin.vertical(4),
-                Text(_details(p), style: UITextStyles.hint),
+                Text(
+                  _details(p),
+                  style: UITextStyles.regular12.copyWith(
+                    color: UIColors.secondary2,
+                  ),
+                ),
               ],
             ),
           ),

@@ -84,7 +84,7 @@ class _FormSequenceDebugPageState extends State<FormSequenceDebugPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Расставьте формы буквы «Ба»', style: UITextStyles.semibold17),
+            Text('Расставьте формы буквы «Ба»', style: UITextStyles.bold17),
             const Margin.vertical(24),
             FormSequenceExercise(
               key: ValueKey('form-sequence-debug-$_round'),
@@ -98,12 +98,14 @@ class _FormSequenceDebugPageState extends State<FormSequenceDebugPage> {
                   ? Text(
                       'Результат появится после заполнения четырёх слотов',
                       key: const ValueKey('form-sequence-debug-pending'),
-                      style: UITextStyles.hint,
+                      style: UITextStyles.regular12.copyWith(
+                        color: UIColors.secondary2,
+                      ),
                     )
                   : Text(
                       _isCorrect ? 'Верно' : 'Неверный порядок',
                       key: const ValueKey('form-sequence-debug-result'),
-                      style: UITextStyles.semibold17.copyWith(
+                      style: UITextStyles.bold17.copyWith(
                         color: _isCorrect
                             ? UIColors.primary
                             : UIColors.secondary2,

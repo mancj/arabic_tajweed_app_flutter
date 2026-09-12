@@ -111,7 +111,9 @@ class LetterWidgetCard extends StatelessWidget {
         TextSpan(text: text.substring(0, at)),
         TextSpan(
           text: accent,
-          style: TextStyle(color: UIColors.primary),
+          style: UITextStyles.semibold22Compact.copyWith(
+            color: UIColors.primary,
+          ),
         ),
         TextSpan(text: text.substring(at + accent!.length)),
       ],
@@ -214,10 +216,7 @@ class LetterWidgetCard extends StatelessWidget {
                                   const Margin.vertical(8),
                                   Text.rich(
                                     _questionSpan(),
-                                    style: UITextStyles.cardTitle.copyWith(
-                                      color: UIColors.text,
-                                      height: 1.1,
-                                    ),
+                                    style: UITextStyles.semibold22Compact,
                                   ),
                                 ],
                               ],
@@ -294,18 +293,11 @@ class LetterWidgetCard extends StatelessWidget {
                       glyph ??
                       Text(
                         letter,
-                        style: TextStyle(
-                          fontSize: isArabic ? 80 : 32,
-                          // Строка ужата до кегля: иначе высоту бокса задаёт
-                          // шрифт, и у каждой буквы свой запас сверху и снизу.
-                          height: 1,
-
-                          fontFamily: isArabic
-                              ? UITextStyles.fontScheherazadeNew
-                              : UITextStyles.fontSerif,
-                          color: UIColors.text,
-                          letterSpacing: 0,
-                        ),
+                        // Строка ужата до кегля: иначе высоту бокса задаёт
+                        // шрифт, и у каждой буквы свой запас сверху и снизу.
+                        style: isArabic
+                            ? UITextStyles.arabicRegular80Compact
+                            : UITextStyles.serifRegular32Compact,
                       ),
                 ),
               ),
@@ -326,7 +318,7 @@ class LetterWidgetCard extends StatelessWidget {
                 child: Text(
                   subtitle!,
                   key: ValueKey(subtitle),
-                  style: UITextStyles.serifSemibold18.copyWith(
+                  style: UITextStyles.serifSemibold18Compact.copyWith(
                     color: UIColors.primary,
                   ),
                 ).animate().fadeIn(duration: .3.seconds),

@@ -34,13 +34,7 @@ class SegmentedTabs extends StatelessWidget {
   static const _trackPadding = 3.0;
 
   TextStyle get _style =>
-      style ??
-      TextStyle(
-        fontFamily: UITextStyles.fontOnest,
-        fontWeight: FontWeight.w500,
-        fontSize: 15,
-        color: UIColors.secondary2,
-      );
+      style ?? UITextStyles.medium15.copyWith(color: UIColors.secondary2);
 
   TextStyle get _selectedStyle =>
       selectedStyle ?? _style.copyWith(color: UIColors.highlightArea);

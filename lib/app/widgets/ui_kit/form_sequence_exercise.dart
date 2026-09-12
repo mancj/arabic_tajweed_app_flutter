@@ -565,7 +565,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
           key: ValueKey(
             _revealingAnswer ? 'form-answer-reveal' : 'form-instruction',
           ),
-          style: UITextStyles.hint,
+          style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
         ),
         const Margin.vertical(8),
         Row(
@@ -726,10 +726,10 @@ class _FormSlotSurface extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.fade,
               softWrap: false,
-              style: UITextStyles.regular12.copyWith(
-                color: active ? UIColors.text : UIColors.secondary2,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              ),
+              style: (active ? UITextStyles.semibold12 : UITextStyles.regular12)
+                  .copyWith(
+                    color: active ? UIColors.text : UIColors.secondary2,
+                  ),
             ),
           ),
           Align(
@@ -737,7 +737,7 @@ class _FormSlotSurface extends StatelessWidget {
             child: atom == null
                 ? Text(
                     '?',
-                    style: UITextStyles.cardTitle.copyWith(
+                    style: UITextStyles.semibold22.copyWith(
                       color: active
                           ? UIColors.primary
                           : UIColors.backgroundShapes2,
@@ -839,12 +839,7 @@ class _Glyph extends StatelessWidget {
     return Text(
       value,
       textDirection: TextDirection.rtl,
-      style: TextStyle(
-        color: UIColors.text,
-        fontFamily: UITextStyles.fontScheherazadeNew,
-        fontSize: 38,
-        height: 1,
-      ),
+      style: UITextStyles.arabicRegular38Compact,
     );
   }
 }

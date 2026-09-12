@@ -174,10 +174,15 @@ class _DebugTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: UITextStyles.semibold17),
+                    Text(title, style: UITextStyles.bold17),
                     if (subtitle != null) ...[
                       const Margin.vertical(4),
-                      Text(subtitle!, style: UITextStyles.hint),
+                      Text(
+                        subtitle!,
+                        style: UITextStyles.regular12.copyWith(
+                          color: UIColors.secondary2,
+                        ),
+                      ),
                     ],
                   ],
                 ),

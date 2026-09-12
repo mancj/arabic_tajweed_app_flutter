@@ -210,12 +210,7 @@ class _CheckButton extends StatelessWidget {
         ),
         child: Text(
           'Проверить',
-          style: TextStyle(
-            fontFamily: UITextStyles.fontOnest,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-            color: UIColors.secondary2,
-          ),
+          style: UITextStyles.semibold15.copyWith(color: UIColors.secondary2),
         ),
       ),
     );

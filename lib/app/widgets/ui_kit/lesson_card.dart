@@ -61,7 +61,7 @@ class LessonCard extends StatelessWidget {
                   children: [
                     BadgeLabel(text: badge, color: UIColors.text),
                     const Margin.vertical(8),
-                    Text(title, style: UITextStyles.cardTitle),
+                    Text(title, style: UITextStyles.semibold22),
                   ],
                 ),
               ),

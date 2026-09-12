@@ -116,27 +116,15 @@ class CourseLessonPreview extends StatelessWidget {
               const Margin.horizontal(8),
               Text(
                 label,
-                style: UITextStyles.regular10.copyWith(
+                style: UITextStyles.monoSemibold11.copyWith(
                   color: UIColors.badgeText1,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
-                  letterSpacing: .8,
-                  fontFamily: UITextStyles.fontJetBrainsMono,
                 ),
               ),
             ],
           ),
         ),
         const Margin.vertical(12),
-        Text(
-          controller.lessonTitle,
-          style: UITextStyles.pageTitleSemibold.copyWith(
-            fontSize: 27,
-            height: 1.12,
-            letterSpacing: -.6,
-            fontFamilyFallback: const [UITextStyles.fontDGFaseh],
-          ),
-        ),
+        Text(controller.lessonTitle, style: UITextStyles.semibold27),
       ],
     ),
   );
@@ -152,11 +140,11 @@ class CourseLessonPreview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(controller.lessonFocus, style: UITextStyles.medium17),
+          Text(controller.lessonFocus, style: UITextStyles.semibold17),
           const Margin.vertical(4),
           Text(
             controller.lessonDetail,
-            style: UITextStyles.hint.copyWith(fontSize: 13),
+            style: UITextStyles.regular13.copyWith(color: UIColors.secondary2),
           ),
         ],
       ),
@@ -329,20 +317,12 @@ class CourseActivityWeek extends StatelessWidget {
                   color: UIColors.primary,
                 ),
                 const Margin.horizontal(8),
-                Text(
-                  'Эта неделя',
-                  style: UITextStyles.regular14.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: UITextStyles.fontJetBrainsMono,
-                    letterSpacing: 0,
-                  ),
-                ),
+                Text('Эта неделя', style: UITextStyles.monoSemibold14),
                 const Spacer(),
                 Text(
                   'Ваш ритм',
-                  style: UITextStyles.hint.copyWith(
-                    fontFamily: UITextStyles.fontJetBrainsMono,
-                    letterSpacing: 0,
+                  style: UITextStyles.monoRegular12.copyWith(
+                    color: UIColors.secondary2,
                   ),
                 ),
               ],
@@ -366,8 +346,7 @@ class CourseActivityWeek extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: UITextStyles.hint.copyWith(
-                            fontSize: 11,
+                          style: UITextStyles.regular11.copyWith(
                             color: current
                                 ? UIColors.text
                                 : UIColors.secondary2,
@@ -396,7 +375,7 @@ class CourseActivityWeek extends StatelessWidget {
                                 )
                               : Text(
                                   '${date.day}',
-                                  style: UITextStyles.medium12.copyWith(
+                                  style: UITextStyles.semibold12.copyWith(
                                     color: current
                                         ? UIColors.primaryButtonText
                                         : UIColors.secondary2,
@@ -466,13 +445,13 @@ class CourseOverview extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: ' / ${controller.totalLetters}',
-                            style: UITextStyles.hint,
+                            style: UITextStyles.regular12.copyWith(
+                              color: UIColors.secondary2,
+                            ),
                           ),
                         ],
                       ),
-                      style: UITextStyles.pageTitleSemibold.copyWith(
-                        fontSize: 28,
-                      ),
+                      style: UITextStyles.semibold28,
                     ),
                   ),
                 ],
@@ -484,7 +463,9 @@ class CourseOverview extends StatelessWidget {
             controller.hasStarted
                 ? 'букв освоено\nВсе темы и знания'
                 : 'Начните с первых букв\nВсе темы курса',
-            style: UITextStyles.hint.copyWith(fontSize: 11, height: 1.5),
+            style: UITextStyles.regular11Relaxed.copyWith(
+              color: UIColors.secondary2,
+            ),
           ),
         ],
       ),
@@ -533,10 +514,7 @@ class CourseOverview extends StatelessWidget {
           Text(
             upcoming?.topic.title ??
                 (controller.allDone ? 'Весь курс знаком' : 'Закрепляем знания'),
-            style: UITextStyles.regular14.copyWith(
-              fontWeight: FontWeight.w600,
-              height: 1.25,
-            ),
+            style: UITextStyles.semibold14Relaxed,
           ),
           const Margin.vertical(8),
           Text(
@@ -545,7 +523,9 @@ class CourseOverview extends StatelessWidget {
                 : upcoming.canPractice
                 ? 'Уже доступно\nМожно перейти'
                 : 'После закрепления\nПосмотреть условия',
-            style: UITextStyles.hint.copyWith(fontSize: 11, height: 1.5),
+            style: UITextStyles.regular11Relaxed.copyWith(
+              color: UIColors.secondary2,
+            ),
           ),
         ],
       ),
@@ -601,14 +581,7 @@ class _OverviewTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    title,
-                    style: UITextStyles.regular14.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: UITextStyles.fontJetBrainsMono,
-                    ),
-                  ),
+                  child: Text(title, style: UITextStyles.monoSemibold13),
                 ),
                 Container(
                   width: 30,
@@ -679,11 +652,6 @@ class _Glyph extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text,
     textDirection: TextDirection.rtl,
-    style: TextStyle(
-      fontFamily: UITextStyles.fontDGFaseh,
-      fontSize: size,
-      height: 1,
-      color: color,
-    ),
+    style: UITextStyles.dgFasehRegular(size, height: 1).copyWith(color: color),
   );
 }

@@ -109,12 +109,10 @@ class _Painter extends CustomPainter {
       TextPainter(
         text: TextSpan(
           text: word,
-          style: TextStyle(
-            fontFamily: UITextStyles.fontScheherazadeNew,
-            fontSize: fontSize,
-            color: color,
+          style: UITextStyles.arabicRegular(
+            fontSize,
             height: 1,
-          ),
+          ).copyWith(color: color),
         ),
         textDirection: TextDirection.rtl,
       )..layout();

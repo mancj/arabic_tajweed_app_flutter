@@ -101,12 +101,10 @@ class _LetterCard extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontOnest,
-              fontWeight: FontWeight.w500,
-              fontSize: 15 * k,
-              color: UIColors.secondary2,
-            ),
+            style: UITextStyles.scaled(
+              UITextStyles.medium15,
+              k,
+            ).copyWith(color: UIColors.secondary2),
           ),
         ),
         Positioned(
@@ -116,7 +114,7 @@ class _LetterCard extends StatelessWidget {
           height: LetterGuides.designHeight * k,
           child: Center(child: LetterGuides(k: k)),
         ),
-        // Строка поднята над сеткой прописи: арабские глифы Rubik сидят
+        // Строка поднята над сеткой прописи: арабские глифы сидят
         // в нижней части строки, и по центру сетки буква уходит вниз.
         // При таком смещении контур буквы попадает в макетные 109…215.
         Positioned(
@@ -128,12 +126,7 @@ class _LetterCard extends StatelessWidget {
             child: Text(
               glyph,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: UITextStyles.fontScheherazadeNew,
-                fontVariations: UITextStyles.rubik(500),
-                fontSize: 133.5 * k,
-                color: UIColors.text,
-              ),
+              style: UITextStyles.arabicRegular(133.5 * k),
             ),
           ),
         ),
@@ -144,12 +137,7 @@ class _LetterCard extends StatelessWidget {
           child: Text(
             name,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontOnest,
-              fontWeight: FontWeight.w600,
-              fontSize: 22 * k,
-              color: UIColors.text,
-            ),
+            style: UITextStyles.scaled(UITextStyles.semibold22, k),
           ),
         ),
         Positioned(
@@ -159,11 +147,7 @@ class _LetterCard extends StatelessWidget {
           child: Text(
             transcription,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontSerif,
-              fontSize: 17 * k,
-              color: UIColors.text,
-            ),
+            style: UITextStyles.scaled(UITextStyles.serifRegular17, k),
           ),
         ),
       ],
@@ -221,12 +205,9 @@ class _FormCard extends StatelessWidget {
                   child: Text(
                     form.glyph,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: UITextStyles.fontScheherazadeNew,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 50.4 * k,
-                      color: UIColors.secondary1,
-                    ),
+                    style: UITextStyles.arabicMedium(
+                      50.4 * k,
+                    ).copyWith(color: UIColors.secondary1),
                   ),
                 ),
               ),
@@ -238,11 +219,8 @@ class _FormCard extends StatelessWidget {
                   form.title,
                   textAlign: TextAlign.center,
                   maxLines: 1,
-                  style: TextStyle(
-                    fontFamily: UITextStyles.fontOnest,
-                    fontSize: 10,
-                    height: 1,
-                    overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
+                  style: UITextStyles.regular10Compact.copyWith(
                     color: UIColors.secondary1,
                   ),
                 ),
@@ -252,10 +230,7 @@ class _FormCard extends StatelessWidget {
                 top: 4,
                 child: Text(
                   '${form.index}',
-                  style: TextStyle(
-                    fontFamily: UITextStyles.fontPlayfair,
-                    fontVariations: UITextStyles.playfair(500),
-                    fontSize: 14,
+                  style: UITextStyles.playfairMedium14.copyWith(
                     color: UIColors.secondary1,
                   ),
                 ),
@@ -306,20 +281,11 @@ class _PronunciationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Произношение',
-                  style: TextStyle(
-                    fontFamily: UITextStyles.fontOnest,
-                    fontSize: 17,
-                    color: UIColors.text,
-                  ),
-                ),
+                Text('Произношение', style: UITextStyles.regular17),
                 Margin.vertical(4),
                 Text(
                   'Нажмите, чтобы прослушать',
-                  style: TextStyle(
-                    fontFamily: UITextStyles.fontOnest,
-                    fontSize: 13,
+                  style: UITextStyles.regular13.copyWith(
                     color: UIColors.secondary2,
                   ),
                 ),
@@ -338,12 +304,6 @@ class _TajweedCard extends StatelessWidget {
   final String title;
   final String text;
 
-  /// Межстрочный интервал блока в макете.
-  static const _lineHeight = 1.1228;
-
-  /// В Playfair нет арабских глифов, а в тексте правила встречается буква.
-  static const _fallback = [UITextStyles.fontScheherazadeNew];
-
   const _TajweedCard({required this.title, required this.text});
 
   @override
@@ -359,29 +319,9 @@ class _TajweedCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontPlayfair,
-              fontVariations: UITextStyles.playfair(700),
-              fontFamilyFallback: _fallback,
-              fontSize: 18,
-              height: _lineHeight,
-              color: UIColors.text,
-            ),
-          ),
+          Text(title, style: UITextStyles.playfairBold18),
           const Margin.vertical(24),
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: UITextStyles.fontPlayfair,
-              fontVariations: UITextStyles.playfair(500),
-              fontFamilyFallback: _fallback,
-              fontSize: 18,
-              height: _lineHeight,
-              color: UIColors.text,
-            ),
-          ),
+          Text(text, style: UITextStyles.playfairMedium18),
         ],
       ),
     );

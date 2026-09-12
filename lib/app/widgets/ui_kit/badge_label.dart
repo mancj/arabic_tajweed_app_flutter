@@ -25,10 +25,7 @@ class BadgeLabel extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: UITextStyles.badge.copyWith(
-          color: textColor,
-          fontFamily: UITextStyles.fontJetBrainsMono,
-        ),
+        style: UITextStyles.monoMedium12.copyWith(color: textColor),
       ),
     );
   }

@@ -49,7 +49,10 @@ class LessonProgressBar extends StatelessWidget {
       children: [
         Expanded(child: bar),
         const Margin.horizontal(8),
-        Text(debugLabel!, style: UITextStyles.hint),
+        Text(
+          debugLabel!,
+          style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+        ),
       ],
     );
   }

@@ -46,9 +46,14 @@ class CourseLink extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: UITextStyles.semiboldText),
+                    Text(title, style: UITextStyles.semibold14),
                     const Margin.vertical(8),
-                    Text(subtitle, style: UITextStyles.hint),
+                    Text(
+                      subtitle,
+                      style: UITextStyles.regular12.copyWith(
+                        color: UIColors.secondary2,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -133,7 +138,7 @@ class CourseSectionPage extends StatelessWidget {
         children: [
           Text(
             'Каждый блок можно закреплять за несколько занятий.',
-            style: UITextStyles.hint,
+            style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
           ),
           const Margin.vertical(16),
           for (final status in controller.byStage[stage]!) ...[
@@ -222,7 +227,7 @@ class CourseTopicPage extends StatelessWidget {
                 : 'Освоено: ${s.done} из ${s.total}',
           ),
           const Margin.vertical(24),
-          Text('Материал блока', style: UITextStyles.semiboldText),
+          Text('Материал блока', style: UITextStyles.semibold14),
           const Margin.vertical(12),
           for (final atom in atoms)
             Padding(
@@ -230,7 +235,7 @@ class CourseTopicPage extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(atom.label, style: UITextStyles.regularText),
+                    child: Text(atom.label, style: UITextStyles.regular17),
                   ),
                   Text(
                     TopicBoard(
@@ -238,7 +243,9 @@ class CourseTopicPage extends StatelessWidget {
                         ).isDone(atom.id, controller.context)
                         ? 'Освоено'
                         : 'Впереди',
-                    style: UITextStyles.hint,
+                    style: UITextStyles.regular12.copyWith(
+                      color: UIColors.secondary2,
+                    ),
                   ),
                 ],
               ),
@@ -246,7 +253,7 @@ class CourseTopicPage extends StatelessWidget {
           if (s.state != TopicState.locked) ...[
             const Margin.vertical(12),
             ExpansionTile(
-              title: Text('Объяснения', style: UITextStyles.semiboldText),
+              title: Text('Объяснения', style: UITextStyles.semibold16),
               children: [
                 for (final atom in atoms)
                   Padding(
@@ -259,11 +266,7 @@ class CourseTopicPage extends StatelessWidget {
                           : Text(
                               atom.display,
                               textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                fontFamily: UITextStyles.fontScheherazadeNew,
-                                fontSize: 64,
-                                color: UIColors.text,
-                              ),
+                              style: UITextStyles.arabicRegular64,
                             ),
                     ),
                   ),
@@ -273,7 +276,7 @@ class CourseTopicPage extends StatelessWidget {
             const Margin.vertical(16),
             Text(
               'Уже знакомы с этим материалом? Проверим необходимые знания. Подтверждённое сохранится, даже если останутся пробелы.',
-              style: UITextStyles.regularText,
+              style: UITextStyles.regular17,
             ),
           ],
         ],

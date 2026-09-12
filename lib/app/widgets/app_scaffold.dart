@@ -204,15 +204,7 @@ class _Header extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'tajweed',
-                        style: TextStyle(
-                          fontFamily: UITextStyles.fontOnest,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                          color: UIColors.text,
-                        ),
-                      ),
+                      Text('tajweed', style: UITextStyles.semibold20),
                       const Margin.horizontal(4),
                       Icon(
                         Icons.auto_awesome,
@@ -228,11 +220,7 @@ class _Header extends StatelessWidget {
             Center(
               child: Text(
                 title!,
-                style: TextStyle(
-                  fontFamily: UITextStyles.fontOnest,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 22,
-                  color: UIColors.text,
+                style: UITextStyles.medium22.copyWith(
                   shadows: [
                     Shadow(
                       color: UIColors.shadows,

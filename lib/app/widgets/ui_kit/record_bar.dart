@@ -39,7 +39,11 @@ class RecordBar extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(status, style: UITextStyles.hint, textAlign: TextAlign.center),
+        Text(
+          status,
+          style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+          textAlign: TextAlign.center,
+        ),
         const Margin.vertical(12),
         AnimatedScale(
           scale: recording ? 1.15 : 1,
