@@ -1,3 +1,4 @@
+import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -44,6 +45,7 @@ class CourseLessonPreview extends StatelessWidget {
       tiltConfig: _tiltConfig,
       child: _CourseSurface(
         radius: 28,
+        onTap: controller.continueCourse,
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -137,15 +139,25 @@ class CourseLessonPreview extends StatelessWidget {
     ),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(controller.lessonFocus, style: UITextStyles.semibold17),
-          const Margin.vertical(4),
-          Text(
-            controller.lessonDetail,
-            style: UITextStyles.regular13.copyWith(color: UIColors.secondary2),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(controller.lessonFocus, style: UITextStyles.semibold17),
+                const Margin.vertical(4),
+                Text(
+                  controller.lessonDetail,
+                  style: UITextStyles.regular13.copyWith(
+                    color: UIColors.secondary2,
+                  ),
+                ),
+              ],
+            ),
           ),
+          Icon(Icons.arrow_outward_outlined, color: UIColors.secondary2),
         ],
       ),
     ),
@@ -413,7 +425,7 @@ class CourseOverview extends StatelessWidget {
     final path = _OverviewTile(
       title: 'Мой путь',
       icon: SvgPicture.asset(
-        UISVGAssets.solarRouteLinear,
+        UISVGAssets.hugeiconsRoad01,
         colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
       ),
       onTap: _path,
@@ -472,11 +484,9 @@ class CourseOverview extends StatelessWidget {
     );
     final next = _OverviewTile(
       title: upcoming == null ? 'Практика' : 'Далее',
-      icon: Icon(
-        upcoming == null
-            ? Icons.auto_awesome_rounded
-            : Icons.arrow_outward_rounded,
-        color: UIColors.primary,
+      icon: SvgPicture.asset(
+        UISVGAssets.solarRouteLinear,
+        colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
       ),
       onTap: upcoming == null
           ? _path
@@ -616,28 +626,23 @@ class _CourseSurface extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: gradient == null ? UIColors.cardBackground : null,
-      gradient: gradient,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: [
-        BoxShadow(
-          color: UIColors.shadows,
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-      ],
-    ),
-    child: Material(
-      color: gradient == null ? UIColors.cardBackground : Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
+  Widget build(BuildContext context) => AppGestureDetector(
+    onTap: onTap,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: gradient == null ? UIColors.cardBackground : null,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        side: BorderSide(color: UIColors.highlightArea),
+        border: Border.all(color: UIColors.highlightArea),
+        boxShadow: [
+          BoxShadow(
+            color: UIColors.shadows,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: onTap == null ? child : InkWell(onTap: onTap, child: child),
+      child: onTap == null ? child : child,
     ),
   );
 }

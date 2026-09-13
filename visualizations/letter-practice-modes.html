@@ -1,0 +1,83 @@
+<section id="tajweed-modes" aria-labelledby="modes-title">
+  <style>
+    #tajweed-modes { color: light-dark(#17231d,#e8f2eb); font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+    #tajweed-modes * { box-sizing:border-box; }
+    #tajweed-modes h2 { margin:0 0 14px; font-size:1.1rem; font-weight:500; }
+    #tajweed-modes .mode-picker { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:18px; }
+    #tajweed-modes .mode-picker button { appearance:none; border:1px solid light-dark(#d8e5dc,#34473c); background:light-dark(#fff,#17241d); color:inherit; border-radius:12px; padding:10px 8px; font:inherit; font-size:.78rem; cursor:pointer; }
+    #tajweed-modes .mode-picker button[aria-selected="true"] { background:light-dark(#196b45,#51c987); border-color:transparent; color:light-dark(#fff,#102619); }
+    #tajweed-modes .phone { width:min(100%,390px); margin:auto; min-height:580px; overflow:hidden; border-radius:32px; background:light-dark(#f8fbf8,#101913); border:8px solid light-dark(#20392c,#d8e7dc); box-shadow:0 14px 34px light-dark(#b9cbbf,#000); }
+    #tajweed-modes .top { padding:18px 20px 13px; background:light-dark(#eef7f0,#18251d); }
+    #tajweed-modes .progress { display:flex; gap:5px; margin-bottom:16px; }
+    #tajweed-modes .progress i { height:5px; flex:1; background:light-dark(#d4e5d8,#32463a); border-radius:8px; }
+    #tajweed-modes .progress i:first-child, #tajweed-modes .progress i:nth-child(2) { background:light-dark(#2a9a61,#4dcc8d); }
+    #tajweed-modes .lesson { display:flex; justify-content:space-between; align-items:center; font-size:.85rem; }
+    #tajweed-modes .lesson strong { font-weight:500; }
+    #tajweed-modes .content { padding:27px 20px 20px; text-align:center; }
+    #tajweed-modes .eyebrow { color:light-dark(#5d7565,#a4bca9); font-size:.78rem; margin:0 0 8px; }
+    #tajweed-modes h3 { margin:0 0 19px; font-size:1.14rem; font-weight:500; }
+    #tajweed-modes .arabic { direction:rtl; font-family:"Geeza Pro","Noto Naskh Arabic",serif; }
+    #tajweed-modes .big-letter { font-size:6.6rem; line-height:1; margin:12px 0 24px; color:light-dark(#183c29,#a9efc5); }
+    #tajweed-modes .hint { color:light-dark(#5d7565,#a4bca9); font-size:.84rem; line-height:1.45; margin:10px auto 22px; max-width:290px; }
+    #tajweed-modes .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; direction:rtl; }
+    #tajweed-modes .tile { min-height:70px; display:grid; place-items:center; border:1px solid light-dark(#d6e3d9,#34483b); background:light-dark(#fff,#1b291f); border-radius:15px; font:2rem "Geeza Pro","Noto Naskh Arabic",serif; color:inherit; }
+    #tajweed-modes .tile.target { background:light-dark(#dbf3e2,#204b31); border-color:light-dark(#4ba874,#4dcc8d); }
+    #tajweed-modes .tile.dim { opacity:.45; }
+    #tajweed-modes .slots { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; direction:rtl; }
+    #tajweed-modes .slot { border:1px dashed light-dark(#91b39c,#587661); border-radius:15px; min-height:94px; padding:8px; display:grid; place-items:center; background:light-dark(#fff,#1a281e); }
+    #tajweed-modes .slot small { align-self:start; color:light-dark(#5d7565,#a4bca9); font:400 .67rem ui-rounded,system-ui,sans-serif; direction:ltr; }
+    #tajweed-modes .slot b { font:2.4rem "Geeza Pro","Noto Naskh Arabic",serif; font-weight:400; }
+    #tajweed-modes .word { font:3.3rem "Geeza Pro","Noto Naskh Arabic",serif; direction:rtl; letter-spacing:4px; margin:18px 0; }
+    #tajweed-modes mark { padding:0 4px; color:inherit; background:light-dark(#bcefd0,#2b7650); border-radius:8px; }
+    #tajweed-modes .pair { display:flex; direction:rtl; align-items:center; justify-content:center; gap:12px; margin:22px 0; }
+    #tajweed-modes .pair span { min-width:93px; min-height:93px; display:grid; place-items:center; border-radius:18px; background:light-dark(#fff,#1b291f); border:1px solid light-dark(#d6e3d9,#34483b); font:3.8rem "Geeza Pro","Noto Naskh Arabic",serif; }
+    #tajweed-modes .arrow { font:1.5rem ui-rounded,system-ui,sans-serif !important; min-width:0 !important; min-height:0 !important; border:0 !important; background:transparent !important; color:light-dark(#36794f,#76d59e); }
+    #tajweed-modes .choices { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; direction:rtl; }
+    #tajweed-modes .choice { min-height:72px; border-radius:15px; border:1px solid light-dark(#d6e3d9,#34483b); background:light-dark(#fff,#1b291f); font:2rem "Geeza Pro","Noto Naskh Arabic",serif; display:grid; place-items:center; }
+    #tajweed-modes .choice.wrong { color:light-dark(#a13b39,#ffaaa4); }
+    #tajweed-modes .sequence { display:flex; justify-content:center; gap:10px; direction:rtl; margin:20px 0; }
+    #tajweed-modes .sequence span { width:66px; height:72px; border-radius:15px; border:1px dashed light-dark(#8aa997,#597562); background:light-dark(#fff,#1b291f); display:grid; place-items:center; font:2rem "Geeza Pro","Noto Naskh Arabic",serif; }
+    #tajweed-modes .cta { width:100%; margin-top:18px; border:0; border-radius:15px; padding:14px; background:light-dark(#196b45,#51c987); color:light-dark(#fff,#102619); font:500 .95rem ui-rounded,system-ui,sans-serif; }
+    #tajweed-modes .caption { margin:15px auto 0; max-width:550px; text-align:center; color:light-dark(#53665a,#afc1b4); font-size:.84rem; line-height:1.45; }
+    @media (max-width:480px) { #tajweed-modes .mode-picker { grid-template-columns:repeat(2,1fr); } }
+  </style>
+  <h2 id="modes-title">Новые режимы практики букв</h2>
+  <div class="mode-picker" role="tablist" aria-label="Выбор упражнения">
+    <button id="family-tab" role="tab" aria-controls="mode-panel" aria-selected="true" type="button" data-mode="family">Семейство</button>
+    <button id="memory-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="memory">Что изменилось?</button>
+    <button id="join-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="join">Соедини</button>
+    <button id="odd-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="odd">Кто лишний?</button>
+    <button id="find-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="find">Найди все</button>
+    <button id="dictation-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="dictation">Диктант</button>
+    <button id="chain-tab" role="tab" aria-controls="mode-panel" aria-selected="false" type="button" data-mode="chain">Цепочка форм</button>
+  </div>
+  <div class="phone" id="mode-panel" role="tabpanel" aria-live="polite" aria-labelledby="family-tab"></div>
+  <p class="caption" id="mode-caption"></p>
+  <script>
+    const root = document.getElementById('tajweed-modes');
+    const panel = document.getElementById('mode-panel');
+    const caption = document.getElementById('mode-caption');
+    const modes = {
+      family: { title:'Соберите семейство буквы', body:`<p class="eyebrow">Найдите все формы буквы «ба»</p><h3>Выберите 4 плитки</h3><div class="tiles"><button class="tile target" type="button">ب</button><button class="tile" type="button">ت</button><button class="tile target" type="button">ـبـ</button><button class="tile" type="button">ـتـ</button><button class="tile target" type="button">بـ</button><button class="tile target" type="button">ـب</button></div><button class="cta" type="button">Проверить</button>`, note:'Помогает увидеть одну букву в четырёх начертаниях.' },
+      memory: { title:'Что изменилось?', body:`<p class="eyebrow">Буква мелькнула и скрылась</p><h3>Что вы видели?</h3><div class="big-letter">؟</div><p class="hint">Сначала карточка показывает «ب» на секунду. Затем пользователь выбирает её по памяти.</p><div class="choices"><button class="choice" type="button">ب</button><button class="choice" type="button">ت</button></div>`, note:'Короткая пауза переводит узнавание в запоминание образа.' },
+      join: { title:'Соедините буквы', body:`<p class="eyebrow">Перетащите вторую букву к первой</p><h3>Что станет с «ب»?</h3><div class="pair"><span>بـ</span><span class="arrow">+ ←</span><span>ت</span></div><p class="hint">После соединения приложение показывает: بـ + ت → بـت</p><button class="cta" type="button">Соединить</button>`, note:'Наглядно объясняет изменение формы и разрывы у несоединяющихся букв.' },
+      odd: { title:'Кто здесь лишний?', body:`<p class="eyebrow">Три формы одной буквы</p><h3>Найдите чужую плитку</h3><div class="tiles"><button class="tile" type="button">ب</button><button class="tile" type="button">بـ</button><button class="tile wrong" type="button">ت</button><button class="tile" type="button">ـبـ</button></div><p class="hint">Подсказка после ответа: у «тa» две точки, у «ба» — одна.</p>`, note:'Тренирует отличие от похожих букв через один заметный признак.' },
+      find: { title:'Найдите все «ба»', body:`<p class="eyebrow">Отметьте букву в разных позициях</p><h3>Где здесь «ب»?</h3><div class="word">تـ <mark>بـ</mark> <mark>ـبـ</mark> د <mark>ـب</mark></div><p class="hint">Нажатые вхождения мягко подсвечиваются. Варианты — только из уже изученного.</p><button class="cta" type="button">Готово</button>`, note:'Переносит знание формы из карточки в строку.' },
+      dictation: { title:'Слуховой диктант', body:`<p class="eyebrow">Прослушайте: «ба · та · ба»</p><h3>Соберите последовательность</h3><div class="sequence"><span>ب</span><span>ت</span><span>ب</span></div><div class="tiles"><button class="tile" type="button">ب</button><button class="tile" type="button">ت</button><button class="tile dim" type="button">ث</button></div><button class="cta" type="button">Проверить</button>`, note:'Добавляет слуховую память и порядок букв без чтения слов.' },
+      chain: { title:'Цепочка форм', body:`<p class="eyebrow">Одна буква в разных местах слова</p><h3>Выберите форму для середины</h3><div class="slots"><div class="slot"><small>Отдельно</small><b>ب</b></div><div class="slot"><small>В начале</small><b>بـ</b></div><div class="slot"><small>В середине</small><b>?</b></div><div class="slot"><small>В конце</small><b>ـب</b></div></div><div class="choices" style="margin-top:14px"><button class="choice" type="button">ـبـ</button><button class="choice" type="button">ـتـ</button></div>`, note:'Учит предсказывать форму, а не только собирать готовый набор.' }
+    };
+    function render(name) {
+      const mode = modes[name];
+      panel.innerHTML = `<div class="top"><div class="progress"><i></i><i></i><i></i><i></i><i></i></div><div class="lesson"><span>Урок 3 · Буквы и формы</span><strong>${mode.title}</strong></div></div><div class="content">${mode.body}</div>`;
+      caption.textContent = mode.note;
+      root.querySelectorAll('[role="tab"]').forEach(button => {
+        const selected = button.dataset.mode === name;
+        button.setAttribute('aria-selected', selected);
+        button.tabIndex = selected ? 0 : -1;
+        if (selected) panel.setAttribute('aria-labelledby', button.id);
+      });
+    }
+    root.querySelectorAll('[role="tab"]').forEach(button => button.addEventListener('click', () => render(button.dataset.mode)));
+    render('family');
+  </script>
+</section>

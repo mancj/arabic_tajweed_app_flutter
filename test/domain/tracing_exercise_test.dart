@@ -176,10 +176,11 @@ void main() {
     expect(modes, [ExerciseMode.sayName]);
   });
 
-  // Пара букв раньше раздувалась до пяти встреч на каждую и давала
-  // механическое A/B/A/B. Проверяем и первый вход, и продолжение темы:
-  // обязательные умения остаются, одинаковый тест встречается один раз.
-  test('узкий блок даёт четыре разных задания на каждую букву', () {
+  // Пара букв раньше давала механическое A/B/A/B, а старая буква
+  // появлялась только в конце. Проверяем, что повтор разрывает ритм, но
+  // обязательные режимы каждой буквы и их внутренний порядок сохраняются.
+  test('узкий блок подмешивает старый материал между новым', () {
+    final reviewPositions = <int>{};
     for (final state in AtomState.values) {
       for (var seed = 0; seed < 30; seed++) {
         final ex =
@@ -206,7 +207,12 @@ void main() {
             );
 
         expect(ex, hasLength(9));
-        expect(ex.last.atom, siin);
+        if (state == AtomState.fresh) {
+          expect(ex.take(2).map((item) => item.atom).toSet(), {ba, ta});
+          final position = ex.indexWhere((item) => item.atom == siin);
+          expect(position, inInclusiveRange(2, 4));
+          reviewPositions.add(position);
+        }
         for (final atom in [ba, ta]) {
           expect(modesOf(ex, atom), [
             ExerciseMode.trace,
@@ -217,6 +223,7 @@ void main() {
         }
       }
     }
+    expect(reviewPositions.length, greaterThan(1));
   });
 
   test('без голоса у пары не больше двух тестов выбора на букву', () {

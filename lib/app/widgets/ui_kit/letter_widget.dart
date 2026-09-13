@@ -210,7 +210,8 @@ class LetterWidgetCard extends StatelessWidget {
                                 if (labelText != null)
                                   BadgeLabel(
                                     text: labelText!,
-                                    color: UIColors.text,
+                                    color: UIColors.primary,
+                                    textColor: UIColors.badgeText1,
                                   ),
                                 if (question != null) ...[
                                   const Margin.vertical(8),

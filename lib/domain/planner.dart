@@ -142,9 +142,13 @@ class LessonPlanner {
     required int sessionId,
     required int sessionsWithoutNew,
     Set<String>? topicIds,
+    Map<String, int> previousCounts = const {},
   }) {
     final deferred = _deferred(ctx, sessionId);
-    final review = _reviewQueue(ctx, sessionId);
+    final review = _reviewQueue(
+      ctx,
+      sessionId,
+    ).where((id) => (previousCounts[id] ?? 0) < _maxDrillsPerAtom).toList();
 
     // 1. Потолок отложенных. Предохранитель на предохранитель: иначе
     //    человек формально не застревает, а фактически ничего не учит.
@@ -167,6 +171,7 @@ class LessonPlanner {
         sessionsWithoutNew,
         review,
         topicIds,
+        previousCounts,
       );
     }
 
@@ -273,6 +278,7 @@ class LessonPlanner {
     int sessionsWithoutNew,
     List<String> review,
     Set<String>? topicIds,
+    Map<String, int> previousCounts,
   ) {
     final board = TopicBoard(curriculum, rules: rules);
     final ordered = board
@@ -302,14 +308,21 @@ class LessonPlanner {
       if (unfinished.topic.counterOf.every(
         (id) => ctx.stateOf(id) != AtomState.fresh,
       )) {
-        return _focusOnGaps(unfinished.topic, board, ctx);
+        final focused = _focusOnGaps(
+          unfinished.topic,
+          board,
+          ctx,
+          previousCounts,
+        );
+        if (focused != null) return focused;
+      } else {
+        return board.planFor(
+          unfinished.topic,
+          ctx,
+          sessionId: sessionId,
+          rules: rules,
+        );
       }
-      return board.planFor(
-        unfinished.topic,
-        ctx,
-        sessionId: sessionId,
-        rules: rules,
-      );
     }
     final next =
         candidate != null &&
@@ -340,6 +353,7 @@ class LessonPlanner {
           (n) =>
               n.atom.kind != AtomKind.concept &&
               ctx.stateOf(n.atom.id) != AtomState.fresh &&
+              (previousCounts[n.atom.id] ?? 0) < _maxDrillsPerAtom &&
               !(ctx.progress[n.atom.id]?.isDeferredAt(sessionId, rules) ??
                   false) &&
               (scope == null || scope.contains(n.atom.id)),
@@ -355,10 +369,11 @@ class LessonPlanner {
     );
   }
 
-  LessonPlan _focusOnGaps(
+  LessonPlan? _focusOnGaps(
     Topic topic,
     TopicBoard board,
     CurriculumContext ctx,
+    Map<String, int> previousCounts,
   ) {
     final counts = <String, int>{};
     var remaining = min(rules.focusedReviewTasks, rules.tasksPerSession);
@@ -380,13 +395,16 @@ class LessonPlanner {
         missing,
         ctx.isKnown(id) ? 0 : max(2, rules.cleanStreakForKnown - p.cleanStreak),
       );
-      if (count > remaining) continue;
-      counts[id] = count;
-      remaining -= count;
+      final available = min(
+        remaining,
+        _maxDrillsPerAtom - (previousCounts[id] ?? 0),
+      );
+      final scheduled = min(count, available);
+      if (scheduled <= 0) continue;
+      counts[id] = scheduled;
+      remaining -= scheduled;
     }
-    if (counts.isEmpty) {
-      throw StateError('Лимит закрепления не вмещает обязательную практику');
-    }
+    if (counts.isEmpty) return null;
     final plan = LessonPlan(
       topicId: topic.id,
       template: LessonTemplate.review,

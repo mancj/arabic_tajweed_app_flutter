@@ -14,9 +14,9 @@ import 'package:get/get.dart';
 
 import '../helpers/plugin_mocks.dart';
 
-/// Промахи считает сам холст и после серии показывает, как пишется. Для
-/// урока это подсказка, а не ошибка: человек обводит по контуру, и собранная
-/// буква сразу засчитывается верным ответом с окном успеха. См. SPEC.md §5.
+/// Автоматический показ и кнопка «Не помню» лишь открывают контур. Они не
+/// создают ответ и не показывают ошибку: результат появляется, когда человек
+/// обвёл подсказку и собрал букву. См. SPEC.md §5.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ProgressDatabase db;
@@ -129,6 +129,39 @@ void main() {
     await c.onTracingMerged();
     await settle(tester);
 
+    expect(c.wasCorrect.value, isTrue);
+    expect(find.text('Верно!'), findsOneWidget);
+  });
+
+  testWidgets('«Не помню» показывает контур без ошибки и результата', (
+    tester,
+  ) async {
+    final c = await openAtTracing(tester, mode: ExerciseMode.traceFromMemory);
+    final exercise = c.current;
+    final answersBefore = (await db.readAll())
+        .whereType<ProgressEvent>()
+        .length;
+
+    await tester.tap(find.text('Не помню, показать'));
+    await settle(tester);
+
+    expect(c.current, same(exercise));
+    expect(c.tracingGuideVisible.value, isTrue);
+    expect(c.canvasMode, TracingMode.tracing);
+    expect(c.tracingHint.value, 'Обведите по подсказке');
+    expect(c.wasWrong.value, isFalse);
+    expect(c.wasCorrect.value, isFalse);
+    expect(find.text('Попробуйте ещё раз'), findsNothing);
+    expect(find.text('Не помню, показать'), findsNothing);
+    final answersAfter = (await db.readAll()).whereType<ProgressEvent>().length;
+    expect(
+      answersAfter,
+      answersBefore,
+      reason: 'подсказка не является ответом',
+    );
+
+    await c.onTracingMerged();
+    await settle(tester);
     expect(c.wasCorrect.value, isTrue);
     expect(find.text('Верно!'), findsOneWidget);
   });

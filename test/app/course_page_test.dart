@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:arabic_tajweed_app/app/pages/course/course_dashboard.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_path_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_binding.dart';
@@ -12,8 +14,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
-/// Главная кнопка запускает показанный план, а галочка старого занятия
-/// не подменяет знания. Оглавление доступно отдельно, включая закрытые темы.
+import '../helpers/plugin_mocks.dart';
+
+/// Главная кнопка и витрина запускают показанный план, а галочка старого
+/// занятия не подменяет знания. Оглавление доступно отдельно, включая
+/// закрытые темы.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
@@ -24,6 +29,7 @@ void main() {
   ]);
   late ProgressDatabase db;
   setUp(() {
+    mockPlatformPlugins();
     db = ProgressDatabase(NativeDatabase.memory());
   });
   tearDown(() async {
@@ -86,6 +92,19 @@ void main() {
       expect(c.opening.value, isFalse);
     },
   );
+
+  testWidgets('нажатие на витрину запускает показанное занятие', (
+    tester,
+  ) async {
+    final c = await open(tester);
+    final plan = c.nextPlan.value;
+
+    await tester.tap(find.byType(CourseLessonPreview));
+    await settle(tester);
+
+    expect((Get.arguments as Map)['plan'], same(plan));
+    expect((Get.arguments as Map)[LessonBinding.continuePlanningArg], isTrue);
+  });
 
   testWidgets('закрытая тема открывает описание и вход в проверку', (
     tester,

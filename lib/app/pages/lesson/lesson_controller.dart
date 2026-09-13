@@ -137,6 +137,9 @@ class LessonController extends GetxController {
   /// В режиме по памяти буква собралась целиком — можно засчитывать.
   final tracingDone = false.obs;
 
+  /// В режиме по памяти контур открыт как подсказка, а не как результат.
+  final tracingGuideVisible = false.obs;
+
   /// Разобранные SVG: одна и та же буква встречается в уроке не раз.
   final _shapes = <String, TracingShape>{};
 
@@ -574,6 +577,7 @@ class LessonController extends GetxController {
       ctx: ctx,
       sessionId: _sessionId,
       sessionsWithoutNew: await _progress.sessionsWithoutNew(),
+      previousCounts: _askedCounts,
     );
 
     // Новый блок вводим только целиком. Если обязательные задания
@@ -799,6 +803,7 @@ class LessonController extends GetxController {
 
     drawing.clear();
     tracingDone.value = false;
+    tracingGuideVisible.value = false;
     tracingShape.value = name == null ? null : _shapes[name];
     // Строка под сеткой — только обратная связь: что рисовать дальше
     // и что не сошлось. Само задание написано в шапке карточки, и дублировать
@@ -816,20 +821,22 @@ class LessonController extends GetxController {
   }
 
   /// Холст показывает контур: в режиме обводки всегда, а в режиме по памяти —
-  /// после ошибки, когда контур и есть показ верного ответа.
+  /// после автоматической или ручной подсказки и при разборе ошибки.
   TracingMode get canvasMode {
     _refresh.value;
-    return current?.mode == ExerciseMode.trace || wasWrong.value
+    return current?.mode == ExerciseMode.trace ||
+            tracingGuideVisible.value ||
+            wasWrong.value
         ? TracingMode.tracing
         : TracingMode.freehand;
   }
 
   /// Стереть нарисованное и начать букву заново. Собранные части холст
-  /// откатывает сам, вслед за исчезнувшими штрихами. После разбора ошибки
-  /// подсказку не трогаем: там на холсте показан верный ответ.
+  /// откатывает сам, вслед за исчезнувшими штрихами. Открытую подсказку
+  /// не прячем: человек продолжает обводить по контуру.
   void clearTracing() {
     drawing.clear();
-    if (wasWrong.value) return;
+    if (wasWrong.value || tracingGuideVisible.value) return;
     tracingDone.value = false;
     tracingHint.value = _tracingStartHint;
   }
@@ -855,24 +862,29 @@ class LessonController extends GetxController {
   /// Холст сам показал, как пишется, после серии промахов, см.
   /// [DrawingCanvas.missesBeforeReveal]. Это не ошибка и не разбор: контур
   /// остаётся, человек обводит по нему, и собранная буква засчитывается
-  /// верным ответом. Строгость проверки не меняется — подсказка честнее,
-  /// чем сниженная планка, — а ошибкой обводка становится только по
-  /// кнопке «Не помню». См. SPEC.md §5.
+  /// верным ответом. Строгость проверки не меняется — подсказка честнее
+  /// сниженной планки. См. SPEC.md §5.
   void onTracingRevealed() {
     if (wasWrong.value) return;
+    tracingDone.value = false;
     tracingHint.value = 'Обведите по подсказке';
+    tracingGuideVisible.value = true;
   }
 
-  /// Ошибка в обводке: ответ засчитан как неверный, холст очищен, и на нём
-  /// открывается контур — показ сам запускается на чистом холсте.
-  Future<void> _revealTracing() async {
-    await submit(directOutcome: false);
-    if (wasWrong.value) drawing.clear();
+  /// «Не помню» в режиме по памяти открывает контур без ответа и ошибки.
+  /// Ответ появится только после того, как человек обведёт подсказку.
+  void giveUpTracing() {
+    if (current?.mode != ExerciseMode.traceFromMemory ||
+        wasWrong.value ||
+        wasCorrect.value ||
+        tracingGuideVisible.value) {
+      return;
+    }
+    drawing.clear();
+    tracingDone.value = false;
+    tracingHint.value = 'Обведите по подсказке';
+    tracingGuideVisible.value = true;
   }
-
-  /// «Не помню» в режиме по памяти: ответ засчитывается ошибкой, а контур
-  /// открывается — иначе человек застревает на букве, которую не помнит.
-  Future<void> giveUpTracing() => _revealTracing();
 
   /// У заданий без выбора нечего выделять — кнопка активна сразу.
   /// Исключение — письмо: там ответ готов, только когда буква собрана

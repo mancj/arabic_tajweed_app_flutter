@@ -59,7 +59,11 @@ class LessonCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    BadgeLabel(text: badge, color: UIColors.text),
+                    BadgeLabel(
+                      text: badge,
+                      color: UIColors.text,
+                      textColor: UIColors.badgeText1,
+                    ),
                     const Margin.vertical(8),
                     Text(title, style: UITextStyles.semibold22),
                   ],

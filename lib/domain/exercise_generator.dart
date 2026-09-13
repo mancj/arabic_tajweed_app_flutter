@@ -134,8 +134,9 @@ class ExerciseGenerator {
     return exercises;
   }
 
-  /// Кого спрашиваем и в каком порядке: сначала закрепление по материалу
-  /// урока, затем блок повторения из общей очереди.
+  /// Кого спрашиваем и в каком порядке: сначала каждая новая буква
+  /// получает первую встречу, затем в закрепление подмешивается повторение
+  /// из общей очереди.
   ///
   /// Внутри закрепления атомы чередуются: подряд одну и ту же букву не спрашиваем. Блоками
   /// («три раза алиф, потом три раза ба») человек отвечает по инерции —
@@ -161,13 +162,21 @@ class ExerciseGenerator {
     // букв нехватка такого материала означает короткий урок. ТЗ §6.2.
     // Весь материал плана получает обязательные задания. Вместимость
     // проверена заранее: здесь ни одна форма уже не может исчезнуть.
+    final perAtomLimit = narrowBaseLetters
+        ? rules.narrowLetterExercises
+        : _maxPerAtom;
     final remaining = {
       for (final atom in {...fresh, ...review})
-        atom:
-            reviewCounts[atom.id] ??
-            (narrowBaseLetters
-                ? max(rules.minimumExercises(atom), rules.narrowLetterExercises)
-                : rules.minimumExercises(atom)),
+        atom: min(
+          reviewCounts[atom.id] ??
+              (narrowBaseLetters
+                  ? max(
+                      rules.minimumExercises(atom),
+                      rules.narrowLetterExercises,
+                    )
+                  : rules.minimumExercises(atom)),
+          max(0, perAtomLimit - (previousCounts[atom.id] ?? 0)),
+        ),
     };
     final required = {...remaining};
     final requiredCount = remaining.values.sum;
@@ -241,14 +250,15 @@ class ExerciseGenerator {
       }
     }
 
-    // Возврат старого идёт отдельным блоком в хвосте, после закрепления:
-    // сначала материал урока, потом повторение прошлых тем. См. ТЗ §6.2.
-    // Чередование действует только внутри закрепления.
+    // Формы сначала собираем в педагогическом порядке. Общий повтор
+    // вставляем уже в готовую очередь: так порядок встреч одной буквы
+    // (например, контур до письма по памяти) не ломается. См. ТЗ §6.2.
+    late final List<_ScheduledAtom> topicSlots;
     if (fresh.any(_isConnectedForm)) {
       // Все формы входят в один сеанс, но изучаются последовательными
       // блоками. Внутри блока сохраняется чередование букв.
       final byForm = result.groupListsBy((item) => item.atom.form);
-      return [
+      topicSlots = [
         for (final form in [
           null,
           LetterForm.isolated,
@@ -257,10 +267,68 @@ class ExerciseGenerator {
           LetterForm.medial,
         ])
           ...?byForm[form],
-        ...spacedSlots,
       ];
+    } else {
+      topicSlots = result;
     }
-    return [...result, ...spacedSlots];
+    return _interleaveSpacedReview(topicSlots, spacedSlots, fresh);
+  }
+
+  /// Не даёт паре новых букв превратиться в предсказуемое A/B/A/B.
+  /// До первой вставки каждая новая буква встречается хотя бы раз.
+  /// Дальше выбор случаен, но пока обе очереди не пусты, старое не идёт
+  /// дважды подряд, а новое — больше двух раз подряд.
+  List<_ScheduledAtom> _interleaveSpacedReview(
+    List<_ScheduledAtom> topic,
+    List<_ScheduledAtom> spaced,
+    List<Atom> fresh,
+  ) {
+    if (topic.isEmpty || spaced.isEmpty || fresh.isEmpty) {
+      return [...topic, ...spaced];
+    }
+
+    String learningKey(Atom atom) => atom.letterId ?? atom.id;
+    final freshKeys = fresh.map(learningKey).toSet();
+    final seenFresh = <String>{};
+    var protectedLength = 0;
+    for (final item in topic) {
+      protectedLength++;
+      final key = learningKey(item.atom);
+      if (freshKeys.contains(key)) seenFresh.add(key);
+      if (seenFresh.length == freshKeys.length) break;
+    }
+
+    final mixed = topic.take(protectedLength).toList();
+    final remainingTopic = topic.skip(protectedLength).toList();
+    var topicIndex = 0;
+    var spacedIndex = 0;
+    var topicRun = 0;
+    var spacedRun = 0;
+
+    while (topicIndex < remainingTopic.length && spacedIndex < spaced.length) {
+      final takeSpaced =
+          spacedRun == 0 &&
+          (topicRun >= 2 ||
+              _random.nextInt(
+                    remainingTopic.length -
+                        topicIndex +
+                        spaced.length -
+                        spacedIndex,
+                  ) <
+                  spaced.length - spacedIndex);
+      if (takeSpaced) {
+        mixed.add(spaced[spacedIndex++]);
+        spacedRun = 1;
+        topicRun = 0;
+      } else {
+        mixed.add(remainingTopic[topicIndex++]);
+        topicRun++;
+        spacedRun = 0;
+      }
+    }
+    mixed.addAll(remainingTopic.skip(topicIndex));
+    mixed.addAll(spaced.skip(spacedIndex));
+    return mixed;
   }
 
   /// Созревшие формы старой буквы получают компактную пару: узнавание её
@@ -384,6 +452,10 @@ class ExerciseGenerator {
     // узнавание; при трёх-четырёх сначала сохраняем обязательные режимы.
     // У новой буквы сессия переносит голос сразу после её объяснения.
     final p = ctx.progress[atom.id] ?? const AtomProgress();
+    final availablePractice = rules
+        .requiredPracticeModes(atom)
+        .where((mode) => allowPronunciation || mode != ExerciseMode.sayName)
+        .toList();
     final missingPractice = focused && !p.weak
         ? rules
               .requiredPracticeModes(atom)
@@ -393,6 +465,22 @@ class ExerciseGenerator {
               )
               .toList()
         : const <ExerciseMode>[];
+    if (focused && !p.weak && missingPractice.length < slot.count) {
+      // Ошибка сбрасывает текущую чистую серию, но не забывает уже
+      // выполненные режимы. Если после этого давать только тест с выбором,
+      // серия никогда не наберёт два разных режима и буква зациклится.
+      final modesInUpcomingStreak = {
+        ...p.modesInStreak,
+        ...missingPractice,
+        _canRecognizeBySound(atom, pool.toSet())
+            ? ExerciseMode.soundToLetter
+            : ExerciseMode.trace,
+      };
+      for (final mode in availablePractice) {
+        if (modesInUpcomingStreak.length >= rules.distinctModesForKnown) break;
+        if (modesInUpcomingStreak.add(mode)) missingPractice.add(mode);
+      }
+    }
     if (slot.index < missingPractice.length) {
       final mode = missingPractice[slot.index];
       if (mode == ExerciseMode.sayName) spoken.add(atom.letterId!);

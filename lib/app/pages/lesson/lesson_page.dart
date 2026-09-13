@@ -431,24 +431,30 @@ class _TracingBar extends GetView<LessonController> {
     if (mode == ExerciseMode.trace) {
       return const SizedBox.shrink();
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: controller.giveUpTracing,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8, top: 8),
-            child: Text(
-              'Не помню, показать',
-              style: UITextStyles.regular12.copyWith(
-                color: UIColors.secondary2,
+
+    return Obx(() {
+      if (controller.tracingGuideVisible.value) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: controller.giveUpTracing,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8, top: 8),
+              child: Text(
+                'Не помню, показать',
+                style: UITextStyles.regular12.copyWith(
+                  color: UIColors.secondary2,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 }
 
