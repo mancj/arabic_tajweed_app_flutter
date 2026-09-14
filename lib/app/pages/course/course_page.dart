@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../resources/ui_resources.dart';
@@ -66,7 +67,8 @@ class CoursePage extends GetView<CourseController> {
             const Margin.vertical(16),
             CourseActivityWeek(
               days: controller.activityDays.toSet(),
-              today: DateTime.now(),
+              today: controller.today,
+              onDateTap: kDebugMode ? controller.setDebugToday : null,
             ),
             const Margin.vertical(8),
             CourseLessonPreview(controller: controller),

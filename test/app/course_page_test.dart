@@ -4,15 +4,18 @@ import 'package:arabic_tajweed_app/app/pages/course/course_dashboard.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_path_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_binding.dart';
+import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/plugin_mocks.dart';
 
@@ -45,8 +48,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   }
 
-  Future<CourseController> open(WidgetTester tester) async {
-    final c = Get.put(CourseController(database: db, curriculum: curriculum));
+  Future<CourseController> open(WidgetTester tester, {AppClock? clock}) async {
+    final c = Get.put(
+      CourseController(database: db, curriculum: curriculum, clock: clock),
+    );
     await tester.pumpWidget(
       GetMaterialApp(
         home: const CoursePage(),
@@ -61,6 +66,39 @@ void main() {
     await settle(tester);
     return c;
   }
+
+  // Выбранный в debug день должен переживать перезапуск общих часов, иначе
+  // календарь после нового запуска вернётся к реальному числу.
+  testWidgets('нажатие на дату сохраняет сегодняшний день приложения', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    DateTime systemNow() => DateTime(2026, 9, 14, 10, 30);
+    final clock = AppClock(systemNow: systemNow, preferences: preferences);
+    final c = await open(tester, clock: clock);
+    final nextDay = find.descendant(
+      of: find.byType(CourseActivityWeek),
+      matching: find.text('15'),
+    );
+
+    await tester.tap(nextDay);
+    await settle(tester);
+
+    expect(DateUtils.isSameDay(c.today, DateTime(2026, 9, 15)), isTrue);
+    await tester.runAsync(
+      () => c.repository.finishSession(
+        sessionId: 1,
+        purpose: LessonPurpose.standard,
+        exerciseCount: 0,
+        firstTryCorrect: 0,
+      ),
+    );
+    final summaries = await db.readSessionSummaries();
+    expect(DateUtils.isSameDay(summaries.single.at, c.today), isTrue);
+    final restarted = AppClock(systemNow: systemNow, preferences: preferences);
+    expect(DateUtils.isSameDay(restarted.now, c.today), isTrue);
+  });
 
   testWidgets('главная показывает одно занятие и отдельный путь', (
     tester,

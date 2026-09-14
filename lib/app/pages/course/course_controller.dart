@@ -127,6 +127,12 @@ class CourseController extends GetxController {
       statuses.firstWhereOrNull((s) => s.topic.id == nextPlan.value?.topicId);
   bool get allDone => statuses.isNotEmpty && statuses.every((s) => s.isDone);
   bool get hasStarted => activityDays.isNotEmpty;
+  DateTime get today => _clock.now;
+
+  Future<void> setDebugToday(DateTime date) async {
+    await _clock.setDebugToday(date);
+    await refreshBoard();
+  }
 
   int get knownLetters => context.knownLetterCount;
   int get totalLetters => curriculum.formsByLetter.length;

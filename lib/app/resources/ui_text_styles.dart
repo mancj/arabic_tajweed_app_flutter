@@ -68,6 +68,7 @@ class UITextStyles {
   static TextStyle get regular11Relaxed => _style(size: 11, height: 1.5);
   static TextStyle get regular12 => _style(size: 12);
   static TextStyle get regular13 => _style(size: 13);
+  static TextStyle get regular15 => _style(size: 15);
   static TextStyle get regular17 => _style(size: 17);
 
   static TextStyle get medium15 => _style(size: 15, weight: FontWeight.w500);

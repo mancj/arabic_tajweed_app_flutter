@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart' hide GetNumUtils;
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/media/single_sound_effect.dart';
@@ -73,6 +74,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
 
   void _showResultSheet() {
     if (!mounted || _sheetOpen) return;
+    if (controller.isDebugFinishingLesson) return;
     if (!controller.wasCorrect.value && !controller.wasWrong.value) return;
 
     _sheetOpen = true;
@@ -100,6 +102,15 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: controller.isReviewOnly ? 'Повторение' : 'Урок',
+      actions: kDebugMode
+          ? [
+              Obx(
+                () => controller.stage.value == LessonStage.exercise
+                    ? const _LessonDebugMenu()
+                    : const SizedBox.shrink(),
+              ),
+            ]
+          : const [],
       bottomBar: Obx(() => _BottomBar(stage: controller.stage.value)),
       builder: (context, insets) => Obx(() {
         final stage = controller.stage.value;
@@ -330,10 +341,6 @@ class _BottomBar extends GetView<LessonController> {
         return Column(
           mainAxisSize: MainAxisSize.max,
           children: [
-            // Только в отладке: «верно» пишет чистый ответ и двигает прогресс,
-            // «пропустить» не пишет ничего. Оба нужны, чтобы быстро дойти
-            // до нужного места курса.
-            if (kDebugMode) const _DebugBar(),
             if (isTracing)
               _TracingBar(mode: exercise!.mode)
             else if (isSayName)
@@ -378,43 +385,61 @@ class _BottomBar extends GetView<LessonController> {
   }
 }
 
-class _DebugBar extends GetView<LessonController> {
-  const _DebugBar();
+class _LessonDebugMenu extends GetView<LessonController> {
+  const _LessonDebugMenu();
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _DebugAction(text: 'Ответить верно', onTap: controller.answerCorrectly),
-        const Margin.horizontal(24),
-        _DebugAction(text: 'Пропустить', onTap: controller.skipExercise),
+  Widget build(BuildContext context) => Obx(() {
+    final canActOnCurrent =
+        controller.card.value == null &&
+        !controller.wasCorrect.value &&
+        !controller.wasWrong.value &&
+        controller.current != null;
+    final availableWidth = MediaQuery.sizeOf(context).width - 32;
+    final menuWidth = availableWidth < 320 ? availableWidth : 320.0;
+    final itemStyle = UITextStyles.regular15;
+
+    return GlassMenu(
+      menuAlignment: GlassMenuAlignment.topRight,
+      autoAdjustToScreen: true,
+      menuPadding: const EdgeInsets.all(0),
+      menuWidth: menuWidth,
+      menuBorderRadius: 24,
+      itemBorderRadius: 16,
+      quality: AppScaffoldActionButton.defaultQuality,
+      settings: AppScaffoldActionButton.menuSettings,
+      items: [
+        GlassMenuItem(
+          title: 'Ответить верно',
+          icon: const Icon(Icons.check_circle_outline_rounded),
+          titleStyle: itemStyle,
+          enabled: canActOnCurrent,
+          onTap: controller.answerCorrectly,
+        ),
+        GlassMenuItem(
+          title: 'Пропустить',
+          icon: const Icon(Icons.skip_next_outlined),
+          titleStyle: itemStyle,
+          enabled: canActOnCurrent,
+          onTap: controller.skipExercise,
+        ),
+        const GlassMenuDivider(),
+        GlassMenuItem(
+          title: 'Завершить урок с правильными ответами',
+          icon: const Icon(Icons.done_all_rounded),
+          titleStyle: itemStyle,
+          height: 64,
+          maxLines: 2,
+          onTap: controller.finishLessonCorrectly,
+        ),
       ],
-    ),
-  );
-}
-
-/// Текстовая кнопка отладочной панели: без рамки, чтобы не спутать
-/// с настоящими кнопками урока.
-class _DebugAction extends StatelessWidget {
-  const _DebugAction({required this.text, required this.onTap});
-
-  final String text;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: onTap,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        text,
-        style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+      triggerBuilder: (context, toggleMenu) => AppScaffoldActionButton(
+        icon: Icon(Icons.bug_report_outlined, color: UIColors.text),
+        semanticLabel: 'Меню отладки урока',
+        onPressed: toggleMenu,
       ),
-    ),
-  );
+    );
+  });
 }
 
 /// Нижняя панель заданий на письмо.

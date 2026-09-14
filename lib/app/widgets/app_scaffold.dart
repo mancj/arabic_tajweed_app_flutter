@@ -17,8 +17,8 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 typedef AppScaffoldContentBuilder =
     Widget Function(BuildContext context, EdgeInsets contentInsets);
 
-/// Каркас экрана приложения: фоновый паттерн, плавающая шапка со стеклянной
-/// кнопкой «назад» и опциональная закреплённая снизу панель.
+/// Каркас экрана приложения: фоновый паттерн, плавающая шапка со стеклянными
+/// кнопками навигации и действий, опциональная закреплённая снизу панель.
 ///
 /// Содержимое занимает всю высоту — и под шапкой, и под нижней панелью, чтобы
 /// стекло преломляло живой контент, а не пустой фон. Каркас лишь считает поля
@@ -28,6 +28,7 @@ typedef AppScaffoldContentBuilder =
 /// ```dart
 /// AppScaffold(
 ///   title: 'Алфавит',
+///   actions: [_AlphabetMenu()],
 ///   bottomBar: _NextButton(...),
 ///   builder: (context, insets) => SingleChildScrollView(
 ///     padding: insets,
@@ -54,6 +55,9 @@ class AppScaffold extends StatefulWidget {
   /// Показывать бренд вместо заголовка экрана.
   final bool showBrand;
 
+  /// Действия справа в шапке. Обычно это компактные кнопки размером 46×46.
+  final List<Widget> actions;
+
   final Color? backgroundColor;
 
   /// Боковые поля содержимого; вертикальные отступы прибавляются к ним.
@@ -69,6 +73,7 @@ class AppScaffold extends StatefulWidget {
     this.onBack,
     this.showBackButton = true,
     this.showBrand = false,
+    this.actions = const [],
     this.backgroundColor,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.edgeBlurSigma = 4,
@@ -161,6 +166,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             child: _Header(
               title: widget.title,
               showBrand: widget.showBrand,
+              actions: widget.actions,
               onBack: widget.showBackButton
                   ? (widget.onBack ?? Get.back)
                   : null,
@@ -187,8 +193,14 @@ class _Header extends StatelessWidget {
   final String? title;
   final bool showBrand;
   final VoidCallback? onBack;
+  final List<Widget> actions;
 
-  const _Header({this.title, this.showBrand = false, this.onBack});
+  const _Header({
+    this.title,
+    this.showBrand = false,
+    this.onBack,
+    this.actions = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +236,7 @@ class _Header extends StatelessWidget {
                   shadows: [
                     Shadow(
                       color: UIColors.shadows,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                       blurRadius: 4,
                     ),
                   ],
@@ -236,29 +248,26 @@ class _Header extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: GlassIconButton(
+                child: AppScaffoldActionButton(
                   icon: Icon(CupertinoIcons.back, color: UIColors.text),
-                  onPressed: onBack,
-                  size: AppScaffold._headerHeight,
-                  iconSize: 24,
+                  onPressed: onBack!,
                   semanticLabel: 'Назад',
-                  // Линзу рисует только premium: standard — плоское матовое
-                  // стекло без преломления. Вне общего слоя premium обязан
-                  // рендерить собственный, иначе ассерт в debug.
-                  quality: GlassQuality.premium,
-                  useOwnLayer: true,
-                  settings: const LiquidGlassSettings(
-                    // Чем толще стекло, тем сильнее гнёт картинку под собой.
-                    thickness: 24,
-                    // Блюр матирует фон и съедает искажение — держим минимальным.
-                    blur: 1,
-                    refractiveIndex: 1.45,
-                    chromaticAberration: .04,
-                    lightIntensity: .8,
-                    // Осветляющая вуаль iOS 26 для читаемости на светлом фоне;
-                    // выше .2 стекло мутнеет и линза пропадает.
-                    whitenStrength: .15,
-                  ),
+                ),
+              ),
+            ),
+          if (actions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var index = 0; index < actions.length; index++) ...[
+                      if (index > 0) const Margin.horizontal(8),
+                      actions[index],
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -266,6 +275,48 @@ class _Header extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Единая стеклянная кнопка для [AppScaffold.actions].
+class AppScaffoldActionButton extends StatelessWidget {
+  const AppScaffoldActionButton({
+    required this.icon,
+    required this.onPressed,
+    required this.semanticLabel,
+    super.key,
+  });
+
+  final Widget icon;
+  final VoidCallback onPressed;
+  final String semanticLabel;
+
+  /// Базовые параметры стекла для элементов шапки.
+  static const defaultQuality = GlassQuality.premium;
+  static const defaultSettings = LiquidGlassSettings(
+    thickness: 24,
+    blur: 1,
+    refractiveIndex: 1.45,
+    chromaticAberration: .04,
+    lightIntensity: .8,
+    whitenStrength: .15,
+  );
+
+  /// Меню сохраняет оптику кнопки, но сильнее матирует фон под текстом.
+  static final menuSettings = defaultSettings.copyWith(blur: 10);
+
+  @override
+  Widget build(BuildContext context) => GlassIconButton(
+    icon: icon,
+    onPressed: onPressed,
+    size: AppScaffold._headerHeight,
+    iconSize: 24,
+    semanticLabel: semanticLabel,
+    // Линзу рисует только premium: standard — плоское матовое стекло без
+    // преломления. Вне общего слоя premium рендерит собственный слой.
+    quality: defaultQuality,
+    useOwnLayer: true,
+    settings: defaultSettings,
+  );
 }
 
 /// Сообщает высоту ребёнка после каждого layout, на котором она изменилась.

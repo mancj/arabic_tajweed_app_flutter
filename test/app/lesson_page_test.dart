@@ -54,7 +54,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  Future<void> pumpLesson(WidgetTester tester, {String? topicId}) async {
+  Future<void> pumpLesson(
+    WidgetTester tester, {
+    String? topicId,
+    bool continuePlanning = false,
+  }) async {
     // Граф отдаём готовым: rootBundle в тестах отвечает только первому
     // тесту файла, дальше запрос повисает.
     Get.put(
@@ -62,6 +66,7 @@ void main() {
         database: db,
         curriculum: curriculum,
         topicId: topicId,
+        continuePlanning: continuePlanning,
         shapeLoader: shapeFromDisk,
         audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
@@ -210,6 +215,8 @@ void main() {
 
     expect(controller.isSayNameTask, isTrue);
     final exercise = controller.current!;
+    await tester.tap(find.bySemanticsLabel('Меню отладки урока'));
+    await settle(tester);
     await tester.tap(find.text('Ответить верно'));
     await settle(tester);
 
@@ -230,5 +237,38 @@ void main() {
     expect(answers, hasLength(1));
     expect(answer.atomId, exercise.atom.id);
     expect(answer.correct, isTrue);
+  });
+
+  // Массовое debug-завершение должно сохранять обычные ответы каждого режима,
+  // а не перескакивать очередь и оставлять тему частично пройденной.
+  testWidgets('отладочная кнопка завершает урок правильными ответами', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpLesson(tester, topicId: 'm.first', continuePlanning: true);
+    final controller = Get.find<LessonController>();
+
+    while (controller.stage.value == LessonStage.intro) {
+      await controller.nextIntro();
+      await settle(tester);
+    }
+    expect(find.text('Завершить урок с правильными ответами'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Меню отладки урока'));
+    await settle(tester);
+    expect(find.text('Завершить урок с правильными ответами'), findsOneWidget);
+    await tester.tap(find.text('Завершить урок с правильными ответами'));
+    for (var i = 0; i < 100; i++) {
+      await settle(tester);
+      if (controller.stage.value == LessonStage.finished) break;
+    }
+
+    expect(controller.stage.value, LessonStage.finished);
+    expect(find.text('Урок пройден'), findsOneWidget);
+    expect(find.text('Верно!'), findsNothing);
+    final answers = (await db.readAll()).whereType<ProgressEvent>().toList();
+    expect(answers, isNotEmpty);
+    expect(answers.every((answer) => answer.correct), isTrue);
   });
 }

@@ -302,10 +302,12 @@ class CourseActivityWeek extends StatelessWidget {
   const CourseActivityWeek({
     required this.days,
     required this.today,
+    this.onDateTap,
     super.key,
   });
   final Set<DateTime> days;
   final DateTime today;
+  final ValueChanged<DateTime>? onDateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +354,8 @@ class CourseActivityWeek extends StatelessWidget {
                 );
                 final active = days.contains(date);
                 final current = DateUtils.isSameDay(date, today);
-                return Semantics(
+                final day = Semantics(
+                  button: onDateTap != null,
                   label:
                       '$label, ${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
                   child: ExcludeSemantics(
@@ -399,6 +402,11 @@ class CourseActivityWeek extends StatelessWidget {
                       ],
                     ),
                   ),
+                );
+                if (onDateTap == null) return day;
+                return AppGestureDetector(
+                  onTap: () => onDateTap!(date),
+                  child: day,
                 );
               }).toList(),
             ),

@@ -57,7 +57,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
           AtomIntroduced(
             atomId: check.concepts[conceptIndex].id,
             sessionId: session!,
-            at: DateTime.now(),
+            at: widget.controller.today,
           ),
         );
         conceptIndex++;
@@ -70,7 +70,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
             KnowledgeConfirmed(
               atomId: q.atom.id,
               sessionId: session!,
-              at: DateTime.now(),
+              at: widget.controller.today,
             ),
           );
           confirmed.add(q.atom.id);

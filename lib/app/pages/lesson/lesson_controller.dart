@@ -268,6 +268,7 @@ class LessonController extends GetxController {
   bool _sessionSummaryRecorded = false;
   bool _pronunciationRequired = true;
   bool _pronunciationAvailable = true;
+  bool _debugFinishingLesson = false;
   late final PronunciationPreference? _pronunciationPreference;
   int? _pronunciationSessionId;
   bool _currentBlockEndsSession = false;
@@ -974,6 +975,39 @@ class LessonController extends GetxController {
     if (exercise.isChoice) selected.value = exercise.answerIndex;
     await submit(directOutcome: true);
     if (advance && wasCorrect.value) await submit();
+  }
+
+  bool get isDebugFinishingLesson => _debugFinishingLesson;
+
+  /// Только для отладки: проходит остаток занятия через обычные верные
+  /// ответы, включая новые блоки, карточки и пересчёт плана.
+  Future<void> finishLessonCorrectly() async {
+    if (!kDebugMode ||
+        _debugFinishingLesson ||
+        stage.value != LessonStage.exercise) {
+      return;
+    }
+    _debugFinishingLesson = true;
+    try {
+      var steps = 0;
+      while (stage.value != LessonStage.finished) {
+        if (steps++ >= 500) {
+          throw StateError('Отладочный проход урока не завершился');
+        }
+        if (stage.value == LessonStage.intro) {
+          await nextIntro();
+          continue;
+        }
+        while (card.value != null) {
+          await dismissCard();
+        }
+        if (stage.value == LessonStage.exercise) {
+          await answerCorrectly(advance: true);
+        }
+      }
+    } finally {
+      _debugFinishingLesson = false;
+    }
   }
 
   /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:

@@ -1,4 +1,5 @@
 import 'package:arabic_tajweed_app/app/shared_state/auth_state.dart';
+import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/rest/api_client.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_rest_client.dart';
@@ -22,10 +23,9 @@ class AppBinding extends Bindings {
   }
 
   Future<void> asyncDependencies() async {
-    await Get.putAsync(() async {
-      var prefs = await SharedPreferences.getInstance();
-      return SharedPreferenceManager(prefs);
-    });
+    final preferences = await SharedPreferences.getInstance();
+    Get.put(SharedPreferenceManager(preferences));
+    Get.put(AppClock(preferences: preferences), permanent: true);
 
     // Одна база на всё приложение: лог событий append-only.
     Get.put(ProgressDatabase(), permanent: true);
