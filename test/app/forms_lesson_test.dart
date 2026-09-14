@@ -37,6 +37,7 @@ void main() {
     progress = ProgressRepository(
       database: database,
       letterFormIds: curriculum.letterFormIds,
+      baseLetterIds: curriculum.baseLetterIds,
     );
   });
   tearDown(() => database.close());
@@ -260,11 +261,26 @@ void main() {
       containsAll(formIds),
     );
     await progress.recompute();
+    final folded = await progress.progress();
+    for (final id in formIds) {
+      expect(
+        folded[id]?.state.index,
+        greaterThanOrEqualTo(AtomState.known.index),
+        reason:
+            '$id: ${folded[id]?.state}, streak=${folded[id]?.cleanStreak}, '
+            'modes=${folded[id]?.modesInStreak}',
+      );
+    }
     final statuses = TopicBoard(curriculum).statuses(
-      CurriculumContext(progress: await progress.progress(), formsByLetter: {}),
+      CurriculumContext(progress: folded, formsByLetter: {}),
       completed: {
         for (final c in await database.readCompletions()) c.topicId: c.byTest,
       },
+    );
+    expect(
+      statuses.firstWhere((s) => s.topic.id == 'm.forms').isDone,
+      isTrue,
+      reason: 'идеально пройденный урок форм не должен требовать лишний день',
     );
     expect(
       statuses.firstWhere((s) => s.topic.id == 'm.jim').state,

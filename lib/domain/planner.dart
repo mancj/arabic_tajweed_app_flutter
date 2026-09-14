@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'atom.dart';
 import 'atom_state.dart';
 import 'curriculum.dart';
+import 'lesson_pacing.dart';
 import 'learning_rules.dart';
 import 'review_queue.dart';
 import 'topic_board.dart';
@@ -21,6 +22,8 @@ class LessonPlan {
     this.spacedReview = const [],
     this.topicId,
     this.reviewCounts = const {},
+    this.purpose = LessonPurpose.standard,
+    this.checkpointLetters,
   });
 
   /// Небольшой цельный блок материала; оглавление может объединять их.
@@ -36,6 +39,9 @@ class LessonPlan {
   final Map<String, int> reviewCounts;
   bool get isFocusedReview => reviewCounts.isNotEmpty;
 
+  final LessonPurpose purpose;
+  final int? checkpointLetters;
+
   /// Возврат старого из общей очереди — блок «повтор» по ТЗ §6.2.
   /// Это буквы из других тем, иначе они не всплывали бы никогда.
   /// Кандидаты на оставшиеся места; обязательный материал — newAtoms/reviewAtoms.
@@ -48,21 +54,59 @@ class LessonPlan {
   /// Проверяем до объяснений: генератор обязан спросить весь материал
   /// плана. Слишком большую тему нужно разделить в программе курса.
   int minimumTaskCount(Curriculum curriculum, LearningRules rules) {
+    return minimumExerciseCounts(curriculum, rules).values.sum;
+  }
+
+  /// Минимум встреч по каждому атому. У соединённых форм одной встречи
+  /// каждой плюс повтор опорной формы хватает, чтобы добавить сборку всего
+  /// семейства. У двухформенных букв сборки нет, поэтому их конечная форма
+  /// получает две самостоятельные проверки.
+  Map<String, int> minimumExerciseCounts(
+    Curriculum curriculum,
+    LearningRules rules,
+  ) {
     final own = _ownAtoms(curriculum);
     final narrowLetters = isNarrowBaseLetterBlock(curriculum);
-    final minimum = own.values
-        .map(
-          (atom) =>
-              reviewCounts[atom.id] ??
-              (narrowLetters && atom.kind != AtomKind.concept
-                  ? max(
-                      rules.minimumExercises(atom),
-                      rules.narrowLetterExercises,
-                    )
-                  : rules.minimumExercises(atom)),
-        )
-        .sum;
-    return minimum;
+    final counts = {
+      for (final atom in own.values)
+        atom.id:
+            reviewCounts[atom.id] ??
+            (narrowLetters && atom.kind != AtomKind.concept
+                ? max(rules.minimumExercises(atom), rules.narrowLetterExercises)
+                : rules.minimumExercises(atom)),
+    };
+
+    if (!isFocusedReview) {
+      final freshConnected = newAtoms
+          .where(
+            (atom) =>
+                atom.kind == AtomKind.letterForm &&
+                atom.form != null &&
+                atom.form != LetterForm.isolated &&
+                atom.letterId != null,
+          )
+          .groupListsBy((atom) => atom.letterId!);
+      for (final entry in freshConnected.entries) {
+        final expectedConnected = max(
+          0,
+          (curriculum.formsByLetter[entry.key]?.length ?? 1) - 1,
+        );
+        final completeFourFormFamily =
+            expectedConnected == 3 && entry.value.length == 3;
+        final repeated = completeFourFormFamily
+            ? [
+                entry.value.firstWhereOrNull(
+                      (atom) => atom.form == LetterForm.medial,
+                    ) ??
+                    entry.value.first,
+              ]
+            : entry.value;
+        for (final atom in repeated) {
+          counts[atom.id] = max(counts[atom.id] ?? 0, 2);
+        }
+      }
+    }
+    return counts;
   }
 
   /// Полный блок ровно из двух отдельных букв. Для него не нужны пятые
@@ -120,9 +164,10 @@ class LessonPlan {
   }
 }
 
-/// Планировщик. Четыре правила строго по приоритету — срабатывает первое
-/// подходящее. Порядок и есть содержательное решение: гарантия темпа
-/// сильнее нагрузки, но потолок отложенных сильнее гарантии темпа.
+/// Планировщик проверяет правила строго по приоритету — срабатывает
+/// первое подходящее. Порядок и есть содержательное решение: дневной цикл
+/// повторений и рубежи не обходятся гарантией темпа, а потолок отложенных
+/// сильнее всего.
 /// См. SPEC.md §6.3.
 class LessonPlanner {
   const LessonPlanner({
@@ -143,6 +188,7 @@ class LessonPlanner {
     required int sessionsWithoutNew,
     Set<String>? topicIds,
     Map<String, int> previousCounts = const {},
+    PacingSnapshot pacing = const PacingSnapshot(),
   }) {
     final deferred = _deferred(ctx, sessionId);
     final review = _reviewQueue(
@@ -172,6 +218,7 @@ class LessonPlanner {
         review,
         topicIds,
         previousCounts,
+        pacing,
       );
     }
 
@@ -279,6 +326,7 @@ class LessonPlanner {
     List<String> review,
     Set<String>? topicIds,
     Map<String, int> previousCounts,
+    PacingSnapshot pacing,
   ) {
     final board = TopicBoard(curriculum, rules: rules);
     final ordered = board
@@ -302,9 +350,15 @@ class LessonPlanner {
         : null;
     // Просмотр карточки и несколько ответов ещё не завершают материал.
     // Продолжаем начатый блок по знаниям, без сохранения очереди занятия.
-    // Гарантия темпа не позволяет перескочить обязательную практику.
+    // После уже завершённого сегодня урока с новым материалом сначала
+    // выдаём полноценное смешанное повторение, даже если в теме остались
+    // пробелы: оно одновременно лечит их и не зацикливается на одной паре.
     final unfinished = candidate?.started == true ? candidate : null;
     if (unfinished != null) {
+      if (unfinished.topic.stage == 1 &&
+          !pacing.canIntroduceNewMaterial(rules)) {
+        return _pacingReview(ctx, sessionId, previousCounts, pacing);
+      }
       if (unfinished.topic.counterOf.every(
         (id) => ctx.stateOf(id) != AtomState.fresh,
       )) {
@@ -331,12 +385,33 @@ class LessonPlanner {
             )
         ? candidate
         : null;
+    final nextPlan = next == null
+        ? null
+        : board.planFor(next.topic, ctx, sessionId: sessionId, rules: rules);
+    final checkpoint = _dueAlphabetCheckpoint(ctx, pacing);
+    final reachesNewLetters = nextPlan?.newAtoms.any(_isBaseLetter) ?? false;
+    final leavesAlphabet = frontier == null || frontier.topic.stage > 1;
+    if (checkpoint != null && (reachesNewLetters || leavesAlphabet)) {
+      return _mixedAlphabetReview(
+        ctx,
+        sessionId,
+        previousCounts,
+        purpose: LessonPurpose.alphabetCheckpoint,
+        checkpointLetters: checkpoint,
+        reason: 'обязательная смешанная проверка после $checkpoint букв',
+      );
+    }
+    final introducesAlphabetMaterial =
+        next?.topic.stage == 1 && (nextPlan?.newAtoms.isNotEmpty ?? false);
+    if (introducesAlphabetMaterial && !pacing.canIntroduceNewMaterial(rules)) {
+      return _pacingReview(ctx, sessionId, previousCounts, pacing);
+    }
     final overloaded = _load(ctx, sessionId) > loadThreshold;
     final force = sessionsWithoutNew >= rules.sessionsWithoutNewBeforeForcing;
     if (next != null && (!overloaded || force)) {
       // Весь объявленный блок обязателен, включая все формы. Если он не
       // помещается, исправляется контент; генератор ничего не отбрасывает.
-      return board.planFor(next.topic, ctx, sessionId: sessionId, rules: rules);
+      return nextPlan!;
     }
     final scope = topicIds == null
         ? null
@@ -369,6 +444,202 @@ class LessonPlanner {
     );
   }
 
+  int? _dueAlphabetCheckpoint(CurriculumContext ctx, PacingSnapshot pacing) {
+    if (!pacing.enabled) return null;
+    final learnedPrefix = curriculum.baseLetters
+        .takeWhile((atom) => ctx.isKnown(atom.id))
+        .length;
+    return rules.alphabetCheckpointLetters
+        .where(
+          (threshold) =>
+              threshold <= learnedPrefix &&
+              !pacing.completedAlphabetCheckpoints.any(
+                (completed) => completed >= threshold,
+              ),
+        )
+        .maxOrNull;
+  }
+
+  LessonPlan _pacingReview(
+    CurriculumContext ctx,
+    int sessionId,
+    Map<String, int> previousCounts,
+    PacingSnapshot pacing,
+  ) => _mixedAlphabetReview(
+    ctx,
+    sessionId,
+    previousCounts,
+    purpose: LessonPurpose.mixedReview,
+    reason:
+        'темп занятий: до следующего нового блока '
+        '${pacing.reviewsUntilNewMaterial(rules)} успешных повторений',
+  );
+
+  LessonPlan _mixedAlphabetReview(
+    CurriculumContext ctx,
+    int sessionId,
+    Map<String, int> previousCounts, {
+    required LessonPurpose purpose,
+    required String reason,
+    int? checkpointLetters,
+  }) {
+    final alphabetIds = curriculum.topics
+        .where((topic) => topic.stage == 1)
+        .expand((topic) => topic.counterOf)
+        .toSet();
+    final candidates = curriculum.nodes
+        .where((node) => alphabetIds.contains(node.atom.id))
+        .map((node) => node.atom)
+        .where(
+          (atom) =>
+              atom.kind != AtomKind.concept &&
+              ctx.stateOf(atom.id) != AtomState.fresh &&
+              !(ctx.progress[atom.id]?.isDeferredAt(sessionId, rules) ??
+                  false) &&
+              (previousCounts[atom.id] ?? 0) < _maxDrillsPerAtom,
+        )
+        .sorted((a, b) => _reviewPriority(a, b, ctx, sessionId));
+    if (candidates.isEmpty) {
+      return _buildPlan(
+        template: LessonTemplate.review,
+        newAtoms: const [],
+        reviewAtoms: _reviewQueue(ctx, sessionId),
+        reason: reason,
+      );
+    }
+
+    final latestSession = candidates
+        .map(
+          (atom) =>
+              ctx.progress[atom.id]?.introducedSession ??
+              ctx.progress[atom.id]?.lastSeenSession ??
+              0,
+        )
+        .max;
+    final recent = candidates
+        .where(
+          (atom) =>
+              (ctx.progress[atom.id]?.introducedSession ??
+                  ctx.progress[atom.id]?.lastSeenSession ??
+                  0) ==
+              latestSession,
+        )
+        .toList();
+    final older = candidates.whereNot(recent.contains).toList();
+    final counts = <String, int>{};
+
+    if (checkpointLetters != null) {
+      final previousCheckpoint =
+          rules.alphabetCheckpointLetters
+              .where((threshold) => threshold < checkpointLetters)
+              .maxOrNull ??
+          0;
+      final segment = curriculum.baseLetters
+          .skip(previousCheckpoint)
+          .take(checkpointLetters - previousCheckpoint)
+          .where(candidates.contains);
+      for (final atom in segment) {
+        counts[atom.id] = 1;
+      }
+    }
+
+    final limit = rules.tasksPerSession;
+    final recentLimit = older.isEmpty
+        ? limit
+        : limit * rules.recentMaterialMaxPercent ~/ 100;
+    _fillReviewCounts(
+      counts,
+      older,
+      targetForGroup: limit - recentLimit,
+      previousCounts: previousCounts,
+    );
+    _fillReviewCounts(
+      counts,
+      recent,
+      targetForGroup: recentLimit,
+      previousCounts: previousCounts,
+    );
+    _fillReviewCounts(
+      counts,
+      candidates,
+      targetTotal: limit,
+      previousCounts: previousCounts,
+    );
+
+    final plan = LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: const [],
+      reviewAtoms: counts.keys.toList(),
+      reviewCounts: counts,
+      purpose: purpose,
+      checkpointLetters: checkpointLetters,
+      reason: reason,
+    );
+    plan.validate(curriculum, rules);
+    return plan;
+  }
+
+  int _reviewPriority(Atom a, Atom b, CurriculumContext ctx, int sessionId) {
+    final pa = ctx.progress[a.id]!;
+    final pb = ctx.progress[b.id]!;
+    final state = (pa.state.index < AtomState.known.index ? 0 : 1).compareTo(
+      pb.state.index < AtomState.known.index ? 0 : 1,
+    );
+    if (state != 0) return state;
+    final weak = (pa.weak ? 0 : 1).compareTo(pb.weak ? 0 : 1);
+    if (weak != 0) return weak;
+    final due =
+        (pa.isDueAt(
+                  sessionId,
+                  rules,
+                  isLetterForm: a.kind == AtomKind.letterForm,
+                )
+                ? 0
+                : 1)
+            .compareTo(
+              pb.isDueAt(
+                    sessionId,
+                    rules,
+                    isLetterForm: b.kind == AtomKind.letterForm,
+                  )
+                  ? 0
+                  : 1,
+            );
+    if (due != 0) return due;
+    return (pa.lastSeenSession ?? 0).compareTo(pb.lastSeenSession ?? 0);
+  }
+
+  void _fillReviewCounts(
+    Map<String, int> counts,
+    List<Atom> atoms, {
+    required Map<String, int> previousCounts,
+    int? targetForGroup,
+    int? targetTotal,
+  }) {
+    if (atoms.isEmpty) return;
+    int groupTotal() => atoms.map((atom) => counts[atom.id] ?? 0).sum;
+    bool needsMore() => targetTotal != null
+        ? counts.values.sum < targetTotal
+        : groupTotal() < targetForGroup!;
+
+    while (needsMore()) {
+      var added = false;
+      for (final atom in atoms) {
+        if (!needsMore()) break;
+        final used = (previousCounts[atom.id] ?? 0) + (counts[atom.id] ?? 0);
+        if (used >= _maxDrillsPerAtom) continue;
+        counts.update(atom.id, (count) => count + 1, ifAbsent: () => 1);
+        added = true;
+      }
+      if (!added) break;
+    }
+  }
+
+  static bool _isBaseLetter(Atom atom) =>
+      atom.kind == AtomKind.letterForm &&
+      atom.letterId != null &&
+      atom.form == LetterForm.isolated;
+
   LessonPlan? _focusOnGaps(
     Topic topic,
     TopicBoard board,
@@ -393,7 +664,9 @@ class LessonPlanner {
       // подтверждено, достаточно только пропущенного обязательного режима.
       final count = max(
         missing,
-        ctx.isKnown(id) ? 0 : max(2, rules.cleanStreakForKnown - p.cleanStreak),
+        ctx.isKnown(id)
+            ? 0
+            : max(2, rules.cleanStreakRequiredFor(atom) - p.cleanStreak),
       );
       final available = min(
         remaining,

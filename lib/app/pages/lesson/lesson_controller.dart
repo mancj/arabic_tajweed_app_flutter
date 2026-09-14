@@ -21,9 +21,11 @@ import '../../../domain/exercise.dart';
 import '../../../domain/exercise_generator.dart';
 import '../../../domain/learning_rules.dart';
 import '../../../domain/lesson_session.dart';
+import '../../../domain/lesson_pacing.dart';
 import '../../../domain/topic_board.dart';
 import '../../../domain/planner.dart';
 import '../../../domain/progress_event.dart';
+import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
 import '../../widgets/drawing/tracing_shape_svg.dart';
 
@@ -43,12 +45,16 @@ class LessonController extends GetxController {
     VoiceRecorder? recorder,
     PronunciationRestClient? pronunciation,
     PronunciationPreference? pronunciationPreference,
+    AppClock? clock,
   }) : _baseRules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
        _topicId = topicId,
        _previewPlan = plan,
        _injectedPronunciationPreference = pronunciationPreference,
+       _clock =
+           clock ??
+           (Get.isRegistered<AppClock>() ? Get.find<AppClock>() : AppClock()),
        _shapeLoader = shapeLoader ?? _loadShapeAsset,
        _audio = audio ?? LetterAudio(),
        pronunciation = PronunciationChecker(
@@ -65,13 +71,14 @@ class LessonController extends GetxController {
         _pronunciationAvailable,
   );
 
-  /// Обычное занятие может добирать готовые блоки и повторение до общего
-  /// бюджета. Узкий блок из двух букв заканчивается после старого повтора:
-  /// следующую пару ради длины в ту же сессию не добавляем.
+  /// Обычное занятие может добирать повторение до общего бюджета. Один урок
+  /// вводит не больше одного цельного блока нового материала; смешанное
+  /// повторение тоже всегда остаётся отдельным занятием без нового.
   final bool continuePlanning;
 
   /// В тестах база подставляется в памяти; в приложении берётся из Get.
   final ProgressDatabase? _database;
+  final AppClock _clock;
 
   /// Готовый граф вместо чтения ассета — нужен тестам.
   final Curriculum? _injectedCurriculum;
@@ -254,7 +261,11 @@ class LessonController extends GetxController {
   final _formSequenceLetters = <String>{};
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
+  final _firstAttemptResults = <bool>[];
   bool _hasNewMaterial = false;
+  LessonPurpose _sessionPurpose = LessonPurpose.standard;
+  int? _sessionCheckpointLetters;
+  bool _sessionSummaryRecorded = false;
   bool _pronunciationRequired = true;
   bool _pronunciationAvailable = true;
   late final PronunciationPreference? _pronunciationPreference;
@@ -332,6 +343,8 @@ class LessonController extends GetxController {
       database: _database ?? Get.find<ProgressDatabase>(),
       rules: rules,
       letterFormIds: _curriculum.letterFormIds,
+      baseLetterIds: _curriculum.baseLetterIds,
+      now: () => _clock.now,
     );
 
     final ctx = await _context();
@@ -343,6 +356,7 @@ class LessonController extends GetxController {
                 ctx: ctx,
                 sessionId: _sessionId,
                 sessionsWithoutNew: await _progress.sessionsWithoutNew(),
+                pacing: await _progress.pacing(),
               )
             : _topicPlan(ctx));
     await _activatePlan(initialPlan, taskLimit: rules.tasksPerSession);
@@ -356,9 +370,14 @@ class LessonController extends GetxController {
   }) async {
     plan.validate(_curriculum, rules, taskLimit: taskLimit);
     _plan = plan;
+    if (_planReasons.isEmpty) {
+      _sessionPurpose = plan.purpose;
+      _sessionCheckpointLetters = plan.checkpointLetters;
+    }
     _currentBlockEndsSession =
         endsSession ??
-        (continuePlanning && plan.isNarrowBaseLetterBlock(_curriculum));
+        (plan.purpose.isMixedReview ||
+            (continuePlanning && plan.newAtoms.isNotEmpty));
     _topicId = plan.topicId ?? _topicId;
     _planReasons.add(plan.reason);
     _hasNewMaterial = _hasNewMaterial || plan.newAtoms.isNotEmpty;
@@ -480,13 +499,9 @@ class LessonController extends GetxController {
   Future<void> nextIntro() async {
     if (stage.value != LessonStage.intro) return;
     final atom = introAtom;
-    if (atom != null) {
+    if (atom != null && _plan!.newAtoms.any((fresh) => fresh.id == atom.id)) {
       await _progress.record(
-        AtomIntroduced(
-          atomId: atom.id,
-          sessionId: _sessionId,
-          at: DateTime.now(),
-        ),
+        AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: _clock.now),
       );
     }
     introIndex.value++;
@@ -578,6 +593,7 @@ class LessonController extends GetxController {
       sessionId: _sessionId,
       sessionsWithoutNew: await _progress.sessionsWithoutNew(),
       previousCounts: _askedCounts,
+      pacing: await _progress.pacing(),
     );
 
     // Новый блок вводим только целиком. Если обязательные задания
@@ -660,6 +676,7 @@ class LessonController extends GetxController {
       sessionId: _sessionId,
       rules: rules,
       taskLimit: limit,
+      now: () => _clock.now,
     );
     _syncShortSessionTarget(allowShorter: true);
     await _loadShapes(exercises);
@@ -780,13 +797,11 @@ class LessonController extends GetxController {
       return;
     }
 
-    await _progress.record(
-      AtomIntroduced(
-        atomId: atom.id,
-        sessionId: _sessionId,
-        at: DateTime.now(),
-      ),
-    );
+    if (_plan!.newAtoms.any((fresh) => fresh.id == atom.id)) {
+      await _progress.record(
+        AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: _clock.now),
+      );
+    }
     _shownCards.add(atom.id);
     _sessionIntroduced[atom.id] = atom;
     _nextCard();
@@ -992,6 +1007,7 @@ class LessonController extends GetxController {
       final letterId = exercise.atom.letterId;
       if (letterId != null) _formSequenceLetters.add(letterId);
     }
+    _firstAttemptResults.add(false);
     _countAsked(exercise.resultAtoms);
     await _afterExercise();
   }
@@ -1068,7 +1084,15 @@ class LessonController extends GetxController {
 
     // Пишем сразу, а не в конце сессии: лог должен пережить убитое
     // приложение, иначе ответы теряются молча.
-    await _progress.recordAll(session.log.skip(logLength));
+    final addedLog = session.log.skip(logLength).toList();
+    await _progress.recordAll(addedLog);
+    final firstAttempt = addedLog
+        .whereType<ProgressEvent>()
+        .where((event) => event.attempt == 1)
+        .toList();
+    if (firstAttempt.isNotEmpty) {
+      _firstAttemptResults.add(firstAttempt.every((event) => event.correct));
+    }
     if (exercise.mode == ExerciseMode.positionToForm) {
       final letterId = exercise.atom.letterId;
       if (letterId != null) _formSequenceLetters.add(letterId);
@@ -1100,6 +1124,16 @@ class LessonController extends GetxController {
   };
 
   Future<void> _finish() async {
+    if (!_sessionSummaryRecorded) {
+      await _progress.finishSession(
+        sessionId: _sessionId,
+        purpose: _sessionPurpose,
+        exerciseCount: _firstAttemptResults.length,
+        firstTryCorrect: _firstAttemptResults.where((result) => result).length,
+        checkpointLetters: _sessionCheckpointLetters,
+      );
+      _sessionSummaryRecorded = true;
+    }
     // «Пройден» — это факт о занятии, а не о знании: человек дошёл до конца
     // сессии. Освоенность букв добирается повторениями и на отметку
     // не влияет — иначе закрытый урок выглядит недоделанным.

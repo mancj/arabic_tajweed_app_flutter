@@ -18,6 +18,7 @@ class AtomProgress {
     this.hadActiveSuccess = false,
     this.knownAt,
     this.confirmations = 0,
+    this.introducedSession,
     this.deferredAtSession,
     this.deferCount = 0,
     this.lastSeenSession,
@@ -42,6 +43,10 @@ class AtomProgress {
 
   final DateTime? knownAt;
   final int confirmations;
+
+  /// Первая сессия, где атом действительно появился. Нужна, чтобы
+  /// смешанное повторение отличало последний набор от более старых букв.
+  final int? introducedSession;
 
   /// Сессия, на которой атом отложен. null — атом в обычной ротации.
   final int? deferredAtSession;
@@ -104,6 +109,7 @@ class AtomProgress {
     bool? hadActiveSuccess,
     DateTime? knownAt,
     int? confirmations,
+    int? introducedSession,
     int? deferredAtSession,
     bool clearDeferred = false,
     int? deferCount,
@@ -120,6 +126,7 @@ class AtomProgress {
     hadActiveSuccess: hadActiveSuccess ?? this.hadActiveSuccess,
     knownAt: knownAt ?? this.knownAt,
     confirmations: confirmations ?? this.confirmations,
+    introducedSession: introducedSession ?? this.introducedSession,
     deferredAtSession: clearDeferred
         ? null
         : (deferredAtSession ?? this.deferredAtSession),
@@ -134,11 +141,13 @@ class AtomProgress {
 class ProgressFold {
   const ProgressFold({
     required this.letterFormIds,
+    this.baseLetterIds = const {},
     this.rules = const LearningRules(),
   });
 
   final LearningRules rules;
   final Set<String> letterFormIds;
+  final Set<String> baseLetterIds;
 
   Map<String, AtomProgress> fold(Iterable<LogEntry> log) =>
       foldOnto(const {}, log);
@@ -160,6 +169,7 @@ class ProgressFold {
   AtomProgress _apply(AtomProgress p, LogEntry entry) => switch (entry) {
     AtomIntroduced() => p.copyWith(
       state: p.state == AtomState.fresh ? AtomState.introduced : p.state,
+      introducedSession: p.introducedSession ?? entry.sessionId,
       lastSeenSession: entry.sessionId,
     ),
     ProgressEvent() => _applyAnswer(p, entry),
@@ -169,6 +179,7 @@ class ProgressFold {
           : p.copyWith(
               state: AtomState.known,
               knownAt: entry.at,
+              introducedSession: p.introducedSession ?? entry.sessionId,
               weak: true,
               lastSeenSession: entry.sessionId,
               clearDeferred: true,
@@ -176,6 +187,7 @@ class ProgressFold {
   };
 
   AtomProgress _applyAnswer(AtomProgress p, ProgressEvent e) {
+    p = p.copyWith(introducedSession: p.introducedSession ?? e.sessionId);
     final isLetterForm = letterFormIds.contains(e.atomId);
     if (!e.correct) return _applyError(p, e, isLetterForm: isLetterForm);
 
@@ -226,7 +238,7 @@ class ProgressFold {
       AtomState.learning when _reachedKnown(next, e) => next.copyWith(
         state: AtomState.known,
         knownAt: e.at,
-        weak: _isLenient(next),
+        weak: _isLenient(next, e.atomId),
       ),
       AtomState.known
           when isLetterForm &&
@@ -240,18 +252,25 @@ class ProgressFold {
     };
   }
 
-  bool _isLenient(AtomProgress p) =>
+  bool _isLenient(AtomProgress p, String atomId) =>
       p.deferCount >= rules.defersBeforeLenient &&
-      !(p.cleanStreak >= rules.cleanStreakForKnown &&
+      !(p.cleanStreak >= _cleanStreakRequired(atomId) &&
           p.modesInStreak.length >= rules.distinctModesForKnown);
 
   bool _reachedKnown(AtomProgress p, ProgressEvent e) {
     // Облегчённый критерий для атома, который дважды откладывали:
     // иначе он блокирует курс бесконечно.
-    if (_isLenient(p)) return true;
-    return p.cleanStreak >= rules.cleanStreakForKnown &&
+    if (_isLenient(p, e.atomId)) return true;
+    return p.cleanStreak >= _cleanStreakRequired(e.atomId) &&
         p.modesInStreak.length >= rules.distinctModesForKnown;
   }
+
+  int _cleanStreakRequired(String atomId) =>
+      baseLetterIds.isNotEmpty &&
+          letterFormIds.contains(atomId) &&
+          !baseLetterIds.contains(atomId)
+      ? rules.connectedFormCleanStreakForKnown
+      : rules.cleanStreakForKnown;
 
   /// Подтверждение засчитывается, только если прошёл очередной интервал.
   bool _confirmed(AtomProgress p, ProgressEvent e) {

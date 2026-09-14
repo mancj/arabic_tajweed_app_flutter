@@ -36,6 +36,7 @@ void main() {
     final fold = ProgressFold(
       rules: rules,
       letterFormIds: curriculum.letterFormIds,
+      baseLetterIds: curriculum.baseLetterIds,
     );
     var progress = <String, AtomProgress>{};
     var sessionsWithoutNew = 0;

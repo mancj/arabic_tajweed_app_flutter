@@ -12,8 +12,10 @@ import '../../../domain/atom.dart';
 import '../../../domain/atom_state.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/learning_rules.dart';
+import '../../../domain/lesson_pacing.dart';
 import '../../../domain/planner.dart';
 import '../../../domain/topic_board.dart';
+import '../../shared_state/app_clock.dart';
 import '../lesson/lesson_binding.dart';
 
 /// Один следующий план для карточки на главном и запуска занятия.
@@ -24,15 +26,20 @@ class CourseController extends GetxController {
     ProgressDatabase? database,
     Curriculum? curriculum,
     PronunciationPreference? pronunciationPreference,
+    AppClock? clock,
   }) : _baseRules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
-       _injectedPronunciationPreference = pronunciationPreference;
+       _injectedPronunciationPreference = pronunciationPreference,
+       _clock =
+           clock ??
+           (Get.isRegistered<AppClock>() ? Get.find<AppClock>() : AppClock());
 
   final LearningRules _baseRules;
   final ProgressDatabase? _database;
   final Curriculum? _injectedCurriculum;
   final PronunciationPreference? _injectedPronunciationPreference;
+  final AppClock _clock;
   bool _pronunciationRequired = true;
 
   LearningRules get rules => _baseRules.copyWith(
@@ -49,6 +56,7 @@ class CourseController extends GetxController {
   late Curriculum curriculum;
   late ProgressRepository repository;
   late CurriculumContext context;
+  PacingSnapshot pacing = const PacingSnapshot();
   bool _ready = false;
 
   @override
@@ -75,6 +83,8 @@ class CourseController extends GetxController {
           database: _database ?? Get.find<ProgressDatabase>(),
           rules: rules,
           letterFormIds: curriculum.letterFormIds,
+          baseLetterIds: curriculum.baseLetterIds,
+          now: () => _clock.now,
         );
         _ready = true;
       }
@@ -83,6 +93,7 @@ class CourseController extends GetxController {
         progress: await repository.progress(),
         formsByLetter: curriculum.formsByLetter,
       );
+      pacing = await repository.pacing();
       final plan = await planFor();
       final completions = await repository.completions();
       statuses.assignAll(
@@ -109,6 +120,7 @@ class CourseController extends GetxController {
         sessionId: await repository.nextSessionId(),
         sessionsWithoutNew: await repository.sessionsWithoutNew(),
         topicIds: topicIds,
+        pacing: pacing,
       );
 
   TopicStatus? get currentTopic =>
@@ -161,6 +173,12 @@ class CourseController extends GetxController {
   }
 
   String get lessonFocus {
+    if (nextPlan.value?.purpose == LessonPurpose.alphabetCheckpoint) {
+      return 'Проверяем весь пройденный блок';
+    }
+    if (nextPlan.value?.purpose == LessonPurpose.mixedReview) {
+      return 'Перемешиваем пройденный материал';
+    }
     if (nextPlan.value?.isFocusedReview ?? false) return 'Закрепление и новое';
     if (nextPlan.value?.newAtoms.isEmpty ?? true) {
       return 'Тренируем знакомый материал';
@@ -178,6 +196,13 @@ class CourseController extends GetxController {
   String get lessonDetail {
     final plan = nextPlan.value;
     if (plan == null) return '';
+    if (plan.purpose == LessonPurpose.alphabetCheckpoint) {
+      return 'Проверка обязательна перед следующим блоком алфавита';
+    }
+    if (plan.purpose == LessonPurpose.mixedReview) {
+      final left = pacing.reviewsUntilNewMaterial(rules);
+      return '$left ${_reviewWord(left)} до следующего нового блока';
+    }
     if (plan.isFocusedReview) {
       final count = plan.reviewCounts.values.sum;
       final word = count == 1
@@ -230,6 +255,7 @@ class CourseController extends GetxController {
       ctx: projected,
       sessionId: await repository.nextSessionId(),
       sessionsWithoutNew: rules.sessionsWithoutNewBeforeForcing,
+      pacing: pacing,
     );
     return statuses.firstWhereOrNull(
           (s) => s.topic.id == after.topicId && s.topic.id != plan.topicId,
@@ -249,6 +275,12 @@ class CourseController extends GetxController {
   String get lessonTitle {
     final plan = nextPlan.value;
     if (plan == null) return 'Готовим занятие';
+    if (plan.purpose == LessonPurpose.alphabetCheckpoint) {
+      return 'Смешанная проверка';
+    }
+    if (plan.purpose == LessonPurpose.mixedReview) {
+      return 'Повторим весь пройденный алфавит';
+    }
     if (plan.newAtoms.isEmpty) return 'Закрепим знакомое';
     if (plan.topicId == 'm.join') return 'Соединяем первые буквы';
     if (currentTopic?.topic.title != null) {
@@ -261,6 +293,12 @@ class CourseController extends GetxController {
   String get lessonDescription {
     final plan = nextPlan.value;
     if (plan == null) return '';
+    if (plan.purpose == LessonPurpose.alphabetCheckpoint) {
+      return 'Обязательное смешанное занятие без нового материала.';
+    }
+    if (plan.purpose == LessonPurpose.mixedReview) {
+      return 'Успешное повторение приближает следующий новый блок.';
+    }
     if (plan.newAtoms.isEmpty) {
       return 'Повторим материал, который стоит закрепить.';
     }
@@ -278,6 +316,17 @@ class CourseController extends GetxController {
 
   Map<int, List<TopicStatus>> get byStage =>
       groupBy(statuses, (s) => s.topic.stage);
+
+  String get lessonBadge => switch (nextPlan.value?.purpose) {
+    LessonPurpose.alphabetCheckpoint => 'Сегодня · ПРОВЕРКА',
+    LessonPurpose.mixedReview => 'Сегодня · СМЕШАННОЕ ПОВТОРЕНИЕ',
+    _ => '',
+  };
+
+  static String _reviewWord(int count) => switch (count) {
+    1 => 'занятие',
+    _ => 'занятия',
+  };
   static String stageTitle(int stage) => switch (stage) {
     1 => 'Буквы и их формы',
     2 => 'Соединение букв',
@@ -294,12 +343,23 @@ class CourseController extends GetxController {
 
   Future<void> open(TopicStatus status) async {
     if (!status.canPractice || opening.value) return;
-    final plan = TopicBoard(curriculum).planFor(
+    final topicPlan = TopicBoard(curriculum).planFor(
       status.topic,
       context,
       sessionId: await repository.nextSessionId(),
       rules: rules,
     );
+    final automatic = await planFor();
+    final introducesAlphabet =
+        status.topic.stage == 1 && topicPlan.newAtoms.isNotEmpty;
+    final blockedByCheckpoint =
+        automatic.purpose == LessonPurpose.alphabetCheckpoint &&
+        (introducesAlphabet || status.topic.stage > 1);
+    final blockedByDailyPace =
+        automatic.purpose == LessonPurpose.mixedReview && introducesAlphabet;
+    final plan = blockedByCheckpoint || blockedByDailyPace
+        ? automatic
+        : topicPlan;
     await _openPlan(plan);
   }
 

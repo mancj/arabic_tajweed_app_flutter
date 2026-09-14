@@ -24,7 +24,10 @@ void main() {
         File('assets/curriculum/$s.json').readAsStringSync(),
       ),
   ]);
-  final fold = ProgressFold(letterFormIds: course.letterFormIds);
+  final fold = ProgressFold(
+    letterFormIds: course.letterFormIds,
+    baseLetterIds: course.baseLetterIds,
+  );
   CurriculumContext ctx(Map<String, AtomProgress> p) =>
       CurriculumContext(progress: p, formsByLetter: course.formsByLetter);
   final now = DateTime(2026, 9, 9);

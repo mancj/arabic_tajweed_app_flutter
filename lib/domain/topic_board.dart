@@ -178,7 +178,7 @@ class TopicBoard {
     // Но только назад: атомы тем, которые идут после этой, исключаются.
     // Иначе возврат к пройденному уроку тащит буквы из следующего —
     // начатого и брошенного, — и повторение выглядит как чужой урок.
-    final spaced = ReviewQueue(rules: rules).build(
+    final spaced = ReviewQueue(rules: rules).buildMixed(
       ctx,
       sessionId: sessionId,
       exclude: {...topic.counterOf, ..._atomsAfter(topic)},

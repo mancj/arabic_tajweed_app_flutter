@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../domain/progress_event.dart';
+import '../domain/lesson_pacing.dart';
 
 part 'progress_database.g.dart';
 
@@ -41,7 +42,22 @@ class TopicCompletions extends Table {
   Set<Column> get primaryKey => {topicId};
 }
 
-@DriftDatabase(tables: [LogRows, TopicCompletions])
+/// Завершённые занятия. Это сырой итог, а не готовый вердикт: порог
+/// успешности смешанного повтора применяется в репозитории и может быть
+/// откалиброван без потери истории.
+class SessionSummaries extends Table {
+  IntColumn get sessionId => integer()();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get purpose => text()();
+  IntColumn get exerciseCount => integer()();
+  IntColumn get firstTryCorrect => integer()();
+  IntColumn get checkpointLetters => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {sessionId};
+}
+
+@DriftDatabase(tables: [LogRows, TopicCompletions, SessionSummaries])
 class ProgressDatabase extends _$ProgressDatabase {
   ProgressDatabase([QueryExecutor? executor])
     : super(
@@ -57,7 +73,7 @@ class ProgressDatabase extends _$ProgressDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Без миграции база, созданная прошлой версией приложения, остаётся
   /// без новых таблиц — и падает на первом же запросе. В тестах это не
@@ -67,6 +83,9 @@ class ProgressDatabase extends _$ProgressDatabase {
     onUpgrade: (m, from, to) async {
       // v2: отметки о пройденных уроках отделены от лога атомов.
       if (from < 2) await m.createTable(topicCompletions);
+      // v3: только завершённое смешанное занятие даёт допуск к новым
+      // буквам; одного ответа в брошенном уроке недостаточно.
+      if (from < 3) await m.createTable(sessionSummaries);
     },
   );
 
@@ -88,12 +107,13 @@ class ProgressDatabase extends _$ProgressDatabase {
   Future<void> completeTopic(
     String topicId, {
     required int sessionId,
+    DateTime? at,
     bool byTest = false,
   }) => into(topicCompletions).insertOnConflictUpdate(
     TopicCompletionsCompanion.insert(
       topicId: topicId,
       sessionId: sessionId,
-      at: DateTime.now(),
+      at: at ?? DateTime.now(),
       byTest: Value(byTest),
     ),
   );
@@ -101,11 +121,34 @@ class ProgressDatabase extends _$ProgressDatabase {
   Future<List<TopicCompletion>> readCompletions() =>
       select(topicCompletions).get();
 
+  Future<void> finishSession({
+    required int sessionId,
+    required DateTime at,
+    required LessonPurpose purpose,
+    required int exerciseCount,
+    required int firstTryCorrect,
+    int? checkpointLetters,
+  }) => into(sessionSummaries).insert(
+    SessionSummariesCompanion.insert(
+      sessionId: Value(sessionId),
+      at: at,
+      purpose: purpose.name,
+      exerciseCount: exerciseCount,
+      firstTryCorrect: firstTryCorrect,
+      checkpointLetters: Value(checkpointLetters),
+    ),
+    mode: InsertMode.insertOrIgnore,
+  );
+
+  Future<List<SessionSummary>> readSessionSummaries() =>
+      select(sessionSummaries).get();
+
   /// Стереть весь лог. Нужно при отладке контента: граф и тексты меняются,
   /// а пройденные уроки заново не показываются — планировщик ведёт дальше.
   Future<void> clear() async {
     await delete(logRows).go();
     await delete(topicCompletions).go();
+    await delete(sessionSummaries).go();
   }
 
   Future<int> get eventCount async => (await select(logRows).get()).length;

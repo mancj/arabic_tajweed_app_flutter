@@ -5,7 +5,11 @@ import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 const rules = LearningRules();
 const fold = ProgressFold(rules: rules, letterFormIds: {});
-const letterFold = ProgressFold(rules: rules, letterFormIds: {'ba.isolated'});
+const letterFold = ProgressFold(
+  rules: rules,
+  letterFormIds: {'ba.isolated'},
+  baseLetterIds: {'ba.isolated'},
+);
 final t0 = DateTime(2026, 1, 1);
 
 ProgressEvent answer({

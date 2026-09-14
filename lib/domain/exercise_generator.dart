@@ -83,6 +83,7 @@ class ExerciseGenerator {
       review,
       spaced,
       plan.reviewCounts,
+      plan.minimumExerciseCounts(curriculum, rules),
       limit,
       previousCounts,
       narrowBaseLetters: plan.isNarrowBaseLetterBlock(curriculum),
@@ -152,6 +153,7 @@ class ExerciseGenerator {
     List<Atom> review,
     _SpacedReview spaced,
     Map<String, int> reviewCounts,
+    Map<String, int> minimumCounts,
     int taskLimit,
     Map<String, int> previousCounts, {
     required bool narrowBaseLetters,
@@ -168,13 +170,7 @@ class ExerciseGenerator {
     final remaining = {
       for (final atom in {...fresh, ...review})
         atom: min(
-          reviewCounts[atom.id] ??
-              (narrowBaseLetters
-                  ? max(
-                      rules.minimumExercises(atom),
-                      rules.narrowLetterExercises,
-                    )
-                  : rules.minimumExercises(atom)),
+          minimumCounts[atom.id] ?? rules.minimumExercises(atom),
           max(0, perAtomLimit - (previousCounts[atom.id] ?? 0)),
         ),
     };
@@ -188,14 +184,18 @@ class ExerciseGenerator {
     var available = forTopic - remaining.values.sum;
     if (remaining.isEmpty && spaced.items.isEmpty) return const [];
 
-    // Новым небазовым формам тоже даём три встречи, если есть место.
-    for (final atom in fresh.where(remaining.containsKey)) {
-      final extra = min(
-        available,
-        max(0, _drillsPerNewAtom - remaining[atom]!),
-      );
-      remaining[atom] = remaining[atom]! + extra;
-      available -= extra;
+    // Свободные встречи раздаём кругами. Иначе первые две формы получали
+    // по три задания, а последние — по одному и требовали лишний урок.
+    while (available > 0) {
+      var added = false;
+      for (final atom in fresh.where(remaining.containsKey)) {
+        if (available == 0) break;
+        if (remaining[atom]! >= _drillsPerNewAtom) continue;
+        remaining[atom] = remaining[atom]! + 1;
+        available--;
+        added = true;
+      }
+      if (!added) break;
     }
     final perAtomCaps = {
       for (final atom in remaining.keys)
@@ -792,10 +792,11 @@ class ExerciseGenerator {
   DistractorLevel _levelFor(Atom atom, CurriculumContext ctx, int sessionId) {
     final p = ctx.progress[atom.id] ?? const AtomProgress();
     if (p.returnedEasy(sessionId, rules)) return DistractorLevel.distant;
+    final cleanStreakForKnown = rules.cleanStreakRequiredFor(atom);
 
     return switch (p.state) {
       AtomState.fresh || AtomState.introduced => DistractorLevel.distant,
-      AtomState.learning when p.cleanStreak >= rules.cleanStreakForKnown - 1 =>
+      AtomState.learning when p.cleanStreak >= cleanStreakForKnown - 1 =>
         DistractorLevel.minimalPair,
       AtomState.learning => DistractorLevel.mixed,
       AtomState.known || AtomState.mastered => DistractorLevel.minimalPair,

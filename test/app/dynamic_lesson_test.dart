@@ -9,6 +9,8 @@ import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:arabic_tajweed_app/data/voice_recorder.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
@@ -247,6 +249,64 @@ void main() {
       answers.map((event) => event.mode),
       isNot(contains(ExerciseMode.sayName)),
     );
+  });
+
+  // Допуск к новым буквам должен переживать перезапуск. Поэтому смешанное
+  // занятие получает итог только после последнего задания, не при старте.
+  test('завершённое смешанное занятие сохраняет честный итог', () async {
+    final at = DateTime(2026, 9, 13);
+    const ids = ['alif.isolated', 'ba.isolated', 'ta.isolated', 'tha.isolated'];
+    await repository.recordAll([
+      for (final id in ids)
+        KnowledgeConfirmed(atomId: id, sessionId: 1, at: at),
+    ]);
+    const plan = LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: [],
+      reviewAtoms: ids,
+      reviewCounts: {
+        'alif.isolated': 2,
+        'ba.isolated': 2,
+        'ta.isolated': 2,
+        'tha.isolated': 2,
+      },
+      purpose: LessonPurpose.mixedReview,
+      reason: 'проверяем сохранение итога',
+    );
+    const rules = LearningRules(
+      tasksPerSession: 8,
+      reviewLessonMinExercises: 8,
+      requirePronunciation: false,
+    );
+    final controller = LessonController(
+      database: database,
+      curriculum: curriculum,
+      plan: plan,
+      rules: rules,
+      continuePlanning: true,
+      shapeLoader: (_) async =>
+          throw UnsupportedError('Холст тут не проверяем'),
+    );
+    addTearDown(controller.onClose);
+    final ready = Completer<void>();
+    final subscription = controller.stage.listen((stage) {
+      if (stage != LessonStage.loading && !ready.isCompleted) {
+        ready.complete();
+      }
+    });
+    controller.onInit();
+    await ready.future.timeout(const Duration(seconds: 5));
+    await subscription.cancel();
+
+    expect(await database.readSessionSummaries(), isEmpty);
+    while (controller.stage.value != LessonStage.finished) {
+      await controller.answerCorrectly(advance: true);
+    }
+
+    final summary = (await database.readSessionSummaries()).single;
+    expect(summary.purpose, LessonPurpose.mixedReview.name);
+    expect(summary.exerciseCount, 8);
+    expect(summary.firstTryCorrect, 8);
   });
 }
 

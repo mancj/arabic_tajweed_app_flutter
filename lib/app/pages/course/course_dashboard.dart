@@ -34,12 +34,14 @@ class CourseLessonPreview extends StatelessWidget {
     final hasReview =
         controller.nextPlan.value!.reviewAtoms.isNotEmpty ||
         controller.nextPlan.value!.spacedReview.isNotEmpty;
-    final label = isNew
+    final label = controller.lessonBadge.isNotEmpty
+        ? controller.lessonBadge
+        : isNew
         ? hasReview
-              ? 'Сегодня: НОВОЕ И ПОВТОРЕНИЕ'
+              ? 'Сегодня: НОВОЕ + ПОВТОРЕНИЕ'
               : 'Сегодня: НОВЫЙ МАТЕРИАЛ'
         : controller.nextPlan.value!.isFocusedReview
-        ? 'Сегодня · ЗАКРЕПЛЕНИЕ И НОВОЕ'
+        ? 'Сегодня · ЗАКРЕПЛЕНИЕ + НОВОЕ'
         : 'Сегодня · ЗАКРЕПЛЕНИЕ';
     return Tilt(
       tiltConfig: _tiltConfig,

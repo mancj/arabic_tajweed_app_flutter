@@ -75,7 +75,9 @@ void main() {
     expect(exercises.length, rules.tasksPerSession);
   });
 
-  test('повтор идёт блоком в конце, после закрепления по теме', () {
+  // Старый материал не должен лежать предсказуемым хвостом: именно
+  // перемешивание не даёт угадывать ответы по текущей теме урока.
+  test('повтор встраивается внутрь закрепления по теме', () {
     final topic = topicOf('m.forms');
     final plan = board.planFor(topic, afterFirstLesson, sessionId: 3);
 
@@ -91,10 +93,10 @@ void main() {
     expect(firstOld, greaterThan(0));
     expect(
       exercises
-          .skip(firstOld)
-          .every((e) => !topic.counterOf.contains(e.atom.id)),
+          .skip(firstOld + 1)
+          .any((e) => topic.counterOf.contains(e.atom.id)),
       isTrue,
-      reason: 'сначала материал урока, потом старое — ТЗ §6.2',
+      reason: 'старое осталось отдельным хвостом вместо смешивания',
     );
   });
 

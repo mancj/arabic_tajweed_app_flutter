@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/data/progress_database.dart';
-import 'package:drift/drift.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -38,9 +38,27 @@ void main() {
     final db = ProgressDatabase(NativeDatabase(file));
     expect(
       db.schemaVersion,
-      greaterThanOrEqualTo(2),
+      greaterThanOrEqualTo(3),
       reason: 'добавили таблицу — поднимите версию, иначе миграция не пойдёт',
     );
     await db.close();
+  });
+
+  test('база версии 2 получает итоги сессий', () async {
+    final v2 = ProgressDatabase(NativeDatabase(file));
+    await v2.customStatement('DROP TABLE IF EXISTS session_summaries');
+    await v2.customStatement('PRAGMA user_version = 2');
+    await v2.close();
+
+    final upgraded = ProgressDatabase(NativeDatabase(file));
+    await upgraded.finishSession(
+      sessionId: 1,
+      at: DateTime(2026),
+      purpose: LessonPurpose.mixedReview,
+      exerciseCount: 20,
+      firstTryCorrect: 18,
+    );
+    expect(await upgraded.readSessionSummaries(), hasLength(1));
+    await upgraded.close();
   });
 }

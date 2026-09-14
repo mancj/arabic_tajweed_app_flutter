@@ -24,6 +24,12 @@ class LearningRules {
     this.reviewPerSession = 4,
     this.focusedReviewTasks = 8,
     this.sessionsWithoutNewBeforeForcing = 2,
+    this.reviewsBeforeNextNewLesson = 2,
+    this.reviewLessonSuccessPercent = 80,
+    this.reviewLessonMinExercises = 8,
+    this.recentMaterialMaxPercent = 40,
+    this.alphabetCheckpointLetters = const [7, 15, 21, 28],
+    this.connectedFormCleanStreakForKnown = 2,
     this.tasksPerSession = 20,
     this.narrowLetterExercises = 4,
     this.tracingMissesBeforeReveal = 3,
@@ -74,8 +80,37 @@ class LearningRules {
   final int focusedReviewTasks;
   final int sessionsWithoutNewBeforeForcing;
 
+  /// После урока с новым материалом алфавита столько успешных занятий
+  /// без нового нужно пройти в тот же день, чтобы открыть следующий блок.
+  final int reviewsBeforeNextNewLesson;
+
+  /// Успех занятия-повторения: доля заданий, выполненных с первой попытки.
+  /// Скорость сюда не входит — медленный правильный ответ остаётся знанием.
+  final int reviewLessonSuccessPercent;
+  final int reviewLessonMinExercises;
+
+  /// Когда старого материала достаточно, последний введённый набор не может
+  /// занять больше этой доли смешанного занятия.
+  final int recentMaterialMaxPercent;
+
+  /// Границы цельных отрезков алфавита. Они совпадают с концами авторских
+  /// групп и дают блоки по 7, 8, 6 и 7 букв.
+  final List<int> alphabetCheckpointLetters;
+
+  /// Соединённую форму в уроке проверяют отдельно и в сборке семейства.
+  /// Этих двух разных успешных проверок достаточно для первого `known`;
+  /// изолированная буква по-прежнему требует три встречи и письмо с голосом.
+  final int connectedFormCleanStreakForKnown;
+
+  int cleanStreakRequiredFor(Atom atom) =>
+      atom.kind == AtomKind.letterForm &&
+          atom.form != null &&
+          atom.form != LetterForm.isolated
+      ? connectedFormCleanStreakForKnown
+      : cleanStreakForKnown;
+
   /// Верхний бюджет обычной сессии. Пара отдельных букв может закончиться
-  /// раньше, когда созревшего старого материала для остатка нет.
+  /// раньше, только когда знакомого старого материала для остатка нет.
   final int tasksPerSession;
 
   /// Сколько встреч получает каждая буква в узком блоке из двух отдельных
@@ -148,6 +183,12 @@ class LearningRules {
     reviewPerSession: reviewPerSession,
     focusedReviewTasks: focusedReviewTasks,
     sessionsWithoutNewBeforeForcing: sessionsWithoutNewBeforeForcing,
+    reviewsBeforeNextNewLesson: reviewsBeforeNextNewLesson,
+    reviewLessonSuccessPercent: reviewLessonSuccessPercent,
+    reviewLessonMinExercises: reviewLessonMinExercises,
+    recentMaterialMaxPercent: recentMaterialMaxPercent,
+    alphabetCheckpointLetters: alphabetCheckpointLetters,
+    connectedFormCleanStreakForKnown: connectedFormCleanStreakForKnown,
     tasksPerSession: tasksPerSession,
     narrowLetterExercises: narrowLetterExercises,
     tracingMissesBeforeReveal: tracingMissesBeforeReveal,

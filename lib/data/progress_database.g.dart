@@ -866,11 +866,434 @@ class TopicCompletionsCompanion extends UpdateCompanion<TopicCompletion> {
   }
 }
 
+class $SessionSummariesTable extends SessionSummaries
+    with TableInfo<$SessionSummariesTable, SessionSummary> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionSummariesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _purposeMeta = const VerificationMeta(
+    'purpose',
+  );
+  @override
+  late final GeneratedColumn<String> purpose = GeneratedColumn<String>(
+    'purpose',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _exerciseCountMeta = const VerificationMeta(
+    'exerciseCount',
+  );
+  @override
+  late final GeneratedColumn<int> exerciseCount = GeneratedColumn<int>(
+    'exercise_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstTryCorrectMeta = const VerificationMeta(
+    'firstTryCorrect',
+  );
+  @override
+  late final GeneratedColumn<int> firstTryCorrect = GeneratedColumn<int>(
+    'first_try_correct',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _checkpointLettersMeta = const VerificationMeta(
+    'checkpointLetters',
+  );
+  @override
+  late final GeneratedColumn<int> checkpointLetters = GeneratedColumn<int>(
+    'checkpoint_letters',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    sessionId,
+    at,
+    purpose,
+    exerciseCount,
+    firstTryCorrect,
+    checkpointLetters,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_summaries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionSummary> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('purpose')) {
+      context.handle(
+        _purposeMeta,
+        purpose.isAcceptableOrUnknown(data['purpose']!, _purposeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_purposeMeta);
+    }
+    if (data.containsKey('exercise_count')) {
+      context.handle(
+        _exerciseCountMeta,
+        exerciseCount.isAcceptableOrUnknown(
+          data['exercise_count']!,
+          _exerciseCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseCountMeta);
+    }
+    if (data.containsKey('first_try_correct')) {
+      context.handle(
+        _firstTryCorrectMeta,
+        firstTryCorrect.isAcceptableOrUnknown(
+          data['first_try_correct']!,
+          _firstTryCorrectMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_firstTryCorrectMeta);
+    }
+    if (data.containsKey('checkpoint_letters')) {
+      context.handle(
+        _checkpointLettersMeta,
+        checkpointLetters.isAcceptableOrUnknown(
+          data['checkpoint_letters']!,
+          _checkpointLettersMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionId};
+  @override
+  SessionSummary map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionSummary(
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}session_id'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}at'],
+      )!,
+      purpose: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purpose'],
+      )!,
+      exerciseCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}exercise_count'],
+      )!,
+      firstTryCorrect: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}first_try_correct'],
+      )!,
+      checkpointLetters: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}checkpoint_letters'],
+      ),
+    );
+  }
+
+  @override
+  $SessionSummariesTable createAlias(String alias) {
+    return $SessionSummariesTable(attachedDatabase, alias);
+  }
+}
+
+class SessionSummary extends DataClass implements Insertable<SessionSummary> {
+  final int sessionId;
+  final DateTime at;
+  final String purpose;
+  final int exerciseCount;
+  final int firstTryCorrect;
+  final int? checkpointLetters;
+  const SessionSummary({
+    required this.sessionId,
+    required this.at,
+    required this.purpose,
+    required this.exerciseCount,
+    required this.firstTryCorrect,
+    this.checkpointLetters,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_id'] = Variable<int>(sessionId);
+    map['at'] = Variable<DateTime>(at);
+    map['purpose'] = Variable<String>(purpose);
+    map['exercise_count'] = Variable<int>(exerciseCount);
+    map['first_try_correct'] = Variable<int>(firstTryCorrect);
+    if (!nullToAbsent || checkpointLetters != null) {
+      map['checkpoint_letters'] = Variable<int>(checkpointLetters);
+    }
+    return map;
+  }
+
+  SessionSummariesCompanion toCompanion(bool nullToAbsent) {
+    return SessionSummariesCompanion(
+      sessionId: Value(sessionId),
+      at: Value(at),
+      purpose: Value(purpose),
+      exerciseCount: Value(exerciseCount),
+      firstTryCorrect: Value(firstTryCorrect),
+      checkpointLetters: checkpointLetters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkpointLetters),
+    );
+  }
+
+  factory SessionSummary.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionSummary(
+      sessionId: serializer.fromJson<int>(json['sessionId']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      purpose: serializer.fromJson<String>(json['purpose']),
+      exerciseCount: serializer.fromJson<int>(json['exerciseCount']),
+      firstTryCorrect: serializer.fromJson<int>(json['firstTryCorrect']),
+      checkpointLetters: serializer.fromJson<int?>(json['checkpointLetters']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionId': serializer.toJson<int>(sessionId),
+      'at': serializer.toJson<DateTime>(at),
+      'purpose': serializer.toJson<String>(purpose),
+      'exerciseCount': serializer.toJson<int>(exerciseCount),
+      'firstTryCorrect': serializer.toJson<int>(firstTryCorrect),
+      'checkpointLetters': serializer.toJson<int?>(checkpointLetters),
+    };
+  }
+
+  SessionSummary copyWith({
+    int? sessionId,
+    DateTime? at,
+    String? purpose,
+    int? exerciseCount,
+    int? firstTryCorrect,
+    Value<int?> checkpointLetters = const Value.absent(),
+  }) => SessionSummary(
+    sessionId: sessionId ?? this.sessionId,
+    at: at ?? this.at,
+    purpose: purpose ?? this.purpose,
+    exerciseCount: exerciseCount ?? this.exerciseCount,
+    firstTryCorrect: firstTryCorrect ?? this.firstTryCorrect,
+    checkpointLetters: checkpointLetters.present
+        ? checkpointLetters.value
+        : this.checkpointLetters,
+  );
+  SessionSummary copyWithCompanion(SessionSummariesCompanion data) {
+    return SessionSummary(
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      at: data.at.present ? data.at.value : this.at,
+      purpose: data.purpose.present ? data.purpose.value : this.purpose,
+      exerciseCount: data.exerciseCount.present
+          ? data.exerciseCount.value
+          : this.exerciseCount,
+      firstTryCorrect: data.firstTryCorrect.present
+          ? data.firstTryCorrect.value
+          : this.firstTryCorrect,
+      checkpointLetters: data.checkpointLetters.present
+          ? data.checkpointLetters.value
+          : this.checkpointLetters,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionSummary(')
+          ..write('sessionId: $sessionId, ')
+          ..write('at: $at, ')
+          ..write('purpose: $purpose, ')
+          ..write('exerciseCount: $exerciseCount, ')
+          ..write('firstTryCorrect: $firstTryCorrect, ')
+          ..write('checkpointLetters: $checkpointLetters')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    sessionId,
+    at,
+    purpose,
+    exerciseCount,
+    firstTryCorrect,
+    checkpointLetters,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionSummary &&
+          other.sessionId == this.sessionId &&
+          other.at == this.at &&
+          other.purpose == this.purpose &&
+          other.exerciseCount == this.exerciseCount &&
+          other.firstTryCorrect == this.firstTryCorrect &&
+          other.checkpointLetters == this.checkpointLetters);
+}
+
+class SessionSummariesCompanion extends UpdateCompanion<SessionSummary> {
+  final Value<int> sessionId;
+  final Value<DateTime> at;
+  final Value<String> purpose;
+  final Value<int> exerciseCount;
+  final Value<int> firstTryCorrect;
+  final Value<int?> checkpointLetters;
+  const SessionSummariesCompanion({
+    this.sessionId = const Value.absent(),
+    this.at = const Value.absent(),
+    this.purpose = const Value.absent(),
+    this.exerciseCount = const Value.absent(),
+    this.firstTryCorrect = const Value.absent(),
+    this.checkpointLetters = const Value.absent(),
+  });
+  SessionSummariesCompanion.insert({
+    this.sessionId = const Value.absent(),
+    required DateTime at,
+    required String purpose,
+    required int exerciseCount,
+    required int firstTryCorrect,
+    this.checkpointLetters = const Value.absent(),
+  }) : at = Value(at),
+       purpose = Value(purpose),
+       exerciseCount = Value(exerciseCount),
+       firstTryCorrect = Value(firstTryCorrect);
+  static Insertable<SessionSummary> custom({
+    Expression<int>? sessionId,
+    Expression<DateTime>? at,
+    Expression<String>? purpose,
+    Expression<int>? exerciseCount,
+    Expression<int>? firstTryCorrect,
+    Expression<int>? checkpointLetters,
+  }) {
+    return RawValuesInsertable({
+      if (sessionId != null) 'session_id': sessionId,
+      if (at != null) 'at': at,
+      if (purpose != null) 'purpose': purpose,
+      if (exerciseCount != null) 'exercise_count': exerciseCount,
+      if (firstTryCorrect != null) 'first_try_correct': firstTryCorrect,
+      if (checkpointLetters != null) 'checkpoint_letters': checkpointLetters,
+    });
+  }
+
+  SessionSummariesCompanion copyWith({
+    Value<int>? sessionId,
+    Value<DateTime>? at,
+    Value<String>? purpose,
+    Value<int>? exerciseCount,
+    Value<int>? firstTryCorrect,
+    Value<int?>? checkpointLetters,
+  }) {
+    return SessionSummariesCompanion(
+      sessionId: sessionId ?? this.sessionId,
+      at: at ?? this.at,
+      purpose: purpose ?? this.purpose,
+      exerciseCount: exerciseCount ?? this.exerciseCount,
+      firstTryCorrect: firstTryCorrect ?? this.firstTryCorrect,
+      checkpointLetters: checkpointLetters ?? this.checkpointLetters,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionId.present) {
+      map['session_id'] = Variable<int>(sessionId.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (purpose.present) {
+      map['purpose'] = Variable<String>(purpose.value);
+    }
+    if (exerciseCount.present) {
+      map['exercise_count'] = Variable<int>(exerciseCount.value);
+    }
+    if (firstTryCorrect.present) {
+      map['first_try_correct'] = Variable<int>(firstTryCorrect.value);
+    }
+    if (checkpointLetters.present) {
+      map['checkpoint_letters'] = Variable<int>(checkpointLetters.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionSummariesCompanion(')
+          ..write('sessionId: $sessionId, ')
+          ..write('at: $at, ')
+          ..write('purpose: $purpose, ')
+          ..write('exerciseCount: $exerciseCount, ')
+          ..write('firstTryCorrect: $firstTryCorrect, ')
+          ..write('checkpointLetters: $checkpointLetters')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$ProgressDatabase extends GeneratedDatabase {
   _$ProgressDatabase(QueryExecutor e) : super(e);
   $ProgressDatabaseManager get managers => $ProgressDatabaseManager(this);
   late final $LogRowsTable logRows = $LogRowsTable(this);
   late final $TopicCompletionsTable topicCompletions = $TopicCompletionsTable(
+    this,
+  );
+  late final $SessionSummariesTable sessionSummaries = $SessionSummariesTable(
     this,
   );
   @override
@@ -880,6 +1303,7 @@ abstract class _$ProgressDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     logRows,
     topicCompletions,
+    sessionSummaries,
   ];
 }
 
@@ -1340,6 +1764,235 @@ typedef $$TopicCompletionsTableProcessedTableManager =
       TopicCompletion,
       PrefetchHooks Function()
     >;
+typedef $$SessionSummariesTableCreateCompanionBuilder =
+    SessionSummariesCompanion Function({
+      Value<int> sessionId,
+      required DateTime at,
+      required String purpose,
+      required int exerciseCount,
+      required int firstTryCorrect,
+      Value<int?> checkpointLetters,
+    });
+typedef $$SessionSummariesTableUpdateCompanionBuilder =
+    SessionSummariesCompanion Function({
+      Value<int> sessionId,
+      Value<DateTime> at,
+      Value<String> purpose,
+      Value<int> exerciseCount,
+      Value<int> firstTryCorrect,
+      Value<int?> checkpointLetters,
+    });
+
+class $$SessionSummariesTableFilterComposer
+    extends Composer<_$ProgressDatabase, $SessionSummariesTable> {
+  $$SessionSummariesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purpose => $composableBuilder(
+    column: $table.purpose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get exerciseCount => $composableBuilder(
+    column: $table.exerciseCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get firstTryCorrect => $composableBuilder(
+    column: $table.firstTryCorrect,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get checkpointLetters => $composableBuilder(
+    column: $table.checkpointLetters,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SessionSummariesTableOrderingComposer
+    extends Composer<_$ProgressDatabase, $SessionSummariesTable> {
+  $$SessionSummariesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purpose => $composableBuilder(
+    column: $table.purpose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get exerciseCount => $composableBuilder(
+    column: $table.exerciseCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get firstTryCorrect => $composableBuilder(
+    column: $table.firstTryCorrect,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get checkpointLetters => $composableBuilder(
+    column: $table.checkpointLetters,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SessionSummariesTableAnnotationComposer
+    extends Composer<_$ProgressDatabase, $SessionSummariesTable> {
+  $$SessionSummariesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get purpose =>
+      $composableBuilder(column: $table.purpose, builder: (column) => column);
+
+  GeneratedColumn<int> get exerciseCount => $composableBuilder(
+    column: $table.exerciseCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get firstTryCorrect => $composableBuilder(
+    column: $table.firstTryCorrect,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get checkpointLetters => $composableBuilder(
+    column: $table.checkpointLetters,
+    builder: (column) => column,
+  );
+}
+
+class $$SessionSummariesTableTableManager
+    extends
+        RootTableManager<
+          _$ProgressDatabase,
+          $SessionSummariesTable,
+          SessionSummary,
+          $$SessionSummariesTableFilterComposer,
+          $$SessionSummariesTableOrderingComposer,
+          $$SessionSummariesTableAnnotationComposer,
+          $$SessionSummariesTableCreateCompanionBuilder,
+          $$SessionSummariesTableUpdateCompanionBuilder,
+          (
+            SessionSummary,
+            BaseReferences<
+              _$ProgressDatabase,
+              $SessionSummariesTable,
+              SessionSummary
+            >,
+          ),
+          SessionSummary,
+          PrefetchHooks Function()
+        > {
+  $$SessionSummariesTableTableManager(
+    _$ProgressDatabase db,
+    $SessionSummariesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionSummariesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionSummariesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionSummariesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> sessionId = const Value.absent(),
+                Value<DateTime> at = const Value.absent(),
+                Value<String> purpose = const Value.absent(),
+                Value<int> exerciseCount = const Value.absent(),
+                Value<int> firstTryCorrect = const Value.absent(),
+                Value<int?> checkpointLetters = const Value.absent(),
+              }) => SessionSummariesCompanion(
+                sessionId: sessionId,
+                at: at,
+                purpose: purpose,
+                exerciseCount: exerciseCount,
+                firstTryCorrect: firstTryCorrect,
+                checkpointLetters: checkpointLetters,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> sessionId = const Value.absent(),
+                required DateTime at,
+                required String purpose,
+                required int exerciseCount,
+                required int firstTryCorrect,
+                Value<int?> checkpointLetters = const Value.absent(),
+              }) => SessionSummariesCompanion.insert(
+                sessionId: sessionId,
+                at: at,
+                purpose: purpose,
+                exerciseCount: exerciseCount,
+                firstTryCorrect: firstTryCorrect,
+                checkpointLetters: checkpointLetters,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SessionSummariesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$ProgressDatabase,
+      $SessionSummariesTable,
+      SessionSummary,
+      $$SessionSummariesTableFilterComposer,
+      $$SessionSummariesTableOrderingComposer,
+      $$SessionSummariesTableAnnotationComposer,
+      $$SessionSummariesTableCreateCompanionBuilder,
+      $$SessionSummariesTableUpdateCompanionBuilder,
+      (
+        SessionSummary,
+        BaseReferences<
+          _$ProgressDatabase,
+          $SessionSummariesTable,
+          SessionSummary
+        >,
+      ),
+      SessionSummary,
+      PrefetchHooks Function()
+    >;
 
 class $ProgressDatabaseManager {
   final _$ProgressDatabase _db;
@@ -1348,4 +2001,6 @@ class $ProgressDatabaseManager {
       $$LogRowsTableTableManager(_db, _db.logRows);
   $$TopicCompletionsTableTableManager get topicCompletions =>
       $$TopicCompletionsTableTableManager(_db, _db.topicCompletions);
+  $$SessionSummariesTableTableManager get sessionSummaries =>
+      $$SessionSummariesTableTableManager(_db, _db.sessionSummaries);
 }

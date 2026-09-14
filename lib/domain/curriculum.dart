@@ -188,6 +188,18 @@ class Curriculum {
       if (node.atom.kind == AtomKind.letterForm) node.atom.id,
   };
 
+  List<Atom> get baseLetters => nodes
+      .map((node) => node.atom)
+      .where(
+        (atom) =>
+            atom.kind == AtomKind.letterForm &&
+            atom.letterId != null &&
+            atom.form == LetterForm.isolated,
+      )
+      .toList();
+
+  Set<String> get baseLetterIds => baseLetters.map((atom) => atom.id).toSet();
+
   List<Topic> openTopics(CurriculumContext ctx) =>
       topics.where((m) => m.requirement.isMet(ctx)).toList();
 }

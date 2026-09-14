@@ -1,6 +1,8 @@
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/progress_repository.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,7 @@ void main() {
     repo = ProgressRepository(
       database: db,
       letterFormIds: const {'ba.isolated'},
+      baseLetterIds: const {'ba.isolated', 'ta.isolated'},
     );
   });
 
@@ -193,4 +196,121 @@ void main() {
     await repo.clear();
     expect(await repo.activityDays(), isEmpty);
   });
+
+  // Брошенный или плохо выполненный повтор не открывает новый материал;
+  // более поздний новый урок начинает отсчёт двух повторений заново.
+  test('два успешных урока без нового открывают следующий блок', () async {
+    final day = DateTime(2026, 9, 13, 10);
+    await repo.record(
+      AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: day),
+    );
+    await repo.finishSession(
+      sessionId: 1,
+      purpose: LessonPurpose.standard,
+      exerciseCount: 20,
+      firstTryCorrect: 20,
+      at: day,
+    );
+    var pacing = await repo.pacing(now: day);
+    expect(pacing.hasNewMaterialToday, isTrue);
+    expect(pacing.successfulReviewsSinceLatestNew, 0);
+    expect(pacing.canIntroduceNewMaterial(repoRules), isFalse);
+
+    // Название плана не важно: засчитывается любой завершённый урок без
+    // нового, если он достаточно длинный и правильно выполнен.
+    await repo.finishSession(
+      sessionId: 2,
+      purpose: LessonPurpose.standard,
+      exerciseCount: 20,
+      firstTryCorrect: 20,
+      at: day,
+    );
+    await repo.finishSession(
+      sessionId: 3,
+      purpose: LessonPurpose.mixedReview,
+      exerciseCount: 20,
+      firstTryCorrect: 15,
+      at: day,
+    );
+    await repo.finishSession(
+      sessionId: 4,
+      purpose: LessonPurpose.mixedReview,
+      exerciseCount: 20,
+      firstTryCorrect: 16,
+      at: day,
+    );
+    pacing = await repo.pacing(now: day);
+    expect(pacing.successfulReviewsSinceLatestNew, 2);
+    expect(pacing.canIntroduceNewMaterial(repoRules), isTrue);
+
+    // Новый материал может быть формой или понятием, не только отдельной
+    // буквой. После него прежние повторы больше не считаются.
+    await repo.record(
+      AtomIntroduced(atomId: 'concept.forms', sessionId: 5, at: day),
+    );
+    await repo.finishSession(
+      sessionId: 5,
+      purpose: LessonPurpose.standard,
+      exerciseCount: 20,
+      firstTryCorrect: 20,
+      at: day,
+    );
+    pacing = await repo.pacing(now: day);
+    expect(pacing.successfulReviewsSinceLatestNew, 0);
+    expect(pacing.canIntroduceNewMaterial(repoRules), isFalse);
+
+    await repo.finishSession(
+      sessionId: 6,
+      purpose: LessonPurpose.alphabetCheckpoint,
+      exerciseCount: 20,
+      firstTryCorrect: 18,
+      checkpointLetters: 7,
+      at: day,
+    );
+    await repo.finishSession(
+      sessionId: 7,
+      purpose: LessonPurpose.mixedReview,
+      exerciseCount: 8,
+      firstTryCorrect: 8,
+      at: day,
+    );
+
+    // Повторная историческая запись AtomIntroduced для уже знакомой буквы
+    // не превращает ручной повтор темы в новый материал.
+    await repo.record(
+      AtomIntroduced(atomId: 'ba.isolated', sessionId: 8, at: day),
+    );
+    await repo.finishSession(
+      sessionId: 8,
+      purpose: LessonPurpose.standard,
+      exerciseCount: 20,
+      firstTryCorrect: 20,
+      at: day,
+    );
+    // События брошенного занятия без итоговой записи не считаются уроком.
+    await repo.record(answer(session: 9));
+
+    pacing = await repo.pacing(now: day);
+    expect(pacing.hasNewMaterialToday, isTrue);
+    expect(pacing.successfulReviewsSinceLatestNew, 3);
+    expect(pacing.completedAlphabetCheckpoints, {7});
+    expect(pacing.canIntroduceNewMaterial(repoRules), isTrue);
+
+    final restarted = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+      baseLetterIds: const {'ba.isolated', 'ta.isolated'},
+    );
+    expect((await restarted.pacing(now: day)).completedAlphabetCheckpoints, {
+      7,
+    });
+    expect(
+      (await restarted.pacing(
+        now: day.add(const Duration(days: 1)),
+      )).hasNewMaterialToday,
+      isFalse,
+    );
+  });
 }
+
+const repoRules = LearningRules();

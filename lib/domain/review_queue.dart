@@ -68,6 +68,75 @@ class ReviewQueue {
         .toList();
   }
 
+  /// Кандидаты для урока с новым материалом: сначала сохраняем всё, что
+  /// действительно созрело, затем добираем знакомое даже до интервала.
+  /// После первого набора начало списка поровну чередует последнюю волну
+  /// и более старые знания — именно первые элементы получат резерв урока.
+  List<String> buildMixed(
+    CurriculumContext ctx, {
+    required int sessionId,
+    Set<String> exclude = const {},
+    required Curriculum curriculum,
+  }) {
+    final due = build(
+      ctx,
+      sessionId: sessionId,
+      exclude: exclude,
+      curriculum: curriculum,
+    );
+    final drillable = {
+      for (final node in curriculum.nodes)
+        if (node.atom.kind != AtomKind.concept) node.atom.id,
+    };
+    final fallback = ctx.progress.entries
+        .where(
+          (entry) =>
+              drillable.contains(entry.key) &&
+              !exclude.contains(entry.key) &&
+              entry.value.state != AtomState.fresh &&
+              !entry.value.isDeferredAt(sessionId, rules),
+        )
+        .sorted(
+          (a, b) => (a.value.lastSeenSession ?? 0).compareTo(
+            b.value.lastSeenSession ?? 0,
+          ),
+        )
+        .map((entry) => entry.key);
+    final candidates = <String>{...due, ...fallback}.toList();
+    final latestSession = candidates
+        .map(
+          (id) =>
+              ctx.progress[id]?.introducedSession ??
+              ctx.progress[id]?.lastSeenSession ??
+              0,
+        )
+        .maxOrNull;
+    if (latestSession == null) return const [];
+
+    final recent = <String>[];
+    final older = <String>[];
+    for (final id in candidates) {
+      final progress = ctx.progress[id]!;
+      final introduced =
+          progress.introducedSession ?? progress.lastSeenSession ?? 0;
+      (introduced == latestSession ? recent : older).add(id);
+    }
+    if (older.isEmpty) return candidates.take(rules.reviewQueueCap).toList();
+
+    final mixed = <String>[];
+    for (
+      var index = 0;
+      mixed.length < rules.reviewQueueCap &&
+          (index < older.length || index < recent.length);
+      index++
+    ) {
+      if (index < older.length) mixed.add(older[index]);
+      if (mixed.length == rules.reviewQueueCap) break;
+      if (index < recent.length) mixed.add(recent[index]);
+    }
+    return mixed;
+  }
+
   static int _urgency(AtomProgress p) =>
       p.state.index < AtomState.known.index ? 0 : 1;
 }

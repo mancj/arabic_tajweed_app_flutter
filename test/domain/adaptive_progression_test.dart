@@ -22,7 +22,10 @@ void main() {
         File('assets/curriculum/$stage.json').readAsStringSync(),
       ),
   ]);
-  final fold = ProgressFold(letterFormIds: course.letterFormIds);
+  final fold = ProgressFold(
+    letterFormIds: course.letterFormIds,
+    baseLetterIds: course.baseLetterIds,
+  );
   const rules = LearningRules();
   final at = DateTime(2026, 9, 10);
   final board = TopicBoard(course);
