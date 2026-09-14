@@ -163,7 +163,7 @@ class _DebugTile extends StatelessWidget {
       child: AppGestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             color: UIColors.cardBackground,

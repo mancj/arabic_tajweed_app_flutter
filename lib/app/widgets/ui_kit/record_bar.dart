@@ -39,12 +39,6 @@ class RecordBar extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          status,
-          style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
-          textAlign: TextAlign.center,
-        ),
-        const Margin.vertical(12),
         AnimatedScale(
           scale: recording ? 1.15 : 1,
           duration: const Duration(milliseconds: 200),
@@ -59,6 +53,14 @@ class RecordBar extends StatelessWidget {
               color: UIColors.primaryButtonText,
             ),
           ),
+        ),
+        const Margin.vertical(12),
+        Text(
+          status,
+          style: UITextStyles.monoRegular12.copyWith(
+            color: UIColors.secondary2,
+          ),
+          textAlign: TextAlign.center,
         ),
         if (footer case final footer?) ...[const Margin.vertical(8), footer],
       ],
