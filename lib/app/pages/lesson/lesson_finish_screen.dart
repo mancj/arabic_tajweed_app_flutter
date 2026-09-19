@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -54,7 +55,10 @@ class LessonFinishScreen extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: UIColors.primary10,
                       borderRadius: BorderRadius.circular(8),
@@ -69,10 +73,7 @@ class LessonFinishScreen extends StatelessWidget {
                 ],
               ),
               const Margin.vertical(12),
-              for (final atom in introduced) ...[
-                _LearnedTile(atom: atom),
-                const Margin.vertical(8),
-              ],
+              _LearnedGrid(atoms: introduced),
             ] else
               const _FinishReviewNote(),
             if (kDebugMode && controller.planReason.isNotEmpty) ...[
@@ -245,6 +246,47 @@ class _FinishReviewNote extends StatelessWidget {
   );
 }
 
+class _LearnedGrid extends StatelessWidget {
+  const _LearnedGrid({required this.atoms});
+
+  final List<Atom> atoms;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final columns =
+          constraints.maxWidth < 320 ||
+              MediaQuery.textScalerOf(context).scale(1) > 1.3
+          ? 1
+          : 2;
+      final rows = atoms.slices(columns).toList();
+
+      return Column(
+        children: [
+          for (final (rowIndex, row) in rows.indexed) ...[
+            if (rowIndex > 0) const Margin.vertical(8),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (index, atom) in row.indexed) ...[
+                    if (index > 0) const Margin.horizontal(8),
+                    Expanded(child: _LearnedTile(atom: atom)),
+                  ],
+                  if (row.length < columns) ...[
+                    const Margin.horizontal(8),
+                    const Expanded(child: SizedBox.shrink()),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    },
+  );
+}
+
 class _LearnedTile extends StatelessWidget {
   const _LearnedTile({required this.atom});
 
@@ -267,11 +309,12 @@ class _LearnedTile extends StatelessWidget {
         borderRadius: 20,
         borderSide: BorderSide(color: UIColors.borders),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             alignment: Alignment.center,
             decoration: SquircleBorders.squircleBorder(
               color: UIColors.primary10,
@@ -293,24 +336,15 @@ class _LearnedTile extends StatelessWidget {
                     ),
                   ),
           ),
-          const Margin.horizontal(16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  category,
-                  style: UITextStyles.regular12.copyWith(
-                    color: UIColors.secondary2,
-                  ),
-                ),
-                const Margin.vertical(4),
-                Text(
-                  atom.label.isEmpty ? atom.display : atom.label,
-                  style: UITextStyles.semibold17,
-                ),
-              ],
-            ),
+          const Margin.vertical(12),
+          Text(
+            category,
+            style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+          ),
+          const Margin.vertical(4),
+          Text(
+            atom.label.isEmpty ? atom.display : atom.label,
+            style: UITextStyles.semibold17,
           ),
         ],
       ),
