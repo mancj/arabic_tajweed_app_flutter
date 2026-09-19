@@ -266,6 +266,7 @@ void main() {
 
     expect(controller.stage.value, LessonStage.finished);
     expect(find.text('Урок пройден'), findsOneWidget);
+    expect(find.text('Закрыть'), findsOneWidget);
     expect(find.text('Верно!'), findsNothing);
     final answers = (await db.readAll()).whereType<ProgressEvent>().toList();
     expect(answers, isNotEmpty);

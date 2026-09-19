@@ -32,6 +32,7 @@ dependencies:
   flutter_tilt: ^4.1.0
   tuple: ^2.0.2
   dio: ^5.7.0
+  material3_expressive_loading_indicator: ^0.1.2
 
 
 dev_dependencies:

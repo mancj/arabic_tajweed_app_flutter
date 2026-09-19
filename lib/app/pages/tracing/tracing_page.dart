@@ -35,7 +35,9 @@ class TracingPage extends GetView<TracingController> {
         padding: insets,
         child: Column(
           children: [
-            Obx(() => LessonProgressBar(value: controller.progress)),
+            Obx(
+              () => LessonProgressBar(value: controller.progress, wavy: true),
+            ),
             const Margin.vertical(12),
             const _ModeTabs(),
             const Margin.vertical(16),

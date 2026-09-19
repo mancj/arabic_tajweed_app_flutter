@@ -290,6 +290,11 @@ class LessonController extends GetxController {
 
   List<Atom> get sessionIntroduced => _sessionIntroduced.values.toList();
 
+  int get completedExerciseCount => _firstAttemptResults.length;
+
+  int get firstTryCorrectCount =>
+      _firstAttemptResults.where((result) => result).length;
+
   Exercise? get current {
     _refresh.value;
     // После ответа сессия уже указывает на следующее задание, но экран ещё
@@ -1162,8 +1167,8 @@ class LessonController extends GetxController {
       await _progress.finishSession(
         sessionId: _sessionId,
         purpose: _sessionPurpose,
-        exerciseCount: _firstAttemptResults.length,
-        firstTryCorrect: _firstAttemptResults.where((result) => result).length,
+        exerciseCount: completedExerciseCount,
+        firstTryCorrect: firstTryCorrectCount,
         checkpointLetters: _sessionCheckpointLetters,
       );
       _sessionSummaryRecorded = true;

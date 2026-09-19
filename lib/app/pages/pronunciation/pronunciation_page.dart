@@ -41,7 +41,9 @@ class PronunciationPage extends GetView<PronunciationController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Obx(() => LessonProgressBar(value: controller.progress)),
+            Obx(
+              () => LessonProgressBar(value: controller.progress, wavy: true),
+            ),
             const Margin.vertical(16),
             const _LetterCard(),
             const Margin.vertical(12),

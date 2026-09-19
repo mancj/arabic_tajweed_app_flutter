@@ -29,6 +29,7 @@ import 'package:arabic_tajweed_app/domain/exercise.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 import 'lesson_controller.dart';
+import 'lesson_finish_screen.dart';
 
 export 'lesson_binding.dart';
 export 'lesson_controller.dart';
@@ -85,6 +86,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
         backgroundColor: UIColors.transparent,
         isDismissible: false,
         enableDrag: false,
+        isScrollControlled: true,
         builder: (_) => _ResultSheet(controller: controller),
       );
       _sheetOpen = false;
@@ -100,34 +102,39 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: controller.isReviewOnly ? 'Повторение' : 'Урок',
-      actions: kDebugMode
-          ? [
-              Obx(
-                () => controller.stage.value == LessonStage.exercise
-                    ? const _LessonDebugMenu()
-                    : const SizedBox.shrink(),
-              ),
-            ]
-          : const [],
-      bottomBar: Obx(() => _BottomBar(stage: controller.stage.value)),
-      builder: (context, insets) => Obx(() {
-        final stage = controller.stage.value;
-        return SingleChildScrollView(
-          // Прокрутку у холста отбирает он сам, забирая жест в арене
-          // ([DrawingCanvas]). Всей странице замирать не нужно: карточка
-          // обводки бывает выше экрана, и до кнопок надо доезжать.
-          padding: insets,
-          child: switch (stage) {
-            LessonStage.loading => const _Centered(child: _Loader()),
-            LessonStage.intro => const _IntroBlock(),
-            LessonStage.exercise => const _ExerciseBlock(),
-            LessonStage.finished => const _FinishBlock(),
-          },
-        );
-      }),
-    );
+    return Obx(() {
+      if (controller.stage.value == LessonStage.finished) {
+        return LessonFinishScreen(controller: controller);
+      }
+      return AppScaffold(
+        title: controller.isReviewOnly ? 'Повторение' : 'Урок',
+        actions: kDebugMode
+            ? [
+                Obx(
+                  () => controller.stage.value == LessonStage.exercise
+                      ? const _LessonDebugMenu()
+                      : const SizedBox.shrink(),
+                ),
+              ]
+            : const [],
+        bottomBar: Obx(() => _BottomBar(stage: controller.stage.value)),
+        builder: (context, insets) => Obx(() {
+          final stage = controller.stage.value;
+          return SingleChildScrollView(
+            // Прокрутку у холста отбирает он сам, забирая жест в арене
+            // ([DrawingCanvas]). Всей странице замирать не нужно: карточка
+            // обводки бывает выше экрана, и до кнопок надо доезжать.
+            padding: insets,
+            child: switch (stage) {
+              LessonStage.loading => const _Centered(child: _Loader()),
+              LessonStage.intro => const _IntroBlock(),
+              LessonStage.exercise => const _ExerciseBlock(),
+              LessonStage.finished => const SizedBox.shrink(),
+            },
+          );
+        }),
+      );
+    });
   }
 }
 
@@ -142,7 +149,9 @@ class _ResultSheet extends StatefulWidget {
 
 class _ResultSheetState extends State<_ResultSheet>
     with SingleTickerProviderStateMixin {
-  static const _autoAdvanceDuration = Duration(seconds: 5);
+  static const _autoAdvanceDuration = kDebugMode
+      ? Duration(seconds: 3)
+      : Duration(seconds: 3);
 
   late final SingleSoundEffect _answerSound;
   AnimationController? _autoAdvanceController;
@@ -208,7 +217,7 @@ class _ResultSheetState extends State<_ResultSheet>
               ? 'Все формы расставлены по своим местам.'
               : exercise?.mode.isTracing == true
               ? 'Буква $label написана правильно.'
-              : 'Правильный ответ: $label.'
+              : null
         : isPronunciation && check != null
         ? 'Услышано: ${check.heard}. Это буква $label.'
         : isFormSequence
@@ -219,83 +228,180 @@ class _ResultSheetState extends State<_ResultSheet>
                     'Верные формы останутся на своих местах.'
         : exercise?.mode.isTracing == true
         ? 'Попробуйте написать букву $label ещё раз.'
-        : 'Правильный ответ: $label.';
+        : null;
 
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .85,
+        ),
         decoration: BoxDecoration(
           color: UIColors.cardBackground,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: UIColors.secondary1,
-                borderRadius: BorderRadius.circular(4),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: UIColors.secondary1,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ),
-            ),
-            const Margin.vertical(16),
-            Icon(
-              correct ? Icons.check_circle_rounded : Icons.refresh_rounded,
-              size: 41,
-              color: correct ? UIColors.primary : UIColors.text,
-            ),
-            const Margin.vertical(12),
-            Text(
-              title,
-              style: UITextStyles.semibold22,
-              textAlign: TextAlign.center,
-            ),
-            const Margin.vertical(8),
-            Text(
-              text,
-              style: UITextStyles.regular17,
-              textAlign: TextAlign.center,
-            ),
-            if (correct) ...[
-              const Margin.vertical(16),
-              AnimatedBuilder(
-                animation: _autoAdvanceController!,
-                builder: (context, _) {
-                  final progress = _autoAdvanceController!.value;
-                  final secondsLeft =
-                      (_autoAdvanceDuration.inSeconds * (1 - progress)).ceil();
-                  return Semantics(
-                    label: 'Автоматический переход',
-                    value: 'Через $secondsLeft секунд',
-                    child: Column(
-                      key: const ValueKey('correct-answer-auto-progress'),
-                      children: [
-                        Text(
-                          'Далее автоматически через $secondsLeft сек.',
-                          style: UITextStyles.regular12.copyWith(
-                            color: UIColors.secondary2,
-                          ),
-                        ),
-                        const Margin.vertical(8),
-                        LessonProgressBar(value: progress, height: 8),
-                      ],
+              const Margin.vertical(24),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: correct
+                          ? UIColors.primary
+                          : UIColors.backgroundShapes1,
+                      borderRadius: BorderRadius.circular(32),
                     ),
-                  );
-                },
+                    child: Icon(
+                      correct ? Icons.check_rounded : Icons.refresh_rounded,
+                      size: 16,
+                      color: correct ? UIColors.white : UIColors.secondary1,
+                    ),
+                  ),
+                  const Margin.horizontal(8),
+                  Expanded(child: Text(title, style: UITextStyles.semibold22)),
+                ],
               ),
-            ],
-            const Margin.vertical(24),
-            SizedBox(
-              width: double.infinity,
-              child: NextButton(
+              if (exercise != null && !isFormSequence) ...[
+                const Margin.vertical(24),
+                _ResultAnswerCard(atom: exercise.answer),
+              ],
+              if (text != null) ...[
+                const Margin.vertical(16),
+                Text(
+                  text,
+                  style: UITextStyles.regular17.copyWith(
+                    color: UIColors.secondary2,
+                  ),
+                ),
+              ],
+              if (correct) ...[
+                const Margin.vertical(16),
+                AnimatedBuilder(
+                  animation: _autoAdvanceController!,
+                  builder: (context, _) {
+                    final progress = _autoAdvanceController!.value;
+                    final secondsLeft =
+                        (_autoAdvanceDuration.inSeconds * (1 - progress))
+                            .ceil();
+                    return Semantics(
+                      label: 'Автоматический переход',
+                      value: 'Через $secondsLeft секунд',
+                      child: Column(
+                        key: const ValueKey('correct-answer-auto-progress'),
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Следующее задание через $secondsLeft сек.',
+                            style: UITextStyles.regular12.copyWith(
+                              color: UIColors.secondary2,
+                            ),
+                          ),
+                          const Margin.vertical(8),
+                          ExcludeSemantics(
+                            child: LessonProgressBar(
+                              value: progress,
+                              wavy: true,
+                              animateOnChange: false,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+              const Margin.vertical(24),
+              NextButton(
                 title: correct ? 'Продолжить' : 'Попробовать ещё раз',
                 enabled: !_advancing,
                 onTap: _advance,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _ResultAnswerCard extends StatelessWidget {
+  const _ResultAnswerCard({required this.atom});
+
+  final Atom atom;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasGlyph = atom.kind != AtomKind.concept;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: UIColors.highlightArea,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          if (hasGlyph) ...[
+            Container(
+                  width: 62,
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: SquircleBorders.squircleBorder(
+                    color: UIColors.primary10,
+                    borderRadius: 16,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      atom.display,
+                      style: UITextStyles.arabicRegular80Compact.copyWith(
+                        color: UIColors.primary,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                )
+                .animate()
+                .fadeIn(delay: .2.seconds, duration: .5.seconds)
+                .scaleXY(begin: .8, curve: Curves.easeInOutBack),
+            const Margin.horizontal(16),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ПРАВИЛЬНЫЙ ОТВЕТ',
+                  style: UITextStyles.monoSemibold11.copyWith(
+                    color: UIColors.secondary2,
+                  ),
+                ).animate().fadeIn(delay: .4.seconds, duration: .5.seconds),
+                const Margin.vertical(8),
+                Text(
+                  atom.label.isNotEmpty ? atom.label : atom.display,
+                  style: UITextStyles.semibold22,
+                ).animate().fadeIn(delay: .6.seconds, duration: .5.seconds),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -380,7 +486,7 @@ class _BottomBar extends GetView<LessonController> {
           ],
         );
       }),
-      LessonStage.finished => NextButton(title: 'Завершить', onTap: Get.back),
+      LessonStage.finished => const SizedBox.shrink(),
     };
   }
 }
@@ -835,6 +941,7 @@ class _LessonProgress extends GetView<LessonController> {
     return Obx(
       () => LessonProgressBar(
         value: controller.progress,
+        wavy: true,
         debugLabel: kDebugMode
             ? '№ ${controller.exerciseNumber} из ${controller.totalExercises}'
             : null,
@@ -1099,84 +1206,4 @@ class _Glyph extends StatelessWidget {
     style: UITextStyles.arabicRegular(size),
     textDirection: TextDirection.rtl,
   );
-}
-
-class _Hint extends StatelessWidget {
-  const _Hint({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24),
-    child: Text(
-      text,
-      style: UITextStyles.regular17,
-      textAlign: TextAlign.center,
-    ),
-  );
-}
-
-class _FinishBlock extends GetView<LessonController> {
-  const _FinishBlock();
-
-  @override
-  Widget build(BuildContext context) {
-    final introduced = controller.sessionIntroduced;
-
-    return Column(
-      children: [
-        const Margin.vertical(48),
-        Text(
-          controller.isReviewOnly ? 'Повторили' : 'Урок пройден',
-          style: UITextStyles.semibold32,
-        ),
-        const Margin.vertical(16),
-        if (introduced.isNotEmpty) ...[
-          Text(
-            controller.isReviewOnly ? 'Повторили' : 'Сегодня разобрали',
-            style: UITextStyles.regular17,
-          ),
-          const Margin.vertical(12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            alignment: WrapAlignment.center,
-            children: [for (final atom in introduced) _LearnedChip(atom: atom)],
-          ),
-        ],
-        const Margin.vertical(24),
-        // Причина плана видна только в отладке: пользователю она ничего
-        // не говорит, а нам объясняет, почему урок вышел именно таким.
-        if (kDebugMode) _Hint(text: controller.planReason),
-      ],
-    );
-  }
-}
-
-class _LearnedChip extends StatelessWidget {
-  const _LearnedChip({required this.atom});
-
-  final Atom atom;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: SquircleBorders.squircleBorder(
-        color: UIColors.cardBackground,
-        borderRadius: 16,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (atom.kind != AtomKind.concept) ...[
-            _Glyph(atom: atom, size: 28),
-            const Margin.horizontal(8),
-          ],
-          Text(atom.label, style: UITextStyles.semibold14),
-        ],
-      ),
-    );
-  }
 }

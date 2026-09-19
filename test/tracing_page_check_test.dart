@@ -29,7 +29,8 @@ void main() {
     });
 
     await tester.pumpWidget(const GetMaterialApp(home: TracingPage()));
-    await tester.pumpAndSettle();
+    // Показ написания буквы на холсте может перезапускаться при загрузке.
+    await tester.pump(const Duration(milliseconds: 500));
 
     final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
     final box = tester.getRect(find.byType(DrawingCanvas));
