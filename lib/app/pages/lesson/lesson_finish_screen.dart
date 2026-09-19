@@ -79,7 +79,7 @@ class LessonFinishScreen extends StatelessWidget {
             if (kDebugMode && controller.planReason.isNotEmpty) ...[
               const Margin.vertical(16),
               Text(
-                'План: ${controller.planReason}',
+                controller.planReason,
                 style: UITextStyles.monoMedium12.copyWith(
                   color: UIColors.secondary2,
                   fontFamilyFallback: [UITextStyles.fontDGFaseh],
@@ -137,7 +137,9 @@ class _FinishHero extends StatelessWidget {
           const Margin.vertical(24),
           Text(
             'Занятие завершено',
-            style: UITextStyles.semibold13.copyWith(color: UIColors.primary),
+            style: UITextStyles.monoSemibold13.copyWith(
+              color: UIColors.primary,
+            ),
           ),
           const Margin.vertical(8),
           Text(
@@ -172,11 +174,11 @@ class _FinishStats extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: [
       Expanded(
-        child: _FinishStat(value: '$exerciseCount', label: 'Выполнено заданий'),
+        child: _FinishStat(value: exerciseCount, label: 'Выполнено заданий'),
       ),
       const Margin.horizontal(8),
       Expanded(
-        child: _FinishStat(value: '$firstTryCount', label: 'С первого раза'),
+        child: _FinishStat(value: firstTryCount, label: 'С первого раза'),
       ),
     ],
   );
@@ -185,7 +187,7 @@ class _FinishStats extends StatelessWidget {
 class _FinishStat extends StatelessWidget {
   const _FinishStat({required this.value, required this.label});
 
-  final String value;
+  final int value;
   final String label;
 
   @override
@@ -199,11 +201,17 @@ class _FinishStat extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: UITextStyles.semibold27),
+        TweenAnimationBuilder<int>(
+          tween: IntTween(begin: 0, end: value),
+          duration: const Duration(milliseconds: 1000),
+          curve: Curves.easeInOut,
+          builder: (context, count, child) =>
+              Text('$count', style: UITextStyles.semibold27),
+        ),
         const Margin.vertical(4),
         Text(
           label,
-          style: UITextStyles.regular13.copyWith(color: UIColors.secondary2),
+          style: UITextStyles.monoMedium12.copyWith(color: UIColors.secondary2),
         ),
       ],
     ),
