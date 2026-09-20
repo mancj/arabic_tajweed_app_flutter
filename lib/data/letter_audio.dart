@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 // PlayerState прячем: одноимённый класс есть и в audioplayers, а нужен
@@ -10,12 +11,13 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../domain/audio_track.dart';
+import 'lesson_audio.dart';
 
 /// Звучание букв: запись имени буквы, одна на все её формы.
 ///
 /// Файл ищется по `letterId`, а не задаётся в контенте: ب в начале и в конце
 /// звучит одинаково, и класть одно и то же имя файла в четыре атома незачем.
-class LetterAudio {
+class LetterAudio implements LessonAudio {
   LetterAudio({AudioPlayer? player}) : _player = player;
 
   /// Плеер создаётся при первом воспроизведении, а не вместе с экраном:
@@ -24,7 +26,10 @@ class LetterAudio {
   AudioPlayer? _player;
 
   /// Что сейчас звучит: форма записи и позиция. На это подписана волна.
-  final track = ValueNotifier<AudioTrack>(AudioTrack.silent);
+  @override
+  final ValueNotifier<AudioTrack> track = ValueNotifier<AudioTrack>(
+    AudioTrack.silent,
+  );
 
   /// Пики уже разобранных записей: разбор файла стоит дорого, а буквы
   /// слушают по многу раз подряд.
@@ -78,19 +83,24 @@ class LetterAudio {
 
   /// Нажатие на кнопку: та же буква на ходу — остановка, любая другая
   /// (или уже смолкшая) — воспроизведение с начала.
-  Future<void> toggle(String? letterId) async {
-    if (!has(letterId)) return;
+  Future<void> toggle(String? letterId) =>
+      toggleAsset(has(letterId) ? assetOf(letterId!) : null);
+
+  @override
+  Future<void> toggleAsset(String? asset) async {
+    if (asset == null) return;
     final player = _player;
     // Спрашиваем сам плеер, а не прогресс: после конца записи он шлёт
     // позицию 0, и по прогрессу доигравшая запись неотличима от начала.
-    if (letterId == _current && player?.state == PlayerState.playing) {
+    if (asset == _current && player?.state == PlayerState.playing) {
       return stop();
     }
-    return play(letterId);
+    return playAsset(asset);
   }
 
   /// Обрывает звук и возвращает волну в покой: продолжать с места нечего,
   /// следующее нажатие начнёт запись сначала.
+  @override
   Future<void> stop() async {
     _current = null;
     track.value = AudioTrack.silent;
@@ -103,21 +113,25 @@ class LetterAudio {
 
   /// Проигрывает имя буквы. Повторное нажатие обрывает предыдущий звук,
   /// а не накладывается на него.
-  Future<void> play(String? letterId) async {
-    if (!has(letterId)) return;
+  Future<void> play(String? letterId) =>
+      playAsset(has(letterId) ? assetOf(letterId!) : null);
+
+  @override
+  Future<void> playAsset(String? asset) async {
+    if (asset == null) return;
     try {
       final player = _player ??= AudioPlayer();
       await player.stop();
       _listen(player);
-      _current = letterId;
+      _current = asset;
       track.value = AudioTrack(
-        levels: _levels[letterId] ?? const [],
+        levels: _levels[asset] ?? const [],
         isPlaying: true,
       );
       // Форма снимается параллельно со звуком: первый раз она приезжает
       // с задержкой в пару кадров, и ждать её — значит задержать сам звук.
-      unawaited(_loadLevels(letterId!));
-      await player.play(AssetSource(assetOf(letterId)));
+      unawaited(_loadLevels(asset));
+      await player.play(AssetSource(asset));
     } catch (_) {
       // Звук — не то, ради чего стоит ронять урок: если плеера нет,
       // молча продолжаем без него.
@@ -153,12 +167,12 @@ class LetterAudio {
   /// Снимает форму записи. Извлечение живёт в нативной части пакета, то есть
   /// только на Android и iOS; на вебе и десктопе оно просто не отвечает —
   /// волна остаётся декоративной, и это нормально.
-  Future<void> _loadLevels(String letterId) async {
-    if (_levels.containsKey(letterId)) return;
+  Future<void> _loadLevels(String asset) async {
+    if (_levels.containsKey(asset)) return;
 
     final controller = PlayerController();
     try {
-      final file = await _fileOf(letterId);
+      final file = await _fileOf(asset);
       final raw = await controller.extractWaveformData(
         path: file.path,
         noOfSamples: _sampleCount,
@@ -170,30 +184,33 @@ class LetterAudio {
           ? const <double>[]
           : raw.map((v) => (v / peak).clamp(0.0, 1.0)).toList();
 
-      _levels[letterId] = levels;
-      if (track.value.isPlaying) {
+      _levels[asset] = levels;
+      if (_current == asset && track.value.isPlaying) {
         track.value = track.value.copyWith(levels: levels);
       }
     } catch (_) {
       // Пустой список — знак «формы нет», и он тоже кэшируется: незачем
       // ходить в отсутствующий плагин на каждое нажатие.
-      _levels[letterId] = const [];
+      _levels[asset] = const [];
     } finally {
       controller.dispose();
     }
   }
 
   /// Нативному разбору нужен файл на диске, ассет он открыть не может.
-  Future<File> _fileOf(String letterId) async {
+  Future<File> _fileOf(String asset) async {
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/letter_$letterId.wav');
+    final key = base64Url.encode(utf8.encode(asset)).replaceAll('=', '');
+    final extension = asset.split('.').last;
+    final file = File('${dir.path}/lesson_$key.$extension');
     if (!file.existsSync()) {
-      final bytes = await rootBundle.load('assets/${assetOf(letterId)}');
+      final bytes = await rootBundle.load('assets/$asset');
       await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
     }
     return file;
   }
 
+  @override
   Future<void> dispose() async {
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());

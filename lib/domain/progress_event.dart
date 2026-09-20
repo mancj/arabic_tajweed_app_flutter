@@ -98,18 +98,28 @@ class ProgressEvent extends LogEntry {
   /// 1 — с первой попытки. Только такие ответы двигают атом вперёд.
   final int attempt;
 
-  /// Уложился в порог скорости. Нужно для дальнейшего закрепления
-  /// known/mastered; начальное освоение проверяет правильность без спешки.
+  /// Старое поле журнала. Сохранено для чтения накопленных ответов;
+  /// скорость больше не влияет на прогресс.
   final bool fastEnough;
 
-  /// Быстрый ответ с первой попытки — подтверждение автоматизма.
-  bool get isClean => correct && attempt == 1 && fastEnough;
+  /// Правильный ответ с первой попытки.
+  bool get isClean => correct && attempt == 1;
 }
 
 /// Знание подтверждено двумя заданиями входной проверки. Это отдельное
 /// событие: нельзя выдавать его за несколько обычных учебных ответов.
 class KnowledgeConfirmed extends LogEntry {
   const KnowledgeConfirmed({
+    required super.atomId,
+    required super.sessionId,
+    required super.at,
+  });
+}
+
+/// Награда за букву уже выдана. Хранится в логе, чтобы ошибка и повторное
+/// освоение не показывали её второй раз. На знание атомов не влияет.
+class LetterLearned extends LogEntry {
+  const LetterLearned({
     required super.atomId,
     required super.sessionId,
     required super.at,

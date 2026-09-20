@@ -23,6 +23,7 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
   example: json['example'] == null
       ? null
       : WordExample.fromJson(json['example'] as Map<String, dynamic>),
+  audioAsset: json['audioAsset'] as String?,
 );
 
 Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
@@ -36,6 +37,7 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'confusableWith': instance.confusableWith,
   'tracing': instance.tracing,
   'example': instance.example,
+  'audioAsset': instance.audioAsset,
 };
 
 const _$AtomKindEnumMap = {

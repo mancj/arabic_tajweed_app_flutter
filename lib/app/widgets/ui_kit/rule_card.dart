@@ -9,18 +9,21 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
 /// [badge] и [text] опциональны — у понятия без пояснения остаётся
 /// один заголовок. [child] — слот под иллюстрацию к тексту, например
 /// слово с подсвеченной буквой: карточка одна на все объяснения,
-/// а что в ней показать, решает экран.
+/// а что в ней показать, решает экран. [footer] доходит до боковых и
+/// нижнего краёв карточки.
 class RuleCard extends StatelessWidget {
   final String title;
   final String? badge;
   final String? text;
   final Widget? child;
+  final Widget? footer;
 
   const RuleCard({
     required this.title,
     this.badge,
     this.text,
     this.child,
+    this.footer,
     Key? key,
   }) : super(key: key);
 
@@ -31,7 +34,6 @@ class RuleCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       decoration: SquircleBorders.squircleBorder(
         color: UIColors.cardBackground,
         borderRadius: 24,
@@ -45,27 +47,39 @@ class RuleCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (badge != null) ...[
-            BadgeLabel(
-              text: badge,
-              color: UIColors.primary,
-              textColor: UIColors.badgeText1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 24, 16, footer == null ? 24 : 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (badge != null) ...[
+                    BadgeLabel(
+                      text: badge,
+                      color: UIColors.primary,
+                      textColor: UIColors.badgeText1,
+                    ),
+                    const Margin.vertical(8),
+                  ],
+                  Text(title, style: UITextStyles.semibold22),
+                  if (text != null && text.isNotEmpty) ...[
+                    const Margin.vertical(16),
+                    Text(text, style: UITextStyles.serifRegular16),
+                  ],
+                  if (child != null) ...[
+                    const Margin.vertical(16),
+                    Center(child: child),
+                  ],
+                ],
+              ),
             ),
-            const Margin.vertical(8),
+            if (footer != null) footer!,
           ],
-          Text(title, style: UITextStyles.semibold22),
-          if (text != null && text.isNotEmpty) ...[
-            const Margin.vertical(16),
-            Text(text, style: UITextStyles.serifRegular16),
-          ],
-          if (child != null) ...[
-            const Margin.vertical(16),
-            Center(child: child),
-          ],
-        ],
+        ),
       ),
     );
   }

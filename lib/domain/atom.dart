@@ -59,6 +59,7 @@ class Atom {
     this.confusableWith = const [],
     this.tracing,
     this.example,
+    this.audioAsset,
   });
 
   factory Atom.fromJson(Map<String, dynamic> json) => _$AtomFromJson(json);
@@ -95,6 +96,10 @@ class Atom {
   /// не только глифом с татвилями, но и в контексте. Только у форм,
   /// отличных от изолированной.
   final WordExample? example;
+
+  /// Запись для этого материала, путь внутри assets/. У букв без этого поля
+  /// пока используется прежняя запись имени по letterId.
+  final String? audioAsset;
 
   Map<String, dynamic> toJson() => _$AtomToJson(this);
 

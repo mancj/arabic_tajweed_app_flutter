@@ -57,20 +57,31 @@ void main() {
     expect(p.state, AtomState.known);
   });
 
-  // Медленное правильное письмо не должно запирать начальное обучение.
-  // При этом автоматизм и подтверждения после known требуют скорости.
-  test('медленные верные ответы дают known, но не ускоряют интервалы', () {
+  // Старые записи с fastEnough=false должны давать тот же прогресс:
+  // возвращение проверки скорости сломает подтверждения и mastered.
+  test('медленные ответы из старого журнала подтверждают знание', () {
     final p = run([
       answer(fast: false, mode: ExerciseMode.trace),
       answer(fast: false, mode: ExerciseMode.traceFromMemory),
       answer(fast: false, mode: ExerciseMode.sayName),
       answer(fast: false, session: 2, offset: const Duration(days: 2)),
     ]);
-    expect(p.cleanStreak, 3);
+    expect(p.cleanStreak, 4);
     expect(p.state, AtomState.known);
-    expect(p.cleanSinceKnown, 0);
-    expect(p.confirmations, 0);
-    expect(p.reviewIntervalFor(rules), rules.reviewIntervalBase);
+    expect(p.cleanSinceKnown, 1);
+    expect(p.confirmations, 1);
+    expect(p.reviewIntervalFor(rules), rules.reviewIntervalBase * 2);
+
+    final letter = runLetter([
+      answer(fast: false, mode: ExerciseMode.trace),
+      answer(fast: false, mode: ExerciseMode.nameToForm),
+      answer(fast: false, mode: ExerciseMode.trace),
+      answer(fast: false, session: 2),
+      answer(fast: false, session: 4),
+      answer(fast: false, session: 8),
+    ]);
+    expect(letter.confirmations, 3);
+    expect(letter.state, AtomState.mastered);
   });
 
   test('чистые повторы в known удваивают интервал, ошибка обнуляет', () {
@@ -136,6 +147,31 @@ void main() {
     ]);
     expect(mastered.confirmations, 3);
     expect(mastered.state, AtomState.mastered);
+  });
+
+  // Ранний повтор обновляет дату последнего показа, но не должен переносить
+  // срок подтверждения: иначе буква при ежедневной практике не станет mastered.
+  test('ранние повторы не отодвигают mastered', () {
+    final log = <LogEntry>[
+      answer(mode: ExerciseMode.trace),
+      answer(mode: ExerciseMode.nameToForm),
+      answer(mode: ExerciseMode.trace),
+      answer(session: 2), // Первое подтверждение, следующее — в #4.
+      answer(session: 3), // Рано; срок остаётся #4.
+    ];
+    final beforeSecond = runLetter(log);
+    expect(beforeSecond.confirmations, 1);
+    expect(beforeSecond.lastSeenSession, 3);
+    expect(beforeSecond.dueSession(rules, isLetterForm: true), 4);
+
+    log.add(answer(session: 4));
+    expect(runLetter(log).confirmations, 2);
+    for (final session in [5, 6, 7]) {
+      log.add(answer(session: session));
+    }
+    expect(runLetter(log).dueSession(rules, isLetterForm: true), 8);
+    log.add(answer(session: 8));
+    expect(runLetter(log).state, AtomState.mastered);
   });
 
   test('ошибка обнуляет подтверждения буквы', () {

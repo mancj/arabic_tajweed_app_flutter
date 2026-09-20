@@ -2,7 +2,7 @@ name: arabic_tajweed_app
 description: "Your app description here"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+42
+version: 1.0.0+45
 
 environment:
   sdk: '^3.8.0'
@@ -33,6 +33,7 @@ dependencies:
   tuple: ^2.0.2
   dio: ^5.7.0
   material3_expressive_loading_indicator: ^0.1.2
+  rive: ^0.14.11
 
 
 dev_dependencies:
@@ -53,6 +54,7 @@ flutter:
     - assets/svg/alphabet/
     - assets/audio/alphabet/
     - assets/img/
+    - assets/rive/
   fonts:
     - family: Onest
       fonts:

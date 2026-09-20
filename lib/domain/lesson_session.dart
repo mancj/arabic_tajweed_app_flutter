@@ -62,11 +62,9 @@ class LessonSession {
     _queue.insert(_index, _queue.removeAt(at));
   }
 
-  /// [fastEnough] считает вызывающий: порог зависит от режима.
   AnswerOutcome answer(
     Exercise exercise,
     int optionIndex, {
-    required bool fastEnough,
     Map<String, bool>? atomResults,
   }) {
     final correct = optionIndex == exercise.answerIndex;
@@ -93,7 +91,7 @@ class LessonSession {
           mode: exercise.mode,
           correct: results[atom.id]!,
           attempt: _attempt,
-          fastEnough: fastEnough,
+          fastEnough: true,
         ),
     ]);
 

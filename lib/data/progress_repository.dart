@@ -45,6 +45,7 @@ class ProgressRepository {
   Set<int> _sessions = const {};
   Set<int> _sessionsWithNew = const {};
   Set<String> _introducedAtomIds = const {};
+  Set<String> _learnedLetterIds = const {};
   Set<DateTime> _activityDays = const {};
 
   /// Дни реальной работы по местному времени, включая незаконченные занятия.
@@ -65,6 +66,11 @@ class ProgressRepository {
 
   Future<AtomProgress> of(String atomId) async =>
       (await progress())[atomId] ?? const AtomProgress();
+
+  Future<Set<String>> learnedLetterIds() async {
+    if (!_loaded) await recompute();
+    return Set.unmodifiable(_learnedLetterIds);
+  }
 
   /// Номер для урока, который начинается сейчас: следующий за последним
   /// в логе. Брошенный на середине урок номер не освобождает — так проще,
@@ -233,6 +239,10 @@ class ProgressRepository {
       }
     }
     _introducedAtomIds = introducedAtomIds;
+    _learnedLetterIds = log
+        .whereType<LetterLearned>()
+        .map((e) => e.atomId)
+        .toSet();
     _sessionsWithNew = sessionsWithNew;
     _loaded = true;
   }
@@ -244,11 +254,12 @@ class ProgressRepository {
       await recompute();
       return;
     }
-    final touched = entries.map((e) => e.atomId).toSet();
+    final progressEntries = entries.where((e) => e is! LetterLearned).toList();
+    final touched = progressEntries.map((e) => e.atomId).toSet();
     final base = {
       for (final id in touched) id: _cache[id] ?? const AtomProgress(),
     };
-    _cache = {..._cache, ..._fold.foldOnto(base, entries)};
+    _cache = {..._cache, ..._fold.foldOnto(base, progressEntries)};
     _activityDays = {..._activityDays, ...entries.map((e) => _localDay(e.at))};
     _sessions = {..._sessions, ...entries.map((e) => e.sessionId)};
     final introducedAtomIds = {..._introducedAtomIds};
@@ -259,6 +270,10 @@ class ProgressRepository {
       }
     }
     _introducedAtomIds = introducedAtomIds;
+    _learnedLetterIds = {
+      ..._learnedLetterIds,
+      ...entries.whereType<LetterLearned>().map((e) => e.atomId),
+    };
     _sessionsWithNew = sessionsWithNew;
   }
 }

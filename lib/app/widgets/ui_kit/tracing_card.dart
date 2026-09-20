@@ -5,11 +5,10 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_audio_waveform.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get_utils/src/extensions/num_extensions.dart';
 
 /// Карточка обводки: шапка [LessonCard] с кнопкой «стереть», под ней
 /// прописная сетка с холстом и строка обратной связи.
@@ -126,22 +125,7 @@ class TracingCard extends StatelessWidget {
                     bottom: -16,
                     height: 100,
                     child: IgnorePointer(
-                      child: WaveformWidget(
-                        strokeWidth: .5,
-                        height: 200,
-                        layers: 3,
-                        track: track,
-                        restHeight: .4,
-                        minBumps: 3,
-                        maxBumps: 4,
-                        particles: WaveformParticles(
-                          minRadius: .5,
-                          color: UIColors.primary,
-                          maxRadius: 1,
-                          duration: 1.seconds,
-                          fadeInDuration: .2.seconds,
-                        ),
-                      ),
+                      child: LessonAudioWaveform(height: 200, track: track),
                     ),
                   ),
                 Positioned(

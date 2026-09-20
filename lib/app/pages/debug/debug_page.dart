@@ -2,6 +2,8 @@ import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_learned_popup.dart';
+import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:arabic_tajweed_app/data/rest/api_config.dart';
@@ -88,6 +90,18 @@ class DebugPage extends GetView<DebugController> {
                   title: 'Формы буквы',
                   subtitle: 'Тест слотов, плиток и анимаций',
                   onTap: controller.openFormSequence,
+                ),
+                _DebugTile(
+                  title: 'Буква изучена',
+                  subtitle: 'Поп-ап с анимацией Rive',
+                  onTap: () async {
+                    final curriculum = await const CurriculumLoader().load();
+                    if (!context.mounted) return;
+                    await showLetterLearnedPopup(
+                      context,
+                      atom: curriculum.baseLetters.first,
+                    );
+                  },
                 ),
               ],
             ),

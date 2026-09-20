@@ -11,7 +11,7 @@ import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Прогон курса насквозь: идеальный ученик отвечает всё верно и быстро.
+/// Прогон курса насквозь: идеальный ученик отвечает верно с первой попытки.
 /// Тест ловит тупики в графе — ситуацию, когда планировщику нечего выдать,
 /// а курс при этом не пройден.
 void main() {
@@ -85,7 +85,7 @@ void main() {
       );
       while (!lesson.isFinished) {
         final e = lesson.current!;
-        lesson.answer(e, e.answerIndex, fastEnough: true);
+        lesson.answer(e, e.answerIndex);
       }
       progress = fold.foldOnto(progress, lesson.log);
 

@@ -84,7 +84,7 @@ void main() {
       if (c.wasCorrect.value) await c.submit();
     } else {
       c.select(ex.isChoice ? ex.answerIndex : 0);
-      await tester.tap(find.text('Ответить'));
+      await c.submit();
       if (c.wasCorrect.value) await c.submit();
     }
     await settle(tester);

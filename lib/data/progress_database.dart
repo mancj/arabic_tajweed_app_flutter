@@ -154,6 +154,12 @@ class ProgressDatabase extends _$ProgressDatabase {
   Future<int> get eventCount async => (await select(logRows).get()).length;
 
   LogRowsCompanion _toCompanion(LogEntry entry) => switch (entry) {
+    LetterLearned() => LogRowsCompanion.insert(
+      kind: 'letterLearned',
+      atomId: entry.atomId,
+      sessionId: entry.sessionId,
+      at: entry.at,
+    ),
     AtomIntroduced() => LogRowsCompanion.insert(
       kind: 'introduced',
       atomId: entry.atomId,
@@ -179,6 +185,11 @@ class ProgressDatabase extends _$ProgressDatabase {
   };
 
   LogEntry _toDomain(LogRow row) => switch (row.kind) {
+    'letterLearned' => LetterLearned(
+      atomId: row.atomId,
+      sessionId: row.sessionId,
+      at: row.at,
+    ),
     'introduced' => AtomIntroduced(
       atomId: row.atomId,
       sessionId: row.sessionId,

@@ -1,5 +1,11 @@
 import '../helpers/plugin_mocks.dart';
 import 'package:arabic_tajweed_app/data/letter_audio.dart';
+import 'package:arabic_tajweed_app/data/lesson_audio.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
+import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 
@@ -58,6 +64,7 @@ void main() {
     WidgetTester tester, {
     String? topicId,
     bool continuePlanning = false,
+    LessonAudio? audio,
   }) async {
     // Граф отдаём готовым: rootBundle в тестах отвечает только первому
     // тесту файла, дальше запрос повисает.
@@ -68,7 +75,7 @@ void main() {
         topicId: topicId,
         continuePlanning: continuePlanning,
         shapeLoader: shapeFromDisk,
-        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
+        audio: audio ?? LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
@@ -130,14 +137,21 @@ void main() {
     expect(find.textContaining('28 букв'), findsOneWidget);
   });
 
+  // Обзор должен озвучивать букву сам; кнопка лежит поверх нижней волны,
+  // которая доходит до боковых и нижнего краёв карточки без отступов.
   testWidgets('перед первой формой буквы показан общий обзор', (tester) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final audio = _RecordingAudio();
     await tester.runAsync(
       () => db.appendAll([
         for (final id in curriculum.topics.first.counterOf)
           AtomIntroduced(atomId: id, sessionId: 1, at: DateTime(2026)),
       ]),
     );
-    await pumpLesson(tester, topicId: 'm.forms');
+    await pumpLesson(tester, topicId: 'm.forms', audio: audio);
     final controller = Get.find<LessonController>();
 
     while (controller.stage.value == LessonStage.intro) {
@@ -153,6 +167,40 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Все формы буквы ${forms.first.display}'), findsOneWidget);
+    final isolated = forms.firstWhere(
+      (form) => form.form == LetterForm.isolated,
+    );
+    final asset = LetterAudio.assetOf(isolated.letterId!);
+    expect(find.byType(PlayControl), findsOneWidget);
+    expect(audio.played, contains(asset));
+    expect(audio.track.value.isPlaying, isTrue);
+    expect(
+      tester.widget<WaveformWidget>(find.byType(WaveformWidget)).track,
+      same(audio.track),
+    );
+    final card = find.byType(RuleCard);
+    final wave = find.byType(WaveformWidget);
+    final play = find.byType(PlayControl);
+    // Между волной и внешним краем остаётся только граница карточки в 1 px.
+    expect(
+      tester.getSize(wave).width,
+      closeTo(tester.getSize(card).width, 2.1),
+    );
+    expect(
+      tester.getBottomRight(wave).dy,
+      closeTo(tester.getBottomRight(card).dy, 1),
+    );
+    expect(tester.getCenter(play).dx, closeTo(tester.getCenter(card).dx, 1));
+    expect(
+      tester.getBottomRight(card).dy - tester.getBottomRight(play).dy,
+      inInclusiveRange(4, 14),
+    );
+    expect(tester.getTopLeft(play).dy, greaterThan(tester.getTopLeft(wave).dy));
+
+    await tester.tap(play);
+    await tester.pump();
+    expect(audio.toggled, [asset]);
+    expect(audio.track.value.isPlaying, isFalse);
 
     await tester.tap(find.text('Понятно'));
     await settle(tester);
@@ -272,4 +320,34 @@ void main() {
     expect(answers, isNotEmpty);
     expect(answers.every((answer) => answer.correct), isTrue);
   });
+}
+
+class _RecordingAudio implements LessonAudio {
+  @override
+  final ValueNotifier<AudioTrack> track = ValueNotifier(AudioTrack.silent);
+
+  final played = <String>[];
+  final toggled = <String>[];
+
+  @override
+  Future<void> playAsset(String? asset) async {
+    if (asset != null) {
+      played.add(asset);
+      track.value = const AudioTrack(isPlaying: true);
+    }
+  }
+
+  @override
+  Future<void> toggleAsset(String? asset) async {
+    if (asset != null) {
+      toggled.add(asset);
+      track.value = AudioTrack(isPlaying: !track.value.isPlaying);
+    }
+  }
+
+  @override
+  Future<void> stop() async => track.value = AudioTrack.silent;
+
+  @override
+  Future<void> dispose() async => track.dispose();
 }

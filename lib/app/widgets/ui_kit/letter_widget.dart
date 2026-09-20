@@ -3,7 +3,7 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/animated_background_shapes.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_audio_waveform.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
@@ -180,22 +180,7 @@ class LetterWidgetCard extends StatelessWidget {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: WaveformWidget(
-                        strokeWidth: .5,
-                        height: 150,
-                        layers: 3,
-                        track: track,
-                        restHeight: .4,
-                        minBumps: 3,
-                        maxBumps: 4,
-                        particles: WaveformParticles(
-                          minRadius: .5,
-                          color: UIColors.primary,
-                          maxRadius: 1,
-                          duration: 1.seconds,
-                          fadeInDuration: .2.seconds,
-                        ),
-                      ),
+                      child: LessonAudioWaveform(track: track),
                     ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),

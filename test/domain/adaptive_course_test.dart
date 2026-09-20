@@ -170,7 +170,7 @@ void main() {
       );
       while (!lesson.isFinished) {
         final e = lesson.current!;
-        lesson.answer(e, e.answerIndex, fastEnough: true);
+        lesson.answer(e, e.answerIndex);
       }
       p = fold.foldOnto(p, lesson.log);
       withoutNew = plan.newAtoms.isEmpty ? withoutNew + 1 : 0;

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../data/curriculum_loader.dart';
 import '../../../data/letter_audio.dart';
+import '../../../data/lesson_audio.dart';
 import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
 import '../../../data/pronunciation_checker.dart';
@@ -20,14 +21,20 @@ import '../../../domain/curriculum.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/exercise_generator.dart';
 import '../../../domain/learning_rules.dart';
+import '../../../domain/letter_learning.dart';
+import '../../../domain/lesson_explanation_queue.dart';
 import '../../../domain/lesson_session.dart';
 import '../../../domain/lesson_pacing.dart';
+import '../../../domain/lesson_plan_continuation.dart';
 import '../../../domain/topic_board.dart';
 import '../../../domain/planner.dart';
+import '../../../domain/pronunciation_attempts.dart';
 import '../../../domain/progress_event.dart';
 import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
-import '../../widgets/drawing/tracing_shape_svg.dart';
+import 'lesson_audio_source.dart';
+import 'form_sequence_task_state.dart';
+import 'tracing_task_state.dart';
 
 /// Что показывает экран прямо сейчас.
 enum LessonStage { loading, intro, exercise, finished }
@@ -41,7 +48,7 @@ class LessonController extends GetxController {
     LessonPlan? plan,
     this.continuePlanning = false,
     Future<TracingShape> Function(String asset)? shapeLoader,
-    LetterAudio? audio,
+    LessonAudio? audio,
     VoiceRecorder? recorder,
     PronunciationRestClient? pronunciation,
     PronunciationPreference? pronunciationPreference,
@@ -55,7 +62,7 @@ class LessonController extends GetxController {
        _clock =
            clock ??
            (Get.isRegistered<AppClock>() ? Get.find<AppClock>() : AppClock()),
-       _shapeLoader = shapeLoader ?? _loadShapeAsset,
+       _tracing = TracingTaskState(shapeLoader: shapeLoader),
        _audio = audio ?? LetterAudio(),
        pronunciation = PronunciationChecker(
          recorder: recorder,
@@ -89,11 +96,10 @@ class LessonController extends GetxController {
   String? _topicId;
   final LessonPlan? _previewPlan;
 
-  /// Откуда берутся фигуры для обводки. В тестах подставляется, чтобы
-  /// не ходить в ассеты.
-  final Future<TracingShape> Function(String asset) _shapeLoader;
+  final TracingTaskState _tracing;
 
   final stage = LessonStage.loading.obs;
+  final learnedLetters = <Atom>[].obs;
   final loadError = RxnString();
   final _refresh = 0.obs;
 
@@ -107,16 +113,13 @@ class LessonController extends GetxController {
 
   /// Номер ошибки в задании с четырьмя формами. После разбора виджет получает
   /// новый ключ и начинает следующую попытку с сохранёнными подсказками.
-  final formSequenceAttempt = 0.obs;
-  List<bool>? _formSequenceSlotResults;
-  List<Atom?> _formSequenceInitialPlaced = const [];
-  bool _revealFormSequenceAnswer = false;
+  final _formSequence = FormSequenceTaskState();
 
-  List<bool>? get formSequenceSlotResults => _formSequenceSlotResults;
-  List<Atom?> get formSequenceInitialPlaced => _formSequenceInitialPlaced;
-  bool get revealFormSequenceAnswer => _revealFormSequenceAnswer;
-  int get formSequenceCorrectCount =>
-      _formSequenceSlotResults?.where((result) => result).length ?? 0;
+  RxInt get formSequenceAttempt => _formSequence.attempt;
+  List<bool>? get formSequenceSlotResults => _formSequence.slotResults;
+  List<Atom?> get formSequenceInitialPlaced => _formSequence.initialPlaced;
+  bool get revealFormSequenceAnswer => _formSequence.revealAnswer;
+  int get formSequenceCorrectCount => _formSequence.correctCount;
 
   /// Правильный ответ показывается до перехода, чтобы человек успел увидеть
   /// результат и понять, что именно засчиталось.
@@ -128,27 +131,11 @@ class LessonController extends GetxController {
 
   void revealName() => nameRevealed.value = true;
 
-  /// Холст обводки. Один на весь урок: между заданиями он очищается,
-  /// а не пересоздаётся.
-  final drawing = DrawingController();
-
-  /// Фигура текущего задания. null — обводить нечего, показываем заглушку.
-  final tracingShape = Rxn<TracingShape>();
-
-  /// Подсказка под холстом: что рисовать дальше или что не сошлось.
-  final tracingHint = ''.obs;
-
-  /// С чего начинается любая буква: холст ждёт части по порядку.
-  static const _tracingStartHint = 'Начните с основы буквы';
-
-  /// В режиме по памяти буква собралась целиком — можно засчитывать.
-  final tracingDone = false.obs;
-
-  /// В режиме по памяти контур открыт как подсказка, а не как результат.
-  final tracingGuideVisible = false.obs;
-
-  /// Разобранные SVG: одна и та же буква встречается в уроке не раз.
-  final _shapes = <String, TracingShape>{};
+  DrawingController get drawing => _tracing.drawing;
+  Rxn<TracingShape> get tracingShape => _tracing.shape;
+  RxString get tracingHint => _tracing.hint;
+  RxBool get tracingDone => _tracing.done;
+  RxBool get tracingGuideVisible => _tracing.guideVisible;
 
   /// Карточка перед текущим заданием. Формы букв объясняются там, где
   /// впервые встречаются, а не списком в начале урока: соединение — это
@@ -159,51 +146,43 @@ class LessonController extends GetxController {
   /// Это обзор, а не атом: он не пишет событие и не влияет на прогресс.
   final formsOverview = <Atom>[].obs;
 
-  final _shownFormsOverviews = <String>{};
-
-  /// Чьи карточки в этом уроке уже показаны.
-  final _shownCards = <String>{};
-
-  /// Объясняем также новые формы в вариантах ответа, прежде чем показать
-  /// сам вопрос. Иначе узнавание проверяло бы ещё не показанный материал.
-  final _pendingCards = <Atom>[];
-
-  /// Атомы, которым этот урок посвящён. Блок повтора приводит буквы
-  /// из прошлых уроков, и объяснять их заново — не дело этого урока:
-  /// карточка показывается только для своего материала.
-  final _ownAtoms = <String>{};
-
   /// Голос буквы. Один плеер на урок: новое нажатие обрывает предыдущий
   /// звук, а не накладывается на него.
   /// В тестах подставляется с плеером под известным именем: у настоящего
   /// имя случайное, и его каналы нечем подменить.
-  final LetterAudio _audio;
+  final LessonAudio _audio;
+  final LessonAudioSource _audioSource = const LessonAudioSource();
 
   /// Есть ли у атома запись. У понятий, слогов и хамзы её пока нет.
-  bool hasVoice(Atom atom) => LetterAudio.has(atom.letterId);
+  bool hasVoice(Atom atom) => _audioSource.forAtom(atom) != null;
+  bool hasExerciseVoice(Exercise exercise) =>
+      _audioSource.forExercise(exercise) != null;
 
   /// Нажатие на кнопку звучания: играет, ставит на паузу или продолжает —
   /// решает сам плеер, экрану знать об этом нечего.
-  void playVoice(Atom atom) => unawaited(_audio.toggle(atom.letterId));
+  void playVoice(Atom atom) =>
+      unawaited(_audio.toggleAsset(_audioSource.forAtom(atom)));
+  void playExerciseVoice(Exercise exercise) =>
+      unawaited(_audio.toggleAsset(_audioSource.forExercise(exercise)));
 
   /// Звучание при появлении буквы: всегда с начала. Нажатие звучащую букву
   /// останавливает, а показ следующей формы той же буквы — не должен.
-  void startVoice(Atom atom) => unawaited(_audio.play(atom.letterId));
+  void startVoice(Atom atom) =>
+      unawaited(_audio.playAsset(_audioSource.forAtom(atom)));
+  void startExerciseVoice(Exercise exercise) =>
+      unawaited(_audio.playAsset(_audioSource.forExercise(exercise)));
 
   /// Что сейчас звучит: форма записи и позиция. Карточка отдаёт это волне.
   ValueListenable<AudioTrack> get voiceTrack => _audio.track;
 
   /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
-  static const tracingMatcher = TracingMatcher();
+  static const tracingMatcher = TracingTaskState.matcher;
 
   /// Задание «назови букву»: запись и проверка на сервере. Цепочка общая
   /// с экраном тренировки, здесь решается только, что делать с ответом.
   final PronunciationChecker pronunciation;
 
-  /// Номер записи в текущем задании. После первого промаха сервер
-  /// подсказывает, что услышал, и даётся ещё одна, см.
-  /// [LearningRules.sayNameAttempts].
-  final sayAttempt = 1.obs;
+  final _pronunciationAttempts = PronunciationAttempts();
 
   bool get isSayNameTask {
     _refresh.value;
@@ -231,37 +210,40 @@ class LessonController extends GetxController {
   /// попытку не тратит, первый настоящий промах даёт ещё одну, последний
   /// засчитывается ошибкой — дальше как в остальных режимах.
   Future<void> _judgePronunciation(LetterCheck result) async {
-    if (result.matched) {
-      await submit(directOutcome: true);
-      return;
+    switch (_pronunciationAttempts.evaluate(
+      matched: result.matched,
+      hasWarning: result.recording.warning != null,
+      limit: rules.sayNameAttempts,
+    )) {
+      case PronunciationDecision.accepted:
+        await submit(directOutcome: true);
+      case PronunciationDecision.wrong:
+        await submit(directOutcome: false);
+      case PronunciationDecision.retry || PronunciationDecision.ignored:
+        break;
     }
-    if (result.recording.warning != null) return;
-    if (sayAttempt.value < rules.sayNameAttempts) {
-      sayAttempt.value++;
-      return;
-    }
-    await submit(directOutcome: false);
   }
 
   /// Новое задание — прошлые записи и подсказки к делу не относятся.
   void _syncPronunciation() {
     pronunciation.reset();
-    sayAttempt.value = 1;
+    _pronunciationAttempts.reset();
   }
 
   late final Curriculum _curriculum;
+  late final LessonExplanationQueue _explanations;
   late final ProgressRepository _progress;
   LessonSession? _session;
   Exercise? _answeredExercise;
   bool _returnToIntro = false;
   LessonPlan? _plan;
-  DateTime _shownAt = DateTime.now();
   int _completedExercises = 0;
   final _askedCounts = <String, int>{};
   final _formSequenceLetters = <String>{};
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
   final _firstAttemptResults = <bool>[];
+  final _announcedLetterIds = <String>{};
   bool _hasNewMaterial = false;
   LessonPurpose _sessionPurpose = LessonPurpose.standard;
   int? _sessionCheckpointLetters;
@@ -345,6 +327,7 @@ class LessonController extends GetxController {
       _pronunciationSessionId = await _pronunciationPreference?.beginSession();
     }
     _curriculum = _injectedCurriculum ?? await const CurriculumLoader().load();
+    _explanations = LessonExplanationQueue(_curriculum);
     _progress = ProgressRepository(
       database: _database ?? Get.find<ProgressDatabase>(),
       rules: rules,
@@ -352,6 +335,7 @@ class LessonController extends GetxController {
       baseLetterIds: _curriculum.baseLetterIds,
       now: () => _clock.now,
     );
+    _announcedLetterIds.addAll(await _progress.learnedLetterIds());
 
     final ctx = await _context();
     _sessionId = await _progress.nextSessionId();
@@ -366,7 +350,6 @@ class LessonController extends GetxController {
               )
             : _topicPlan(ctx));
     await _activatePlan(initialPlan, taskLimit: rules.tasksPerSession);
-    _shownAt = DateTime.now();
   }
 
   Future<void> _activatePlan(
@@ -388,16 +371,8 @@ class LessonController extends GetxController {
     _planReasons.add(plan.reason);
     _hasNewMaterial = _hasNewMaterial || plan.newAtoms.isNotEmpty;
 
-    _ownAtoms.addAll(
-      plan.isFocusedReview || _topicId == null
-          ? plan.newAtoms.map((atom) => atom.id)
-          : _curriculum.topics
-                    .firstWhereOrNull((topic) => topic.id == _topicId)
-                    ?.counterOf ??
-                const [],
-    );
-
-    final intro = _introFor(plan);
+    _explanations.activate(plan, topicId: _topicId);
+    final intro = _explanations.introFor(plan, topicId: _topicId);
     introAtoms.assignAll(intro);
     introIndex.value = 0;
     for (final atom in intro) {
@@ -418,46 +393,6 @@ class LessonController extends GetxController {
       stage.value = LessonStage.intro;
     }
   }
-
-  /// Что показать в блоке «новое».
-  ///
-  /// Обычно это новые атомы урока. В повторении темы, где вводить нечего,
-  /// показываем её понятия: спросить их заданием нельзя, поэтому
-  /// «повторить понятие» означает перечитать объяснение.
-  List<Atom> _introFor(LessonPlan plan) {
-    if (plan.isFocusedReview) return const [];
-    if (!isTopicLesson) return plan.newAtoms.where(_belongsToIntro).toList();
-
-    // Урок по теме показывает её объяснения целиком — и новые, и знакомые.
-    // Человек сам выбрал эту тему, значит хочет пройти её заново, а не
-    // получить огрызок из того, что он ещё не доучил.
-    final inLesson = {
-      for (final atom in plan.newAtoms) atom.id: atom,
-      for (final id in plan.reviewAtoms)
-        if (_atomById(id) case final atom?) id: atom,
-    };
-
-    final topic = _curriculum.topics.firstWhereOrNull((t) => t.id == _topicId);
-
-    // Порядок берём из темы: он и есть порядок объяснений в уроке.
-    return [
-      for (final id in topic?.counterOf ?? const <String>[])
-        if (inLesson[id] case final atom?)
-          if (_belongsToIntro(atom)) atom,
-    ];
-  }
-
-  /// Что объясняется в начале урока, а что по ходу.
-  ///
-  /// Понятия и изолированные начертания идут вперёд: сначала показываем
-  /// буквы, потом спрашиваем. Соединённые формы — нет: девять карточек
-  /// подряд про начало, середину и конец читаются как один длинный текст,
-  /// из которого не запоминается ничего.
-  bool _belongsToIntro(Atom atom) =>
-      atom.form == null || atom.form == LetterForm.isolated;
-
-  Atom? _atomById(String id) =>
-      _curriculum.nodes.firstWhereOrNull((n) => n.atom.id == id)?.atom;
 
   /// Номер текущего задания в сессии. Карточки вопроса ключуются по нему:
   /// новая буква спрашивается несколько раз подряд, и ключ по атому
@@ -535,20 +470,12 @@ class LessonController extends GetxController {
   }
 
   void _showExercise() {
-    _shownAt = DateTime.now();
-    _resetFormSequenceHelp();
+    _formSequence.reset();
     _refresh.value++;
     _syncCard();
     _syncTracing();
     _syncPronunciation();
     stage.value = LessonStage.exercise;
-  }
-
-  void _resetFormSequenceHelp() {
-    formSequenceAttempt.value = 0;
-    _formSequenceSlotResults = null;
-    _formSequenceInitialPlaced = const [];
-    _revealFormSequenceAnswer = false;
   }
 
   /// После первого произношения продолжаем знакомство с остальными буквами.
@@ -593,29 +520,16 @@ class LessonController extends GetxController {
 
     final remaining = rules.tasksPerSession - _completedExercises;
     final ctx = await _context();
-    final planner = LessonPlanner(curriculum: _curriculum, rules: rules);
-    var next = planner.plan(
-      ctx: ctx,
-      sessionId: _sessionId,
-      sessionsWithoutNew: await _progress.sessionsWithoutNew(),
-      previousCounts: _askedCounts,
-      pacing: await _progress.pacing(),
-    );
-
-    // Новый блок вводим только целиком. Если обязательные задания
-    // не помещаются, остаток сессии отдаём знакомому материалу.
-    if (next.minimumTaskCount(_curriculum, rules) > remaining) {
-      next = planner.practicePlan(
-        ctx: ctx,
-        sessionId: _sessionId,
-        taskLimit: remaining,
-        previousCounts: _askedCounts,
-      );
-    }
-
-    if (next.minimumTaskCount(_curriculum, rules) == 0 &&
-        next.newAtoms.isEmpty &&
-        next.reviewAtoms.isEmpty) {
+    final next = LessonPlanContinuation(curriculum: _curriculum, rules: rules)
+        .next(
+          context: ctx,
+          sessionId: _sessionId,
+          sessionsWithoutNew: await _progress.sessionsWithoutNew(),
+          remaining: remaining,
+          previousCounts: _askedCounts,
+          pacing: await _progress.pacing(),
+        );
+    if (next == null) {
       await _finish();
       return;
     }
@@ -636,15 +550,18 @@ class LessonController extends GetxController {
         .firstWhereOrNull((topic) => topic.id == _topicId)
         ?.counterOf
         .toSet();
-    final replacement = LessonPlanner(curriculum: _curriculum, rules: rules)
-        .practicePlan(
-          ctx: ctx,
+    final replacement =
+        LessonPlanContinuation(
+          curriculum: _curriculum,
+          rules: rules,
+        ).replaceUnavailablePronunciation(
+          context: ctx,
           sessionId: _sessionId,
-          taskLimit: remaining,
+          remaining: remaining,
           previousCounts: _askedCounts,
           atomIds: topicIds,
         );
-    if (replacement.minimumTaskCount(_curriculum, rules) == 0) return false;
+    if (replacement == null) return false;
 
     await _activatePlan(
       replacement,
@@ -685,7 +602,7 @@ class LessonController extends GetxController {
       now: () => _clock.now,
     );
     _syncShortSessionTarget(allowShorter: true);
-    await _loadShapes(exercises);
+    await _tracing.preload(exercises);
     if (exercises.isEmpty) {
       if (continuePlanning) {
         await _finishBlock();
@@ -710,83 +627,15 @@ class LessonController extends GetxController {
     }
   }
 
-  /// Фигуры разбираются один раз на урок, до первого задания: иначе холст
-  /// мигал бы пустым, пока грузится SVG.
-  Future<void> _loadShapes(List<Exercise> exercises) async {
-    final names = exercises
-        .where((e) => e.mode.isTracing)
-        .map((e) => e.atom.tracing)
-        .nonNulls
-        .toSet();
-
-    for (final name in names) {
-      if (_shapes.containsKey(name)) continue;
-      try {
-        _shapes[name] = await _shapeLoader(name);
-      } catch (_) {
-        // Файла нет или он не разбирается: задание покажет заглушку.
-        // Ронять из-за этого весь урок нельзя.
-      }
-    }
-  }
-
-  static Future<TracingShape> _loadShapeAsset(String asset) =>
-      TracingShapeSvg.load('assets/svg/alphabet/$asset.svg', id: asset);
-
-  /// Готовит холст под текущее задание: чистит нарисованное, подставляет
-  /// фигуру и возвращает подсказку в исходное состояние.
-  /// Нужна ли карточка перед текущим заданием. Показывается один раз
-  /// за урок: второй встрече той же формы объяснение уже не нужно.
   void _syncCard() {
     nameRevealed.value = false;
-    final exercise = _session?.current;
-    _pendingCards
-      ..clear()
-      ..addAll(
-        {
-          if (exercise != null) exercise.atom,
-          if (exercise?.prompt case final prompt?) prompt,
-          ...?exercise?.options,
-        }.where(
-          (atom) =>
-              !_belongsToIntro(atom) &&
-              _ownAtoms.contains(atom.id) &&
-              !_shownCards.contains(atom.id),
-        ),
-      );
-    _nextCard();
+    _explanations.prepareFor(_session?.current);
+    _publishExplanation();
   }
 
-  static const _formsOverviewOrder = [
-    LetterForm.isolated,
-    LetterForm.initial,
-    LetterForm.medial,
-    LetterForm.finalForm,
-  ];
-
-  void _nextCard() {
-    final next = _pendingCards.isEmpty ? null : _pendingCards.removeAt(0);
-    card.value = next;
-    formsOverview.assignAll(_formsOverviewBefore(next));
-  }
-
-  List<Atom> _formsOverviewBefore(Atom? atom) {
-    final letterId = atom?.letterId;
-    if (letterId == null ||
-        atom?.form == null ||
-        atom?.form == LetterForm.isolated ||
-        _shownFormsOverviews.contains(letterId)) {
-      return const [];
-    }
-
-    final forms = [
-      for (final id in _curriculum.formsByLetter[letterId] ?? const <String>[])
-        if (_atomById(id) case final form?) form,
-    ];
-    return [
-      for (final position in _formsOverviewOrder)
-        ...forms.where((form) => form.form == position),
-    ];
+  void _publishExplanation() {
+    card.value = _explanations.card;
+    formsOverview.assignAll(_explanations.formsOverview);
   }
 
   /// Карточка прочитана: атом записывается как показанный, и урок
@@ -796,10 +645,8 @@ class LessonController extends GetxController {
     if (atom == null) return;
 
     if (formsOverview.isNotEmpty) {
-      final letterId = atom.letterId;
-      if (letterId != null) _shownFormsOverviews.add(letterId);
-      formsOverview.clear();
-      _shownAt = DateTime.now();
+      _explanations.dismissOverview();
+      _publishExplanation();
       return;
     }
 
@@ -808,75 +655,47 @@ class LessonController extends GetxController {
         AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: _clock.now),
       );
     }
-    _shownCards.add(atom.id);
     _sessionIntroduced[atom.id] = atom;
-    _nextCard();
-    // Время на ответ считается с закрытия карточки: чтение объяснения
-    // не должно превращать верный ответ в медленный.
-    _shownAt = DateTime.now();
+    _explanations.dismissCard();
+    _publishExplanation();
   }
 
   void _syncTracing() {
-    final exercise = _session?.current;
-    final name = exercise != null && exercise.mode.isTracing
-        ? exercise.atom.tracing
-        : null;
-
-    drawing.clear();
-    tracingDone.value = false;
-    tracingGuideVisible.value = false;
-    tracingShape.value = name == null ? null : _shapes[name];
-    // Строка под сеткой — только обратная связь: что рисовать дальше
-    // и что не сошлось. Само задание написано в шапке карточки, и дублировать
-    // его здесь незачем.
-    tracingHint.value = tracingShape.value == null ? '' : _tracingStartHint;
+    _tracing.sync(_session?.current);
   }
 
   /// Задание, где вместо вариантов холст.
   bool get isTracingTask {
     _refresh.value;
-    final exercise = current;
-    return exercise != null &&
-        exercise.mode.isTracing &&
-        tracingShape.value != null;
+    return _tracing.isAvailableFor(current);
   }
 
   /// Холст показывает контур: в режиме обводки всегда, а в режиме по памяти —
   /// после автоматической или ручной подсказки и при разборе ошибки.
   TracingMode get canvasMode {
     _refresh.value;
-    return current?.mode == ExerciseMode.trace ||
-            tracingGuideVisible.value ||
-            wasWrong.value
-        ? TracingMode.tracing
-        : TracingMode.freehand;
+    return _tracing.canvasMode(current, wasWrong: wasWrong.value);
   }
 
   /// Стереть нарисованное и начать букву заново. Собранные части холст
   /// откатывает сам, вслед за исчезнувшими штрихами. Открытую подсказку
   /// не прячем: человек продолжает обводить по контуру.
   void clearTracing() {
-    drawing.clear();
-    if (wasWrong.value || tracingGuideVisible.value) return;
-    tracingDone.value = false;
-    tracingHint.value = _tracingStartHint;
+    _tracing.clear(wasWrong: wasWrong.value);
   }
 
   /// Части буквы засчитываются по одной — и по контуру, и по памяти:
   /// проверять нечего, ответ готов, когда собрана последняя.
   void onTracingProgress(TracingProgress progress) {
     if (wasWrong.value) return;
-    tracingHint.value = progress.isComplete
-        ? 'Буква собрана'
-        : 'Нарисуйте: ${progress.nextLabel ?? 'букву'}';
+    _tracing.onProgress(progress);
   }
 
   /// Последняя часть означает, что холст уже полностью проверил букву —
   /// и по контуру, и по памяти. Отдельное подтверждение кнопкой не нужно.
   Future<void> onTracingMerged() async {
     if (wasWrong.value) return;
-    tracingDone.value = true;
-    tracingHint.value = 'Буква собрана';
+    _tracing.onMerged();
     await submit(directOutcome: true);
   }
 
@@ -887,9 +706,7 @@ class LessonController extends GetxController {
   /// сниженной планки. См. SPEC.md §5.
   void onTracingRevealed() {
     if (wasWrong.value) return;
-    tracingDone.value = false;
-    tracingHint.value = 'Обведите по подсказке';
-    tracingGuideVisible.value = true;
+    _tracing.revealGuide();
   }
 
   /// «Не помню» в режиме по памяти открывает контур без ответа и ошибки.
@@ -901,10 +718,7 @@ class LessonController extends GetxController {
         tracingGuideVisible.value) {
       return;
     }
-    drawing.clear();
-    tracingDone.value = false;
-    tracingHint.value = 'Обведите по подсказке';
-    tracingGuideVisible.value = true;
+    _tracing.giveUp();
   }
 
   /// У заданий без выбора нечего выделять — кнопка активна сразу.
@@ -938,36 +752,14 @@ class LessonController extends GetxController {
         wasCorrect.value) {
       return;
     }
-    const expected = LetterForm.values;
-    final atomResults = {
-      for (final option in exercise.options)
-        option.id: switch (placed.indexWhere(
-          (placed) => placed.id == option.id,
-        )) {
-          final index when index >= 0 && index < expected.length =>
-            option.form == expected[index],
-          _ => false,
-        },
-    };
-    final correct =
-        atomResults.length == expected.length &&
-        atomResults.values.every((value) => value);
-    final slotResults = [
-      for (final (index, position) in expected.indexed)
-        index < placed.length && placed[index].form == position,
-    ];
-    _formSequenceSlotResults = correct ? null : List.unmodifiable(slotResults);
-    _formSequenceInitialPlaced = correct
-        ? const []
-        : List.unmodifiable([
-            for (final (index, atom) in placed.indexed)
-              slotResults[index] ? atom : null,
-          ]);
-    _revealFormSequenceAnswer = !correct && formSequenceAttempt.value == 2;
-    selected.value = correct
+    final evaluation = _formSequence.evaluate(
+      options: exercise.options,
+      placed: placed,
+    );
+    selected.value = evaluation.correct
         ? exercise.answerIndex
         : (exercise.answerIndex + 1) % exercise.options.length;
-    await submit(atomResults: atomResults);
+    await submit(atomResults: evaluation.atomResults);
   }
 
   /// Только для отладки: засчитать текущее задание верным, каким бы оно
@@ -1099,7 +891,7 @@ class LessonController extends GetxController {
       wasWrong.value = false;
       selected.value = null;
       if (exercise.mode == ExerciseMode.positionToForm) {
-        formSequenceAttempt.value++;
+        _formSequence.retry();
       }
       _refresh.value++;
       // Холст после разбора чистый: задание осталось тем же, и человек
@@ -1110,20 +902,15 @@ class LessonController extends GetxController {
       return;
     }
 
-    final elapsed = DateTime.now().difference(_shownAt);
     _answeredExercise = exercise;
     final logLength = session.log.length;
-    final outcome = session.answer(
-      exercise,
-      choice,
-      fastEnough: elapsed <= _speedLimit(exercise.mode),
-      atomResults: atomResults,
-    );
+    final outcome = session.answer(exercise, choice, atomResults: atomResults);
     _syncShortSessionTarget();
 
     // Пишем сразу, а не в конце сессии: лог должен пережить убитое
     // приложение, иначе ответы теряются молча.
     final addedLog = session.log.skip(logLength).toList();
+    final beforeProgress = await _progress.progress();
     await _progress.recordAll(addedLog);
     final firstAttempt = addedLog
         .whereType<ProgressEvent>()
@@ -1144,6 +931,8 @@ class LessonController extends GetxController {
       return;
     }
 
+    await _queueLearnedLetters(addedLog, beforeProgress);
+
     _countAsked(exercise.resultAtoms);
 
     // После проверки звук вопроса больше не должен звучать поверх обратной
@@ -1153,14 +942,36 @@ class LessonController extends GetxController {
     _refresh.value++;
   }
 
-  /// TODO(speed): пороги подлежат калибровке, и у аудио с обводкой они
-  /// другие. См. SPEC.md §4. Голос: нажать, сказать, дождаться сервера —
-  /// на это уходят секунды, порог отсекает только брошенное задание.
-  Duration _speedLimit(ExerciseMode mode) => switch (mode) {
-    _ when mode.isTracing => const Duration(seconds: 40),
-    ExerciseMode.sayName => const Duration(seconds: 20),
-    _ => const Duration(seconds: 5),
-  };
+  Future<void> _queueLearnedLetters(
+    List<LogEntry> addedLog,
+    Map<String, AtomProgress> beforeProgress,
+  ) async {
+    if (_debugFinishingLesson) return;
+    final learning = LetterLearning(_curriculum, rules);
+    final afterProgress = await _progress.progress();
+    final byId = {
+      for (final node in _curriculum.nodes) node.atom.id: node.atom,
+    };
+    final letterIds = {
+      for (final event in addedLog.whereType<ProgressEvent>())
+        if (event.correct && byId[event.atomId]?.letterId != null)
+          byId[event.atomId]!.letterId!,
+    };
+    for (final letterId in letterIds) {
+      if (_announcedLetterIds.contains(letterId) ||
+          learning.isLearned(letterId, beforeProgress) ||
+          !learning.isLearned(letterId, afterProgress)) {
+        continue;
+      }
+      final atom = learning.displayAtom(letterId);
+      if (atom == null) continue;
+      await _progress.record(
+        LetterLearned(atomId: letterId, sessionId: _sessionId, at: _clock.now),
+      );
+      _announcedLetterIds.add(letterId);
+      learnedLetters.add(atom);
+    }
+  }
 
   Future<void> _finish() async {
     if (!_sessionSummaryRecorded) {
@@ -1199,7 +1010,7 @@ class LessonController extends GetxController {
 
   @override
   void onClose() {
-    drawing.dispose();
+    _tracing.dispose();
     pronunciation.dispose();
     unawaited(_audio.dispose());
     super.onClose();

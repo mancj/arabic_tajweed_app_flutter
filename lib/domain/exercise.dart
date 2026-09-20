@@ -29,6 +29,8 @@ class Exercise {
     this.isReview = false,
     this.isRequired = false,
     this.prompt,
+    this.audioAsset,
+    this.question,
   });
 
   /// Задание без выбора: обводка, сборка, аудио. Ответ не выбирается
@@ -44,6 +46,8 @@ class Exercise {
     this.level = DistractorLevel.distant,
     this.isReview = false,
     this.isRequired = false,
+    this.audioAsset,
+    this.question,
   }) : options = const [],
        answerIndex = directAnswer,
        prompt = null;
@@ -78,6 +82,13 @@ class Exercise {
   /// это отдельная форма той же буквы: она остаётся образцом и при этом
   /// также участвует в упражнении.
   final Atom? prompt;
+
+  /// Запись вопроса, если она отличается от записи самого атома.
+  final String? audioAsset;
+
+  /// Текст вопроса для материала, который использует знакомую механику с
+  /// другим содержанием. Если null, показывается подпись старого режима.
+  final String? question;
 
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;

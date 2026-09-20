@@ -69,6 +69,7 @@ class UITextStyles {
   static TextStyle get regular12 => _style(size: 12);
   static TextStyle get regular13 => _style(size: 13);
   static TextStyle get regular15 => _style(size: 15);
+  static TextStyle get regular16 => _style(size: 16);
   static TextStyle get regular17 => _style(size: 17);
 
   static TextStyle get medium15 => _style(size: 15, weight: FontWeight.w500);
@@ -94,6 +95,7 @@ class UITextStyles {
     height: 1.1,
     fallback: const [fontDGFaseh],
   );
+  static TextStyle get semibold26 => _style(size: 26, weight: FontWeight.w600);
   static TextStyle get semibold27 => _style(
     size: 27,
     weight: FontWeight.w600,

@@ -50,7 +50,7 @@ LessonSession session(int count) => LessonSession(
 void main() {
   test('верный ответ двигает к следующему заданию', () {
     final s = session(3);
-    expect(s.answer(s.current!, 0, fastEnough: true), AnswerOutcome.correct);
+    expect(s.answer(s.current!, 0), AnswerOutcome.correct);
     expect(s.current!.atom.id, 'a1');
   });
 
@@ -62,10 +62,7 @@ void main() {
       now: () => DateTime(2026, 1, 2),
     );
 
-    expect(
-      s.answer(exercise, exercise.answerIndex, fastEnough: true),
-      AnswerOutcome.correct,
-    );
+    expect(s.answer(exercise, exercise.answerIndex), AnswerOutcome.correct);
     final events = s.log.cast<ProgressEvent>();
     expect(events, hasLength(4));
     expect(events.map((event) => event.atomId).toSet(), {
@@ -88,10 +85,7 @@ void main() {
       exercise.options[3].id: true,
     };
 
-    expect(
-      s.answer(exercise, 1, fastEnough: true, atomResults: results),
-      AnswerOutcome.wrong,
-    );
+    expect(s.answer(exercise, 1, atomResults: results), AnswerOutcome.wrong);
     expect({
       for (final event in s.log.cast<ProgressEvent>())
         event.atomId: event.correct,
@@ -105,9 +99,9 @@ void main() {
     // Человек остаётся на провальном задании до верного ответа. Каждый
     // промах не должен добавлять ещё одну копию в очередь.
     for (var i = 0; i < 5; i++) {
-      expect(s.answer(first, 1, fastEnough: true), AnswerOutcome.wrong);
+      expect(s.answer(first, 1), AnswerOutcome.wrong);
     }
-    s.answer(first, 0, fastEnough: true);
+    s.answer(first, 0);
 
     final ids = s.queueIds;
     expect(ids.where((id) => id == first.atom.id), hasLength(2));
@@ -121,8 +115,8 @@ void main() {
     );
     final first = s.current!;
 
-    s.answer(first, 1, fastEnough: true);
-    s.answer(first, 0, fastEnough: true);
+    s.answer(first, 1);
+    s.answer(first, 0);
 
     expect(s.queueIds.where((id) => id == 'a'), hasLength(2));
   });
@@ -130,8 +124,8 @@ void main() {
   test('провал возвращается через несколько заданий, а не в конец', () {
     final s = session(8);
     final first = s.current!;
-    s.answer(first, 1, fastEnough: true);
-    s.answer(first, 0, fastEnough: true);
+    s.answer(first, 1);
+    s.answer(first, 0);
 
     // Сразу — ответит по памяти, в самый конец — забудет разбор.
     final ids = s.queueIds;
@@ -146,22 +140,22 @@ void main() {
   test('ошибка возвращает задание в очередь', () {
     final s = session(3);
     final first = s.current!;
-    expect(s.answer(first, 1, fastEnough: true), AnswerOutcome.wrong);
+    expect(s.answer(first, 1), AnswerOutcome.wrong);
     expect(s.current, first, reason: 'остаёмся на нём до верного ответа');
 
-    s.answer(first, 0, fastEnough: true);
+    s.answer(first, 0);
     expect(s.current!.atom.id, 'a1');
 
-    s.answer(s.current!, 0, fastEnough: true);
-    s.answer(s.current!, 0, fastEnough: true);
+    s.answer(s.current!, 0);
+    s.answer(s.current!, 0);
     expect(s.current, first, reason: 'провал вернулся в очередь');
   });
 
   test('повторная попытка пишется в лог как attempt 2', () {
     final s = session(2);
     final first = s.current!;
-    s.answer(first, 1, fastEnough: true);
-    s.answer(first, 0, fastEnough: true);
+    s.answer(first, 1);
+    s.answer(first, 0);
 
     final events = s.log.cast<ProgressEvent>();
     expect(events.map((e) => e.attempt), [1, 2]);
@@ -178,16 +172,16 @@ void main() {
     );
     for (var i = 0; i < 10; i++) {
       final e = s.current!;
-      s.answer(e, 1, fastEnough: true);
-      s.answer(e, 0, fastEnough: true);
+      s.answer(e, 1);
+      s.answer(e, 0);
     }
     expect(s.total, rules.tasksPerSession);
   });
 
   test('сессия заканчивается, когда очередь пройдена', () {
     final s = session(2);
-    s.answer(s.current!, 0, fastEnough: true);
-    s.answer(s.current!, 0, fastEnough: true);
+    s.answer(s.current!, 0);
+    s.answer(s.current!, 0);
     expect(s.isFinished, isTrue);
     expect(s.progress, 1);
   });
