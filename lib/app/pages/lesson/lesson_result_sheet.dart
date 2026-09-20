@@ -55,15 +55,14 @@ class _LessonResultSheetState extends State<LessonResultSheet>
   }
 
   void _handleAutoAdvanceStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) unawaited(_advance());
+    if (status == AnimationStatus.completed) _advance();
   }
 
-  Future<void> _advance() async {
+  void _advance() {
     if (_advancing || !mounted) return;
     setState(() => _advancing = true);
     _autoAdvanceController?.stop();
-    await controller.submit();
-    if (mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -172,7 +171,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Следующее задание через $secondsLeft сек.',
+                            'Продолжение через $secondsLeft сек.',
                             style: UITextStyles.regular12.copyWith(
                               color: UIColors.secondary2,
                             ),

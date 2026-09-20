@@ -68,16 +68,21 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
         _sheetOpen = false;
         return;
       }
-      await showModalBottomSheet<void>(
-        context: context,
-        backgroundColor: UIColors.transparent,
-        isDismissible: false,
-        enableDrag: false,
-        isScrollControlled: true,
-        builder: (_) => LessonResultSheet(controller: controller),
-      );
-      _sheetOpen = false;
-      await _showLearnedPopups();
+      try {
+        final advance = await showModalBottomSheet<bool>(
+          context: context,
+          backgroundColor: UIColors.transparent,
+          isDismissible: false,
+          enableDrag: false,
+          isScrollControlled: true,
+          builder: (_) => LessonResultSheet(controller: controller),
+        );
+        if (!mounted || advance != true) return;
+        await _showLearnedPopups();
+        if (mounted) await controller.submit();
+      } finally {
+        _sheetOpen = false;
+      }
     });
   }
 

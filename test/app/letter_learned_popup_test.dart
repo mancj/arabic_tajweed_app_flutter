@@ -17,8 +17,8 @@ import 'package:get/get.dart';
 
 import '../helpers/plugin_mocks.dart';
 
-// Защищает связь между сохранённым ответом и наградой: окно должно открыться
-// после результата, показать нужную букву и не повториться при новом заходе.
+// Защищает порядок после ответа: награда открывается после результата,
+// удерживает прежнее задание до закрытия и не повторяется при новом заходе.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.parse(
@@ -61,7 +61,7 @@ void main() {
     expect(find.text('ج'), findsNothing);
   });
 
-  testWidgets('после освоения формы награда показана один раз', (tester) async {
+  testWidgets('награда задерживает переход до закрытия', (tester) async {
     final at = DateTime(2026, 1, 1);
     await db.appendAll([
       for (final mode in [
@@ -120,6 +120,14 @@ void main() {
 
     expect(find.byType(LetterLearnedPopup), findsOneWidget);
     expect(find.textContaining('букву Алиф'), findsOneWidget);
+    final rewardedExercise = controller.current;
+    expect(controller.wasCorrect.value, isTrue);
+    expect(controller.stage.value, LessonStage.exercise);
+    await tester.pump(const Duration(seconds: 5));
+    await settle(tester);
+    expect(find.byType(LetterLearnedPopup), findsOneWidget);
+    expect(controller.current, same(rewardedExercise));
+    expect(controller.wasCorrect.value, isTrue);
     expect((await db.readAll()).whereType<LetterLearned>(), hasLength(1));
     final reopenedProgress = ProgressRepository(
       database: db,
@@ -130,6 +138,12 @@ void main() {
     await tester.tap(find.text('Закрыть').last);
     await settle(tester);
     expect(find.byType(LetterLearnedPopup), findsNothing);
+    expect(controller.wasCorrect.value, isFalse);
+    expect(
+      controller.stage.value == LessonStage.finished ||
+          !identical(controller.current, rewardedExercise),
+      isTrue,
+    );
   });
 }
 
