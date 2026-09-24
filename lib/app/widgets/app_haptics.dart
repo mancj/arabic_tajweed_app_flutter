@@ -20,12 +20,16 @@ class AppHaptics {
     }
   }
 
-  /// Единственный отклик в приложении: самый лёгкий тик. Он же на нажатие
-  /// кнопок, он же под пальцем при рисовании — частые повторы читаются как
-  /// шершавость бумаги, а не как удары. Более тяжёлый `soft()` на нажатиях
-  /// ощущался как жирная вибрация.
+  /// Самый лёгкий тик для нажатий и рисования.
   static void tick() {
     if (_supported) Gaimon.selection();
   }
 
+  static void light() {
+    if (_supported) Gaimon.light();
+  }
+
+  static void success() {
+    if (_supported) Gaimon.success();
+  }
 }
