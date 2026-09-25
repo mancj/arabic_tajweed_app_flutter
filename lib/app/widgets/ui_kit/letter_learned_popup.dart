@@ -2,21 +2,23 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/badge_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get_utils/get_utils.dart' hide GetNumUtils;
 import 'package:path_drawing/path_drawing.dart';
 import 'package:rive/rive.dart' as rive;
 
+import '../../diagnostics/app_diagnostics.dart';
 import '../../../domain/atom.dart';
 import '../../resources/ui_resources.dart';
+import '../app_haptics.dart';
 import '../margin.dart';
 import 'next_button.dart';
 
-const double _defaultAnimationSpeed = 3;
+const double _defaultAnimationSpeed = 1;
 
 /// Показывает награду за изученную букву. Анимация запускается при каждом открытии.
 Future<void> showLetterLearnedPopup(
   BuildContext context, {
   required Atom atom,
-  Color? ornamentColor,
   double animationSpeed = _defaultAnimationSpeed,
 }) => showDialog<void>(
   context: context,
@@ -27,37 +29,43 @@ Future<void> showLetterLearnedPopup(
     insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
     child: SingleChildScrollView(
       child: Center(
-        child: LetterLearnedPopup(
-          atom: atom,
-          ornamentColor: ornamentColor,
-          animationSpeed: animationSpeed,
-        ),
+        child: LetterLearnedPopup(atom: atom, animationSpeed: animationSpeed),
       ),
     ),
   ),
 );
 
 /// Карточка из макета: Flutter рисует содержимое, Rive — только орнамент.
-class LetterLearnedPopup extends StatelessWidget {
+class LetterLearnedPopup extends StatefulWidget {
   const LetterLearnedPopup({
     required this.atom,
-    this.ornamentColor,
     this.animationSpeed = _defaultAnimationSpeed,
     super.key,
   }) : assert(animationSpeed > 0);
 
   final Atom atom;
-  final Color? ornamentColor;
 
   /// Множитель скорости всех анимаций: 1 — исходная, 3 — втрое быстрее.
   /// Должен быть больше нуля; 0 означает остановку, а не мгновенное завершение.
   final double animationSpeed;
 
   @override
+  State<LetterLearnedPopup> createState() => _LetterLearnedPopupState();
+}
+
+class _LetterLearnedPopupState extends State<LetterLearnedPopup> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AppHaptics.light();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Подписка на системную тему перестраивает и уже открытый поп-ап.
     MediaQuery.platformBrightnessOf(context);
-    final color = ornamentColor ?? UIColors.ornamentStroke;
     return Stack(
       children: [
         Container(
@@ -87,21 +95,23 @@ class LetterLearnedPopup extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       Positioned.fill(
-                        child: _AnimatedOrnament(
-                          color: color,
-                          speed: animationSpeed,
-                        ),
+                        child: _AnimatedOrnament(speed: widget.animationSpeed),
                       ),
                       Text(
-                            atom.display,
+                            widget.atom.display,
                             textDirection: TextDirection.rtl,
                             style: UITextStyles.dgFasehRegular(114, height: 1),
                           )
-                          .animate()
-                          .fadeIn(delay: .8.seconds, duration: 500.milliseconds)
+                          .animate(
+                            delay: .3.seconds,
+                            onPlay: (_) => 500.milliseconds.delay(
+                              () => AppHaptics.success(),
+                            ),
+                          )
+                          .fadeIn(duration: 800.milliseconds)
                           .scaleXY(
                             begin: .7,
-                            duration: 500.milliseconds,
+                            duration: 800.milliseconds,
                             curve: Curves.easeInOutBack,
                           ),
                     ],
@@ -115,9 +125,13 @@ class LetterLearnedPopup extends StatelessWidget {
                   )
                   .animate()
                   .fadeIn(delay: .1.seconds, duration: 500.milliseconds)
-                  .then()
-                  .shimmer(),
-              const Margin.vertical(24),
+                  .slideY(
+                    begin: .5,
+                    duration: 500.milliseconds,
+                    curve: Curves.easeInOutBack,
+                  )
+                  .shimmer(duration: 3.seconds),
+              const Margin.vertical(8),
               Text(
                 'Буква изучена',
                 textAlign: TextAlign.center,
@@ -126,18 +140,16 @@ class LetterLearnedPopup extends StatelessWidget {
               const Margin.vertical(4),
               Align(
                 child: Text(
-                  'Вы успешно выучили букву ${atom.label}.\n'
+                  'Вы успешно выучили букву ${widget.atom.label}.\n'
                   'Помните, что каждая выученная буква '
                   'приближает вас к чтению Корана.',
                   textAlign: TextAlign.center,
-                  style: UITextStyles.regular16.copyWith(
-                    color: UIColors.text,
-                  ),
+                  style: UITextStyles.regular16.copyWith(color: UIColors.text),
                 ),
               ).animate().fadeIn(delay: .5.seconds, duration: 500.milliseconds),
-              const Margin.vertical(8),
+              const Margin.vertical(24),
               Text(
-                'Буква ${atom.label} будет и дальше встречаться в упражнениях, но реже других. Так вы сможете лучше закрепить её в памяти.',
+                'Буква ${widget.atom.label} будет и дальше встречаться в упражнениях, но реже других. Так вы сможете лучше закрепить её в памяти.',
                 textAlign: TextAlign.center,
                 style: UITextStyles.monoRegular12.copyWith(
                   color: UIColors.secondary2,
@@ -164,9 +176,8 @@ class LetterLearnedPopup extends StatelessWidget {
 }
 
 class _AnimatedOrnament extends StatefulWidget {
-  const _AnimatedOrnament({required this.color, required this.speed});
+  const _AnimatedOrnament({required this.speed});
 
-  final Color color;
   final double speed;
 
   @override
@@ -194,24 +205,28 @@ class _AnimatedOrnamentState extends State<_AnimatedOrnament> {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-    child: ColorFiltered(
-      colorFilter: ColorFilter.mode(widget.color, BlendMode.srcIn),
-      child: rive.RiveWidgetBuilder(
-        fileLoader: _loader,
-        controller: (file) =>
-            _controller = _SpeedRiveWidgetController(file, speed: widget.speed),
-        builder: (context, state) => switch (state) {
-          rive.RiveLoading() => const SizedBox.expand(),
-          rive.RiveLoaded() => rive.RiveWidget(
-            controller: state.controller,
-            fit: rive.Fit.contain,
-          ),
-          rive.RiveFailed() => SvgPicture.asset(
-            'assets/svg/letter_learned_ornament.svg',
-            fit: BoxFit.contain,
-          ),
-        },
+    child: rive.RiveWidgetBuilder(
+      fileLoader: _loader,
+      dataBind: const rive.AutoBind(),
+      controller: (file) =>
+          _controller = _SpeedRiveWidgetController(file, speed: widget.speed),
+      onLoaded: (_) => AppDiagnostics.talker.info('Rive: орнамент загружен'),
+      onFailed: (error, stackTrace) => AppDiagnostics.talker.handle(
+        error,
+        stackTrace,
+        'Rive: не удалось загрузить орнамент',
       ),
+      builder: (context, state) => switch (state) {
+        rive.RiveLoading() => const SizedBox.expand(),
+        rive.RiveLoaded() => rive.RiveWidget(
+          controller: state.controller,
+          fit: rive.Fit.contain,
+        ),
+        rive.RiveFailed() => SvgPicture.asset(
+          'assets/svg/letter_learned_ornament.svg',
+          fit: BoxFit.contain,
+        ),
+      },
     ),
   );
 }

@@ -26,6 +26,9 @@ enum ExerciseMode {
   /// Письмо по памяти: контура нет, буква проверяется по частям.
   traceFromMemory,
 
+  /// Звучит слог, показана буква без знака — дорисовать огласовку.
+  drawHarakaForSound,
+
   assemble,
 
   /// Назвать букву вслух: запись уходит на сервер, тот отвечает, какую
@@ -43,9 +46,12 @@ extension ExerciseModeX on ExerciseMode {
       this == ExerciseMode.assemble ||
       this == ExerciseMode.sayName;
 
-  /// Оба режима письма: холст один, различается только видимость контура.
+  /// Все задания письма используют один холст; конкретный сценарий решает,
+  /// виден ли контур и закреплено ли положение относительно буквы.
   bool get isTracing =>
-      this == ExerciseMode.trace || this == ExerciseMode.traceFromMemory;
+      this == ExerciseMode.trace ||
+      this == ExerciseMode.traceFromMemory ||
+      this == ExerciseMode.drawHarakaForSound;
 }
 
 /// Запись лога. Лог append-only и упорядочен по времени.

@@ -1,9 +1,16 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="kha_mid">
+<g id="kha_mid" clip-path="url(#clip0_112_2966)">
 <g id="Group 23">
-<path id="3-dot" d="M162.711 74.5146V78.6872" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M164.711 119.75V123.923" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<path id="2-base" d="M100.5 125.37C112.619 121.546 136.846 107.833 166.422 117.232C194.602 126.187 207.2 165.337 218.5 169" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M298.5 169.83C298.5 169.83 290.632 169.83 243.691 169.83C222.083 169.83 96.5 169.83 45 169.83" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="jim_hha_kha_base_forms">
+<path id="2-base" d="M111 167.136C111 167.136 147.424 145.737 177 155.136C205.181 164.092 229.5 201.136 229.5 201.136" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M291.5 204.75L38 204.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2966">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

@@ -1,6 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="hha_end">
-<path id="2-base" d="M85.5831 90C122.52 97.6748 146.681 89.7565 203.309 94.9722C180.21 101.678 55.7791 124.776 85.5831 218.659C100.019 264.132 176.733 260.075 203.309 233.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M275 129C275 129 258.045 129 211.162 129C189.581 129 168 121.467 168 106" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="hha_end" clip-path="url(#clip0_112_2943)">
+<g id="jim_hha_kha_base_forms">
+<g id="Group 88">
+<path id="2-base" d="M78.469 117.88C111.386 117.88 131.65 116.636 188.277 121.852C165.179 128.558 70.552 136.38 78.469 208.88C83.6481 256.307 161.702 254.205 188.277 227.63" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M252.5 140.75C252.5 140.75 235.545 140.75 210.162 140.75C188.581 140.75 176.5 126.75 176.5 126.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_112_2943">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

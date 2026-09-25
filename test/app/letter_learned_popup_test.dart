@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_learned_popup.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
@@ -12,6 +13,7 @@ import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -59,6 +61,49 @@ void main() {
     expect(find.text('ا'), findsOneWidget);
     expect(find.textContaining('букву Алиф'), findsOneWidget);
     expect(find.text('ج'), findsNothing);
+  });
+
+  // Защищает два разных момента отклика: открытие карточки и начало появления
+  // буквы. Перестройка открытого поп-апа не должна повторять вибрации.
+  testWidgets('поп-ап даёт light при открытии и success при появлении буквы', (
+    tester,
+  ) async {
+    final calls = <String>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const gaimonChannel = MethodChannel('gaimon');
+    messenger.setMockMethodCallHandler(gaimonChannel, (call) async {
+      if (call.method == 'canSupportsHaptic') return true;
+      calls.add(call.method);
+      return null;
+    });
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        calls.add(call.arguments as String);
+      }
+      return null;
+    });
+    addTearDown(() async {
+      messenger.setMockMethodCallHandler(gaimonChannel, null);
+      messenger.setMockMethodCallHandler(SystemChannels.platform, null);
+      await AppHaptics.init();
+    });
+    await AppHaptics.init();
+
+    Widget popup() => GetMaterialApp(
+      home: Scaffold(body: LetterLearnedPopup(atom: alif)),
+    );
+    await tester.pumpWidget(popup());
+    expect(calls, ['HapticFeedbackType.lightImpact']);
+
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(calls, ['HapticFeedbackType.lightImpact']);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(calls, ['HapticFeedbackType.lightImpact', 'success']);
+
+    await tester.pumpWidget(popup());
+    await tester.pump(const Duration(seconds: 2));
+    expect(calls, ['HapticFeedbackType.lightImpact', 'success']);
   });
 
   testWidgets('награда задерживает переход до закрытия', (tester) async {

@@ -33,6 +33,7 @@ import '../../../domain/progress_event.dart';
 import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
 import 'lesson_audio_source.dart';
+import 'option_audio_sequence.dart';
 import 'form_sequence_task_state.dart';
 import 'tracing_task_state.dart';
 
@@ -152,6 +153,9 @@ class LessonController extends GetxController {
   /// имя случайное, и его каналы нечем подменить.
   final LessonAudio _audio;
   final LessonAudioSource _audioSource = const LessonAudioSource();
+  late final OptionAudioSequence _optionAudio = OptionAudioSequence(
+    audio: _audio,
+  );
 
   /// Есть ли у атома запись. У понятий, слогов и хамзы её пока нет.
   bool hasVoice(Atom atom) => _audioSource.forAtom(atom) != null;
@@ -174,6 +178,26 @@ class LessonController extends GetxController {
 
   /// Что сейчас звучит: форма записи и позиция. Карточка отдаёт это волне.
   ValueListenable<AudioTrack> get voiceTrack => _audio.track;
+
+  ValueListenable<OptionPlaybackState> get optionPlayback => _optionAudio.state;
+
+  void startOptionSequence(Exercise exercise) {
+    if (exercise.mode != ExerciseMode.letterToSound) return;
+    unawaited(
+      _optionAudio.playAll(
+        exercise.options.map(_audioSource.forAtom).toList(growable: false),
+      ),
+    );
+  }
+
+  void playOptionVoice(Exercise exercise, int index) {
+    unawaited(
+      _optionAudio.toggle(
+        index: index,
+        asset: _audioSource.forAtom(exercise.options[index]),
+      ),
+    );
+  }
 
   /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
   static const tracingMatcher = TracingTaskState.matcher;
@@ -480,6 +504,7 @@ class LessonController extends GetxController {
 
   /// После первого произношения продолжаем знакомство с остальными буквами.
   Future<void> _afterExercise() async {
+    _optionAudio.cancel();
     selected.value = null;
     wasWrong.value = false;
     wasCorrect.value = false;
@@ -677,6 +702,8 @@ class LessonController extends GetxController {
     return _tracing.canvasMode(current, wasWrong: wasWrong.value);
   }
 
+  bool get tracingIsAnchored => _tracing.isAnchored(current);
+
   /// Стереть нарисованное и начать букву заново. Собранные части холст
   /// откатывает сам, вслед за исчезнувшими штрихами. Открытую подсказку
   /// не прячем: человек продолжает обводить по контуру.
@@ -712,7 +739,8 @@ class LessonController extends GetxController {
   /// «Не помню» в режиме по памяти открывает контур без ответа и ошибки.
   /// Ответ появится только после того, как человек обведёт подсказку.
   void giveUpTracing() {
-    if (current?.mode != ExerciseMode.traceFromMemory ||
+    if ((current?.mode != ExerciseMode.traceFromMemory &&
+            current?.mode != ExerciseMode.drawHarakaForSound) ||
         wasWrong.value ||
         wasCorrect.value ||
         tracingGuideVisible.value) {
@@ -819,6 +847,7 @@ class LessonController extends GetxController {
     if (session == null || session.current == null) return;
 
     final exercise = session.current!;
+    await _optionAudio.stop();
     final mode = exercise.mode;
     session.skip();
     if (mode == ExerciseMode.sayName) {
@@ -899,6 +928,9 @@ class LessonController extends GetxController {
       // подсказка убрана, попытки отсчитываются заново.
       if (exercise.mode.isTracing) _syncTracing();
       if (exercise.mode == ExerciseMode.sayName) _syncPronunciation();
+      if (exercise.mode == ExerciseMode.letterToSound) {
+        startOptionSequence(exercise);
+      }
       return;
     }
 
@@ -925,6 +957,7 @@ class LessonController extends GetxController {
     }
 
     if (outcome == AnswerOutcome.wrong) {
+      _optionAudio.cancel();
       unawaited(_audio.stop());
       _refresh.value++;
       wasWrong.value = true;
@@ -937,6 +970,7 @@ class LessonController extends GetxController {
 
     // После проверки звук вопроса больше не должен звучать поверх обратной
     // связи — следующий запуск возможен только по ручной кнопке.
+    _optionAudio.cancel();
     unawaited(_audio.stop());
     wasCorrect.value = true;
     _refresh.value++;
@@ -1012,6 +1046,7 @@ class LessonController extends GetxController {
   void onClose() {
     _tracing.dispose();
     pronunciation.dispose();
+    _optionAudio.dispose();
     unawaited(_audio.dispose());
     super.onClose();
   }

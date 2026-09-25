@@ -25,7 +25,7 @@ import '../helpers/plugin_mocks.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
-    for (final file in ['stage1', 'stage2'])
+    for (final file in ['stage1', 'stage2', 'stage3'])
       CurriculumLoader.parse(
         File('assets/curriculum/$file.json').readAsStringSync(),
       ),
@@ -155,7 +155,7 @@ void main() {
     );
     await settle(tester);
     expect(find.text('Пока закрыто'), findsOneWidget);
-    expect(find.text('Проверить знания и открыть'), findsOneWidget);
+    expect(find.text('Перейти к этой теме'), findsOneWidget);
   });
 
   testWidgets('одна отметка о завершении не делает материал освоенным', (
@@ -272,6 +272,6 @@ void main() {
       tester.widget<CourseTopicPage>(find.byType(CourseTopicPage)).topicId,
       id,
     );
-    expect(find.text('Проверить знания и открыть'), findsOneWidget);
+    expect(find.text('Перейти к этой теме'), findsOneWidget);
   });
 }

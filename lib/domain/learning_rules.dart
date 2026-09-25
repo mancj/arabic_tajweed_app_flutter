@@ -121,6 +121,7 @@ class LearningRules {
   /// режимах и называем вслух. Понятия проходят только через объяснение.
   int minimumExercises(Atom atom) => switch (atom) {
     Atom(kind: AtomKind.concept) => 0,
+    Atom(kind: AtomKind.haraka, tracing: String()) => 4,
     Atom(letterId: String(), form: LetterForm.isolated) => 3,
     _ => 1,
   };
@@ -128,6 +129,10 @@ class LearningRules {
   /// Базовую букву недостаточно узнать в тестах: до продвижения дальше
   /// нужно успешно назвать её и выполнить оба доступных режима письма.
   Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
+    Atom(kind: AtomKind.haraka, tracing: String()) => {
+      ExerciseMode.trace,
+      ExerciseMode.traceFromMemory,
+    },
     Atom(letterId: String(), form: LetterForm.isolated) => {
       if (atom.tracing != null) ...{
         ExerciseMode.trace,

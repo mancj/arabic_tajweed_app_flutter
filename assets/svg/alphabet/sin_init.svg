@@ -1,7 +1,12 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="sin_init">
-<g id="Group 30">
-<path id="1-base" d="M254.758 121.464C278.936 167.276 259.848 184.291 237.579 187C215.31 189.709 206.62 158.708 210.271 146.697C212.392 158.324 196.711 183.133 172.68 185.727C148.016 188.39 149.692 160.673 146.593 144.37C147.684 156.477 137.558 183.018 119.233 183.018C100.909 183.018 71.9376 183.018 54.3342 183.018" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="sin_init" clip-path="url(#clip0_111_2199)">
+<g id="sin_shin_base_forms">
+<path id="1-base" d="M256 165.75C264.174 182.141 271.901 199.277 245.417 203.795C217.515 208.556 216.646 170.305 216.646 170.305C216.646 170.305 216.646 201.403 194.413 203.795C171.595 206.25 165.5 170.305 165.5 170.305C165.5 170.305 179.522 211.75 111.258 211.75H67" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_111_2199">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

@@ -1,8 +1,10 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="ghayn_end">
 <g id="Group 56">
-<path id="2-dot" d="M138.914 45.1885V49.361" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M263.5 177.816H191.816C152.326 177.816 130.718 165.149 89.7375 117.463C100.914 95.8554 162.949 82.443 168.718 112.247C175.207 145.776 106.875 163.658 86.7572 206.874C66.6395 250.09 98.6787 309.699 191.816 265.738" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M139 91V95.1725" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="ayn_ghayn_base_forms">
+<path id="1-base" d="M279 207.547L213.744 207.547C170.567 207.547 140.668 199.344 95.8615 147.267C108.081 123.67 169.816 114.115 169.816 147.267C169.816 169.217 117.857 175.425 95.8615 222.62C73.8655 269.814 114.449 316.538 206.291 279.407" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

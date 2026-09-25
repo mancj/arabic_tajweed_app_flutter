@@ -1,8 +1,8 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="dhal_end">
 <g id="Group 5">
-<path id="2-dot" d="M126 88.0894V92.2619" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M262.889 227.869C262.889 227.869 233.733 227.869 216 227.869C198.267 227.869 187.604 225.114 182.098 219.003C163.035 197.844 145.562 147.917 134.635 132.944C141.561 144.94 186.317 211.761 145.067 225.261C114.816 235.162 83 221.611 83 221.611" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M149 78.75V82.9225" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<path id="1-base" d="M244.5 206.25C244.5 206.25 230 206.25 205.5 206.25C181 206.25 149.5 116.75 149.5 116.75C149.5 116.75 156.5 114.75 163.5 167.75C170.5 220.75 84 202.75 84 202.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

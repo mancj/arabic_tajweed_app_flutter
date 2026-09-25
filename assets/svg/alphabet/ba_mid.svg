@@ -1,8 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="ba_mid">
+<g id="ba_mid" clip-path="url(#clip0_111_1869)">
 <g id="Frame 13">
-<path id="2-dot" d="M163.833 253.404V257.577" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M277.947 212L237 212H206.5C171 212 167 190.5 167 152C167 190 169.243 212 115 212C88 212 66.868 212 62 212" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M163.833 237.75V241.923" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="ba_ta_tha_base_forms">
+<path id="1-base" d="M247.5 202.75H232.5H202C166.5 202.75 162.5 181.25 162.5 142.75C162.5 180.75 164.743 202.75 110.5 202.75C83.5 202.75 82 202.75 82 202.75" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_111_1869">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

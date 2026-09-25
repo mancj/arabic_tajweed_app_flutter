@@ -1,8 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="sod_end">
-<g id="Group 32">
-<path id="1-base" d="M311.5 185H274.452C257.713 185 240 185 218.5 185" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="sod_end" clip-path="url(#clip0_112_2252)">
+<g id="sod_dod_base_forms">
+<g id="Group 90">
+<path id="1-base" d="M155.369 204.211C173.384 177.542 234.195 136.084 243.644 186.52C247.571 207.48 200.631 205.664 153.869 205.664C145.104 199.174 130.869 176.405 130.869 176.405C130.869 176.405 153.869 243.818 94.0114 243.818C23.3692 243.818 49.8693 179.905 49.8693 179.905" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base_2" d="M284 204.75H222.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<path id="2-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 142.585 167.735 135.643 153.85C117.664 117.891 170.148 220.808 71.5704 227.008C-6.60007 231.925 23.8318 153.85 23.8318 153.85" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2252">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

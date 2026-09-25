@@ -2,7 +2,7 @@ name: arabic_tajweed_app
 description: "Your app description here"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+45
+version: 1.0.0+59
 
 environment:
   sdk: '^3.8.0'
@@ -27,6 +27,7 @@ dependencies:
   drift_flutter: ^0.3.1
   gaimon: ^1.5.0
   audioplayers: ^6.8.1
+  flutter_tts: ^4.2.5
   audio_waveforms: ^1.3.0
   path_provider: ^2.1.5
   flutter_tilt: ^4.1.0
@@ -34,6 +35,7 @@ dependencies:
   dio: ^5.7.0
   material3_expressive_loading_indicator: ^0.1.2
   rive: ^0.14.11
+  talker_flutter: ^5.1.20
 
 
 dev_dependencies:
@@ -52,7 +54,9 @@ flutter:
     - assets/audio/
     - assets/svg/
     - assets/svg/alphabet/
+    - assets/svg/harakat/
     - assets/audio/alphabet/
+    - assets/audio/harakat/
     - assets/img/
     - assets/rive/
   fonts:

@@ -149,10 +149,7 @@ class _AppScaffoldState extends State<AppScaffold> {
               // контент за собой.
               style: GlassScrollEdgeStyle.blur,
               maxSigma: widget.edgeBlurSigma,
-              topFadeHeight:
-                  headerZone +
-                  AppScaffold._headerHeight +
-                  AppScaffold._topBlurFadeExtension,
+              topFadeHeight: headerZone + AppScaffold._topBlurFadeExtension,
               bottomFadeHeight: 0,
               child: Builder(
                 builder: (context) => widget.builder(context, contentInsets),

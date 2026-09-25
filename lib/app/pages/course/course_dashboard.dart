@@ -186,7 +186,7 @@ class _CourseLessonTransformation extends StatelessWidget {
   Widget build(BuildContext context) {
     final decorSide = MediaQuery.sizeOf(context).width;
     final showArrow =
-        atom?.kind == AtomKind.syllable ||
+        (atom?.kind == AtomKind.syllable && atom?.audioAsset == null) ||
         (atom?.form != null && atom?.form != LetterForm.isolated);
 
     return Padding(

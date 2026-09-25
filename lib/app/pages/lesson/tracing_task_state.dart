@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../domain/atom.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/progress_event.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
@@ -19,6 +20,8 @@ class TracingTaskState {
   final hint = ''.obs;
   final done = false.obs;
   final guideVisible = false.obs;
+
+  Exercise? _exercise;
 
   static const matcher = TracingMatcher();
   static const _startHint = 'Начните с основы буквы';
@@ -44,10 +47,11 @@ class TracingTaskState {
         ? exercise.atom.tracing
         : null;
     drawing.clear();
+    _exercise = exercise;
     done.value = false;
     guideVisible.value = false;
     shape.value = name == null ? null : _shapes[name];
-    hint.value = shape.value == null ? '' : _startHint;
+    hint.value = shape.value == null ? '' : _startHintFor(exercise);
   }
 
   bool isAvailableFor(Exercise? exercise) =>
@@ -58,22 +62,27 @@ class TracingTaskState {
       ? TracingMode.tracing
       : TracingMode.freehand;
 
+  bool isAnchored(Exercise? exercise) =>
+      exercise?.atom.kind == AtomKind.haraka ||
+      exercise?.mode == ExerciseMode.drawHarakaForSound;
+
   void clear({required bool wasWrong}) {
     drawing.clear();
     if (wasWrong || guideVisible.value) return;
     done.value = false;
-    hint.value = _startHint;
+    hint.value = _startHintFor(_exercise);
   }
 
   void onProgress(TracingProgress progress) {
+    final noun = isAnchored(_exercise) ? 'Огласовка' : 'Буква';
     hint.value = progress.isComplete
-        ? 'Буква собрана'
-        : 'Нарисуйте: ${progress.nextLabel ?? 'букву'}';
+        ? '$noun готова'
+        : 'Нарисуйте: ${progress.nextLabel ?? noun.toLowerCase()}';
   }
 
   void onMerged() {
     done.value = true;
-    hint.value = 'Буква собрана';
+    hint.value = isAnchored(_exercise) ? 'Огласовка готова' : 'Буква собрана';
   }
 
   void revealGuide() {
@@ -89,6 +98,19 @@ class TracingTaskState {
 
   void dispose() => drawing.dispose();
 
-  static Future<TracingShape> _loadShapeAsset(String asset) =>
-      TracingShapeSvg.load('assets/svg/alphabet/$asset.svg', id: asset);
+  String _startHintFor(Exercise? exercise) => switch (exercise?.mode) {
+    ExerciseMode.drawHarakaForSound => 'Дорисуйте услышанную огласовку',
+    ExerciseMode.trace when exercise?.atom.kind == AtomKind.haraka =>
+      'Обведите огласовку',
+    ExerciseMode.traceFromMemory when exercise?.atom.kind == AtomKind.haraka =>
+      'Нарисуйте огласовку по памяти',
+    _ => _startHint,
+  };
+
+  static Future<TracingShape> _loadShapeAsset(String asset) {
+    final path = asset.contains('/')
+        ? 'assets/svg/$asset.svg'
+        : 'assets/svg/alphabet/$asset.svg';
+    return TracingShapeSvg.load(path, id: asset);
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
@@ -5,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_stroke.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_matcher.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape.dart';
+import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 
 void main() {
   const matcher = TracingMatcher();
@@ -97,5 +99,37 @@ void main() {
       strokes: [strokeOf(points)],
     );
     expect(result.isMatch, isFalse);
+  });
+
+  // Фатха и касра имеют одинаковую форму. Без проверки исходной области
+  // фатха, нарисованная под буквой, после выравнивания принималась за верную.
+  test('закреплённая огласовка обязана остаться над или под буквой', () {
+    final source = File('assets/svg/harakat/fatha.svg').readAsStringSync();
+    final fatha = TracingShapeSvg.parse(
+      source,
+      id: 'fatha',
+    ).resolve(const Size(329, 323), padding: 0);
+    final target = fatha.parts.single;
+    final correct = strokeOf(matcher.sample(target));
+    final below = correct.copyWith(
+      points: [
+        for (final point in correct.points) point + const Offset(0, 163),
+      ],
+    );
+
+    expect(
+      matcher
+          .match(
+            target: target,
+            strokes: [below],
+            alignment: matcher.align(target: target, strokes: [below]),
+            structural: true,
+          )
+          .isMatch,
+      isTrue,
+      reason: 'форма та же, поэтому одной проверки формы недостаточно',
+    );
+    expect(matcher.isPlacedNear(target: target, strokes: [correct]), isTrue);
+    expect(matcher.isPlacedNear(target: target, strokes: [below]), isFalse);
   });
 }

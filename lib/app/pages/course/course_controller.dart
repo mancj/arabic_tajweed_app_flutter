@@ -163,7 +163,14 @@ class CourseController extends GetxController {
   String get lessonSource {
     final atom = featuredAtom;
     if (atom == null) return '';
-    if (atom.kind == AtomKind.syllable) return atom.display.split('').join(' ');
+    if (atom.kind == AtomKind.syllable && atom.audioAsset == null) {
+      return atom.display.split('').join(' ');
+    }
+    if (atom.kind == AtomKind.haraka ||
+        atom.kind == AtomKind.word ||
+        atom.kind == AtomKind.syllable) {
+      return '';
+    }
     if (atom.form != null && atom.form != LetterForm.isolated) {
       return curriculum.nodes
               .firstWhereOrNull(
@@ -193,6 +200,12 @@ class CourseController extends GetxController {
       return 'Пишем и называем вслух';
     }
     if (lessonAtoms.any((a) => a.form != null)) return 'Все формы этого блока';
+    if (featuredAtom?.kind == AtomKind.word) return 'Читаем первые слова';
+    if (featuredAtom?.kind == AtomKind.haraka ||
+        (featuredAtom?.kind == AtomKind.syllable &&
+            featuredAtom?.audioAsset != null)) {
+      return 'Слушаем и читаем огласовки';
+    }
     if (featuredAtom?.kind == AtomKind.syllable) {
       return 'Учимся читать соединения';
     }
@@ -335,8 +348,8 @@ class CourseController extends GetxController {
   };
   static String stageTitle(int stage) => switch (stage) {
     1 => 'Буквы и их формы',
-    2 => 'Соединение букв',
-    3 => 'Огласовки',
+    2 => 'Огласовки',
+    3 => 'Связки букв и слова',
     4 => 'Знаки чтения',
     5 => 'Чтение слов',
     _ => 'Правила письма',
@@ -347,7 +360,21 @@ class CourseController extends GetxController {
     await _openPlan(nextPlan.value!, continuePlanning: true);
   }
 
-  Future<void> open(TopicStatus status) async {
+  bool requiresKnowledgeCheck(TopicStatus status) {
+    if (status.isDone) return false;
+    final targetIndex = curriculum.topics.indexWhere(
+      (topic) => topic.id == status.topic.id,
+    );
+    final currentIndex = curriculum.topics.indexWhere(
+      (topic) => topic.id == nextPlan.value?.topicId,
+    );
+    return currentIndex >= 0 && targetIndex > currentIndex;
+  }
+
+  Future<void> open(
+    TopicStatus status, {
+    bool respectCourseGates = true,
+  }) async {
     if (!status.canPractice || opening.value) return;
     final topicPlan = TopicBoard(curriculum).planFor(
       status.topic,
@@ -363,7 +390,8 @@ class CourseController extends GetxController {
         (introducesAlphabet || status.topic.stage > 1);
     final blockedByDailyPace =
         automatic.purpose == LessonPurpose.mixedReview && introducesAlphabet;
-    final plan = blockedByCheckpoint || blockedByDailyPace
+    final plan =
+        respectCourseGates && (blockedByCheckpoint || blockedByDailyPace)
         ? automatic
         : topicPlan;
     await _openPlan(plan);

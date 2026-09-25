@@ -23,9 +23,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// прогресса, а не рисование и запись звука.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // Эта проверка посвящена буквам и их отдельным формам: темы должны
+  // закрываться за один проход. Огласовки проходят собственный путь освоения.
   final curriculum = CurriculumLoader.merge([
-    for (final asset in CurriculumLoader.defaultStageAssets)
-      CurriculumLoader.parse(File(asset).readAsStringSync()),
+    CurriculumLoader.parse(
+      File('assets/curriculum/stage1.json').readAsStringSync(),
+    ),
   ]);
   final formsTopic = curriculum.topics.firstWhere((t) => t.id == 'm.forms');
   final formIds = formsTopic.counterOf.where((id) => id != 'concept.forms');

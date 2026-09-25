@@ -173,7 +173,9 @@ end
 # откуда Xcode берёт CFBundleShortVersionString / CFBundleVersion.
 # Без этого шага в ipa уедет версия от прошлой сборки.
 def flutter_build_ios
-  args = ["fvm", "flutter", "build", "ios", "--release"]
+  # Flutter 3.44 can deadlock while tree-shaking icon fonts: font-subset fills
+  # its stdout pipe while flutter_tools waits for the process to exit.
+  args = ["fvm", "flutter", "build", "ios", "--release", "--no-tree-shake-icons"]
   # gym всё равно подписывает архив заново, так что подпись на этом шаге
   # можно пропустить и сэкономить время: FLUTTER_BUILD_NO_CODESIGN=1
   args << "--no-codesign" if ENV["FLUTTER_BUILD_NO_CODESIGN"] == "1"

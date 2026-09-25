@@ -19,7 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// открытое после ошибки или выдать знания по незавершённой диагностике.
 void main() {
   final course = CurriculumLoader.merge([
-    for (final s in ['stage1', 'stage2'])
+    for (final s in ['stage1', 'stage2', 'stage3'])
       CurriculumLoader.parse(
         File('assets/curriculum/$s.json').readAsStringSync(),
       ),
@@ -54,25 +54,21 @@ void main() {
   });
 
   test(
-    'проверка охватывает все недостающие формы и не спрашивает освоенное',
+    'короткая проверка охватывает недостающие буквы и не спрашивает освоенное',
     () {
       final check = KnowledgeCheck(
         curriculum: course,
-        topic: course.topics[2],
+        topic: course.topics[1],
         context: ctx({
-          'ba.finalForm': AtomProgress(state: AtomState.known, knownAt: now),
+          'ba.isolated': AtomProgress(state: AtomState.known, knownAt: now),
         }),
         random: Random(1),
       );
-      expect(
-        check.questions.where((q) => q.atom.id == 'ba.finalForm'),
-        isEmpty,
-      );
-      for (final id in course.topics[1].counterOf.where(
-        (id) => !id.startsWith('concept.') && id != 'ba.finalForm',
-      )) {
+      expect(check.questions.where((q) => q.atom.id == 'ba.isolated'), isEmpty);
+      for (final id in ['alif.isolated', 'ta.isolated', 'tha.isolated']) {
         expect(check.questions.where((q) => q.atom.id == id).length, 2);
       }
+      expect(check.isCondensed, isFalse);
       for (final q in check.questions) {
         expect(q.options[q.answerIndex], q.atom);
         expect(
@@ -83,6 +79,65 @@ void main() {
       }
     },
   );
+
+  test('далёкая тема проверяется максимум двадцатью вопросами', () {
+    final topic = course.topics.firstWhere((t) => t.id == 'm.haraka.intro');
+    final check = KnowledgeCheck(
+      curriculum: course,
+      topic: topic,
+      context: ctx({}),
+      random: Random(1),
+    );
+    expect(check.atoms.length, greaterThan(80));
+    expect(check.questions, hasLength(20));
+    expect(check.checkedAtoms, hasLength(10));
+    expect(check.inferredAtoms, isNotEmpty);
+    expect(
+      check.atoms.map((atom) => atom.id).toSet(),
+      containsAll(
+        course.topics
+            .takeWhile((candidate) => candidate.id != topic.id)
+            .expand((candidate) => candidate.counterOf),
+      ),
+      reason: 'переход должен закрыть весь путь до выбранной темы',
+    );
+    expect(
+      check.checkedAtoms.map((a) => a.form).toSet(),
+      containsAll([
+        LetterForm.isolated,
+        LetterForm.finalForm,
+        LetterForm.initial,
+        LetterForm.medial,
+      ]),
+    );
+    expect(
+      check.questions.every(
+        (q) => q.options[q.answerIndex] == q.atom && q.options.length >= 2,
+      ),
+      isTrue,
+    );
+  });
+
+  test('проверка поздней темы умеет спрашивать слова по звучанию', () {
+    final topic = course.topics.firstWhere((t) => t.id == 'm.haraka.words3');
+    final check = KnowledgeCheck(
+      curriculum: course,
+      topic: topic,
+      context: ctx({}),
+      random: Random(1),
+    );
+    expect(check.questions.length, lessThanOrEqualTo(20));
+    expect(
+      check.questions.where((q) => q.atom.kind == AtomKind.word),
+      isNotEmpty,
+    );
+    expect(
+      check.questions
+          .where((q) => q.atom.kind == AtomKind.word)
+          .every((q) => q.atom.audioAsset != null && q.options.length >= 2),
+      isTrue,
+    );
+  });
 
   test(
     'подтверждённое сохраняется после перезапуска и не понижает mastered',
@@ -116,6 +171,7 @@ void main() {
     var withoutNew = 0;
     var complete = false;
     int? connectionSession;
+    int? harakatSession;
     int? lastBaseSession;
     for (var session = 1; session <= 250; session++) {
       final plan = LessonPlanner(
@@ -132,6 +188,7 @@ void main() {
           reason: 'модуль соединений начался до завершения алфавита',
         );
       }
+      if (plan.topicId == 'm.haraka.intro') harakatSession ??= session;
       if (plan.newAtoms.any((a) => a.id == 'ya.isolated')) {
         lastBaseSession ??= session;
       }
@@ -184,6 +241,8 @@ void main() {
           'не освоены: ${p.entries.where((e) => e.value.state.index < AtomState.known.index && !e.key.startsWith('concept.')).map((e) => '${e.key}: ${e.value.state} streak=${e.value.cleanStreak} modes=${e.value.modesInStreak}')} ',
     );
     expect(connectionSession, isNotNull);
-    expect(connectionSession!, greaterThan(lastBaseSession!));
+    expect(harakatSession, isNotNull);
+    expect(connectionSession!, greaterThan(harakatSession!));
+    expect(connectionSession, greaterThan(lastBaseSession!));
   });
 }

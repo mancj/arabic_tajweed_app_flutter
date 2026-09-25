@@ -1,7 +1,12 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="sod_base">
-<g id="Group 31">
-<path id="1-base" d="M179.028 172.79C198.868 143.444 275.737 106.081 286.143 161.58C290.468 184.644 237.5 181.024 186 181.024C176.346 173.883 167.585 163.735 160.643 149.85C142.664 113.891 195.148 216.808 96.5704 223.008C18.3999 227.925 48.8318 149.85 48.8318 149.85" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="sod_base" clip-path="url(#clip0_112_2244)">
+<g id="sod_dod_base_forms">
+<path id="1-base" d="M176.369 205.056C194.384 178.387 255.195 136.928 264.644 187.365C268.571 208.324 221.631 206.509 174.869 206.509C166.104 200.019 151.869 177.25 151.869 177.25C151.869 177.25 174.869 244.663 115.011 244.663C44.3692 244.663 70.8693 180.75 70.8693 180.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_112_2244">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

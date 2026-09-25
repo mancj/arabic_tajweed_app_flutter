@@ -1,6 +1,7 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +11,7 @@ import 'atom_progress_controller.dart';
 export 'atom_progress_binding.dart';
 export 'atom_progress_controller.dart';
 
-/// Отладочный список атомов с их состоянием. Открывается из [DebugPage].
+/// Отладочный список атомов с их состоянием. Открывается из меню отладки.
 class AtomProgressPage extends GetView<AtomProgressController> {
   static const routeName = '/debug/atoms';
 
@@ -29,62 +30,220 @@ class AtomProgressPage extends GetView<AtomProgressController> {
         final rows = controller.visible;
         return ListView.builder(
           padding: insets,
-          itemCount: rows.length + 1,
-          itemBuilder: (_, i) => i == 0
-              ? _Summary(controller)
-              : _AtomTile(rows[i - 1], controller),
+          itemCount: rows.isEmpty ? 2 : rows.length + 1,
+          itemBuilder: (_, index) {
+            if (index == 0) {
+              return _Summary(controller, visibleCount: rows.length);
+            }
+            if (rows.isEmpty) return const _EmptyState();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _AtomTile(rows[index - 1], controller),
+            );
+          },
         );
       }),
     );
   }
 }
 
-/// Сводка: сколько атомов в каждом состоянии, номер следующей сессии
-/// и переключатель свежих.
 class _Summary extends StatelessWidget {
-  const _Summary(this.controller);
+  const _Summary(this.controller, {required this.visibleCount});
 
   final AtomProgressController controller;
+  final int visibleCount;
 
   @override
   Widget build(BuildContext context) {
     final counts = controller.counts;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+    final total = controller.rows.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final e in counts.entries)
-                _Badge('${e.key.name} ${e.value}', _stateColor(e.key)),
+              Text(
+                'СОСТОЯНИЯ КУРСА',
+                style: UITextStyles.monoSemibold11.copyWith(
+                  color: UIColors.primary,
+                ),
+              ),
+              const Margin.vertical(8),
+              Text('Прогресс атомов', style: UITextStyles.semibold28),
+              const Margin.vertical(8),
+              Text(
+                'Свёртка журнала обучения по каждому элементу.',
+                style: UITextStyles.regular15.copyWith(
+                  color: UIColors.secondary2,
+                ),
+              ),
             ],
           ),
-          const Margin.vertical(8),
-          Row(
+        ),
+        const Margin.vertical(24),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: UIColors.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'Следующая сессия: ${controller.nextSession.value}',
-                  style: UITextStyles.regular12.copyWith(
-                    color: UIColors.secondary2,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('$total', style: UITextStyles.semibold32),
+                  const Margin.horizontal(8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        'атомов всего',
+                        style: UITextStyles.regular13.copyWith(
+                          color: UIColors.secondary2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: UIColors.primary10,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'СЕССИЯ #${controller.nextSession.value}',
+                      style: UITextStyles.monoSemibold11.copyWith(
+                        color: UIColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Margin.vertical(16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  height: 8,
+                  child: ColoredBox(
+                    color: UIColors.pageBackground,
+                    child: Row(
+                      children: [
+                        for (final state in AtomState.values)
+                          if (counts[state]! > 0)
+                            Expanded(
+                              flex: counts[state]!,
+                              child: SizedBox(
+                                height: 8,
+                                child: ColoredBox(color: _stateColor(state)),
+                              ),
+                            ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              Text(
-                'Скрыть fresh',
-                style: UITextStyles.regular12.copyWith(
-                  color: UIColors.secondary2,
+              const Margin.vertical(16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final state in AtomState.values)
+                    _StateCount(state: state, count: counts[state]!),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Margin.vertical(12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: UIColors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.filter_list_rounded,
+                size: 20,
+                color: UIColors.primary,
+              ),
+              const Margin.horizontal(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Скрыть fresh', style: UITextStyles.semibold15),
+                    const Margin.vertical(4),
+                    Text(
+                      'Показать только атомы с историей',
+                      style: UITextStyles.regular12.copyWith(
+                        color: UIColors.secondary2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Switch(
                 value: controller.hideFresh.value,
                 activeThumbColor: UIColors.primary,
-                onChanged: (v) => controller.hideFresh.value = v,
+                onChanged: (value) => controller.hideFresh.value = value,
               ),
             ],
+          ),
+        ),
+        const Margin.vertical(32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text('Список атомов', style: UITextStyles.semibold17),
+              ),
+              Text(
+                '$visibleCount показано',
+                style: UITextStyles.monoRegular11.copyWith(
+                  color: UIColors.secondary2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Margin.vertical(12),
+      ],
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: UIColors.cardBackground,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.inbox_outlined, size: 32, color: UIColors.secondary2),
+          const Margin.vertical(12),
+          Text('Здесь пока пусто', style: UITextStyles.semibold17),
+          const Margin.vertical(4),
+          Text(
+            'Отключите «Скрыть fresh», чтобы увидеть все атомы.',
+            textAlign: TextAlign.center,
+            style: UITextStyles.regular13.copyWith(color: UIColors.secondary2),
           ),
         ],
       ),
@@ -100,99 +259,267 @@ class _AtomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = row.progress;
     final atom = row.atom;
+    final progress = row.progress;
+    final isConcept = atom.kind == AtomKind.concept;
+    final modes = progress.modesInStreak.map((mode) => mode.name).join(', ');
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
         color: UIColors.cardBackground,
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 68,
-            child: Text(
-              atom.display,
-              textAlign: TextAlign.center,
-              style: UITextStyles.arabicRegular16,
-            ),
-          ),
-          const Margin.horizontal(8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: UIColors.primary10,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: isConcept
+                    ? Icon(Icons.lightbulb_outline, color: UIColors.primary)
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          atom.display,
+                          maxLines: 1,
+                          style: UITextStyles.arabicRegular38Compact,
+                        ),
+                      ),
+              ),
+              const Margin.horizontal(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text(atom.id, style: UITextStyles.bold17)),
-                    if (p.weak) _Badge('weak', UIColors.secondary1),
-                    if (controller.isDeferred(p))
-                      _Badge('deferred', UIColors.secondary1),
-                    _Badge(p.state.name, _stateColor(p.state)),
+                    Text(
+                      isConcept
+                          ? atom.display
+                          : atom.label.isEmpty
+                          ? atom.id
+                          : atom.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: UITextStyles.semibold16,
+                    ),
+                    const Margin.vertical(4),
+                    Text(
+                      atom.id,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: UITextStyles.monoRegular11.copyWith(
+                        color: UIColors.secondary2,
+                      ),
+                    ),
                   ],
                 ),
-                const Margin.vertical(4),
-                Text(
-                  _details(p),
-                  style: UITextStyles.regular12.copyWith(
-                    color: UIColors.secondary2,
-                  ),
-                ),
+              ),
+              const Margin.horizontal(8),
+              _StateBadge(progress.state),
+            ],
+          ),
+          if (progress.weak || controller.isDeferred(progress)) ...[
+            const Margin.vertical(12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (progress.weak) const _FlagBadge('weak'),
+                if (controller.isDeferred(progress))
+                  const _FlagBadge('deferred'),
               ],
+            ),
+          ],
+          const Margin.vertical(16),
+          Container(height: 1, color: UIColors.pageBackground),
+          const Margin.vertical(16),
+          Row(
+            children: [
+              _Metric(label: 'СЕРИЯ', value: '${progress.cleanStreak}'),
+              _Metric(label: 'ОШИБКИ', value: '${progress.totalErrors}'),
+              _Metric(label: 'ПОДТВЕРЖД.', value: '${progress.confirmations}'),
+            ],
+          ),
+          const Margin.vertical(16),
+          _DetailLine(
+            label: 'Режимы серии',
+            value: modes.isEmpty ? '—' : modes,
+          ),
+          const Margin.vertical(8),
+          _DetailLine(
+            label: 'Сессий с ошибкой',
+            value: '${progress.failedSessions.length}',
+          ),
+          const Margin.vertical(8),
+          _DetailLine(
+            label: 'Откладываний',
+            value:
+                '${progress.deferCount}'
+                '${progress.deferredAtSession == null ? '' : ' · с #${progress.deferredAtSession}'}',
+          ),
+          const Margin.vertical(8),
+          _DetailLine(
+            label: 'Активный успех',
+            value: progress.hadActiveSuccess ? 'да' : 'нет',
+          ),
+          const Margin.vertical(8),
+          _DetailLine(
+            label: 'Последний показ',
+            value: progress.lastSeenSession == null
+                ? '—'
+                : '#${progress.lastSeenSession}',
+          ),
+          if (progress.knownAt != null) ...[
+            const Margin.vertical(8),
+            _DetailLine(
+              label: 'В состоянии known с',
+              value: _date(progress.knownAt!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _date(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')} '
+      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: UITextStyles.semibold20),
+          const Margin.vertical(4),
+          Text(
+            label,
+            style: UITextStyles.monoRegular11.copyWith(
+              color: UIColors.secondary2,
             ),
           ),
         ],
       ),
     );
   }
-
-  /// Всё, что решает судьбу атома в свёртке, одной строкой.
-  String _details(AtomProgress p) {
-    final modes = p.modesInStreak.map((m) => m.name).join(', ');
-    return [
-      'серия ${p.cleanStreak}${modes.isEmpty ? '' : ' [$modes]'}',
-      'ошибок ${p.totalErrors}, сессий с ошибкой ${p.failedSessions.length}',
-      'откладываний ${p.deferCount}'
-          '${p.deferredAtSession == null ? '' : ' (с #${p.deferredAtSession})'}',
-      'подтверждений ${p.confirmations}'
-          '${p.knownAt == null ? '' : ', known ${_date(p.knownAt!)}'}',
-      'активный успех: ${p.hadActiveSuccess ? 'да' : 'нет'}',
-      'видели в #${p.lastSeenSession ?? '—'}',
-    ].join('\n');
-  }
-
-  String _date(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} '
-      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge(this.text, this.color);
+class _DetailLine extends StatelessWidget {
+  const _DetailLine({required this.label, required this.value});
 
-  final String text;
-  final Color color;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label  ',
+          style: UITextStyles.regular12.copyWith(color: UIColors.secondary2),
+        ),
+        Expanded(child: Text(value, style: UITextStyles.regular12)),
+      ],
+    );
+  }
+}
+
+class _StateCount extends StatelessWidget {
+  const _StateCount({required this.state, required this.count});
+
+  final AtomState state;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: _stateColor(state),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const Margin.horizontal(4),
+        Text(
+          '${state.name} $count',
+          style: UITextStyles.monoRegular11.copyWith(
+            color: UIColors.secondary2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StateBadge extends StatelessWidget {
+  const _StateBadge(this.state);
+
+  final AtomState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _stateColor(state);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        state.name,
+        style: UITextStyles.monoRegular11.copyWith(
+          color: state == AtomState.fresh ? UIColors.secondary2 : color,
+        ),
+      ),
+    );
+  }
+}
+
+class _FlagBadge extends StatelessWidget {
+  const _FlagBadge(this.label);
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        color: UIColors.pageBackground,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(text, style: UITextStyles.regular12.copyWith(color: color)),
+      child: Text(
+        label,
+        style: UITextStyles.monoRegular11.copyWith(color: UIColors.secondary2),
+      ),
     );
   }
 }
 
 Color _stateColor(AtomState state) => switch (state) {
-  AtomState.fresh => UIColors.secondary2,
+  AtomState.fresh => UIColors.ornamentStroke,
   AtomState.introduced => UIColors.secondary1,
-  AtomState.learning => UIColors.primary,
-  AtomState.known => UIColors.secondary1,
+  AtomState.learning => UIColors.primary70,
+  AtomState.known => UIColors.success,
   AtomState.mastered => UIColors.primary,
 };

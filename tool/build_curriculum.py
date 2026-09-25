@@ -7,6 +7,8 @@
 """
 import json, os
 
+from harakat_data import HARAKAT_LETTER_IDS, HARAKAT_NAMES
+
 OUT = 'assets/curriculum'
 
 # id, глиф-изолированная, конечная, начальная, средняя, имя, похожие, объяснение
@@ -239,7 +241,27 @@ SYLLABLES_BREAK = [
 ]
 
 intro = lambda a: {'type': 'atomIntroduced', 'atomId': a}
+known = lambda a: {'type': 'atomKnown', 'atomId': a}
 ALWAYS = {'type': 'always'}
+
+def all_of(*requirements):
+    return {'type': 'allOf', 'parts': list(requirements)}
+
+
+def after_harakat(requirement):
+    """Связки открываются после огласовок на отдельных буквах."""
+    return all_of(
+        *[known(f'vowel.{lid}.{vowel}')
+          for lid in HARAKAT_LETTER_IDS for vowel in HARAKAT_NAMES],
+        requirement,
+    )
+
+
+def completed(atom_ids):
+    return all_of(*[
+        intro(atom_id) if atom_id.startswith('concept.') else known(atom_id)
+        for atom_id in atom_ids
+    ])
 
 
 def concept_node(cid, requirement):
@@ -290,6 +312,7 @@ def forms_of(lid):
 
 def build_stage1():
     nodes, topics, previous = [], [], None
+    previous_counter = None
 
     for group in GROUPS:
         gate = ALWAYS if previous is None else intro(f'{previous}.isolated')
@@ -306,20 +329,24 @@ def build_stage1():
             for form in forms_of(lid)[1:]:
                 nodes.append(letter_node(lid, form, intro(f'{lid}.isolated')))
 
+        letter_counter = ([group['concept']] if group.get('concept') else []) \
+                         + [f'{l}.isolated' for l in group['letters']]
         topics.append({
             'id': group['tid'], 'stage': 1, 'title': group['title'],
-            'requirement': ALWAYS,
-            'counterOf': ([group['concept']] if group.get('concept') else [])
-                         + [f'{l}.isolated' for l in group['letters']],
+            'requirement': (ALWAYS if previous_counter is None
+                            else completed(previous_counter)),
+            'counterOf': letter_counter,
         })
+        forms_counter = ([group['fconcept']] if group.get('fconcept') else []) \
+                        + [f'{l}.{f}' for l in group['letters']
+                           for f in forms_of(l)[1:]]
         topics.append({
             'id': group['ftid'], 'stage': 1, 'title': group['ftitle'],
-            'requirement': ALWAYS,
-            'counterOf': ([group['fconcept']] if group.get('fconcept') else [])
-                         + [f'{l}.{f}' for l in group['letters']
-                            for f in forms_of(l)[1:]],
+            'requirement': completed(letter_counter),
+            'counterOf': forms_counter,
         })
         previous = group['letters'][-1]
+        previous_counter = forms_counter
 
     nodes.append(concept_node('concept.hamza', intro(f'{previous}.isolated')))
     for hid, glyph, label, carrier in HAMZA:
@@ -327,7 +354,7 @@ def build_stage1():
                                'letterId': 'hamza', 'label': label},
                       'requirement': intro(f'{carrier}.isolated')})
     topics.append({'id': 'm.hamza', 'stage': 1, 'title': 'Хамза: ء أ إ ؤ ئ',
-                   'requirement': ALWAYS,
+                   'requirement': completed(previous_counter),
                    'counterOf': ['concept.hamza'] + [h[0] for h in HAMZA]})
 
     return {'nodes': nodes, 'topics': topics}
@@ -335,21 +362,98 @@ def build_stage1():
 
 def build_stage2():
     nodes, topics = [], []
-    for cid, syllables, tid, title in [
-        ('concept.join', SYLLABLES_JOIN, 'm.join', 'Как буквы соединяются'),
-        ('concept.break', SYLLABLES_BREAK, 'm.break', 'Разрыв в слове'),
-    ]:
-        nodes.append(concept_node(cid, intro('ya.isolated')))
-        for sid, glyph, label, parts in syllables:
-            nodes.append({
-                'atom': {'id': sid, 'kind': 'syllable', 'display': glyph,
-                         'label': label},
-                'requirement': {'type': 'allOf', 'parts':
-                                [intro(f'{p}.isolated') for p in parts]},
-            })
-        topics.append({'id': tid, 'stage': 2, 'title': title,
-                       'requirement': ALWAYS,
-                       'counterOf': [cid] + [s[0] for s in syllables]})
+
+    def connected_requirement(parts):
+        first, last = parts
+        return all_of(
+            known(f'{first}.isolated'),
+            known(f'{last}.isolated'),
+            known(f'{first}.initial'),
+            known(f'{last}.finalForm'),
+        )
+
+    def broken_requirement(parts):
+        first, last = parts
+        return all_of(
+            known(f'{first}.isolated'),
+            known(f'{last}.isolated'),
+            known(f'{first}.isolated'),
+            known(f'{last}.isolated'),
+        )
+
+    join_concept_requirement = after_harakat(all_of(
+        {'type': 'lettersKnown', 'count': 2},
+        known('ba.initial'),
+        known('ta.finalForm'),
+        known('ta.initial'),
+        known('ba.finalForm'),
+    ))
+    nodes.append(concept_node('concept.join', join_concept_requirement))
+
+    node_requirements = {}
+    for index, (sid, glyph, label, parts) in enumerate(SYLLABLES_JOIN):
+        base_requirement = connected_requirement(parts)
+        requirement = (
+            after_harakat(base_requirement)
+            if index < 2
+            else all_of(intro('concept.join'), base_requirement)
+        )
+        node_requirements[sid] = requirement
+        nodes.append({
+            'atom': {'id': sid, 'kind': 'syllable', 'display': glyph,
+                     'label': label},
+            'requirement': requirement,
+        })
+
+    break_concept_requirement = after_harakat(all_of(
+        intro('concept.join'),
+        known('alif.isolated'),
+        known('ba.isolated'),
+    ))
+    nodes.append(concept_node('concept.break', break_concept_requirement))
+    for index, (sid, glyph, label, parts) in enumerate(SYLLABLES_BREAK):
+        base_requirement = broken_requirement(parts)
+        requirement = all_of(
+            intro('concept.join' if index == 2 else 'concept.break'),
+            base_requirement,
+        )
+        node_requirements[sid] = requirement
+        nodes.append({
+            'atom': {'id': sid, 'kind': 'syllable', 'display': glyph,
+                     'label': label},
+            'requirement': requirement,
+        })
+
+    topic_specs = [
+        ('m.join', 'Как буквы соединяются',
+         ['concept.join', 'syl.ba_ta', 'syl.ta_ba'],
+         [join_concept_requirement]),
+        ('m.break', 'Разрыв после алифа',
+         ['concept.break', 'syl.alif_ba'],
+         [break_concept_requirement]),
+        ('m.join.nun', 'Соединение ن ب', ['syl.na_ba'],
+         [node_requirements['syl.na_ba']]),
+        ('m.join.sin', 'Соединение س ب', ['syl.sa_ba'],
+         [node_requirements['syl.sa_ba']]),
+        ('m.join.mim', 'Соединение م ن', ['syl.mi_na'],
+         [node_requirements['syl.mi_na']]),
+        ('m.join.lam', 'Соединение ل ب', ['syl.la_ba'],
+         [node_requirements['syl.la_ba']]),
+        ('m.break.dal', 'Разрыв после د', ['syl.dal_ba'],
+         [node_requirements['syl.dal_ba']]),
+        ('m.break.ra', 'Разрыв после ر', ['syl.ra_ba'],
+         [node_requirements['syl.ra_ba']]),
+        ('m.break.waw', 'Разрыв после و', ['syl.waw_ba'],
+         [node_requirements['syl.waw_ba']]),
+    ]
+    for topic_id, title, counter, requirements in topic_specs:
+        topics.append({
+            'id': topic_id,
+            'stage': 3,
+            'title': title,
+            'requirement': all_of(*requirements),
+            'counterOf': counter,
+        })
     return {'nodes': nodes, 'topics': topics}
 
 

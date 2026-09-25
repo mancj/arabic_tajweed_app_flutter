@@ -120,8 +120,9 @@ class ProgressRepository {
       successfulReviewsSinceLatestNew: successfulReviews,
       completedAlphabetCheckpoints: {
         for (final summary in _sessionSummaries)
-          if (_purposeOf(summary) == LessonPurpose.alphabetCheckpoint &&
-              _isSuccessfulReview(summary) &&
+          if (((_purposeOf(summary) == LessonPurpose.alphabetCheckpoint &&
+                      _isSuccessfulReview(summary)) ||
+                  _purposeOf(summary) == LessonPurpose.placementCheck) &&
               summary.checkpointLetters != null)
             summary.checkpointLetters!,
       },

@@ -14,12 +14,14 @@ class AnswerOption extends StatelessWidget {
   final Widget child;
   final bool selected;
   final Color? accent;
+  final double playbackProgress;
   final VoidCallback? onTap;
 
   const AnswerOption({
     required this.child,
     this.selected = false,
     this.accent,
+    this.playbackProgress = 0,
     this.onTap,
     Key? key,
   }) : super(key: key);
@@ -30,7 +32,6 @@ class AnswerOption extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 62,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         decoration: SquircleBorders.squircleBorder(
           color: UIColors.cardBackground,
           borderRadius: 18,
@@ -40,24 +41,51 @@ class AnswerOption extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: UIColors.shadows,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                     blurRadius: 2,
                   ),
                 ]
               : null,
         ),
-        child: Row(
-          children: [
-            _Radio(selected: selected, accent: accent ?? UIColors.primary),
-            const Margin.horizontal(12),
-            RotatedBox(
-              quarterTurns: 1,
-              child: SvgPicture.asset(UISVGAssets.dashedDivider, width: 22),
-            ),
-            const Margin.horizontal(12),
-            Expanded(child: child),
-            const Margin.horizontal(8),
-          ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: playbackProgress.clamp(0, 1),
+                    heightFactor: 1,
+                    child: ColoredBox(color: UIColors.primary10),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    _Radio(
+                      selected: selected,
+                      accent: accent ?? UIColors.primary,
+                    ),
+                    const Margin.horizontal(12),
+                    RotatedBox(
+                      quarterTurns: 1,
+                      child: SvgPicture.asset(
+                        UISVGAssets.dashedDivider,
+                        width: 22,
+                      ),
+                    ),
+                    const Margin.horizontal(12),
+                    Expanded(child: child),
+                    const Margin.horizontal(8),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

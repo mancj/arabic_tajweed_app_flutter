@@ -33,6 +33,29 @@ void main() {
 
     expect(source.forAtom(letter), 'audio/alphabet/ba.wav');
     expect(source.forAtom(syllable), 'audio/syllables/ba_fatha.wav');
+    expect(
+      source.forAtom(
+        const Atom(
+          id: 'vowel.ba.fatha',
+          kind: AtomKind.syllable,
+          display: 'بَ',
+          letterId: 'ba',
+          audioAsset: 'tts:بَ',
+        ),
+      ),
+      'tts:بَ',
+    );
+    expect(
+      source.forAtom(
+        const Atom(
+          id: 'vowel.ba.kasra',
+          kind: AtomKind.syllable,
+          display: 'بِ',
+          letterId: 'ba',
+        ),
+      ),
+      isNull,
+    );
     expect(source.forExercise(exercise), 'audio/questions/ba_fatha.wav');
     expect(
       LessonExercisePresentation.from(exercise).prompt,

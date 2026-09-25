@@ -45,6 +45,7 @@ const _$AtomKindEnumMap = {
   AtomKind.haraka: 'haraka',
   AtomKind.sign: 'sign',
   AtomKind.syllable: 'syllable',
+  AtomKind.word: 'word',
   AtomKind.concept: 'concept',
 };
 

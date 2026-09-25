@@ -1,10 +1,17 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="shin_end">
-<g id="Group 10">
-<path id="4-dot" d="M152.161 103.436V106.999" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="3-dot" d="M174.43 73.1489V76.712" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M201.154 103.436V106.999" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M316.5 182.422C299.321 182.422 302.32 182.422 274.324 182.422C248.227 182.422 240.602 159.681 236.148 138.048C238.693 168.589 237.447 178.933 213.879 185.132C190.311 191.33 177.829 158.113 181.481 146.102C183.602 157.728 181.481 179.828 157.45 182.422C132.786 185.085 123.991 162.405 120.892 146.101C135.039 178.438 140.746 247.988 64.3027 239.07C15.7975 233.411 6.09651 189.756 25.0943 165.099" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="shin_end" clip-path="url(#clip0_112_2215)">
+<g id="sin_shin_base_forms">
+<path id="1-base" d="M54.1593 190.539C54.1593 190.539 43.8985 247.25 87.0002 247.25C149.691 247.25 139.5 177.25 139.5 177.25C139.5 177.25 141.78 204.492 161.988 204.492C181.566 204.492 181.566 175.237 181.566 175.237C181.566 175.237 181.566 206.674 207.96 206.674C234.355 206.674 226.5 175.237 226.5 175.237C226.5 175.237 235.943 204.492 257.205 204.492C280.013 204.492 276.755 204.492 290.75 204.492" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="Group 9">
+<path id="4-dot" d="M163 133.037V136.6" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M183 106.75V110.313" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M201.992 133.037V136.6" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_112_2215">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

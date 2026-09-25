@@ -190,7 +190,7 @@ class ExerciseGenerator {
       var added = false;
       for (final atom in fresh.where(remaining.containsKey)) {
         if (available == 0) break;
-        if (remaining[atom]! >= _drillsPerNewAtom) continue;
+        if (remaining[atom]! >= _drillsFor(atom)) continue;
         remaining[atom] = remaining[atom]! + 1;
         available--;
         added = true;
@@ -403,6 +403,11 @@ class ExerciseGenerator {
   static bool _isBaseLetter(Atom atom) =>
       atom.letterId != null && atom.form == LetterForm.isolated;
 
+  static int _drillsFor(Atom atom) =>
+      atom.kind == AtomKind.haraka && atom.tracing != null
+      ? 4
+      : _drillsPerNewAtom;
+
   Exercise? _make(
     Atom atom,
     CurriculumContext ctx,
@@ -421,6 +426,50 @@ class ExerciseGenerator {
     required bool allowPronunciation,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
+    if (atom.kind == AtomKind.haraka && atom.tracing != null) {
+      return _harakaQuestion(
+        atom,
+        pool,
+        slot,
+        ctx,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
+    if (atom.kind == AtomKind.syllable && atom.audioAsset != null) {
+      final progress = ctx.progress[atom.id] ?? const AtomProgress();
+      final needsDrawing = !progress.successfulModes.contains(
+        ExerciseMode.drawHarakaForSound,
+      );
+      if (atom.tracing != null &&
+          (slot.index >= 2 || (isReview && needsDrawing))) {
+        return Exercise.direct(
+          atom: atom,
+          mode: ExerciseMode.drawHarakaForSound,
+          isReview: isReview,
+          isRequired: isRequired,
+          question: 'Послушайте и дорисуйте огласовку',
+        );
+      }
+      return _vocalizedQuestion(
+        atom,
+        pool,
+        slot.index,
+        ctx,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
+    if (atom.kind == AtomKind.haraka || atom.kind == AtomKind.word) {
+      return _vocalizedQuestion(
+        atom,
+        pool,
+        slot.index,
+        ctx,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
     if (atom.kind == AtomKind.syllable) {
       return _connectionQuestion(atom, slot.index, isReview, isRequired);
     }
@@ -592,6 +641,48 @@ class ExerciseGenerator {
     );
   }
 
+  Exercise _harakaQuestion(
+    Atom atom,
+    List<Atom> pool,
+    _Slot slot,
+    CurriculumContext ctx, {
+    required bool isReview,
+    required bool isRequired,
+  }) {
+    final progress = ctx.progress[atom.id] ?? const AtomProgress();
+    final missingWriting = const [
+      ExerciseMode.trace,
+      ExerciseMode.traceFromMemory,
+    ].firstWhereOrNull((mode) => !progress.successfulModes.contains(mode));
+    final mode = isReview && missingWriting != null
+        ? missingWriting
+        : switch (slot.index) {
+            0 => ExerciseMode.trace,
+            2 => ExerciseMode.traceFromMemory,
+            _ => null,
+          };
+    if (mode != null) {
+      return Exercise.direct(
+        atom: atom,
+        mode: mode,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
+
+    return _vocalizedQuestion(
+      atom,
+      pool,
+      slot.index,
+      ctx,
+      forcedMode: slot.index == 1
+          ? ExerciseMode.soundToLetter
+          : ExerciseMode.letterToSound,
+      isReview: isReview,
+      isRequired: isRequired,
+    );
+  }
+
   /// Слуховой тест отдельной формы и сборка её семейства идут парой в
   /// интервальном повторении: первый проверяет связь звука с буквой, вторая —
   /// понимание всех позиций. Когда вариантов пока не хватает, сохраняем
@@ -712,6 +803,59 @@ class ExerciseGenerator {
       answerIndex: variants.indexOf(atom),
       isReview: isReview,
       isRequired: isRequired,
+    );
+  }
+
+  /// Огласованные буквы и слова проверяются в обе стороны. Варианты берём
+  /// только из материала того же вида, уже показанного в этом занятии или
+  /// раньше; на одной букве прежде всего меняется огласовка.
+  Exercise _vocalizedQuestion(
+    Atom atom,
+    List<Atom> pool,
+    int index,
+    CurriculumContext ctx, {
+    ExerciseMode? forcedMode,
+    required bool isReview,
+    required bool isRequired,
+  }) {
+    final progress = ctx.progress[atom.id] ?? const AtomProgress();
+    final mode =
+        forcedMode ??
+        ((index + progress.cleanStreak).isEven
+            ? ExerciseMode.soundToLetter
+            : ExerciseMode.letterToSound);
+    final distractorCount = mode == ExerciseMode.letterToSound
+        ? 1
+        : _distractorCount;
+    final alternatives = pool
+        .where((a) => a.kind == atom.kind && a.id != atom.id)
+        .where((a) => a.audioAsset != null && a.display != atom.display)
+        .sorted(
+          (a, b) => (a.letterId == atom.letterId ? 0 : 1).compareTo(
+            b.letterId == atom.letterId ? 0 : 1,
+          ),
+        )
+        .take(distractorCount)
+        .toList();
+    if (alternatives.length < distractorCount) {
+      throw StateError('Недостаточно огласованных вариантов для ${atom.id}');
+    }
+    final options = [atom, ...alternatives]..shuffle(_random);
+    return Exercise(
+      atom: atom,
+      mode: mode,
+      level: DistractorLevel.mixed,
+      options: options,
+      answerIndex: options.indexOf(atom),
+      isReview: isReview,
+      isRequired: isRequired,
+      question: atom.kind == AtomKind.word
+          ? mode == ExerciseMode.soundToLetter
+                ? 'Послушайте и выберите слово'
+                : 'Прочитайте слово и выберите его звучание'
+          : mode == ExerciseMode.soundToLetter
+          ? 'Послушайте и выберите написание'
+          : 'Прочитайте и выберите звучание',
     );
   }
 

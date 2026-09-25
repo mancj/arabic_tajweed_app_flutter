@@ -26,8 +26,8 @@ class DrawingController extends ChangeNotifier {
   /// что перо масштабируется вместе с фигурой при раскладке.
   DrawingController({
     Color? color,
-    double smoothing = 0.3,
-    double minDistance = 3,
+    double smoothing = 0.25,
+    double minDistance = 2.5,
   }) : assert(
          smoothing > 0 && smoothing <= 1,
          'smoothing — доля от 0 до 1, а не пиксели',

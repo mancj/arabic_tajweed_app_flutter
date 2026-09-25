@@ -64,6 +64,15 @@ class TracingMatchResult {
   /// Проверка вообще состоялась (есть и фигура, и ввод).
   bool get isChecked => status == TracingMatchStatus.checked;
 
+  TracingMatchResult copyWith({bool? isMatch}) => TracingMatchResult(
+    coverage: coverage,
+    accuracy: accuracy,
+    deviation: deviation,
+    shapeError: shapeError,
+    dotsTraced: dotsTraced,
+    isMatch: isMatch ?? this.isMatch,
+  );
+
   @override
   String toString() => status == TracingMatchStatus.checked
       ? 'TracingMatchResult(coverage: ${(coverage * 100).round()}%, '
@@ -294,6 +303,26 @@ class TracingMatcher {
     }
 
     return result;
+  }
+
+  /// Проверяет исходное место рисунка до выравнивания формы.
+  /// Горизонтально разрешаем заметный сдвиг руки, а вертикально не даём
+  /// перенести фатху под букву или касру над ней.
+  bool isPlacedNear({
+    required ResolvedTracingPart target,
+    required List<DrawingStroke> strokes,
+    double? penWidth,
+  }) {
+    final points = [for (final stroke in strokes) ...stroke.points];
+    if (points.isEmpty) return false;
+
+    final input = _boundsOf(points);
+    final expected = target.bounds;
+    final band = math.max(target.strokeWidth, penWidth ?? 0);
+    final horizontalLimit = math.max(expected.width * .75, band * 2);
+    final verticalLimit = math.max(expected.height * .75, band * 2);
+    final delta = input.center - expected.center;
+    return delta.dx.abs() <= horizontalLimit && delta.dy.abs() <= verticalLimit;
   }
 
   /// Подбирает сдвиг и равномерный масштаб для группы точек: их проверяют по

@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../data/letter_audio.dart';
+import '../../../domain/atom.dart';
+import '../../../domain/atom_state.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/knowledge_check.dart';
+import '../../../domain/lesson_pacing.dart';
 import '../../../domain/progress_event.dart';
 import '../../resources/ui_resources.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/answer_option.dart';
+import '../../widgets/ui_kit/mono_text_button.dart';
 import '../../widgets/ui_kit/next_button.dart';
 import '../../widgets/ui_kit/question_card.dart';
 import '../../widgets/ui_kit/rule_card.dart';
@@ -31,6 +38,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
     context: widget.controller.context,
   );
   final _scroll = ScrollController();
+  final _audio = LetterAudio();
   bool started = false;
   bool busy = false;
   bool finished = false;
@@ -41,6 +49,9 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
   int? session;
   final correct = <String, int>{};
   final confirmed = <String>{};
+
+  bool get passed =>
+      check.knowledgeAtoms.every((atom) => confirmed.contains(atom.id));
 
   Future<void> _advance() async {
     if (busy) return;
@@ -65,7 +76,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
         final q = check.questions[index];
         final count =
             (correct[q.atom.id] ?? 0) + (selected == q.answerIndex ? 1 : 0);
-        if (count == 2) {
+        if (count == 2 && !confirmed.contains(q.atom.id)) {
           await widget.controller.repository.record(
             KnowledgeConfirmed(
               atomId: q.atom.id,
@@ -82,6 +93,45 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
       if (started &&
           conceptIndex == check.concepts.length &&
           index == check.questions.length) {
+        if (check.isCondensed &&
+            check.checkedAtoms.every((atom) => correct[atom.id] == 2)) {
+          for (final atom in check.inferredAtoms) {
+            if (confirmed.contains(atom.id)) continue;
+            await widget.controller.repository.record(
+              KnowledgeConfirmed(
+                atomId: atom.id,
+                sessionId: session!,
+                at: widget.controller.today,
+              ),
+            );
+            confirmed.add(atom.id);
+          }
+        }
+        if (passed) {
+          var checkpointLetters = 0;
+          final known = {
+            ...confirmed,
+            for (final entry in widget.controller.context.progress.entries)
+              if (entry.value.state.index >= AtomState.known.index) entry.key,
+          };
+          final knownPrefix = widget.controller.curriculum.baseLetters
+              .takeWhile((atom) => known.contains(atom.id))
+              .length;
+          for (final threshold
+              in widget.controller.rules.alphabetCheckpointLetters) {
+            if (threshold <= knownPrefix) checkpointLetters = threshold;
+          }
+          await widget.controller.repository.finishSession(
+            sessionId: session!,
+            purpose: LessonPurpose.placementCheck,
+            exerciseCount: check.questions.length,
+            firstTryCorrect: check.questions.length,
+            checkpointLetters: checkpointLetters == 0
+                ? null
+                : checkpointLetters,
+            at: widget.controller.today,
+          );
+        }
         await widget.controller.refreshBoard();
         finished = true;
       }
@@ -99,6 +149,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
 
   @override
   void dispose() {
+    unawaited(_audio.dispose());
     _scroll.dispose();
     super.dispose();
   }
@@ -111,6 +162,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
     final question = index < check.questions.length
         ? check.questions[index]
         : null;
+    final wordQuestion = question?.atom.kind == AtomKind.word;
     final target = widget.controller.statuses.firstWhere(
       (s) => s.topic.id == widget.topic.id,
     );
@@ -118,19 +170,28 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
       title: 'Проверка знаний',
       bottomBar: NextButton(
         title: finished
-            ? (target.canPractice ? 'Начать тему' : 'Закрепить пробелы')
+            ? (passed ? 'Начать тему' : 'Закрепить пробелы')
             : !started
             ? 'Начать проверку'
             : concept != null
             ? 'Понятно'
+            : question == null
+            ? 'Завершить проверку'
             : 'Ответить',
         enabled:
             !busy &&
-            (finished || !started || concept != null || selected != null),
+            (finished ||
+                !started ||
+                concept != null ||
+                question == null ||
+                selected != null),
         onTap: finished
             ? () async {
-                if (target.canPractice) {
-                  await widget.controller.open(target);
+                if (passed) {
+                  await widget.controller.open(
+                    target,
+                    respectCourseGates: false,
+                  );
                 } else {
                   await widget.controller.continueCourse();
                 }
@@ -147,19 +208,17 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
           ],
           if (finished)
             RuleCard(
-              title: target.canPractice
-                  ? 'Тема доступна'
-                  : 'Часть знаний подтверждена',
+              title: passed ? 'Тема доступна' : 'Часть знаний подтверждена',
               text:
-                  'Подтверждено: ${confirmed.length} из ${check.questions.length ~/ 2}. '
-                  '${target.canPractice ? 'Можно начинать новое.' : 'Остальное закрепим в занятиях.'}',
+                  'Подтверждено: ${confirmed.length} из ${check.atoms.where((a) => a.kind != AtomKind.concept).length}. '
+                  '${passed ? 'Можно начинать новое.' : 'Остальное закрепим в занятиях.'}',
             )
           else if (!started)
             RuleCard(
               title: 'Перед темой «${widget.topic.title}»',
               text:
                   'Проверим только недостающие знания: ${check.questions.length} заданий. '
-                  'Каждый элемент проверяется дважды. Уже освоенное повторно сдавать не нужно. '
+                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый элемент проверяется дважды. '}Уже освоенное повторно сдавать не нужно. '
                   'Можно выйти: подтверждённые знания сохранятся.',
             )
           else if (concept != null)
@@ -178,16 +237,27 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
             const Margin.vertical(12),
             QuestionCard(
               badge: 'Проверка',
-              question: question.reverse
+              question: wordQuestion
+                  ? 'Послушайте и выберите слово'
+                  : question.reverse
                   ? 'Выберите написание'
                   : 'Выберите название',
-              subject: question.reverse
+              subject: wordQuestion
+                  ? '♪'
+                  : question.reverse
                   ? question.atom.label
                   : question.atom.display,
-              subjectFont: question.reverse
+              subjectFont: wordQuestion || question.reverse
                   ? UITextStyles.fontOnest
                   : UITextStyles.fontScheherazadeNew,
             ),
+            if (wordQuestion) ...[
+              MonoTextButton(
+                title: 'Прослушать слово',
+                onPressed: () => _audio.playAsset(question.atom.audioAsset),
+                icon: Icons.volume_up_rounded,
+              ),
+            ],
             const Margin.vertical(16),
             for (final (i, option) in question.options.indexed) ...[
               AnswerOption(
@@ -198,11 +268,13 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
                         selected = i;
                       }),
                 child: Text(
-                  question.reverse ? option.display : option.label,
-                  textDirection: question.reverse
+                  wordQuestion || question.reverse
+                      ? option.display
+                      : option.label,
+                  textDirection: wordQuestion || question.reverse
                       ? TextDirection.rtl
                       : TextDirection.ltr,
-                  style: question.reverse
+                  style: wordQuestion || question.reverse
                       ? UITextStyles.arabicRegular32
                       : UITextStyles.regular17,
                 ),

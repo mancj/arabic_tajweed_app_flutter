@@ -106,8 +106,20 @@ class TopicBoard {
         started ||
         completed.containsKey(topic.id) ||
         (previous != null && completed.containsKey(previous.id));
+    final testableAtoms = topic.counterOf
+        .map(_atom)
+        .nonNulls
+        .where((atom) => atom.kind != AtomKind.concept)
+        .toList();
+    final passedByTest =
+        total > 0 &&
+        done == total &&
+        testableAtoms.isNotEmpty &&
+        testableAtoms.every((atom) => ctx.progress[atom.id]?.weak ?? false);
     final state = !open
         ? TopicState.locked
+        : passedByTest
+        ? TopicState.passedByTest
         : total > 0 && done == total
         ? TopicState.done
         : topic.id == currentId
@@ -254,6 +266,14 @@ class TopicBoard {
         return 'нужно освоить: ${ids.map(_label).join(', ')}';
       }
       final bases = ids.every((id) => _atom(id)?.form == LetterForm.isolated);
+      final syllables = ids.every((id) => _atom(id)?.kind == AtomKind.syllable);
+      final words = ids.every((id) => _atom(id)?.kind == AtomKind.word);
+      if (syllables) {
+        return 'нужно закрепить ещё ${ids.length} ${_counted(ids.length, 'слог', 'слога', 'слогов')}';
+      }
+      if (words) {
+        return 'нужно прочитать ещё ${ids.length} ${_counted(ids.length, 'слово', 'слова', 'слов')}';
+      }
       return bases
           ? 'нужно освоить ещё ${ids.length} ${_letters(ids.length)}'
           : 'нужно закрепить ещё ${ids.length} форм';
@@ -287,6 +307,16 @@ class TopicBoard {
       1 => 'букву',
       2 || 3 || 4 => 'буквы',
       _ => 'букв',
+    };
+  }
+
+  static String _counted(int count, String one, String few, String many) {
+    final tail = count % 100;
+    if (tail >= 11 && tail <= 14) return many;
+    return switch (count % 10) {
+      1 => one,
+      2 || 3 || 4 => few,
+      _ => many,
     };
   }
 }

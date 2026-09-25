@@ -31,6 +31,7 @@ class LessonExercisePresentation {
     required this.prompt,
     required this.optionsAreGlyphs,
     required this.audioHintAction,
+    required this.isHarakaDrawing,
     this.placeholderHint,
   });
 
@@ -39,6 +40,7 @@ class LessonExercisePresentation {
   final String prompt;
   final bool optionsAreGlyphs;
   final String audioHintAction;
+  final bool isHarakaDrawing;
   final String? placeholderHint;
 
   factory LessonExercisePresentation.from(Exercise exercise) {
@@ -69,6 +71,9 @@ class LessonExercisePresentation {
       audioHintAction: exercise.atom.kind == AtomKind.letterForm
           ? 'Не слышно? Показать название'
           : 'Не слышно? Показать подсказку',
+      isHarakaDrawing:
+          mode == ExerciseMode.drawHarakaForSound ||
+          (mode.isTracing && exercise.atom.kind == AtomKind.haraka),
       placeholderHint: _stubHintOf(mode),
     );
   }
@@ -91,12 +96,15 @@ class LessonExercisePresentation {
     ExerciseMode.trace => 'Обведите по контуру: ${exercise.atom.label}',
     ExerciseMode.traceFromMemory =>
       'Напишите по памяти: ${exercise.atom.label}',
+    ExerciseMode.drawHarakaForSound => 'Послушайте и дорисуйте огласовку',
     ExerciseMode.assemble => 'Соберите слог справа налево',
     ExerciseMode.sayName => 'Назовите эту букву вслух',
   };
 
   static String _stubHintOf(ExerciseMode mode) => switch (mode) {
-    ExerciseMode.trace || ExerciseMode.traceFromMemory =>
+    ExerciseMode.trace ||
+    ExerciseMode.traceFromMemory ||
+    ExerciseMode.drawHarakaForSound =>
       'Заглушка. Холст обводки работает, но для этой формы буквы нет SVG '
           'с осевыми линиями — их предстоит нарисовать, см. SPEC.md §12.',
     ExerciseMode.assemble =>
@@ -127,7 +135,10 @@ class LessonExercisePresentation {
           heard == null ? 'Ответ засчитан.' : 'Слышно: $heard.',
         LessonInputKind.formSequence =>
           'Все формы расставлены по своим местам.',
-        LessonInputKind.tracing => 'Буква $answerLabel написана правильно.',
+        LessonInputKind.tracing =>
+          isHarakaDrawing
+              ? 'Огласовка нарисована правильно.'
+              : 'Буква $answerLabel написана правильно.',
         _ => null,
       };
     }
@@ -141,7 +152,9 @@ class LessonExercisePresentation {
             : 'Правильно $formSequenceCorrectCount из 4. '
                   'Верные формы останутся на своих местах.',
       LessonInputKind.tracing =>
-        'Попробуйте написать букву $answerLabel ещё раз.',
+        isHarakaDrawing
+            ? 'Попробуйте нарисовать огласовку ещё раз.'
+            : 'Попробуйте написать букву $answerLabel ещё раз.',
       _ => null,
     };
   }

@@ -147,6 +147,8 @@ class CourseSectionPage extends StatelessWidget {
               title: status.topic.title,
               subtitle: status.state == TopicState.locked
                   ? status.hint
+                  : status.state == TopicState.passedByTest
+                  ? 'Знания подтверждены · нужно закрепить'
                   : status.isDone
                   ? 'Освоено · повторить'
                   : status.started
@@ -195,7 +197,9 @@ class CourseTopicPage extends StatelessWidget {
   Widget build(BuildContext context) => AppScaffold(
     title: 'Тема',
     bottomBar: Obx(
-      () => status.canPractice
+      () => controller.requiresKnowledgeCheck(status)
+          ? NextButton(title: 'Перейти к этой теме', onTap: _check)
+          : status.canPractice
           ? NextButton(
               title: status.started ? 'Потренироваться' : 'Начать этот блок',
               enabled: !controller.opening.value,
@@ -312,6 +316,8 @@ class _TopicOverview extends StatelessWidget {
         : Icons.menu_book_rounded;
     final label = locked
         ? 'Пока закрыто'
+        : status.state == TopicState.passedByTest
+        ? 'Знания подтверждены'
         : completed
         ? 'Освоено'
         : status.started

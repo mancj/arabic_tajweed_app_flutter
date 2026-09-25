@@ -8,6 +8,7 @@ import 'package:audio_waveforms/audio_waveforms.dart' hide PlayerState;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../domain/audio_track.dart';
@@ -24,6 +25,9 @@ class LetterAudio implements LessonAudio {
   /// платформенный канал есть не везде — в тестах его нет вовсе, и создание
   /// в конструкторе роняло бы любой экран с буквой.
   AudioPlayer? _player;
+  FlutterTts? _tts;
+  Timer? _ttsProgressTimer;
+  String? _arabicLocale;
 
   /// Что сейчас звучит: форма записи и позиция. На это подписана волна.
   @override
@@ -40,7 +44,8 @@ class LetterAudio implements LessonAudio {
   /// шестидесяти точек хватает на узнаваемый силуэт.
   static const _sampleCount = 60;
 
-  /// Буквы, для которых записан звук. Хамза и слоги пока без озвучки.
+  /// Буквы, для которых записано имя. Огласовки и слова произносятся
+  /// системным арабским голосом прямо на устройстве.
   static const letters = {
     'alif',
     'ba',
@@ -89,10 +94,7 @@ class LetterAudio implements LessonAudio {
   @override
   Future<void> toggleAsset(String? asset) async {
     if (asset == null) return;
-    final player = _player;
-    // Спрашиваем сам плеер, а не прогресс: после конца записи он шлёт
-    // позицию 0, и по прогрессу доигравшая запись неотличима от начала.
-    if (asset == _current && player?.state == PlayerState.playing) {
+    if (asset == _current && track.value.isPlaying) {
       return stop();
     }
     return playAsset(asset);
@@ -102,10 +104,13 @@ class LetterAudio implements LessonAudio {
   /// следующее нажатие начнёт запись сначала.
   @override
   Future<void> stop() async {
+    _ttsProgressTimer?.cancel();
+    _ttsProgressTimer = null;
     _current = null;
     track.value = AudioTrack.silent;
     try {
       await _player?.stop();
+      await _tts?.stop();
     } catch (_) {
       // Плеера может уже не быть — молчание и так наступило.
     }
@@ -119,7 +124,14 @@ class LetterAudio implements LessonAudio {
   @override
   Future<void> playAsset(String? asset) async {
     if (asset == null) return;
+    if (asset.startsWith('tts:')) {
+      await _speak(asset);
+      return;
+    }
     try {
+      _ttsProgressTimer?.cancel();
+      _ttsProgressTimer = null;
+      await _tts?.stop();
       final player = _player ??= AudioPlayer();
       await player.stop();
       _listen(player);
@@ -138,6 +150,71 @@ class LetterAudio implements LessonAudio {
       _current = null;
       track.value = AudioTrack.silent;
     }
+  }
+
+  Future<void> _speak(String asset) async {
+    try {
+      await _player?.stop();
+      final tts = _tts ??= FlutterTts();
+      await tts.stop();
+      _arabicLocale ??= await _findArabicLocale(tts);
+      if (_arabicLocale == null) {
+        throw StateError('На устройстве нет арабского голоса');
+      }
+      await tts.setLanguage(_arabicLocale!);
+      await tts.setSpeechRate(0.42);
+      _current = asset;
+      track.value = const AudioTrack(isPlaying: true);
+      _startTtsProgress(asset);
+      tts.setCompletionHandler(() {
+        if (_current == asset) {
+          _ttsProgressTimer?.cancel();
+          _ttsProgressTimer = null;
+          track.value = track.value.copyWith(progress: 1, isPlaying: false);
+        }
+      });
+      tts.setErrorHandler((_) {
+        if (_current == asset) {
+          _ttsProgressTimer?.cancel();
+          _ttsProgressTimer = null;
+          track.value = AudioTrack.silent;
+        }
+      });
+      await tts.speak(asset.substring(4));
+    } catch (_) {
+      _ttsProgressTimer?.cancel();
+      _ttsProgressTimer = null;
+      _current = null;
+      track.value = AudioTrack.silent;
+    }
+  }
+
+  /// TTS не сообщает позицию внутри фразы. Даём интерфейсу плавную оценку,
+  /// а точный конец всё равно приходит из completion handler движка.
+  void _startTtsProgress(String asset) {
+    final symbols = asset.substring(4).runes.length;
+    final estimate = Duration(milliseconds: 700 + symbols * 110);
+    final watch = Stopwatch()..start();
+    _ttsProgressTimer?.cancel();
+    _ttsProgressTimer = Timer.periodic(const Duration(milliseconds: 32), (_) {
+      if (_current != asset || !track.value.isPlaying) {
+        _ttsProgressTimer?.cancel();
+        _ttsProgressTimer = null;
+        return;
+      }
+      final progress = (watch.elapsedMilliseconds / estimate.inMilliseconds)
+          .clamp(0, .94)
+          .toDouble();
+      track.value = track.value.copyWith(progress: progress);
+    });
+  }
+
+  Future<String?> _findArabicLocale(FlutterTts tts) async {
+    for (final locale in const ['ar-SA', 'ar-001', 'ar']) {
+      final available = await tts.isLanguageAvailable(locale);
+      if (available == true || available == 1) return locale;
+    }
+    return null;
   }
 
   /// Подписки вешаются один раз на плеер, а не на каждое нажатие.
@@ -212,11 +289,13 @@ class LetterAudio implements LessonAudio {
 
   @override
   Future<void> dispose() async {
+    _ttsProgressTimer?.cancel();
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
     _subscriptions.clear();
     track.dispose();
     await _player?.dispose();
+    await _tts?.stop();
   }
 }

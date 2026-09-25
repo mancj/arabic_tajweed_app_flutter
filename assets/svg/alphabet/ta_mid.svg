@@ -1,9 +1,16 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="ta_mid">
+<g id="ta_mid" clip-path="url(#clip0_111_1938)">
 <g id="Frame 13">
-<path id="3-dot" d="M150 112V116.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M188 112V116.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M277.947 217.339L237 217.339H206.5C171 217.339 167 195.839 167 157.339C167 195.339 169.243 217.339 115 217.339C88 217.339 66.868 217.339 62 217.339" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M143 105.75V109.923" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M181 105.75V109.923" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="ba_ta_tha_base_forms">
+<path id="1-base" d="M247.5 202.75H232.5H202C166.5 202.75 162.5 181.25 162.5 142.75C162.5 180.75 164.743 202.75 110.5 202.75C83.5 202.75 82 202.75 82 202.75" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_111_1938">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

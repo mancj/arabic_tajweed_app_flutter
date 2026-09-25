@@ -5,7 +5,8 @@ import 'learning_rules.dart';
 enum LessonPurpose {
   standard,
   mixedReview,
-  alphabetCheckpoint;
+  alphabetCheckpoint,
+  placementCheck;
 
   bool get isMixedReview => this == mixedReview || this == alphabetCheckpoint;
 }

@@ -1,8 +1,8 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="fa_base">
-<g id="Group 59">
-<path id="1-base" d="M269.999 151.059C244.666 157.02 201.45 168.651 201.45 130.196C201.45 113.06 214.862 83.0467 240.941 95.1763C267.019 107.306 297.568 205.451 177.607 205.451C57.6465 205.451 51.2793 174.356 65.8425 130.196" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M227.529 38.5488V42.7214" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="fa_base_forms">
+<path id="1-base" d="M246.447 192C221.113 197.961 197.711 197.5 197.711 167.831C197.711 150.694 213.201 130.778 233.504 142.5C253.806 154.222 264.868 233 175.504 233C86.1396 233 72.4406 213.659 87.0038 169.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M224 102V106.173" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
 </svg>

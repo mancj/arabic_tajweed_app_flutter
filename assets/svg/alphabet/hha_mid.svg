@@ -1,6 +1,13 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="hha_mid">
-<path id="2-base" d="M100.5 125.37C112.619 121.546 136.846 107.833 166.422 117.232C194.602 126.187 207.2 165.337 218.5 169" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M298.5 169.83C298.5 169.83 290.632 169.83 243.691 169.83C222.083 169.83 96.5 169.83 45 169.83" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="hha_mid" clip-path="url(#clip0_112_2948)">
+<g id="jim_hha_kha_base_forms">
+<path id="2-base" d="M111.001 167.136C111.001 167.136 147.425 145.737 177.001 155.136C205.182 164.092 229.501 201.136 229.501 201.136" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M291.501 204.75L38.001 204.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2948">
+<rect width="329" height="322.5" fill="white" transform="translate(0.000976562)"/>
+</clipPath>
+</defs>
 </svg>

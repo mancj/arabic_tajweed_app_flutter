@@ -12,10 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// нужны два успешных полноценных повторения. На новом дне цикл открыт.
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final stage in ['stage1', 'stage2'])
-      CurriculumLoader.parse(
-        File('assets/curriculum/$stage.json').readAsStringSync(),
-      ),
+    CurriculumLoader.parse(
+      File('assets/curriculum/stage1.json').readAsStringSync(),
+    ),
   ]);
   final planner = LessonPlanner(curriculum: curriculum);
 

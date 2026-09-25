@@ -4,8 +4,9 @@ import 'package:collection/collection.dart';
 import 'atom.dart';
 import 'curriculum.dart';
 
-/// Проверяем именно недостающие зависимости выбранной темы. Каждый атом
-/// проверяется в обе стороны; случайная удача в одном вопросе не даёт зачёт.
+/// Проверяем недостающие зависимости выбранной темы. Для далёкой темы
+/// берём короткую выборку: безошибочный результат подтверждает и остальное
+/// как weak, а частичный успех подтверждает только проверенные элементы.
 class KnowledgeCheck {
   KnowledgeCheck({
     required this.curriculum,
@@ -13,13 +14,22 @@ class KnowledgeCheck {
     required this.context,
     Random? random,
   }) : _random = random ?? Random() {
+    _addPreviousTopics();
     _require(topic.requirement);
+    final missing = atoms.where((a) => a.kind != AtomKind.concept).toList();
+    checkedAtoms = missing.length <= maxCheckedAtoms
+        ? missing
+        : _sample(missing);
+    inferredAtoms = missing.where((a) => !checkedAtoms.contains(a)).toList();
     questions = [
-      for (final reverse in [false, true])
-        for (final atom in atoms.where((a) => a.kind != AtomKind.concept))
-          _question(atom, reverse),
+      for (final atom in checkedAtoms)
+        for (final reverse in [false, true]) _question(atom, reverse),
     ];
   }
+
+  /// Двадцать вопросов сопоставимы с обычным занятием и помещаются в один
+  /// короткий экзамен даже при переходе через весь алфавит.
+  static const maxCheckedAtoms = 10;
 
   final Curriculum curriculum;
   final Topic topic;
@@ -27,9 +37,29 @@ class KnowledgeCheck {
   final Random _random;
   final List<Atom> atoms = [];
   final Set<String> _visited = {};
+  late final List<Atom> checkedAtoms;
+  late final List<Atom> inferredAtoms;
   late final List<KnowledgeQuestion> questions;
+  bool get isCondensed => inferredAtoms.isNotEmpty;
   List<Atom> get concepts =>
       atoms.where((a) => a.kind == AtomKind.concept).toList();
+
+  List<Atom> get knowledgeAtoms =>
+      atoms.where((a) => a.kind != AtomKind.concept).toList();
+
+  /// Переход к выбранной теме закрывает весь путь до неё, а не только
+  /// минимальные зависимости графа.
+  void _addPreviousTopics() {
+    final targetIndex = curriculum.topics.indexWhere((t) => t.id == topic.id);
+    if (targetIndex < 0) {
+      throw StateError('Тема ${topic.id} отсутствует в программе курса');
+    }
+    for (final previous in curriculum.topics.take(targetIndex)) {
+      for (final id in previous.counterOf) {
+        if (!context.isKnown(id)) _add(id);
+      }
+    }
+  }
 
   void _require(Requirement requirement) {
     if (requirement.isMet(context)) return;
@@ -75,6 +105,35 @@ class KnowledgeCheck {
     atoms.add(node.atom);
   }
 
+  List<Atom> _sample(List<Atom> missing) {
+    // В выборку попадают разные виды материала и разные формы букв.
+    // Перемешивание внутри группы не закрепляет одни и те же буквы за тестом.
+    final groups = missing.groupListsBy(
+      (atom) => switch (atom.kind) {
+        AtomKind.letterForm => 'letter.${atom.form?.name}',
+        AtomKind.syllable =>
+          atom.audioAsset == null ? 'connection' : 'vocalized',
+        _ => atom.kind.name,
+      },
+    );
+    for (final group in groups.values) {
+      group.shuffle(_random);
+    }
+    final selected = <Atom>[];
+    while (selected.length < maxCheckedAtoms) {
+      var added = false;
+      for (final group in groups.values) {
+        if (group.isEmpty) continue;
+        selected.add(group.removeLast());
+        added = true;
+        if (selected.length == maxCheckedAtoms) break;
+      }
+      if (!added) break;
+    }
+    selected.shuffle(_random);
+    return selected;
+  }
+
   KnowledgeQuestion _question(Atom atom, bool reverse) {
     final others =
         curriculum.nodes
@@ -84,7 +143,7 @@ class KnowledgeCheck {
                   a.id != atom.id &&
                   a.kind == atom.kind &&
                   a.form == atom.form &&
-                  a.label != atom.label &&
+                  (atom.kind == AtomKind.word || a.label != atom.label) &&
                   a.display != atom.display,
             )
             .toList()

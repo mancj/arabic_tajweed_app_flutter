@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../domain/curriculum.dart';
@@ -14,6 +15,7 @@ class CurriculumLoader {
   static const defaultStageAssets = [
     'assets/curriculum/stage1.json',
     'assets/curriculum/stage2.json',
+    'assets/curriculum/stage3.json',
   ];
 
   final List<String> stageAssets;
@@ -31,9 +33,15 @@ class CurriculumLoader {
       Curriculum.fromJson(jsonDecode(source) as Map<String, dynamic>);
 
   /// Этапы лежат отдельными файлами, но граф один: порядок узлов внутри
-  /// склейки задаёт предпочтение планировщика при равных условиях.
-  static Curriculum merge(Iterable<Curriculum> stages) => Curriculum(
-    nodes: [for (final s in stages) ...s.nodes],
-    topics: [for (final s in stages) ...s.topics],
-  );
+  /// склейки задаёт предпочтение планировщика при равных условиях. Темы
+  /// сортируются по этапу, поэтому файл хранения не диктует программу курса.
+  static Curriculum merge(Iterable<Curriculum> stages) {
+    final stageList = stages.toList();
+    return Curriculum(
+      nodes: [for (final stage in stageList) ...stage.nodes],
+      topics: [
+        for (final stage in stageList) ...stage.topics,
+      ].sortedBy((topic) => topic.stage),
+    );
+  }
 }

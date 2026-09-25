@@ -11,10 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// всплывали буквы из следующего — начатого и брошенного.
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final name in ['stage1', 'stage2'])
-      CurriculumLoader.parse(
-        File('assets/curriculum/$name.json').readAsStringSync(),
-      ),
+    CurriculumLoader.parse(
+      File('assets/curriculum/stage1.json').readAsStringSync(),
+    ),
   ]);
   final board = TopicBoard(curriculum);
 

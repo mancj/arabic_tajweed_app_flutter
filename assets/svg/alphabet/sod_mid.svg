@@ -1,6 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="sod_mid">
-<path id="1-base" d="M311.5 185H274.452C257.713 185 240 185 218.5 185" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M154.028 176.79C173.868 147.444 250.737 110.081 261.143 165.58C265.468 188.644 212.5 185.024 161 185.024C151.346 177.883 141.442 157.385 134.5 143.5C134.5 159.5 134.5 185.024 101 185.024H43.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="sod_mid" clip-path="url(#clip0_112_2257)">
+<g id="sod_dod_base_forms">
+<g id="Group 89">
+<path id="1-base" d="M287.5 203.75H211.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base_2" d="M150 203.211C168.014 176.542 228.826 135.084 238.275 185.52C242.201 206.48 195.262 204.664 148.5 204.664C139.735 198.174 125.5 175.405 125.5 175.405C125.5 175.405 122.5 204.664 92.5 204.664H42" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_112_2257">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

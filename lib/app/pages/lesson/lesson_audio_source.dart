@@ -9,7 +9,7 @@ class LessonAudioSource {
 
   String? forAtom(Atom atom) =>
       atom.audioAsset ??
-      (LetterAudio.has(atom.letterId)
+      (atom.kind == AtomKind.letterForm && LetterAudio.has(atom.letterId)
           ? LetterAudio.assetOf(atom.letterId!)
           : null);
 

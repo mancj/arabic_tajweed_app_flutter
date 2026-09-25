@@ -1,8 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="kha_init">
+<g id="kha_init" clip-path="url(#clip0_112_2971)">
 <g id="Group 24">
-<path id="2-dot" d="M206.647 78.3726V82.5451" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M186 119.75V123.923" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<path id="2-base" d="M140 125.37C152.119 121.546 176.346 107.833 205.922 117.232C234.102 126.187 258.2 165.337 269.5 169H60" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="jim_hha_kha_base_forms">
+<path id="2-base" d="M139.5 170.563C139.5 170.563 168.924 150.895 198.5 160.294C226.681 169.25 254.5 205.544 254.5 205.544H75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2971">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

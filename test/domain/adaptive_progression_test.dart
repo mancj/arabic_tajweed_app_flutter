@@ -17,7 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// знаниям без отметки о завершении или сохранённой очереди заданий.
 void main() {
   final course = CurriculumLoader.merge([
-    for (final stage in ['stage1', 'stage2'])
+    for (final stage in ['stage1', 'stage2', 'stage3'])
       CurriculumLoader.parse(
         File('assets/curriculum/$stage.json').readAsStringSync(),
       ),
@@ -82,9 +82,17 @@ void main() {
           reason: 'нет продвижения',
         );
         final topic = course.topics.firstWhere((t) => t.id == initial.topicId);
-        final drill = initial.newAtoms.firstWhere(
-          (a) => a.kind != AtomKind.concept,
-        );
+        final drills = initial.newAtoms
+            .where((a) => a.kind != AtomKind.concept)
+            .toList();
+        if (drills.isEmpty) {
+          progress = {
+            ...progress,
+            ...confirmed([topic]),
+          };
+          continue;
+        }
+        final drill = drills.first;
 
         for (final shown in [1, initial.newAtoms.length]) {
           final introduced = fold.foldOnto(progress, [

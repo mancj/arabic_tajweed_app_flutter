@@ -80,6 +80,22 @@ void main() {
     );
   });
 
+  test('проверенные знания отличаются от полностью освоенных', () {
+    final progress = {
+      for (final id in firstLesson)
+        id: id.startsWith('concept.')
+            ? const AtomProgress(state: AtomState.introduced)
+            : const AtomProgress(state: AtomState.known, weak: true),
+    };
+    final status = statusOf(
+      'm.first',
+      CurriculumContext(progress: progress, formsByLetter: const {}),
+    );
+
+    expect(status.state, TopicState.passedByTest);
+    expect(status.isDone, isTrue);
+  });
+
   test('отключённый голос не мешает завершить освоенную букву', () {
     final ctx = CurriculumContext(
       progress: {

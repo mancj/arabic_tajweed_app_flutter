@@ -1,6 +1,8 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="to_end">
-<path id="2-base" d="M127 71.5V221C150 188.667 210.31 155.526 232 183C262 221 210 233.5 178.5 233.5C153.3 233.5 107 233.5 87 233.5" stroke="black" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M273 234H235.952C219.213 234 201.5 234 180 234" stroke="black" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="to_zho_base_forms">
+<path id="1-base" d="M279 208C253.167 208 227.333 208 201.5 208" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base_2" d="M141.5 94V208.5C164.5 176.167 209.947 149.5 228.5 173C258.5 211 158.5 208.5 158.5 208.5C158.5 208.5 115 208.5 95 208.5" stroke="black" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
 </g>
 </svg>

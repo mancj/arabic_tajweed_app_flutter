@@ -1,9 +1,18 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="jim_end">
+<g id="jim_end" clip-path="url(#clip0_112_2921)">
 <g id="Group 14">
-<path id="3-dot" d="M136.642 192.648V196.821" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-base" d="M72.5332 88.5C109.471 96.1748 133.631 88.2565 190.259 93.4722C167.161 100.178 42.7293 123.276 72.5332 217.159C86.9692 262.632 163.684 258.575 190.259 232" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M278 127C278 127 261.045 127 214.162 127C192.581 127 171 119.467 171 104" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M137 183.75V187.923" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="jim_hha_kha_base_forms">
+<g id="Group 88">
+<path id="2-base" d="M78.469 117.88C111.386 117.88 131.65 116.636 188.277 121.852C165.179 128.558 70.552 136.38 78.469 208.88C83.6481 256.307 161.702 254.205 188.277 227.63" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M252.5 140.75C252.5 140.75 235.545 140.75 210.162 140.75C188.581 140.75 176.5 126.75 176.5 126.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2921">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

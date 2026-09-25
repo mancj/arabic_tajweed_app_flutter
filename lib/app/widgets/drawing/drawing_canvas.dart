@@ -20,10 +20,10 @@ export 'tracing_matcher.dart';
 export 'tracing_shape.dart';
 
 /// Как холст работает с фигурой.
-/// Части в обоих режимах проверяются одинаково: по очереди, сразу после
-/// штриха, и рисовать их можно где угодно и любого размера — сверяется
-/// форма, а не место на холсте. Режим решает только, видно ли контур,
-/// а значит — куда собранная буква встаёт.
+/// Части в обоих режимах проверяются одинаково: по очереди и сразу после
+/// штриха. [TracingPlacement.free] сверяет форму независимо от места,
+/// [TracingPlacement.anchored] дополнительно сохраняет область над или под
+/// опорной буквой. Режим решает, виден ли контур.
 enum TracingMode {
   /// Фигура показана бледным контуром. Штрихи съезжаются к нему: контур
   /// и есть место буквы, рисунок к нему только приводится.
@@ -32,6 +32,15 @@ enum TracingMode {
   /// Фигура скрыта: пользователь пишет по памяти, и буква остаётся там,
   /// где он её нарисовал. Первая часть закрепляет это место.
   freehand,
+}
+
+/// Где разрешено рисовать фигуру по памяти.
+enum TracingPlacement {
+  /// Текущая буква: холст переносит эталон к рисунку пользователя.
+  free,
+
+  /// Огласовка: форма допускает подгонку, но остаётся над или под опорой.
+  anchored,
 }
 
 /// Чем закончился штрих для текущей части буквы.
@@ -96,11 +105,20 @@ class DrawingCanvas extends StatefulWidget {
   /// линия в макете выглядит плохо.
   final double bandScale;
 
+  /// Сдвиг чернил относительно пальца в режиме письма по памяти. При
+  /// обводке контур должен оставаться прямо под пальцем, поэтому там сдвига
+  /// нет. По памяти линия идёт немного выше и палец её не закрывает.
+  final Offset drawingOffset;
+
+  static const defaultDrawingOffset = Offset(0, -20);
+
   final Color backgroundColor;
 
   /// Что делает холст с фигурой: показывает для обводки или прячет и
   /// принимает части по очереди.
   final TracingMode mode;
+
+  final TracingPlacement placement;
 
   /// Фигура-подсказка под штрихами: её пользователь обводит.
   final TracingShape? placeholder;
@@ -189,9 +207,11 @@ class DrawingCanvas extends StatefulWidget {
     this.completedColor,
     this.strokeWidth,
     this.penScale = 1.1,
-    this.bandScale = 1.5,
+    this.bandScale = 1.65,
+    this.drawingOffset = defaultDrawingOffset,
     this.backgroundColor = UIColors.transparent,
     this.mode = TracingMode.tracing,
+    this.placement = TracingPlacement.free,
     this.placeholder,
     this.placeholderColor,
     this.placeholderPadding = 24,
@@ -479,8 +499,10 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
   /// Сверяет очередную часть фигуры и, если совпало, запускает слияние.
   ///
-  /// Часть рисуют где угодно и любого размера: выравнивание примеряет
-  /// нарисованное к цели, а [TracingMatcher.match] судит уже приведённое.
+  /// При свободном размещении часть рисуют где угодно и любого размера:
+  /// выравнивание примеряет нарисованное к цели, а [TracingMatcher.match]
+  /// судит уже приведённое. Закреплённое размещение дополнительно сверяет
+  /// исходную область рисунка с областью цели.
   /// Совпало — буква встаёт на место и дальше держит его сама: остальным
   /// частям разрешён только небольшой общий сдвиг, чтобы точка попадала
   /// к своей букве, а не к соседнему углу холста.
@@ -505,6 +527,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     if (strokes.isEmpty) return _emptyResult(TracingMatchStatus.noInput);
 
     final anchoring = _anchored == null;
+    final positionLocked = widget.placement == TracingPlacement.anchored;
 
     final alignment = anchoring
         ? widget.matcher.align(target: target, strokes: strokes)
@@ -522,16 +545,24 @@ class _DrawingCanvasState extends State<DrawingCanvas>
       penWidth: _bandWidth,
       structural: true,
     );
+    final placed =
+        !positionLocked ||
+        widget.matcher.isPlacedNear(
+          target: target,
+          strokes: strokes,
+          penWidth: _bandWidth,
+        );
+    if (result.isMatch && !placed) result = result.copyWith(isMatch: false);
 
     // Куда едут штрихи при слиянии. К контуру — в его систему координат,
     // то есть через то же выравнивание, которым мы их узнали. К своему
     // месту — никуда: туда переехала сама фигура, а штрихи уже лежат как
     // надо. А попавшие в контур не едут вовсе: они и так на месте.
-    var merge = _showsGuide || !anchoring
+    var merge = _showsGuide || !anchoring || positionLocked
         ? alignment
         : const TracingAlignment.identity();
 
-    if (!result.isMatch && _showsGuide) {
+    if (!result.isMatch && _showsGuide && placed) {
       // Тем же выравниванием, что и сравнение форм: вопрос не «где ты
       // это нарисовал», а «накрыл ли ты букву». Приведённое к месту
       // покрытие с точностью отвечают на него прямо, а отклонение не даёт
@@ -551,9 +582,11 @@ class _DrawingCanvasState extends State<DrawingCanvas>
       _startMerge(_activeShape!.parts[_filled.length], strokes, merge);
       widget.onStrokeOutcome?.call(TracingStrokeOutcome.completed);
     } else {
-      final helped = anchoring
+      final helped = anchoring && placed
           ? _isFragment(target, strokes)
-          : _advancesCoverage(result);
+          : !anchoring
+          ? _advancesCoverage(result)
+          : false;
       if (!helped && widget.discardMisses) {
         _discarding = true;
         _controller.undo();
@@ -630,7 +663,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   /// к тому, которым мы её примеряли.
   void _settle(TracingAlignment alignment, {required bool anchoring}) {
     if (!anchoring) return;
-    if (_showsGuide) {
+    if (_showsGuide || widget.placement == TracingPlacement.anchored) {
       _anchored = _resolvedShape;
       return;
     }
@@ -801,13 +834,13 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     // Отклик уже на касание: перо «легло на бумагу». Иначе точка —
     // касание без пути — проходила беззвучно, тик идёт только по длине.
     AppHaptics.tick();
-    _controller.startStroke(event.localPosition);
+    _controller.startStroke(_drawingPosition(event.localPosition));
     widget.onStrokeStart?.call();
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     if (event.pointer != _activePointer) return;
-    _controller.extendStroke(event.localPosition);
+    _controller.extendStroke(_drawingPosition(event.localPosition));
     _tickHaptic(event.localPosition);
   }
 
@@ -829,7 +862,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     // Позиция отрыва идёт прямо в endStroke, а не обычным движением:
     // подворот пальца при отрыве должен попасть под сглаживание хвоста,
     // а не в линию как есть.
-    _controller.endStroke(event.localPosition);
+    _controller.endStroke(_drawingPosition(event.localPosition));
 
     final stroke = _controller.strokes.isEmpty
         ? null
@@ -846,6 +879,11 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _activePointer = null;
     _controller.cancelStroke();
   }
+
+  Offset _drawingPosition(Offset pointerPosition) =>
+      widget.mode == TracingMode.freehand
+      ? pointerPosition + widget.drawingOffset
+      : pointerPosition;
 }
 
 /// Собранная часть и число штрихов, которыми её нарисовали.

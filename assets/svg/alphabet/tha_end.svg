@@ -1,10 +1,17 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="tha_end">
-<g id="Frame 13">
-<path id="1-base" d="M302.432 229.839C292.348 229.665 277.762 229.422 249.388 229.839C221.015 230.257 215.852 191.339 214.432 171.339C212.932 185.839 214.432 229.839 172.432 229.839C130.432 229.839 12.4316 250.339 50.4316 163.839" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="tha_end" clip-path="url(#clip0_111_1973)">
+<g id="Group 87">
+<path id="4-dot" d="M125 105.75V109.923" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M147.078 77.75V81.9225" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M168 105.75V109.923" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<path id="4-dot" d="M106 121.967V126.139" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="3-dot" d="M132.078 86.5V90.6725" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M163.373 121.967V126.139" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="ba_ta_tha_base_forms">
+<path id="1-base" d="M82.9296 146.75C52.6095 215.32 146.762 204.07 180.273 204.07C213.785 204.07 212.588 164.19 213.785 152.695C214.918 168.55 219.038 204.4 241.677 204.07C264.316 203.739 275.954 203.932 284 204.07" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_111_1973">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

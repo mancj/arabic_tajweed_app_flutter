@@ -1,5 +1,12 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="hha_base">
-<path id="1-base" d="M101.583 97C138.52 104.675 162.681 96.7565 219.309 101.972C196.21 108.678 71.7791 131.776 101.583 225.659C116.019 271.132 192.733 267.075 219.309 240.5" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="hha_base" clip-path="url(#clip0_112_2939)">
+<g id="jim_hha_kha_base_forms">
+<path id="2-base" d="M110.469 116.88C143.386 116.88 163.65 115.636 220.277 120.852C197.179 127.558 102.552 135.38 110.469 207.88C115.648 255.307 193.702 253.205 220.277 226.63" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2939">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

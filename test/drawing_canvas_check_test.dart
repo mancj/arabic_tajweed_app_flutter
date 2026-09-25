@@ -56,6 +56,55 @@ void main() {
     expect(controller.check().isMatch, isTrue);
   });
 
+  /// Палец не должен закрывать свежую линию: холст хранит штрих выше точки
+  /// касания, а не только визуально сдвигает его при отрисовке.
+  testWidgets('линия рисуется выше пальца', (tester) async {
+    final controller = DrawingController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 200,
+          height: 200,
+          child: DrawingCanvas(
+            controller: controller,
+            mode: TracingMode.freehand,
+          ),
+        ),
+      ),
+    );
+
+    final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
+    final origin = tester.getTopLeft(find.byType(DrawingCanvas));
+    await tester.tapAt(origin + const Offset(100, 100));
+
+    expect(
+      controller.strokes.single.points.single,
+      const Offset(100, 100) + canvas.drawingOffset,
+    );
+  });
+
+  /// При обводке видимый контур служит точной целью, поэтому линия должна
+  /// начинаться непосредственно под пальцем, без сдвига режима по памяти.
+  testWidgets('при обводке линия остаётся под пальцем', (tester) async {
+    final controller = DrawingController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 200,
+          height: 200,
+          child: DrawingCanvas(controller: controller),
+        ),
+      ),
+    );
+
+    final origin = tester.getTopLeft(find.byType(DrawingCanvas));
+    await tester.tapAt(origin + const Offset(100, 100));
+
+    expect(controller.strokes.single.points.single, const Offset(100, 100));
+  });
+
   testWidgets('пустой холст отвечает noInput, а не нулевым результатом', (
     tester,
   ) async {

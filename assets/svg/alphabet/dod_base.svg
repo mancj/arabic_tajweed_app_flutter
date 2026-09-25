@@ -1,8 +1,15 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="dod_base">
+<g id="dod_base" clip-path="url(#clip0_112_2267)">
 <g id="Group 35">
-<path id="2-dot" d="M252 92V95.4917" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M233 129.75V133.242" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
-<path id="1-base" d="M191.028 165.79C210.868 136.444 287.737 99.0811 298.143 154.58C302.468 177.644 249.5 174.024 198 174.024C188.346 166.883 179.585 156.735 172.643 142.85C154.664 106.891 207.148 209.808 108.57 216.008C30.3999 220.925 60.8318 142.85 60.8318 142.85" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="sod_dod_base_forms">
+<path id="1-base" d="M176.369 205.056C194.384 178.387 255.195 136.928 264.644 187.365C268.571 208.324 221.631 206.509 174.869 206.509C166.104 200.019 151.869 177.25 151.869 177.25C151.869 177.25 174.869 244.663 115.011 244.663C44.3692 244.663 70.8693 180.75 70.8693 180.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+</g>
+<defs>
+<clipPath id="clip0_112_2267">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>

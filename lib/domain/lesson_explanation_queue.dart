@@ -106,8 +106,13 @@ class LessonExplanationQueue {
   Atom? _atomById(String id) =>
       curriculum.nodes.firstWhereOrNull((node) => node.atom.id == id)?.atom;
 
-  static bool _belongsToIntro(Atom atom) =>
-      atom.form == null || atom.form == LetterForm.isolated;
+  static bool _belongsToIntro(Atom atom) {
+    if (atom.kind == AtomKind.word ||
+        (atom.kind == AtomKind.syllable && atom.audioAsset != null)) {
+      return false;
+    }
+    return atom.form == null || atom.form == LetterForm.isolated;
+  }
 
   static const _formsOverviewOrder = [
     LetterForm.isolated,

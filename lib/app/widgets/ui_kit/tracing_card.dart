@@ -47,7 +47,11 @@ class TracingCard extends StatelessWidget {
   /// Один и тот же матчер у холста и у подсказок — иначе пороги разъедутся.
   final TracingMatcher matcher;
   final TracingMode mode;
+  final TracingPlacement placement;
   final TracingShape? shape;
+
+  /// Неподвижная опора под холстом. У огласовок это буква без знака.
+  final Widget? canvasBackground;
 
   /// После принятого ответа холст остаётся виден, но больше не рисует.
   final bool enabled;
@@ -70,6 +74,8 @@ class TracingCard extends StatelessWidget {
     required this.mode,
     required this.shape,
     required this.missesBeforeReveal,
+    this.placement = TracingPlacement.free,
+    this.canvasBackground,
     this.enabled = true,
     this.onPlay,
     this.onAutoPlay,
@@ -135,11 +141,16 @@ class TracingCard extends StatelessWidget {
                   height: LetterGuides.designHeight * k,
                   child: Center(child: LetterGuides(k: k)),
                 ),
+                if (canvasBackground case final background?)
+                  Positioned.fill(
+                    child: IgnorePointer(child: Center(child: background)),
+                  ),
                 Positioned.fill(
                   child: DrawingCanvas(
                     controller: controller,
                     matcher: matcher,
                     mode: mode,
+                    placement: placement,
                     placeholder: shape,
                     enabled: enabled,
                     // Четыре слоя, четыре цвета: контур под всем,

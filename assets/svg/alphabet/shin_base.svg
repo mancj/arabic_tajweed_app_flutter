@@ -1,10 +1,17 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="shin_base">
+<g id="shin_base" clip-path="url(#clip0_112_2212)">
 <g id="Group 9">
-<path id="4-dot" d="M179.969 104.572V108.135" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="3-dot" d="M202.238 74.2852V77.8482" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M228.961 104.572V108.135" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M257.593 133.458C266.428 151.234 273.415 177.386 244.79 182.286C214.631 187.449 210.039 157.977 213.691 145.966C215.811 157.592 213.691 179.692 189.66 182.286C164.996 184.949 156.201 162.269 153.102 145.966C167.249 178.302 172.955 247.852 96.5124 238.934C48.0073 233.275 38.3063 189.62 57.3041 164.963" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="4-dot" d="M199 128.037V131.6" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="3-dot" d="M219 101.75V105.313" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M237.992 128.037V131.6" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="sin_shin_base_forms">
+<path id="1-base" d="M257.5 165.75C265.674 182.141 273.401 199.277 246.917 203.795C219.015 208.556 218.146 170.305 218.146 170.305C218.146 170.305 218.146 201.403 195.913 203.795C173.095 206.25 167 170.305 167 170.305C167 170.305 181.022 244.75 112.758 244.75C50.5 244.75 74 182.75 74 182.75" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<defs>
+<clipPath id="clip0_112_2212">
+<rect width="329" height="322.5" fill="white"/>
+</clipPath>
+</defs>
 </svg>
