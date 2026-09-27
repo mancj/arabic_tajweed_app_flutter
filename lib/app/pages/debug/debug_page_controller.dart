@@ -14,6 +14,7 @@ import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.da
 
 import 'form_sequence_debug_page.dart';
 import 'haraka_drawing_debug_page.dart';
+import 'haraka_sequence_debug_page.dart';
 import 'starfield_debug_page.dart';
 
 class DebugController extends GetxController {
@@ -87,6 +88,8 @@ class DebugController extends GetxController {
   void openAppWidgetsPage() => Get.toNamed(AppWidgetsPage.routeName);
 
   void openFormSequence() => Get.toNamed(FormSequenceDebugPage.routeName);
+
+  void openHarakaSequence() => Get.toNamed(HarakaSequenceDebugPage.routeName);
 
   void openHarakaDrawing() => Get.toNamed(HarakaDrawingDebugPage.routeName);
 

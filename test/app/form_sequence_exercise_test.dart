@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 // проверку после каждого тапа, нарушить арабский порядок слотов справа налево,
 // порядок их заполнения, потерять верные позиции между попытками, убрать
 // поэтапную подсказку или запускать отклик цели только после исчезновения
-// летящей плитки.
+// летящей плитки. Звуковые слоты также обязаны включать активную запись и
+// оставлять отдельную кнопку повтора доступной после размещения плитки, не
+// перекрывая ею арабскую букву.
 void main() {
   final isolated = _form('isolated', 'ب', LetterForm.isolated);
   final initial = _form('initial', 'بـ', LetterForm.initial);
@@ -23,6 +25,97 @@ void main() {
     expect(motion.timeAt(.8), const Duration(milliseconds: 1600));
     expect(motion.durationBetween(.9, 1), const Duration(milliseconds: 200));
     expect(motion.interactionLockDuration, const Duration(milliseconds: 700));
+  });
+
+  testWidgets('три звуковых слота звучат по мере заполнения', (tester) async {
+    final sounds = [
+      const Atom(
+        id: 'ba.fatha',
+        kind: AtomKind.haraka,
+        display: 'بَ',
+        label: 'Ба',
+      ),
+      const Atom(
+        id: 'ba.kasra',
+        kind: AtomKind.haraka,
+        display: 'بِ',
+        label: 'Би',
+      ),
+      const Atom(
+        id: 'ba.damma',
+        kind: AtomKind.haraka,
+        display: 'بُ',
+        label: 'Бу',
+      ),
+    ];
+    final slots = [
+      for (final (index, atom) in sounds.indexed)
+        SequenceSlot(
+          id: 'sound-$index',
+          title: 'Звук ${index + 1}',
+          expectedAtomId: atom.id,
+          audioAsset: 'audio/$index.mp3',
+        ),
+    ];
+    final activated = <int>[];
+    final replayed = <int>[];
+    List<Atom>? answer;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: FormSequenceExercise(
+              slots: slots,
+              options: [sounds[2], sounds[0], sounds[1]],
+              instruction: 'Послушайте и выберите огласовку',
+              optionNoun: 'Огласовка',
+              motion: const FormSequenceMotion(
+                duration: Duration(milliseconds: 100),
+              ),
+              onActiveSlotChanged: activated.add,
+              onPlaySlot: replayed.add,
+              onCompleted: (placed) => answer = placed,
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(activated, [0]);
+    expect(find.text('Послушайте и выберите огласовку'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('form-tile-ba.fatha')));
+    await tester.pumpAndSettle();
+    expect(activated, [0, 1]);
+    await tester.tap(find.byTooltip('Прослушать звук 1'));
+    await tester.pump();
+    expect(replayed, [0]);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('form-slot-sound-0')),
+        matching: find.text('بَ'),
+      ),
+      findsOneWidget,
+    );
+    final firstSlot = find.byKey(const ValueKey('form-slot-sound-0'));
+    final glyphRect = tester.getRect(
+      find.descendant(of: firstSlot, matching: find.text('بَ')),
+    );
+    final playButtonRect = tester.getRect(
+      find.descendant(of: firstSlot, matching: find.byType(IconButton)),
+    );
+    expect(glyphRect.overlaps(playButtonRect), isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('form-tile-ba.kasra')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('form-tile-ba.damma')));
+    await tester.pumpAndSettle();
+    expect(activated, [0, 1, 2]);
+    expect(answer?.map((atom) => atom.id), [
+      'ba.fatha',
+      'ba.kasra',
+      'ba.damma',
+    ]);
   });
 
   testWidgets('позиции форм идут справа налево', (tester) async {

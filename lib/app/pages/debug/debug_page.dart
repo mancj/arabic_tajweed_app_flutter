@@ -132,6 +132,12 @@ class DebugPage extends GetView<DebugController> {
                 onTap: controller.openFormSequence,
               ),
               _DebugTile(
+                icon: Icons.volume_up_rounded,
+                title: 'Огласовки по звуку',
+                subtitle: 'Три звуковых слота и три огласовки',
+                onTap: controller.openHarakaSequence,
+              ),
+              _DebugTile(
                 icon: Icons.stars_rounded,
                 title: 'Полёт между звёздами',
                 subtitle: 'Полноэкранная анимация точек',

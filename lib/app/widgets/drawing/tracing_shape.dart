@@ -104,6 +104,32 @@ class TracingShape {
   /// Что именно вписывается в холст: общий кадр, если он задан.
   Rect get frame => viewBox ?? bounds;
 
+  /// Копия фигуры, перенесённая внутри исходного SVG-кадра.
+  TracingShape translated(Offset offset) {
+    final storage = Float64List.fromList([
+      1, 0, 0, 0, //
+      0, 1, 0, 0, //
+      0, 0, 1, 0, //
+      offset.dx, offset.dy, 0, 1, //
+    ]);
+    return TracingShape(
+      id: id,
+      label: label,
+      strokeWidth: strokeWidth,
+      dotRadius: dotRadius,
+      viewBox: viewBox,
+      parts: [
+        for (final part in parts)
+          TracingShapePart(
+            id: part.id,
+            label: part.label,
+            paths: [for (final path in part.paths) path.transform(storage)],
+            dots: [for (final dot in part.dots) dot + offset],
+          ),
+      ],
+    );
+  }
+
   Rect _computeBounds() {
     Rect? result;
 

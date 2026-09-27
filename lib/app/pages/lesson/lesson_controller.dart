@@ -121,6 +121,7 @@ class LessonController extends GetxController {
   List<Atom?> get formSequenceInitialPlaced => _formSequence.initialPlaced;
   bool get revealFormSequenceAnswer => _formSequence.revealAnswer;
   int get formSequenceCorrectCount => _formSequence.correctCount;
+  final sequencePlayingSlot = RxnInt();
 
   /// Правильный ответ показывается до перехода, чтобы человек успел увидеть
   /// результат и понять, что именно засчиталось.
@@ -178,6 +179,39 @@ class LessonController extends GetxController {
 
   /// Что сейчас звучит: форма записи и позиция. Карточка отдаёт это волне.
   ValueListenable<AudioTrack> get voiceTrack => _audio.track;
+
+  void _onSequenceTrackChanged() {
+    if (!_audio.track.value.isPlaying) sequencePlayingSlot.value = null;
+  }
+
+  Future<void> playSequenceSlot(Exercise exercise, int index) async {
+    if (exercise.mode != ExerciseMode.harakaSequence ||
+        index < 0 ||
+        index >= exercise.sequenceOrder.length ||
+        wasWrong.value ||
+        wasCorrect.value) {
+      return;
+    }
+    if (sequencePlayingSlot.value == index && _audio.track.value.isPlaying) {
+      await _audio.stop();
+      return;
+    }
+    sequencePlayingSlot.value = index;
+    await _audio.playAsset(exercise.sequenceOrder[index].audioAsset);
+    if (!_audio.track.value.isPlaying) sequencePlayingSlot.value = null;
+  }
+
+  void startSequenceSlot(Exercise exercise, int index) {
+    if (exercise.mode != ExerciseMode.harakaSequence ||
+        index < 0 ||
+        index >= exercise.sequenceOrder.length ||
+        wasWrong.value ||
+        wasCorrect.value) {
+      return;
+    }
+    sequencePlayingSlot.value = index;
+    unawaited(_audio.playAsset(exercise.sequenceOrder[index].audioAsset));
+  }
 
   ValueListenable<OptionPlaybackState> get optionPlayback => _optionAudio.state;
 
@@ -264,6 +298,7 @@ class LessonController extends GetxController {
   int _completedExercises = 0;
   final _askedCounts = <String, int>{};
   final _formSequenceLetters = <String>{};
+  final _harakaSequenceLetters = <String>{};
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
   final _firstAttemptResults = <bool>[];
@@ -323,9 +358,45 @@ class LessonController extends GetxController {
       ? introAtoms[introIndex.value]
       : null;
 
+  List<Atom> _atomsById(List<String> ids) {
+    final byId = {
+      for (final node in _curriculum.nodes) node.atom.id: node.atom,
+    };
+    return ids.map((id) => byId[id]).nonNulls.toList(growable: false);
+  }
+
+  List<Atom> get fathaIntroExamples =>
+      _atomsById(const ['vowel.ba.fatha', 'vowel.ta.fatha', 'vowel.kaf.fatha']);
+
+  List<Atom> get kasraIntroExamples => _atomsById(const [
+    'vowel.mim.kasra',
+    'vowel.lam.kasra',
+    'vowel.nun.kasra',
+  ]);
+
+  List<Atom> get dammaIntroExamples => _atomsById(const [
+    'vowel.shin.damma',
+    'vowel.ayn.damma',
+    'vowel.jim.damma',
+  ]);
+
+  /// Итоговая таблица: три знака на одних и тех же буквах для сравнения.
+  List<Atom> get harakaSummaryExamples => _atomsById(const [
+    'vowel.ba.fatha',
+    'vowel.ba.kasra',
+    'vowel.ba.damma',
+    'vowel.ta.fatha',
+    'vowel.ta.kasra',
+    'vowel.ta.damma',
+    'vowel.kaf.fatha',
+    'vowel.kaf.kasra',
+    'vowel.kaf.damma',
+  ]);
+
   @override
   void onInit() {
     super.onInit();
+    _audio.track.addListener(_onSequenceTrackChanged);
     // Ошибку загрузки нельзя глотать: без неё экран навсегда останется
     // на индикаторе, и причина будет невидима.
     unawaited(
@@ -390,7 +461,8 @@ class LessonController extends GetxController {
     _currentBlockEndsSession =
         endsSession ??
         (plan.purpose.isMixedReview ||
-            (continuePlanning && plan.newAtoms.isNotEmpty));
+            (continuePlanning &&
+                plan.newAtoms.any((atom) => atom.kind != AtomKind.concept)));
     _topicId = plan.topicId ?? _topicId;
     _planReasons.add(plan.reason);
     _hasNewMaterial = _hasNewMaterial || plan.newAtoms.isNotEmpty;
@@ -488,13 +560,14 @@ class LessonController extends GetxController {
     // _buildSession сам ставит finished, если спрашивать нечего:
     // затирать это переходом в exercise нельзя.
     if (_session == null) await _buildSession();
-    if (stage.value != LessonStage.finished) {
+    if (stage.value != LessonStage.finished && introAtom == null) {
       _showExercise();
     }
   }
 
   void _showExercise() {
     _formSequence.reset();
+    sequencePlayingSlot.value = null;
     _refresh.value++;
     _syncCard();
     _syncTracing();
@@ -611,6 +684,7 @@ class LessonController extends GetxController {
           taskLimit: limit,
           previousCounts: _askedCounts,
           previousFormSequences: _formSequenceLetters,
+          previousHarakaSequences: _harakaSequenceLetters,
           unavailableModes: {
             if (!_pronunciationAvailable) ExerciseMode.sayName,
           },
@@ -771,11 +845,12 @@ class LessonController extends GetxController {
     selected.value = index;
   }
 
-  /// Четыре слота проверяются только вместе, после заполнения последнего.
+  /// Слоты проверяются только вместе, после заполнения последнего.
   Future<void> submitFormSequence(List<Atom> placed) async {
     final exercise = _session?.current;
     if (exercise == null ||
-        exercise.mode != ExerciseMode.positionToForm ||
+        (exercise.mode != ExerciseMode.positionToForm &&
+            exercise.mode != ExerciseMode.harakaSequence) ||
         wasWrong.value ||
         wasCorrect.value) {
       return;
@@ -783,6 +858,9 @@ class LessonController extends GetxController {
     final evaluation = _formSequence.evaluate(
       options: exercise.options,
       placed: placed,
+      expectedAtomIds: exercise.mode == ExerciseMode.harakaSequence
+          ? exercise.sequenceOrder.map((atom) => atom.id).toList()
+          : null,
     );
     selected.value = evaluation.correct
         ? exercise.answerIndex
@@ -866,6 +944,9 @@ class LessonController extends GetxController {
     if (mode == ExerciseMode.positionToForm) {
       final letterId = exercise.atom.letterId;
       if (letterId != null) _formSequenceLetters.add(letterId);
+    } else if (mode == ExerciseMode.harakaSequence) {
+      final letterId = exercise.atom.letterId;
+      if (letterId != null) _harakaSequenceLetters.add(letterId);
     }
     _firstAttemptResults.add(false);
     _countAsked(exercise.resultAtoms);
@@ -919,7 +1000,8 @@ class LessonController extends GetxController {
       // Верный ответ уже показан — это подтверждение, а не новая попытка.
       wasWrong.value = false;
       selected.value = null;
-      if (exercise.mode == ExerciseMode.positionToForm) {
+      if (exercise.mode == ExerciseMode.positionToForm ||
+          exercise.mode == ExerciseMode.harakaSequence) {
         _formSequence.retry();
       }
       _refresh.value++;
@@ -954,6 +1036,9 @@ class LessonController extends GetxController {
     if (exercise.mode == ExerciseMode.positionToForm) {
       final letterId = exercise.atom.letterId;
       if (letterId != null) _formSequenceLetters.add(letterId);
+    } else if (exercise.mode == ExerciseMode.harakaSequence) {
+      final letterId = exercise.atom.letterId;
+      if (letterId != null) _harakaSequenceLetters.add(letterId);
     }
 
     if (outcome == AnswerOutcome.wrong) {
@@ -1044,6 +1129,7 @@ class LessonController extends GetxController {
 
   @override
   void onClose() {
+    _audio.track.removeListener(_onSequenceTrackChanged);
     _tracing.dispose();
     pronunciation.dispose();
     _optionAudio.dispose();

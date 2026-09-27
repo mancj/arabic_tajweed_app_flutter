@@ -328,7 +328,7 @@ class _TopicOverview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: SquircleBorders.squircleBorder(
-        color: UIColors.highlightArea,
+        color: UIColors.cardBackground,
         borderRadius: 28,
         borderSide: BorderSide(color: UIColors.borders),
       ),
@@ -337,25 +337,19 @@ class _TopicOverview extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: UIColors.primary10,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: UIColors.primary, size: 24),
-              ),
-              const Margin.horizontal(12),
               BadgeLabel(
+                leading: Icon(
+                  icon,
+                  color: UIColors.primary,
+                  size: 16,
+                ).marginOnly(right: 4),
                 text: label,
                 color: UIColors.primary10,
                 textColor: UIColors.primary,
               ),
             ],
           ),
-          const Margin.vertical(24),
+          const Margin.vertical(8),
           Text(status.topic.title, style: UITextStyles.semibold27),
           const Margin.vertical(16),
           if (locked)
@@ -455,7 +449,7 @@ class _TopicAtomTile extends StatelessWidget {
               height: 64,
               width: double.infinity,
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.topLeft,
                 child: atom.kind == AtomKind.concept
                     ? Icon(
                         Icons.menu_book_rounded,
@@ -468,9 +462,9 @@ class _TopicAtomTile extends StatelessWidget {
                         child: Text(
                           atom.display,
                           textDirection: TextDirection.rtl,
-                          style: UITextStyles.arabicRegular48Compact.copyWith(
-                            color: UIColors.primary,
-                          ),
+                          style: UITextStyles.dgFasehRegular(
+                            48,
+                          ).copyWith(color: UIColors.primary),
                         ),
                       ),
               ),
@@ -487,7 +481,9 @@ class _TopicAtomTile extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  isDone ? Icons.check_circle_rounded : Icons.circle_outlined,
+                  isDone
+                      ? Icons.check_circle_rounded
+                      : Icons.turn_sharp_right_outlined,
                   size: 14,
                   color: isDone ? UIColors.success : UIColors.secondary2,
                 ),

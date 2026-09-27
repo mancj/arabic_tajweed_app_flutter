@@ -184,8 +184,8 @@ class TopicBoard {
         .where((id) => ctx.stateOf(id) != AtomState.fresh)
         .toList();
 
-    // Блок повтора берётся из общей очереди, а не из самой темы: иначе
-    // буквы прошлых уроков не возвращались бы никогда. См. ТЗ §6.2.
+    // Блок повтора берётся из очереди текущего раздела, а не из самой
+    // темы: прежние темы раздела возвращаются без чужого материала.
     //
     // Но только назад: атомы тем, которые идут после этой, исключаются.
     // Иначе возврат к пройденному уроку тащит буквы из следующего —
@@ -194,6 +194,10 @@ class TopicBoard {
       ctx,
       sessionId: sessionId,
       exclude: {...topic.counterOf, ..._atomsAfter(topic)},
+      include: {
+        for (final section in curriculum.topics)
+          if (section.stage == topic.stage) ...section.counterOf,
+      },
       curriculum: curriculum,
     );
 

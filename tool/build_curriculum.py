@@ -7,7 +7,7 @@
 """
 import json, os
 
-from harakat_data import HARAKAT_LETTER_IDS, HARAKAT_NAMES
+from harakat_data import CORE_SYLLABLE_IDS
 
 OUT = 'assets/curriculum'
 
@@ -249,10 +249,9 @@ def all_of(*requirements):
 
 
 def after_harakat(requirement):
-    """Связки открываются после огласовок на отдельных буквах."""
+    """Связки открываются после обязательных огласовок на всех буквах."""
     return all_of(
-        *[known(f'vowel.{lid}.{vowel}')
-          for lid in HARAKAT_LETTER_IDS for vowel in HARAKAT_NAMES],
+        *[known(atom_id) for atom_id in CORE_SYLLABLE_IDS],
         requirement,
     )
 

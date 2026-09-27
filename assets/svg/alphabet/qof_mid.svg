@@ -1,9 +1,13 @@
 <svg width="329" height="329" viewBox="0 0 329 329" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="qof_mid">
+<g id="qof_base_forms">
 <g id="Group 49">
-<path id="3-dot" d="M128.146 87.4495V91.622" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="2-dot" d="M166.893 87.4495V91.622" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="1-base" d="M289 224.559L204.804 224.558C177.235 224.558 119.951 208.569 119.951 170.114C119.951 152.977 128.147 129.878 158.696 141.055C189.245 152.232 209.363 224.558 89.4018 224.558H41" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="1-base" d="M275 236.443H219.804C192.235 236.443 134.951 220.453 134.951 181.998C134.951 164.861 143.147 141.762 173.696 152.939C204.245 164.116 224.363 236.443 104.402 236.443H56" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="Group 91">
+<path id="3-dot" d="M146 109V113.173" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-dot" d="M176.746 109V113.173" stroke="#08171D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
 </g>
 </g>
 </svg>

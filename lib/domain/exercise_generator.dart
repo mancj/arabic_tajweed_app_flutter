@@ -44,6 +44,7 @@ class ExerciseGenerator {
     int? taskLimit,
     Map<String, int> previousCounts = const {},
     Set<String> previousFormSequences = const {},
+    Set<String> previousHarakaSequences = const {},
     Set<ExerciseMode> unavailableModes = const {},
   }) {
     final limit = taskLimit ?? rules.tasksPerSession;
@@ -132,8 +133,68 @@ class ExerciseGenerator {
       );
       if (ex != null) exercises.add(ex);
     }
-    return exercises;
+    return _includeHarakaSequences(exercises, pool, previousHarakaSequences);
   }
+
+  /// Сборка заменяет одну одиночную проверку «звук → написание», но
+  /// проверяет все три слога. Поэтому число заданий не меняется, а письмо
+  /// и направление «написание → звук» остаются в исходном расписании.
+  List<Exercise> _includeHarakaSequences(
+    List<Exercise> exercises,
+    Set<Atom> pool,
+    Set<String> previousSequences,
+  ) {
+    final families = pool
+        .where(_isVocalizedSyllable)
+        .groupListsBy((atom) => atom.letterId!);
+    final candidates = <String, int>{};
+    for (final (index, exercise) in exercises.indexed) {
+      final atom = exercise.atom;
+      if (!_isVocalizedSyllable(atom) ||
+          exercise.mode != ExerciseMode.soundToLetter ||
+          previousSequences.contains(atom.letterId)) {
+        continue;
+      }
+      final family = families[atom.letterId];
+      if (family == null || family.length != 3) continue;
+      // Последняя из первых проверок даёт ученику сначала услышать два
+      // слога поодиночке; третий он сопоставляет уже внутри сборки.
+      candidates[atom.letterId!] = index;
+    }
+    final result = [...exercises];
+    for (final entry in candidates.entries) {
+      final family = families[entry.key]!;
+      final original = result[entry.value];
+      final prompt = curriculum.nodes
+          .map((node) => node.atom)
+          .firstWhereOrNull(
+            (atom) =>
+                atom.letterId == entry.key && atom.form == LetterForm.isolated,
+          );
+      if (prompt == null) continue;
+      final order = [...family]..shuffle(_random);
+      final options = [...family]..shuffle(_random);
+      result[entry.value] = Exercise(
+        atom: original.atom,
+        mode: ExerciseMode.harakaSequence,
+        level: original.level,
+        options: options,
+        answerIndex: options.indexOf(original.atom),
+        isReview: original.isReview,
+        isRequired: original.isRequired,
+        prompt: prompt,
+        question: 'Расставьте огласовки буквы «${prompt.label}»',
+        sequenceOrder: order,
+      );
+    }
+    return result;
+  }
+
+  static bool _isVocalizedSyllable(Atom atom) =>
+      atom.kind == AtomKind.syllable &&
+      atom.letterId != null &&
+      atom.tracing != null &&
+      atom.audioAsset != null;
 
   /// Кого спрашиваем и в каком порядке: сначала каждая новая буква
   /// получает первую встречу, затем в закрепление подмешивается повторение

@@ -1,13 +1,9 @@
-"""Собирает блок огласовок на 28 буквах и коротких слов в stage3.json.
-
-Три огласовки сначала показываются на ба, затем на остальных отдельных
-буквах. Следующая группа открывается после освоения предыдущей.
-"""
+"""Собирает обязательные слоги на 28 буквах и короткие слова в stage3.json."""
 
 import json
 from pathlib import Path
 
-from harakat_data import HARAKAT_LETTERS, HARAKAT_NAMES
+from harakat_data import CORE_SYLLABLE_IDS, HARAKAT_LETTERS, core_vowels
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,12 +16,23 @@ VOWELS = [
     ("damma", "ُ", "даммой", "у"),
 ]
 VOWEL_NAMES = {"fatha": "Фатха", "kasra": "Касра", "damma": "Дамма"}
-# Не меняем семь уже выпущенных групп. Новые буквы идут после них парами.
-GROUPS = (
-    [LETTERS[i : i + 2] for i in range(1, 13, 2)]
-    + [LETTERS[13:14]]
-    + [LETTERS[i : i + 2] for i in range(14, len(LETTERS), 2)]
+# В каждом блоке не больше пяти новых слогов: остаётся место для повторения
+# и обязательного рисунка огласовки, не растягивая этап на 16+ уроков.
+GROUP_LETTER_IDS = (
+    ("ta", "kaf", "dal", "ra"),
+    ("sin", "mim", "lam", "shin"),
+    ("ayn", "jim", "hha", "fa"),
+    ("nun", "alif", "tha"),
+    ("kha", "dhal", "zay"),
+    ("sod", "dod", "ha"),
+    ("to", "zho", "waw"),
+    ("ghayn", "qof", "ya"),
 )
+LETTER_BY_ID = {letter_id: letter for letter_id, *letter in LETTERS}
+GROUPS = [
+    [(letter_id, *LETTER_BY_ID[letter_id]) for letter_id in group]
+    for group in GROUP_LETTER_IDS
+]
 WORDS = [
     ("kataba", "كَتَبَ"),
     ("darasa", "دَرَسَ"),
@@ -94,7 +101,8 @@ def harakat_asset(letter_id, vowel):
 
 
 def syllable_ids(letters):
-    return [f"vowel.{letter_id}.{name}" for letter_id, _, _ in letters for name, _, _, _ in VOWELS]
+    return [f"vowel.{letter_id}.{name}" for letter_id, _, _ in letters
+            for name in core_vowels(letter_id)]
 
 
 def build():
@@ -116,7 +124,7 @@ def build():
         "kind": "concept",
         "display": "огласовки",
         "label": "Краткие огласовки",
-        "note": "Знак над или под буквой меняет её звучание. Сначала послушаем три знака на отдельной букве ب.",
+        "note": "Знак над или под буквой меняет её звучание. Нажмите на пример, чтобы услышать его.",
     }, prerequisite))
 
     signs = [f"haraka.{name}" for name, _, _, _ in VOWELS]
@@ -153,11 +161,19 @@ def build():
         topics.append(topic(f"m.haraka.group{index}", f"Огласовки на {titles}", requirement, ids))
         for letter_id, glyph, letter_name in group:
             for name, mark, title, sound in VOWELS:
-                display = f"{glyph}{mark}"
+                if name not in core_vowels(letter_id):
+                    continue
+                base = "إ" if letter_id == "alif" and name == "kasra" else (
+                    "أ" if letter_id == "alif" else glyph)
+                display = f"{base}{mark}"
+                note = (f"Послушайте и прочитайте: {display}. Хамза под алифом "
+                        "для касры, над алифом для фатхи и даммы."
+                        if letter_id == "alif" else
+                        f"Послушайте и прочитайте: {display}. Звук «{sound}» краткий.")
                 nodes.append(node(spoken_atom(
                     f"vowel.{letter_id}.{name}", "syllable", display,
                     f"{letter_name.capitalize()} с {title}",
-                    f"Та же огласовка на другой отдельной букве: {display}. Звук «{sound}» краткий.",
+                    note,
                     letter_id,
                     harakat_asset(letter_id, name),
                     f"harakat/{name}",
@@ -170,7 +186,7 @@ def build():
         for atom_id in topic_data["counterOf"]
     ]
     previous = [
-        *syllable_ids(LETTERS),
+        *CORE_SYLLABLE_IDS,
         *connection_ids,
     ]
     for index in range(0, len(WORDS), 3):

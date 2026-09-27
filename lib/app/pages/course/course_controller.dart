@@ -298,7 +298,7 @@ class CourseController extends GetxController {
       return 'Смешанная проверка';
     }
     if (plan.purpose == LessonPurpose.mixedReview) {
-      return 'Повторим весь пройденный алфавит';
+      return 'Повторим пройденный материал';
     }
     if (plan.newAtoms.isEmpty) return 'Закрепим знакомое';
     if (plan.topicId == 'm.join') return 'Соединяем первые буквы';
@@ -365,10 +365,8 @@ class CourseController extends GetxController {
     final targetIndex = curriculum.topics.indexWhere(
       (topic) => topic.id == status.topic.id,
     );
-    final currentIndex = curriculum.topics.indexWhere(
-      (topic) => topic.id == nextPlan.value?.topicId,
-    );
-    return currentIndex >= 0 && targetIndex > currentIndex;
+    final frontierIndex = statuses.indexWhere((candidate) => !candidate.isDone);
+    return frontierIndex >= 0 && targetIndex > frontierIndex;
   }
 
   Future<void> open(
@@ -383,13 +381,13 @@ class CourseController extends GetxController {
       rules: rules,
     );
     final automatic = await planFor();
-    final introducesAlphabet =
-        status.topic.stage == 1 && topicPlan.newAtoms.isNotEmpty;
+    final introducesNewMaterial = topicPlan.newAtoms.isNotEmpty;
+    final introducesAlphabet = status.topic.stage == 1 && introducesNewMaterial;
     final blockedByCheckpoint =
         automatic.purpose == LessonPurpose.alphabetCheckpoint &&
         (introducesAlphabet || status.topic.stage > 1);
     final blockedByDailyPace =
-        automatic.purpose == LessonPurpose.mixedReview && introducesAlphabet;
+        automatic.purpose == LessonPurpose.mixedReview && introducesNewMaterial;
     final plan =
         respectCourseGates && (blockedByCheckpoint || blockedByDailyPace)
         ? automatic
@@ -420,7 +418,14 @@ class CourseController extends GetxController {
         '/lesson',
         arguments: {
           LessonBinding.planArg: plan,
-          LessonBinding.continuePlanningArg: continuePlanning,
+          LessonBinding.continuePlanningArg:
+              continuePlanning ||
+              (plan.newAtoms.isNotEmpty &&
+                  plan.newAtoms.every(
+                    (atom) => atom.kind == AtomKind.concept,
+                  ) &&
+                  plan.reviewAtoms.isEmpty &&
+                  plan.spacedReview.isEmpty),
         },
       );
       await refreshBoard();

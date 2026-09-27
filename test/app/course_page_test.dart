@@ -158,6 +158,36 @@ void main() {
     expect(find.text('Перейти к этой теме'), findsOneWidget);
   });
 
+  // Во время общего повторения у плана нет topicId. «Мой путь» всё равно
+  // должен считать блок впереди текущей границы будущим и вести в проверку,
+  // а не предлагать начать его напрямую.
+  testWidgets('Мой путь позволяет перейти к теме во время общего повтора', (
+    tester,
+  ) async {
+    final c = await open(tester);
+    c.nextPlan.value = const LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: [],
+      reviewAtoms: [],
+      reason: 'общий повтор',
+    );
+    await tester.ensureVisible(find.text('Мой путь'));
+    await tester.tap(find.text('Мой путь'));
+    await settle(tester);
+    await tester.tap(find.text('Буквы и их формы'));
+    await settle(tester);
+    final topic = c.curriculum.topics.firstWhere((t) => t.id == 'm.forms');
+    await tester.tap(find.text(topic.title));
+    await settle(tester);
+
+    expect(c.nextPlan.value?.topicId, isNull);
+    expect(
+      tester.widget<CourseTopicPage>(find.byType(CourseTopicPage)).topicId,
+      topic.id,
+    );
+    expect(find.text('Перейти к этой теме'), findsOneWidget);
+  });
+
   testWidgets('одна отметка о завершении не делает материал освоенным', (
     tester,
   ) async {

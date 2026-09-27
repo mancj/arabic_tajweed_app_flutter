@@ -7,9 +7,8 @@ import 'learning_rules.dart';
 
 /// Очередь интервального повторения: что пора показать снова.
 ///
-/// Общая для всего курса, а не для отдельной темы. Без неё урок по теме
-/// спрашивал бы только её собственные буквы, и старое не возвращалось бы
-/// никогда — а в этом и весь смысл интервального повторения.
+/// Очередь принимает границы текущего раздела: прежние темы в нём
+/// возвращаются, а завершённые разделы не мешают новому материалу.
 class ReviewQueue {
   const ReviewQueue({this.rules = const LearningRules()});
 
@@ -21,12 +20,13 @@ class ReviewQueue {
   /// атом, чей интервал ещё не вышел, в очередь не попадает вовсе:
   /// в этом и смысл интервального повторения. См. ТЗ §6.2.
   ///
-  /// [exclude] — атомы, которые урок и так спросит: повторять их вторым
-  /// заходом незачем. Отложенные и полностью освоенные не берутся.
+  /// [exclude] — атомы, которые урок и так спросит; [include] ограничивает
+  /// очередь текущим разделом. Отложенные и полностью освоенные не берутся.
   List<String> build(
     CurriculumContext ctx, {
     required int sessionId,
     Set<String> exclude = const {},
+    Set<String>? include,
     Curriculum? curriculum,
   }) {
     final letterFormIds = curriculum?.letterFormIds ?? const <String>{};
@@ -41,6 +41,7 @@ class ReviewQueue {
         .where(
           (e) =>
               !exclude.contains(e.key) &&
+              (include == null || include.contains(e.key)) &&
               e.value.state != AtomState.fresh &&
               e.value.state != AtomState.mastered &&
               !e.value.isDeferredAt(sessionId, rules) &&
@@ -76,12 +77,14 @@ class ReviewQueue {
     CurriculumContext ctx, {
     required int sessionId,
     Set<String> exclude = const {},
+    Set<String>? include,
     required Curriculum curriculum,
   }) {
     final due = build(
       ctx,
       sessionId: sessionId,
       exclude: exclude,
+      include: include,
       curriculum: curriculum,
     );
     final drillable = {
@@ -92,6 +95,7 @@ class ReviewQueue {
         .where(
           (entry) =>
               drillable.contains(entry.key) &&
+              (include == null || include.contains(entry.key)) &&
               !exclude.contains(entry.key) &&
               entry.value.state != AtomState.fresh &&
               !entry.value.isDeferredAt(sessionId, rules),

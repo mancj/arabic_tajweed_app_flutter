@@ -1,8 +1,4 @@
-"""Общие данные блока кратких огласовок.
-
-Первые 14 букв сохраняют уже выпущенный порядок. Остальные буквы добавлены
-после них, чтобы существующий прогресс не менял смысл.
-"""
+"""Общие данные обязательных сочетаний блока кратких огласовок."""
 
 HARAKAT_LETTERS = [
     ("ba", "ب", "ба"),
@@ -37,3 +33,29 @@ HARAKAT_LETTERS = [
 
 HARAKAT_LETTER_IDS = [letter_id for letter_id, _, _ in HARAKAT_LETTERS]
 HARAKAT_NAMES = ["fatha", "kasra", "damma"]
+
+# Все три знака объясняются на ба. Для твёрдых букв и ро нужна отдельная
+# проверка касры; первые короткие слова требуют также касру на мим и айн.
+# Остальные буквы получают один обязательный слог, а не все три.
+CORE_VOWELS = {
+    "ba": ("fatha", "kasra", "damma"),
+    "ra": ("fatha", "kasra"),
+    "mim": ("fatha", "kasra"),
+    "ayn": ("fatha", "kasra"),
+    "alif": ("fatha", "kasra", "damma"),
+    **{letter_id: ("fatha", "kasra") for letter_id in
+       ("kha", "sod", "dod", "to", "zho", "ghayn", "qof")},
+    **{letter_id: ("damma",) for letter_id in ("tha", "dhal", "ha", "ya")},
+    **{letter_id: ("kasra",) for letter_id in ("zay", "waw")},
+}
+
+
+def core_vowels(letter_id):
+    return CORE_VOWELS.get(letter_id, ("fatha",))
+
+
+CORE_SYLLABLE_IDS = [
+    f"vowel.{letter_id}.{vowel}"
+    for letter_id in HARAKAT_LETTER_IDS
+    for vowel in core_vowels(letter_id)
+]

@@ -190,10 +190,15 @@ class LessonPlanner {
     Map<String, int> previousCounts = const {},
     PacingSnapshot pacing = const PacingSnapshot(),
   }) {
-    final deferred = _deferred(ctx, sessionId);
+    final stage = curriculum.topics.isEmpty
+        ? null
+        : _activeStage(ctx, topicIds);
+    final stageAtomIds = stage == null ? null : _atomIdsForStage(stage);
+    final deferred = _deferred(ctx, sessionId, atomIds: stageAtomIds);
     final review = _reviewQueue(
       ctx,
       sessionId,
+      atomIds: stageAtomIds,
     ).where((id) => (previousCounts[id] ?? 0) < _maxDrillsPerAtom).toList();
 
     // 1. Потолок отложенных. Предохранитель на предохранитель: иначе
@@ -219,6 +224,8 @@ class LessonPlanner {
         topicIds,
         previousCounts,
         pacing,
+        stage!,
+        stageAtomIds!,
       );
     }
 
@@ -275,15 +282,17 @@ class LessonPlanner {
     Map<String, int> previousCounts = const {},
     Set<String>? atomIds,
   }) {
-    final due = _reviewQueue(
-      ctx,
-      sessionId,
-    ).where((id) => atomIds == null || atomIds.contains(id));
+    final scope =
+        atomIds ??
+        (curriculum.topics.isEmpty
+            ? null
+            : _atomIdsForStage(_activeStage(ctx, null)));
+    final due = _reviewQueue(ctx, sessionId, atomIds: scope);
     final familiar = curriculum.nodes
         .where(
           (node) =>
               node.atom.kind != AtomKind.concept &&
-              (atomIds == null || atomIds.contains(node.atom.id)) &&
+              (scope == null || scope.contains(node.atom.id)) &&
               ctx.stateOf(node.atom.id) != AtomState.fresh &&
               !(ctx.progress[node.atom.id]?.isDeferredAt(sessionId, rules) ??
                   false),
@@ -327,11 +336,23 @@ class LessonPlanner {
     Set<String>? topicIds,
     Map<String, int> previousCounts,
     PacingSnapshot pacing,
+    int stage,
+    Set<String> stageAtomIds,
   ) {
     final board = TopicBoard(curriculum, rules: rules);
+    final hasPracticeInStage = curriculum.nodes.any(
+      (node) =>
+          stageAtomIds.contains(node.atom.id) &&
+          node.atom.kind != AtomKind.concept &&
+          ctx.stateOf(node.atom.id) != AtomState.fresh,
+    );
     final ordered = board
         .statuses(ctx)
-        .where((s) => topicIds == null || topicIds.contains(s.topic.id))
+        .where(
+          (s) =>
+              s.topic.stage == stage &&
+              (topicIds == null || topicIds.contains(s.topic.id)),
+        )
         .toList();
     // Оглавление — это программа курса, а не просто витрина. Даже если
     // широкое условие более поздней темы уже выполнено, она не обгоняет
@@ -352,12 +373,17 @@ class LessonPlanner {
     // Продолжаем начатый блок по знаниям, без сохранения очереди занятия.
     // После уже завершённого сегодня урока с новым материалом сначала
     // выдаём полноценное смешанное повторение, даже если в теме остались
-    // пробелы: оно одновременно лечит их и не зацикливается на одной паре.
+    // пробелы: оно одновременно лечит их и не зацикливается на одном блоке.
     final unfinished = candidate?.started == true ? candidate : null;
     if (unfinished != null) {
-      if (unfinished.topic.stage == 1 &&
-          !pacing.canIntroduceNewMaterial(rules)) {
-        return _pacingReview(ctx, sessionId, previousCounts, pacing);
+      if (hasPracticeInStage && !pacing.canIntroduceNewMaterial(rules)) {
+        return _pacingReview(
+          ctx,
+          sessionId,
+          previousCounts,
+          pacing,
+          stageAtomIds,
+        );
       }
       if (unfinished.topic.counterOf.every(
         (id) => ctx.stateOf(id) != AtomState.fresh,
@@ -392,21 +418,30 @@ class LessonPlanner {
     final reachesNewLetters = nextPlan?.newAtoms.any(_isBaseLetter) ?? false;
     final leavesAlphabet = frontier == null || frontier.topic.stage > 1;
     if (checkpoint != null && (reachesNewLetters || leavesAlphabet)) {
-      return _mixedAlphabetReview(
+      return _mixedReview(
         ctx,
         sessionId,
         previousCounts,
+        atomIds: _alphabetAtomIds,
         purpose: LessonPurpose.alphabetCheckpoint,
         checkpointLetters: checkpoint,
         reason: 'обязательная смешанная проверка после $checkpoint букв',
       );
     }
-    final introducesAlphabetMaterial =
-        next?.topic.stage == 1 && (nextPlan?.newAtoms.isNotEmpty ?? false);
-    if (introducesAlphabetMaterial && !pacing.canIntroduceNewMaterial(rules)) {
-      return _pacingReview(ctx, sessionId, previousCounts, pacing);
+    final introducesNewMaterial = nextPlan?.newAtoms.isNotEmpty ?? false;
+    if (introducesNewMaterial &&
+        hasPracticeInStage &&
+        !pacing.canIntroduceNewMaterial(rules)) {
+      return _pacingReview(
+        ctx,
+        sessionId,
+        previousCounts,
+        pacing,
+        stageAtomIds,
+      );
     }
-    final overloaded = _load(ctx, sessionId) > loadThreshold;
+    final overloaded =
+        _load(ctx, sessionId, atomIds: stageAtomIds) > loadThreshold;
     final force = sessionsWithoutNew >= rules.sessionsWithoutNewBeforeForcing;
     if (next != null && (!overloaded || force)) {
       // Весь объявленный блок обязателен, включая все формы. Если он не
@@ -414,14 +449,12 @@ class LessonPlanner {
       return nextPlan!;
     }
     final scope = topicIds == null
-        ? null
+        ? stageAtomIds
         : curriculum.topics
               .where((t) => topicIds.contains(t.id))
               .expand((t) => t.counterOf)
               .toSet();
-    final due = review
-        .where((id) => scope == null || scope.contains(id))
-        .toList();
+    final due = review.where(scope.contains).toList();
     // «Потренироваться» работает и до срока очередного повторения.
     final familiar = curriculum.nodes
         .where(
@@ -431,7 +464,7 @@ class LessonPlanner {
               (previousCounts[n.atom.id] ?? 0) < _maxDrillsPerAtom &&
               !(ctx.progress[n.atom.id]?.isDeferredAt(sessionId, rules) ??
                   false) &&
-              (scope == null || scope.contains(n.atom.id)),
+              scope.contains(n.atom.id),
         )
         .map((n) => n.atom.id);
     return _buildPlan(
@@ -465,30 +498,34 @@ class LessonPlanner {
     int sessionId,
     Map<String, int> previousCounts,
     PacingSnapshot pacing,
-  ) => _mixedAlphabetReview(
+    Set<String> stageAtomIds,
+  ) => _mixedReview(
     ctx,
     sessionId,
     previousCounts,
+    atomIds: stageAtomIds,
     purpose: LessonPurpose.mixedReview,
     reason:
         'темп занятий: до следующего нового блока '
         '${pacing.reviewsUntilNewMaterial(rules)} успешных повторений',
   );
 
-  LessonPlan _mixedAlphabetReview(
+  Set<String> get _alphabetAtomIds => curriculum.topics
+      .where((topic) => topic.stage == 1)
+      .expand((topic) => topic.counterOf)
+      .toSet();
+
+  LessonPlan _mixedReview(
     CurriculumContext ctx,
     int sessionId,
     Map<String, int> previousCounts, {
     required LessonPurpose purpose,
     required String reason,
+    Set<String>? atomIds,
     int? checkpointLetters,
   }) {
-    final alphabetIds = curriculum.topics
-        .where((topic) => topic.stage == 1)
-        .expand((topic) => topic.counterOf)
-        .toSet();
     final candidates = curriculum.nodes
-        .where((node) => alphabetIds.contains(node.atom.id))
+        .where((node) => atomIds == null || atomIds.contains(node.atom.id))
         .map((node) => node.atom)
         .where(
           (atom) =>
@@ -503,7 +540,7 @@ class LessonPlanner {
       return _buildPlan(
         template: LessonTemplate.review,
         newAtoms: const [],
-        reviewAtoms: _reviewQueue(ctx, sessionId),
+        reviewAtoms: _reviewQueue(ctx, sessionId, atomIds: atomIds),
         reason: reason,
       );
     }
@@ -773,19 +810,56 @@ class LessonPlanner {
     _ => LessonTemplate.newLetter,
   };
 
+  /// Перейдя в новый раздел, автоматический путь не возвращается к старому
+  /// из-за поздней ошибки при ручном повторении его темы.
+  int _activeStage(CurriculumContext ctx, Set<String>? topicIds) {
+    final statuses = TopicBoard(curriculum, rules: rules)
+        .statuses(ctx)
+        .where(
+          (status) => topicIds == null || topicIds.contains(status.topic.id),
+        )
+        .toList();
+    if (statuses.isEmpty) return curriculum.topics.first.stage;
+    final firstStage = statuses.first.topic.stage;
+    final startedStage =
+        statuses
+            .where((status) => status.started)
+            .map((status) => status.topic.stage)
+            .maxOrNull ??
+        firstStage;
+    final nextStage =
+        statuses.firstWhereOrNull((status) => !status.isDone)?.topic.stage ??
+        firstStage;
+    return max(startedStage, nextStage);
+  }
+
+  Set<String> _atomIdsForStage(int stage) => curriculum.topics
+      .where((topic) => topic.stage == stage)
+      .expand((topic) => topic.counterOf)
+      .toSet();
+
   /// Отложенные в нагрузку не входят — в этом и смысл откладывания.
-  int _load(CurriculumContext ctx, int sessionId) => ctx.progress.entries
+  int _load(CurriculumContext ctx, int sessionId, {Set<String>? atomIds}) => ctx
+      .progress
+      .entries
       .where(
         (e) =>
+            (atomIds == null || atomIds.contains(e.key)) &&
             e.value.state == AtomState.learning &&
             !e.value.isDeferredAt(sessionId, rules),
       )
       .length;
 
-  List<String> _deferred(CurriculumContext ctx, int sessionId) => ctx
-      .progress
-      .entries
-      .where((e) => e.value.isDeferredAt(sessionId, rules))
+  List<String> _deferred(
+    CurriculumContext ctx,
+    int sessionId, {
+    Set<String>? atomIds,
+  }) => ctx.progress.entries
+      .where(
+        (e) =>
+            (atomIds == null || atomIds.contains(e.key)) &&
+            e.value.isDeferredAt(sessionId, rules),
+      )
       .map((e) => e.key)
       .toList();
 
@@ -794,8 +868,11 @@ class LessonPlanner {
           .sortedBy<num>((id) => ctx.progress[id]!.deferredAtSession ?? 0)
           .firstOrNull;
 
-  List<String> _reviewQueue(CurriculumContext ctx, int sessionId) =>
-      ReviewQueue(
-        rules: rules,
-      ).build(ctx, sessionId: sessionId, curriculum: curriculum);
+  List<String> _reviewQueue(
+    CurriculumContext ctx,
+    int sessionId, {
+    Set<String>? atomIds,
+  }) => ReviewQueue(
+    rules: rules,
+  ).build(ctx, sessionId: sessionId, include: atomIds, curriculum: curriculum);
 }

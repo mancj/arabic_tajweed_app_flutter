@@ -17,7 +17,7 @@ void main() {
         home: Scaffold(
           body: SingleChildScrollView(
             child: HarakaDrawingCard(
-              letter: 'ب',
+              letterId: 'ba',
               title: 'Нарисуйте огласовку',
               hint: 'По памяти',
               onClear: controller.clear,
@@ -33,9 +33,11 @@ void main() {
       ),
     );
 
-    expect(find.text('ب'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(CustomPaint), findsWidgets);
     final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
     expect(canvas.mode, TracingMode.freehand);
     expect(canvas.placement, TracingPlacement.anchored);
+    expect(canvas.placeholderOffset.dy, lessThan(0));
   });
 }

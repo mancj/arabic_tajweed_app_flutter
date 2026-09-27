@@ -1,6 +1,7 @@
 import 'atom.dart';
 
-/// Результат раскладки четырёх форм. Оценка не зависит от виджета и журнала.
+/// Результат раскладки форм или звуковых слотов.
+/// Оценка не зависит от виджета и журнала.
 class FormSequenceEvaluation {
   const FormSequenceEvaluation({
     required this.atomResults,
@@ -17,24 +18,31 @@ class FormSequenceEvaluation {
   static FormSequenceEvaluation evaluate({
     required List<Atom> options,
     required List<Atom> placed,
+    List<String>? expectedAtomIds,
   }) {
-    const expected = LetterForm.values;
+    final expected = expectedAtomIds;
+    final slotCount = expected?.length ?? LetterForm.values.length;
     final atomResults = {
       for (final option in options)
         option.id: switch (placed.indexWhere(
           (placed) => placed.id == option.id,
         )) {
-          final index when index >= 0 && index < expected.length =>
-            option.form == expected[index],
+          final index when index >= 0 && index < slotCount =>
+            expected == null
+                ? option.form == LetterForm.values[index]
+                : option.id == expected[index],
           _ => false,
         },
     };
     final correct =
-        atomResults.length == expected.length &&
+        atomResults.length == slotCount &&
         atomResults.values.every((value) => value);
     final slotResults = [
-      for (final (index, position) in expected.indexed)
-        index < placed.length && placed[index].form == position,
+      for (var index = 0; index < slotCount; index++)
+        index < placed.length &&
+            (expected == null
+                ? placed[index].form == LetterForm.values[index]
+                : placed[index].id == expected[index]),
     ];
     return FormSequenceEvaluation(
       atomResults: Map.unmodifiable(atomResults),

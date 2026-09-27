@@ -21,6 +21,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/tracing_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_drawing_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_examples_grid.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/exercise.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
@@ -85,14 +86,14 @@ class _SayNameFeedback extends GetView<LessonController> {
 /// Задание на письмо: общая карточка [TracingCard]. Здесь она получает
 /// вопрос, правило показа после промахов и оценку из урока.
 class _TracingTask extends GetView<LessonController> {
-  const _TracingTask({required this.prompt});
+  const _TracingTask({required this.exercise, required this.prompt});
 
+  final Exercise exercise;
   final String prompt;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final exercise = controller.current!;
       final atom = exercise.atom;
       final onPlay = controller.hasVoice(atom)
           ? () => controller.playVoice(atom)
@@ -103,7 +104,11 @@ class _TracingTask extends GetView<LessonController> {
       if (controller.tracingIsAnchored) {
         return HarakaDrawingCard(
           key: ObjectKey(exercise),
-          letter: _bareLetter(atom.display),
+          letterId: atom.kind == AtomKind.syllable && atom.letterId == 'alif'
+              ? atom.id.endsWith('.kasra')
+                    ? 'alif_hamza_below'
+                    : 'alif_hamza_above'
+              : atom.letterId!,
           title: prompt,
           hint: controller.tracingHint.value,
           onClear: controller.clearTracing,
@@ -150,12 +155,6 @@ class _TracingTask extends GetView<LessonController> {
     });
   }
 }
-
-String _bareLetter(String display) => String.fromCharCodes(
-  display.runes.where(
-    (rune) => !((rune >= 0x064B && rune <= 0x065F) || rune == 0x0670),
-  ),
-);
 
 class _Loader extends StatelessWidget {
   const _Loader();
@@ -206,6 +205,16 @@ class LessonIntroBlock extends GetView<LessonController> {
                 badge: controller.isReviewOnly ? 'Повторение' : 'Новая тема',
                 title: atom.label,
                 text: atom.note,
+                child: atom.id == 'concept.haraka'
+                    ? HarakaExamplesOverview(
+                        fathaExamples: controller.fathaIntroExamples,
+                        kasraExamples: controller.kasraIntroExamples,
+                        dammaExamples: controller.dammaIntroExamples,
+                        summaryExamples: controller.harakaSummaryExamples,
+                        onPlay: controller.playVoice,
+                        track: controller.voiceTrack,
+                      )
+                    : null,
               )
               .animate()
               .slideX(begin: .1, curve: Curves.easeInOut, duration: .5.seconds)
@@ -346,7 +355,7 @@ class LessonExerciseBlock extends GetView<LessonController> {
           children: [
             const _LessonProgress(),
             const Margin.vertical(16),
-            _TracingTask(prompt: presentation.prompt),
+            _TracingTask(exercise: exercise, prompt: presentation.prompt),
           ],
         );
       }
@@ -367,6 +376,33 @@ class LessonExerciseBlock extends GetView<LessonController> {
                 '${controller.formSequenceAttempt.value}',
               ),
               options: exercise.options,
+              slots: exercise.mode == ExerciseMode.harakaSequence
+                  ? [
+                      for (final (index, atom)
+                          in exercise.sequenceOrder.indexed)
+                        SequenceSlot(
+                          id: 'sound-$index',
+                          title: 'Звук ${index + 1}',
+                          expectedAtomId: atom.id,
+                          audioAsset: atom.audioAsset,
+                        ),
+                    ]
+                  : null,
+              instruction: exercise.mode == ExerciseMode.harakaSequence
+                  ? 'Послушайте выделенный слот и выберите огласовку'
+                  : 'Выберите форму для выделенного слота',
+              optionNoun: exercise.mode == ExerciseMode.harakaSequence
+                  ? 'Огласовка'
+                  : 'Форма',
+              playingSlotIndex: exercise.mode == ExerciseMode.harakaSequence
+                  ? controller.sequencePlayingSlot.value
+                  : null,
+              onPlaySlot: exercise.mode == ExerciseMode.harakaSequence
+                  ? (index) => controller.playSequenceSlot(exercise, index)
+                  : null,
+              onActiveSlotChanged: exercise.mode == ExerciseMode.harakaSequence
+                  ? (index) => controller.startSequenceSlot(exercise, index)
+                  : null,
               initialPlaced: controller.formSequenceInitialPlaced,
               slotResults: controller.wasWrong.value
                   ? controller.formSequenceSlotResults
@@ -488,6 +524,14 @@ class _QuestionFor extends GetView<LessonController> {
         autoPlay: _canAutoPlay(controller),
         track: controller.voiceTrack,
       ),
+      LessonQuestionKind.harakaSequence => LetterWidgetCard(
+        key: ValueKey('haraka-sequence.${_visibleExerciseIndex(controller)}'),
+        letter: (exercise.prompt ?? atom).display,
+        isArabic: true,
+        labelText: 'Вопрос',
+        question: presentation.prompt,
+        showPlay: false,
+      ),
       // Старые режимы с именем буквы: в уроках не строятся, см. ExerciseMode.
       LessonQuestionKind.label => QuestionCard(
         badge: 'Вопрос',
@@ -524,6 +568,7 @@ class _OptionTile extends GetView<LessonController> {
     required this.option,
     required this.index,
     this.playbackProgress = 0,
+    this.isPlaying = false,
     this.onPlay,
   });
 
@@ -532,6 +577,7 @@ class _OptionTile extends GetView<LessonController> {
   final Atom option;
   final int index;
   final double playbackProgress;
+  final bool isPlaying;
   final VoidCallback? onPlay;
 
   @override
@@ -549,28 +595,23 @@ class _OptionTile extends GetView<LessonController> {
         _ => UIColors.primary,
       };
 
+      if (exercise.mode == ExerciseMode.letterToSound) {
+        return AudioAnswerOption(
+          label: 'Звучание ${index + 1}',
+          selected: selected || (revealed && isAnswer),
+          accent: color,
+          playbackProgress: playbackProgress,
+          isPlaying: isPlaying,
+          onTap: () => controller.select(index),
+          onPlay: onPlay ?? () => controller.playVoice(option),
+        );
+      }
       return AnswerOption(
         selected: selected || (revealed && isAnswer),
         accent: color,
         playbackProgress: playbackProgress,
         onTap: () => controller.select(index),
-        child: exercise.mode == ExerciseMode.letterToSound
-            ? Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Звучание ${index + 1}',
-                      style: UITextStyles.regular17,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Прослушать вариант ${index + 1}',
-                    onPressed: onPlay ?? () => controller.playVoice(option),
-                    icon: const Icon(Icons.volume_up_rounded),
-                  ),
-                ],
-              )
-            : presentation.optionsAreGlyphs
+        child: presentation.optionsAreGlyphs
             ? _Glyph(atom: option, size: 28)
             : Text(option.label, style: UITextStyles.regular17),
       );
@@ -619,6 +660,9 @@ class _AutoPlayingOptionsState extends State<_AutoPlayingOptions> {
                 option: option,
                 index: index,
                 playbackProgress: playback.progressAt(index),
+                isPlaying:
+                    playback.activeIndex == index &&
+                    widget.controller.voiceTrack.value.isPlaying,
                 onPlay: () =>
                     widget.controller.playOptionVoice(widget.exercise, index),
               ),

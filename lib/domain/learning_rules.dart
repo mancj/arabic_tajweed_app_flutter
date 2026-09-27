@@ -79,7 +79,7 @@ class LearningRules {
   final int focusedReviewTasks;
   final int sessionsWithoutNewBeforeForcing;
 
-  /// После урока с новым материалом алфавита столько успешных занятий
+  /// После урока с новым материалом столько успешных занятий
   /// без нового нужно пройти в тот же день, чтобы открыть следующий блок.
   final int reviewsBeforeNextNewLesson;
 
@@ -126,12 +126,15 @@ class LearningRules {
     _ => 1,
   };
 
-  /// Базовую букву недостаточно узнать в тестах: до продвижения дальше
-  /// нужно успешно назвать её и выполнить оба доступных режима письма.
+  /// Узнавание не заменяет письмо: до закрытия темы базовая буква проходит
+  /// голос и два вида письма, а каждый звучащий слог — дорисовывание знака.
   Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
     Atom(kind: AtomKind.haraka, tracing: String()) => {
       ExerciseMode.trace,
       ExerciseMode.traceFromMemory,
+    },
+    Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => {
+      ExerciseMode.drawHarakaForSound,
     },
     Atom(letterId: String(), form: LetterForm.isolated) => {
       if (atom.tracing != null) ...{

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../domain/atom.dart';
 import '../../../domain/form_sequence_evaluation.dart';
 
-/// Подсказки между попытками раскладки форм. Проверка самих мест живёт в
+/// Подсказки между попытками раскладки. Проверка самих мест живёт в
 /// [FormSequenceEvaluation]; здесь только состояние текущего задания.
 class FormSequenceTaskState {
   final attempt = 0.obs;
@@ -23,10 +23,12 @@ class FormSequenceTaskState {
   FormSequenceEvaluation evaluate({
     required List<Atom> options,
     required List<Atom> placed,
+    List<String>? expectedAtomIds,
   }) {
     final evaluation = FormSequenceEvaluation.evaluate(
       options: options,
       placed: placed,
+      expectedAtomIds: expectedAtomIds,
     );
     slotResults = evaluation.correct ? null : evaluation.slotResults;
     initialPlaced = evaluation.initialPlaced;

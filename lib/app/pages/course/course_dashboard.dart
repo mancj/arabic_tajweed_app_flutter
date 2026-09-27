@@ -369,7 +369,7 @@ class CourseActivityWeek extends StatelessWidget {
                                 : UIColors.secondary2,
                           ),
                         ),
-                        const Margin.vertical(8),
+                        const Margin.vertical(4),
                         Container(
                           width: 32,
                           height: 32,

@@ -243,49 +243,46 @@ class LetterWidgetCard extends StatelessWidget {
       children: [
         // Глиф уезжает за наклоном сильнее фона — так буква
         // отделяется от подложки и кажется ближе к зрителю.
-        Positioned(
-          bottom: 16,
-          child: TiltParallax(
-            offset: const Offset(8, 8),
-            // Смена буквы — своя анимация, а не только появление карточки:
-            // в уроке карточка остаётся на месте и меняется лишь глиф,
-            // и без этого он просто подменялся.
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              switchInCurve: Curves.easeOutBack,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: .8, end: 1).animate(animation),
-                  child: child,
-                ),
+        TiltParallax(
+          offset: const Offset(8, 8),
+          // Смена буквы — своя анимация, а не только появление карточки:
+          // в уроке карточка остаётся на месте и меняется лишь глиф,
+          // и без этого он просто подменялся.
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: .8, end: 1).animate(animation),
+                child: child,
               ),
-              child: Container(
-                decoration: ShapeDecoration(
-                  shape: const OvalBorder(),
-                  shadows: [
-                    BoxShadow(
-                      offset: const Offset(2, 2),
-                      blurRadius: 16,
-                      spreadRadius: 8,
-                      color: UIColors.cardBackground.withValues(alpha: .5),
+            ),
+            child: Container(
+              decoration: ShapeDecoration(
+                shape: const OvalBorder(),
+                shadows: [
+                  BoxShadow(
+                    offset: const Offset(2, 2),
+                    blurRadius: 16,
+                    spreadRadius: 8,
+                    color: UIColors.cardBackground.withValues(alpha: .5),
+                  ),
+                ],
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(letter),
+                child:
+                    glyph ??
+                    Text(
+                      letter,
+                      // Строка ужата до кегля: иначе высоту бокса задаёт
+                      // шрифт, и у каждой буквы свой запас сверху и снизу.
+                      style: isArabic
+                          ? UITextStyles.arabicRegular64Compact
+                          : UITextStyles.serifRegular32Compact,
                     ),
-                  ],
-                ),
-                child: KeyedSubtree(
-                  key: ValueKey(letter),
-                  child:
-                      glyph ??
-                      Text(
-                        letter,
-                        // Строка ужата до кегля: иначе высоту бокса задаёт
-                        // шрифт, и у каждой буквы свой запас сверху и снизу.
-                        style: isArabic
-                            ? UITextStyles.arabicRegular80Compact
-                            : UITextStyles.serifRegular32Compact,
-                      ),
-                ),
               ),
             ),
           ),

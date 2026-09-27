@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
@@ -15,6 +15,7 @@ class AnswerOption extends StatelessWidget {
   final bool selected;
   final Color? accent;
   final double playbackProgress;
+  final double trailingPadding;
   final VoidCallback? onTap;
 
   const AnswerOption({
@@ -22,6 +23,7 @@ class AnswerOption extends StatelessWidget {
     this.selected = false,
     this.accent,
     this.playbackProgress = 0,
+    this.trailingPadding = 24,
     this.onTap,
     Key? key,
   }) : super(key: key);
@@ -63,7 +65,7 @@ class AnswerOption extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.only(left: 16, right: trailingPadding),
                 child: Row(
                   children: [
                     _Radio(
@@ -76,11 +78,14 @@ class AnswerOption extends StatelessWidget {
                       child: SvgPicture.asset(
                         UISVGAssets.dashedDivider,
                         width: 22,
+                        colorFilter: ColorFilter.mode(
+                          UIColors.borders,
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
                     const Margin.horizontal(12),
                     Expanded(child: child),
-                    const Margin.horizontal(8),
                   ],
                 ),
               ),
@@ -90,6 +95,53 @@ class AnswerOption extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Звуковой вариант: динамик ближе к правому краю, но вся кнопка остаётся
+/// доступной для нажатия. Увеличение отмечает именно звучащую запись.
+class AudioAnswerOption extends StatelessWidget {
+  const AudioAnswerOption({
+    required this.label,
+    required this.onTap,
+    required this.onPlay,
+    required this.isPlaying,
+    this.selected = false,
+    this.accent,
+    this.playbackProgress = 0,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final VoidCallback onPlay;
+  final bool isPlaying;
+  final bool selected;
+  final Color? accent;
+  final double playbackProgress;
+
+  @override
+  Widget build(BuildContext context) => AnswerOption(
+    selected: selected,
+    accent: accent,
+    playbackProgress: playbackProgress,
+    trailingPadding: 8,
+    onTap: onTap,
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: UITextStyles.regular17)),
+        AnimatedScale(
+          scale: isPlaying ? 1.2 : 1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          child: IconButton(
+            tooltip: 'Прослушать $label',
+            onPressed: onPlay,
+            icon: const Icon(Icons.volume_up_rounded),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Radio extends StatelessWidget {

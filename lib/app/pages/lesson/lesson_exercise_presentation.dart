@@ -12,7 +12,7 @@ enum LessonInputKind {
   placeholder,
 }
 
-enum LessonQuestionKind { audio, formSequence, label, glyph }
+enum LessonQuestionKind { audio, formSequence, harakaSequence, label, glyph }
 
 /// Общий способ показать атом на экране урока. Понятие состоит из текста;
 /// остальные виды материала имеют знак или сочетание для показа.
@@ -46,7 +46,8 @@ class LessonExercisePresentation {
   factory LessonExercisePresentation.from(Exercise exercise) {
     final mode = exercise.mode;
     final input = switch (mode) {
-      ExerciseMode.positionToForm => LessonInputKind.formSequence,
+      ExerciseMode.positionToForm ||
+      ExerciseMode.harakaSequence => LessonInputKind.formSequence,
       ExerciseMode.sayName => LessonInputKind.pronunciation,
       _ when mode.isTracing => LessonInputKind.tracing,
       _ when exercise.isChoice => LessonInputKind.choices,
@@ -55,6 +56,7 @@ class LessonExercisePresentation {
     final question = switch (mode) {
       ExerciseMode.soundToLetter => LessonQuestionKind.audio,
       ExerciseMode.positionToForm => LessonQuestionKind.formSequence,
+      ExerciseMode.harakaSequence => LessonQuestionKind.harakaSequence,
       ExerciseMode.nameToForm => LessonQuestionKind.label,
       _ => LessonQuestionKind.glyph,
     };
@@ -65,6 +67,7 @@ class LessonExercisePresentation {
       optionsAreGlyphs: switch (mode) {
         ExerciseMode.soundToLetter ||
         ExerciseMode.positionToForm ||
+        ExerciseMode.harakaSequence ||
         ExerciseMode.nameToForm => true,
         _ => false,
       },
@@ -80,6 +83,7 @@ class LessonExercisePresentation {
 
   static String _promptFor(Exercise exercise) => switch (exercise.mode) {
     ExerciseMode.positionToForm => 'Расставьте формы буквы по местам',
+    ExerciseMode.harakaSequence => 'Расставьте огласовки по звукам',
     ExerciseMode.formToName =>
       exercise.atom.kind == AtomKind.syllable
           ? 'Какие буквы здесь соединены?'
@@ -134,7 +138,9 @@ class LessonExercisePresentation {
         LessonInputKind.pronunciation =>
           heard == null ? 'Ответ засчитан.' : 'Слышно: $heard.',
         LessonInputKind.formSequence =>
-          'Все формы расставлены по своим местам.',
+          isHarakaSequence
+              ? 'Все огласовки расставлены по звукам.'
+              : 'Все формы расставлены по своим местам.',
         LessonInputKind.tracing =>
           isHarakaDrawing
               ? 'Огласовка нарисована правильно.'
@@ -147,10 +153,10 @@ class LessonExercisePresentation {
         'Услышано: $heard. Это буква $answerLabel.',
       LessonInputKind.formSequence =>
         revealFormSequenceAnswer
-            ? 'Правильно $formSequenceCorrectCount из 4. '
+            ? 'Правильно $formSequenceCorrectCount из ${isHarakaSequence ? 3 : 4}. '
                   'Сейчас покажем весь порядок, затем соберите его сами.'
-            : 'Правильно $formSequenceCorrectCount из 4. '
-                  'Верные формы останутся на своих местах.',
+            : 'Правильно $formSequenceCorrectCount из ${isHarakaSequence ? 3 : 4}. '
+                  'Верные ${isHarakaSequence ? 'огласовки' : 'формы'} останутся на своих местах.',
       LessonInputKind.tracing =>
         isHarakaDrawing
             ? 'Попробуйте нарисовать огласовку ещё раз.'
@@ -158,4 +164,6 @@ class LessonExercisePresentation {
       _ => null,
     };
   }
+
+  bool get isHarakaSequence => question == LessonQuestionKind.harakaSequence;
 }

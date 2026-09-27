@@ -115,6 +115,9 @@ class TracingCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final k = constraints.maxWidth / LetterGuides.designWidth;
+          final contentOffset = placement == TracingPlacement.free
+              ? Offset(0, -_frameHeight * k * .10)
+              : Offset(0, -_frameHeight * k * .10);
 
           return SizedBox(
             height: (_frameHeight + 24) * k,
@@ -143,7 +146,10 @@ class TracingCard extends StatelessWidget {
                 ),
                 if (canvasBackground case final background?)
                   Positioned.fill(
-                    child: IgnorePointer(child: Center(child: background)),
+                    child: Transform.translate(
+                      offset: contentOffset,
+                      child: IgnorePointer(child: Center(child: background)),
+                    ),
                   ),
                 Positioned.fill(
                   child: DrawingCanvas(
@@ -152,6 +158,10 @@ class TracingCard extends StatelessWidget {
                     mode: mode,
                     placement: placement,
                     placeholder: shape,
+                    // Обычная буква стоит на 10% выше центра. В заданиях
+                    // на огласовки опорная буква и привязанный к ней знак
+                    // вместе подняты на 10% высоты кадра.
+                    placeholderOffset: contentOffset,
                     enabled: enabled,
                     // Четыре слоя, четыре цвета: контур под всем,
                     // поверх него показ, дальше чернила руки, и собранная

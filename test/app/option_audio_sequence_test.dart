@@ -1,5 +1,5 @@
-// Защищает автоматическое прослушивание вариантов: записи должны идти сверху
-// вниз, заливка — повторять активную запись и очищаться в состоянии покоя.
+// Защищает автоматическое прослушивание вариантов: записи идут сверху вниз,
+// заливка очищается, а динамик у края растёт только во время звучания.
 import 'package:arabic_tajweed_app/app/pages/lesson/option_audio_sequence.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
@@ -80,6 +80,49 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('динамик у правого края увеличивается только при звучании', (
+    tester,
+  ) async {
+    Widget option(bool isPlaying) => MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 320,
+            child: AudioAnswerOption(
+              label: 'Звучание 1',
+              isPlaying: isPlaying,
+              onTap: () {},
+              onPlay: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(option(false));
+    final card = find.byType(AudioAnswerOption);
+    final button = find.byType(IconButton);
+    final scale = find.byWidgetPredicate(
+      (widget) => widget is AnimatedScale && widget.child is IconButton,
+    );
+    expect(
+      tester.getTopRight(card).dx - tester.getCenter(button).dx,
+      closeTo(32, 1),
+    );
+    expect(tester.widget<AnimatedScale>(scale).scale, 1);
+
+    await tester.pumpWidget(option(true));
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(
+      tester.widget<AnimatedScale>(scale).scale,
+      1.12,
+    );
+
+    await tester.pumpWidget(option(false));
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(tester.widget<AnimatedScale>(scale).scale, 1);
   });
 }
 

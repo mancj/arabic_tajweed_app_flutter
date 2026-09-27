@@ -12,6 +12,7 @@ import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.da
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_drawing_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/haraka_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/starfield_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
@@ -104,6 +105,10 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: FormSequenceDebugPage.routeName,
           page: () => const FormSequenceDebugPage(),
+        ),
+        GetPage(
+          name: HarakaSequenceDebugPage.routeName,
+          page: () => const HarakaSequenceDebugPage(),
         ),
         GetPage(
           name: HarakaDrawingDebugPage.routeName,

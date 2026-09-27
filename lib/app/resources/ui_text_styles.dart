@@ -180,5 +180,6 @@ class UITextStyles {
   static TextStyle get arabicRegular38Compact => arabicRegular(38, height: 1);
   static TextStyle get arabicRegular48Compact => arabicRegular(48, height: 1);
   static TextStyle get arabicRegular64 => arabicRegular(64);
+  static TextStyle get arabicRegular64Compact => arabicRegular(64, height: 1);
   static TextStyle get arabicRegular80Compact => arabicRegular(80, height: 1);
 }

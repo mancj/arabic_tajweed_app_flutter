@@ -7,13 +7,17 @@ class BadgeLabel extends StatelessWidget {
   final String text;
   final Color color;
   final Color? textColor;
+  final Widget? leading;
+  final Widget? trailing;
 
   const BadgeLabel({
     required this.text,
     required this.color,
     this.textColor,
-    Key? key,
-  }) : super(key: key);
+    this.leading,
+    this.trailing,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +27,16 @@ class BadgeLabel extends StatelessWidget {
         color: color,
         borderRadius: 13,
       ),
-      child: Text(
-        text,
-        style: UITextStyles.monoMedium12.copyWith(color: textColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (leading != null) ...[leading!, const SizedBox(width: 4)],
+          Text(
+            text,
+            style: UITextStyles.monoMedium12.copyWith(color: textColor),
+          ),
+          if (trailing != null) ...[const SizedBox(width: 4), trailing!],
+        ],
       ),
     );
   }

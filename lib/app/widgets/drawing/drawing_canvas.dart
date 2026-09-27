@@ -122,6 +122,7 @@ class DrawingCanvas extends StatefulWidget {
 
   /// Фигура-подсказка под штрихами: её пользователь обводит.
   final TracingShape? placeholder;
+  final Offset placeholderOffset;
   final Color? placeholderColor;
   final double placeholderPadding;
 
@@ -213,6 +214,7 @@ class DrawingCanvas extends StatefulWidget {
     this.mode = TracingMode.tracing,
     this.placement = TracingPlacement.free,
     this.placeholder,
+    this.placeholderOffset = Offset.zero,
     this.placeholderColor,
     this.placeholderPadding = 24,
     this.matcher = const TracingMatcher(),
@@ -348,6 +350,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
 
     if (widget.placeholder != oldWidget.placeholder ||
         widget.placeholderPadding != oldWidget.placeholderPadding ||
+        widget.placeholderOffset != oldWidget.placeholderOffset ||
         widget.mode != oldWidget.mode) {
       _resolvedShape = null;
       _resolvedFor = null;
@@ -468,7 +471,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
       return null;
     }
     if (_resolvedFor != size || _resolvedShape == null) {
-      _resolvedShape = shape.resolve(size, padding: widget.placeholderPadding);
+      _resolvedShape = shape
+          .resolve(size, padding: widget.placeholderPadding)
+          .transformed(1, widget.placeholderOffset);
       _resolvedFor = size;
       // Раскладка идёт посреди сборки кадра, а показ трогает анимацию
       // и состояние: запускаем его следующим кадром.

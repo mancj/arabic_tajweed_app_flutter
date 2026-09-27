@@ -31,6 +31,7 @@ class Exercise {
     this.prompt,
     this.audioAsset,
     this.question,
+    this.sequenceOrder = const [],
   });
 
   /// Задание без выбора: обводка, сборка, аудио. Ответ не выбирается
@@ -50,7 +51,8 @@ class Exercise {
     this.question,
   }) : options = const [],
        answerIndex = directAnswer,
-       prompt = null;
+       prompt = null,
+       sequenceOrder = const [];
 
   /// Индекс, которым отмечается верный исход задания без выбора.
   static const directAnswer = 0;
@@ -59,7 +61,7 @@ class Exercise {
   static const directMiss = -1;
 
   /// Основной атом задания. Обычное упражнение пишет результат только ему;
-  /// раскладка форм пишет отдельный результат каждой форме из [resultAtoms].
+  /// семейные раскладки пишут отдельный результат каждому [resultAtoms].
   final Atom atom;
   final ExerciseMode mode;
 
@@ -90,14 +92,18 @@ class Exercise {
   /// другим содержанием. Если null, показывается подпись старого режима.
   final String? question;
 
+  /// Правильный порядок звуковых слотов; пусто у обычных заданий.
+  final List<Atom> sequenceOrder;
+
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;
 
   Atom get answer => isChoice ? options[answerIndex] : atom;
 
   /// Какие элементы действительно проверяет задание. Сборка раскладывает
-  /// все четыре формы, поэтому учитывать только [atom] было бы потерей
-  /// трёх четвертей результата.
+  /// всю семью форм или слогов, а не только [atom].
   List<Atom> get resultAtoms =>
-      mode == ExerciseMode.positionToForm ? List.unmodifiable(options) : [atom];
+      mode == ExerciseMode.positionToForm || mode == ExerciseMode.harakaSequence
+      ? List.unmodifiable(options)
+      : [atom];
 }

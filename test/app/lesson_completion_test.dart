@@ -1,15 +1,22 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/letter_audio.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
+import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../helpers/plugin_mocks.dart';
@@ -18,10 +25,12 @@ import '../helpers/plugin_mocks.dart';
 /// Открыть и выйти — не прохождение.
 /// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
 /// отвечает только первому тесту файла, а остальные вешает.
-Future<TracingShape> shapeFromDisk(String asset) async => TracingShapeSvg.parse(
-  File('assets/svg/alphabet/$asset.svg').readAsStringSync(),
-  id: asset,
-);
+Future<TracingShape> shapeFromDisk(String asset) async {
+  final path = asset.contains('/')
+      ? 'assets/svg/$asset.svg'
+      : 'assets/svg/alphabet/$asset.svg';
+  return TracingShapeSvg.parse(File(path).readAsStringSync(), id: asset);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -135,6 +144,63 @@ void main() {
     final completions = await db.readCompletions();
     expect(completions.map((e) => e.topicId), ['m.first']);
     expect(completions.single.byTest, isFalse);
+  });
+
+  // Последняя карточка обводки остаётся в дереве, пока итог занятия
+  // сохраняется. Она не должна заново читать уже очищенное текущее задание.
+  testWidgets('последняя обводка без ошибки переходит к итогу', (tester) async {
+    await db.close();
+    final delayedDatabase = _DelayedFinishDatabase();
+    db = delayedDatabase;
+    addTearDown(delayedDatabase.unblock);
+    final harakaCurriculum = CurriculumLoader.parse(
+      File('assets/curriculum/stage3.json').readAsStringSync(),
+    );
+    const atomId = 'haraka.fatha';
+    const plan = LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: [],
+      reviewAtoms: [atomId],
+      reviewCounts: {atomId: 1},
+      reason: 'проверка завершения после обводки',
+    );
+    Get.put(
+      LessonController(
+        database: delayedDatabase,
+        curriculum: harakaCurriculum,
+        plan: plan,
+        rules: const LearningRules(
+          tasksPerSession: 1,
+          reviewPerSession: 0,
+          requirePronunciation: false,
+        ),
+        shapeLoader: shapeFromDisk,
+        audio: _SilentAudio(),
+      ),
+    );
+    await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
+    await settle(tester);
+    final controller = Get.find<LessonController>();
+    expect(controller.current?.mode, ExerciseMode.trace);
+
+    await controller.submit(directOutcome: true);
+    await settle(tester);
+    await tester.tap(find.text('Продолжить'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.runAsync(
+      () => delayedDatabase.finishStarted.future.timeout(
+        const Duration(seconds: 2),
+      ),
+    );
+    await tester.pump();
+
+    expect(controller.current, isNull);
+    expect(tester.takeException(), isNull);
+
+    delayedDatabase.allowFinish.complete();
+    await settle(tester);
+    expect(controller.stage.value, LessonStage.finished);
   });
 
   testWidgets('ошибки не мешают засчитать урок', (tester) async {
@@ -300,4 +366,53 @@ void main() {
     }
     expect(c.stage.value, LessonStage.finished);
   });
+}
+
+class _DelayedFinishDatabase extends ProgressDatabase {
+  _DelayedFinishDatabase() : super(NativeDatabase.memory());
+
+  final finishStarted = Completer<void>();
+  final allowFinish = Completer<void>();
+
+  void unblock() {
+    if (!allowFinish.isCompleted) allowFinish.complete();
+  }
+
+  @override
+  Future<void> finishSession({
+    required int sessionId,
+    required DateTime at,
+    required LessonPurpose purpose,
+    required int exerciseCount,
+    required int firstTryCorrect,
+    int? checkpointLetters,
+  }) async {
+    finishStarted.complete();
+    await allowFinish.future;
+    await super.finishSession(
+      sessionId: sessionId,
+      at: at,
+      purpose: purpose,
+      exerciseCount: exerciseCount,
+      firstTryCorrect: firstTryCorrect,
+      checkpointLetters: checkpointLetters,
+    );
+  }
+}
+
+class _SilentAudio implements LessonAudio {
+  @override
+  final ValueNotifier<AudioTrack> track = ValueNotifier(AudioTrack.silent);
+
+  @override
+  Future<void> dispose() async => track.dispose();
+
+  @override
+  Future<void> playAsset(String? asset) async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> toggleAsset(String? asset) async {}
 }

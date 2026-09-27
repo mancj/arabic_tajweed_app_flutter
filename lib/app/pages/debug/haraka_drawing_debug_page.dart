@@ -254,7 +254,7 @@ class _HarakaDrawingDebugPageState extends State<HarakaDrawingDebugPage> {
                       const Margin.vertical(16),
                       HarakaDrawingCard(
                         key: ValueKey('${sample.id}.${_mode.name}'),
-                        letter: String.fromCharCode(sample.display.runes.first),
+                        letterId: sample.letterId!,
                         title: _questionFor(sample),
                         hint: _hint,
                         onClear: _clear,

@@ -60,4 +60,36 @@ void main() {
     );
     expect(withCard, lessThan(0));
   });
+
+  /// Scheherazade даёт строке большой запас сверху и снизу. Без
+  /// компактной высоты и центрирования буква с огласовкой уезжает вверх.
+  testWidgets('арабский глиф использует компактную строку и центр', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LetterWidgetCard(
+          letter: 'طَ',
+          isArabic: true,
+          autoPlay: false,
+          showPlay: false,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final glyph = tester.widget<Text>(find.text('طَ'));
+    expect(glyph.style?.height, 1);
+
+    final glyphArea = find.byWidgetPredicate(
+      (widget) => widget is SizedBox && widget.height == 80,
+    );
+    expect(
+      tester.getCenter(find.text('طَ')).dy,
+      closeTo(tester.getCenter(glyphArea).dy, 0.1),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
 }

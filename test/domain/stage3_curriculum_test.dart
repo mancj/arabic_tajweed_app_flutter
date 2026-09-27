@@ -48,7 +48,7 @@ void main() {
     };
     final connections = stages[1].topics.first;
     expect(connections.requirement.isMet(contextWith(known)), isTrue);
-    known.remove('vowel.nun.damma');
+    known.remove('vowel.nun.fatha');
     expect(connections.requirement.isMet(contextWith(known)), isFalse);
   });
 
@@ -67,15 +67,50 @@ void main() {
     );
   });
 
-  test('три огласовки идут сначала на ба, затем на всех 28 буквах', () {
+  test('42 обязательных слога покрывают все буквы и особые случаи', () {
     final stage = stages[2];
     final syllables = stage.nodes
         .map((n) => n.atom)
         .where((a) => a.kind == AtomKind.syllable)
         .toList();
-    expect(syllables, hasLength(84));
+    expect(syllables, hasLength(42));
     expect(syllables.map((a) => a.letterId).toSet(), hasLength(28));
     expect(syllables.take(3).map((a) => a.display), ['بَ', 'بِ', 'بُ']);
+    final byId = {for (final atom in syllables) atom.id: atom};
+    expect(byId['vowel.alif.fatha']?.display, 'أَ');
+    expect(byId['vowel.alif.kasra']?.display, 'إِ');
+    expect(byId['vowel.alif.damma']?.display, 'أُ');
+    for (final letter in [
+      'kha',
+      'sod',
+      'dod',
+      'to',
+      'zho',
+      'ghayn',
+      'qof',
+      'ra',
+    ]) {
+      expect(byId, contains('vowel.$letter.fatha'));
+      expect(byId, contains('vowel.$letter.kasra'));
+    }
+    expect(byId, isNot(contains('vowel.ra.damma')));
+    expect(byId, contains('vowel.mim.kasra'));
+    expect(byId, contains('vowel.ayn.kasra'));
+    final groups = stage.topics.where(
+      (topic) => topic.id.startsWith('m.haraka.group'),
+    );
+    expect(groups, hasLength(8));
+    expect(groups.every((topic) => topic.counterOf.length <= 5), isTrue);
+    expect(
+      groups.expand((topic) => topic.counterOf),
+      unorderedEquals(syllables.skip(3).map((atom) => atom.id)),
+    );
+    for (final variant in ['above', 'below']) {
+      expect(
+        File('assets/svg/alphabet/alif_hamza_${variant}_base.svg').existsSync(),
+        isTrue,
+      );
+    }
     expect(
       syllables.every(
         (a) =>
@@ -110,7 +145,7 @@ void main() {
     ]);
   });
 
-  test('слова открываются после освоения всех 28 букв с огласовками', () {
+  test('слова открываются после обязательных слогов и связок', () {
     final stage = stages[2];
     final firstWords = stage.topics.firstWhere(
       (t) => t.id == 'm.haraka.words1',
@@ -163,12 +198,17 @@ void main() {
       ).build(plan: plan, ctx: contextWith(const []), sessionId: 1);
       for (final atom in atoms) {
         final modes = exercises
-            .where((e) => e.atom.id == atom.id)
+            .where((e) => e.resultAtoms.contains(atom))
             .map((e) => e.mode)
             .toSet();
+        expect(modes, contains(ExerciseMode.letterToSound));
         expect(
-          modes,
-          containsAll([ExerciseMode.soundToLetter, ExerciseMode.letterToSound]),
+          modes.intersection({
+            ExerciseMode.soundToLetter,
+            ExerciseMode.harakaSequence,
+          }),
+          isNotEmpty,
+          reason: 'Сборка тоже проверяет направление от звука к написанию',
         );
         if (kind == AtomKind.haraka) {
           expect(
@@ -274,6 +314,7 @@ void main() {
     final planner = LessonPlanner(curriculum: curriculum);
     final fold = ProgressFold(letterFormIds: curriculum.letterFormIds);
     var reachedWords = false;
+    var harakaLessons = 0;
     for (var number = 1; number <= 70; number++) {
       final ctx = CurriculumContext(
         progress: progress,
@@ -284,6 +325,14 @@ void main() {
         sessionId: number,
         sessionsWithoutNew: 0,
       );
+      if (plan.topicId?.startsWith('m.haraka.') ?? false) {
+        harakaLessons++;
+      }
+      if (plan.topicId == 'm.join') {
+        // Изолированный планировщик считает вводное понятие и три знака
+        // двумя шагами; экран объединяет их в одно занятие.
+        expect(harakaLessons, lessThanOrEqualTo(11));
+      }
       if (plan.topicId == 'm.haraka.words1') reachedWords = true;
       final exercises = ExerciseGenerator(
         curriculum: curriculum,
