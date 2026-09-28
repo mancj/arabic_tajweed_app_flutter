@@ -1,0 +1,7 @@
+title: "Зай с касрой"
+blocks:
+  - letter:
+      glyph: "زِ"
+      audio: "audio/harakat/zay_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: زِ. Звук «и» краткий.

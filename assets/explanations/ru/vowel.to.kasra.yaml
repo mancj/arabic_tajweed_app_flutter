@@ -1,0 +1,7 @@
+title: "То с касрой"
+blocks:
+  - letter:
+      glyph: "طِ"
+      audio: "audio/harakat/to_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: طِ. Звук «и» краткий.

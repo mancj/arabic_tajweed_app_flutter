@@ -18,6 +18,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/mono_text_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/question_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/explanation_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/tracing_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_drawing_card.dart';
@@ -185,6 +186,26 @@ class LessonIntroBlock extends GetView<LessonController> {
       final atom = controller.introAtom;
       if (atom == null) return const SizedBox.shrink();
 
+      final explanation = controller.explanationFor(atom);
+      if (explanation != null) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Margin.vertical(24),
+            ExplanationCard(
+              key: ValueKey(atom.id),
+              content: explanation,
+              badge: controller.isReviewOnly ? 'Повторение' : 'Новая тема',
+              onPlay: controller.playVoice,
+              onAutoPlay: controller.startVoice,
+              autoPlayLetter: true,
+              hasVoice: controller.hasVoice,
+              track: controller.voiceTrack,
+            ),
+          ],
+        );
+      }
+
       // У понятия нет глифа — его название и есть всё содержимое,
       // поэтому карточку с буквой показываем только для букв и знаков.
       final hasGlyph = LessonAtomPresentation(atom).hasGlyph;
@@ -234,31 +255,46 @@ class _MaterialCard extends GetView<LessonController> {
 
   @override
   Widget build(BuildContext context) {
+    final explanation = controller.explanationFor(atom);
+    final badge = switch (atom.kind) {
+      AtomKind.word => 'Слово',
+      AtomKind.syllable when atom.audioAsset != null => 'Огласовка',
+      _ => 'Соединение',
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _LessonProgress(),
         const Margin.vertical(16),
-        _AtomCardFor(atom: atom),
-        const Margin.vertical(16),
-        RuleCard(
-          badge: switch (atom.kind) {
-            AtomKind.word => 'Слово',
-            AtomKind.syllable when atom.audioAsset != null => 'Огласовка',
-            _ => 'Соединение',
-          },
-          title: atom.label,
-          text: atom.note,
-          child: switch (atom.example) {
-            final example? => HighlightedWord(
-              word: example.word,
-              index: example.index,
-              form: atom.form,
-              fontSize: 48,
-            ),
-            null => null,
-          },
-        ),
+        if (explanation != null)
+          ExplanationCard(
+            key: ValueKey(atom.id),
+            content: explanation,
+            badge: badge,
+            onPlay: controller.playVoice,
+            onAutoPlay: controller.startVoice,
+            autoPlayLetter: true,
+            hasVoice: controller.hasVoice,
+            track: controller.voiceTrack,
+          )
+        else ...[
+          _AtomCardFor(atom: atom),
+          const Margin.vertical(16),
+          RuleCard(
+            badge: badge,
+            title: atom.label,
+            text: atom.note,
+            child: switch (atom.example) {
+              final example? => HighlightedWord(
+                word: example.word,
+                index: example.index,
+                form: atom.form,
+                fontSize: 48,
+              ),
+              null => null,
+            },
+          ),
+        ],
       ],
     );
   }
@@ -276,54 +312,67 @@ class _FormsOverviewCard extends GetView<LessonController> {
       (form) => form.form == LetterForm.isolated,
     );
     final audioAtom = isolated ?? forms.firstOrNull;
-    final hasVoice = audioAtom != null && controller.hasVoice(audioAtom);
+    final explanation = controller.formsExplanationFor(isolated?.letterId);
     return Column(
       key: ValueKey('forms-overview-${isolated?.letterId}'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _LessonProgress(),
         const Margin.vertical(16),
-        RuleCard(
-          badge: 'Соединение',
-          title: 'Все формы буквы ${isolated?.display ?? ''}',
-          text:
-              'Посмотрите на формы и примеры в словах. Дальше разберём '
-              'каждую форму отдельно.',
-          footer: audioAtom != null && hasVoice
-              ? SizedBox(
-                  width: double.infinity,
-                  height: 100,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: LessonAudioWaveform(
-                            height: 100,
-                            track: controller.voiceTrack,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 16,
-                        child: Center(
-                          child: PlayControl(
-                            letter: audioAtom.display,
-                            onTap: () => controller.playVoice(audioAtom),
-                            onAutoPlay: () => controller.startVoice(audioAtom),
-                            autoPlay: true,
-                            track: controller.voiceTrack,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : null,
-          child: LetterFormsOverview(forms: forms),
-        ),
+        if (explanation != null)
+          ExplanationCard(
+            content: explanation,
+            badge: 'Соединение',
+            footer: _audioFooter(audioAtom),
+            onPlay: controller.playVoice,
+            hasVoice: controller.hasVoice,
+            track: controller.voiceTrack,
+          )
+        else
+          RuleCard(
+            badge: 'Соединение',
+            title: 'Все формы буквы ${isolated?.display ?? ''}',
+            text:
+                'Посмотрите на формы и примеры в словах. Дальше разберём '
+                'каждую форму отдельно.',
+            footer: _audioFooter(audioAtom),
+            child: LetterFormsOverview(forms: forms),
+          ),
       ],
+    );
+  }
+
+  Widget? _audioFooter(Atom? atom) {
+    if (atom == null || !controller.hasVoice(atom)) return null;
+    return SizedBox(
+      width: double.infinity,
+      height: 100,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: LessonAudioWaveform(
+                height: 100,
+                track: controller.voiceTrack,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: Center(
+              child: PlayControl(
+                letter: atom.display,
+                onTap: () => controller.playVoice(atom),
+                onAutoPlay: () => controller.startVoice(atom),
+                autoPlay: true,
+                track: controller.voiceTrack,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

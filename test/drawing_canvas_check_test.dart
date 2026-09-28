@@ -56,9 +56,9 @@ void main() {
     expect(controller.check().isMatch, isTrue);
   });
 
-  /// Палец не должен закрывать свежую линию: холст хранит штрих выше точки
-  /// касания, а не только визуально сдвигает его при отрисовке.
-  testWidgets('линия рисуется выше пальца', (tester) async {
+  /// Точка по памяти должна совпадать с касанием: возвращение сдвига
+  /// помешает ставить точки буквы в выбранном пользователем месте.
+  testWidgets('по памяти точка рисуется в месте касания', (tester) async {
     final controller = DrawingController();
 
     await tester.pumpWidget(
@@ -74,18 +74,14 @@ void main() {
       ),
     );
 
-    final canvas = tester.widget<DrawingCanvas>(find.byType(DrawingCanvas));
     final origin = tester.getTopLeft(find.byType(DrawingCanvas));
     await tester.tapAt(origin + const Offset(100, 100));
 
-    expect(
-      controller.strokes.single.points.single,
-      const Offset(100, 100) + canvas.drawingOffset,
-    );
+    expect(controller.strokes.single.points.single, const Offset(100, 100));
   });
 
   /// При обводке видимый контур служит точной целью, поэтому линия должна
-  /// начинаться непосредственно под пальцем, без сдвига режима по памяти.
+  /// начинаться непосредственно под пальцем.
   testWidgets('при обводке линия остаётся под пальцем', (tester) async {
     final controller = DrawingController();
 

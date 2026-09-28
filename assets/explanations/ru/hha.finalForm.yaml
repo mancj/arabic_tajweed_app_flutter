@@ -1,0 +1,11 @@
+title: "Ха (ḥ) в конце"
+blocks:
+  - letter:
+      glyph: "ــح"
+      audio: "audio/alphabet/hha.wav"
+  - text: |
+      Ха в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.
+  - word:
+      text: "ربح"
+      highlight: 2
+      form: finalForm

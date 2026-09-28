@@ -1,0 +1,7 @@
+title: "Йа"
+blocks:
+  - letter:
+      glyph: "ي"
+      audio: "audio/alphabet/ya.wav"
+  - text: |
+      Йа. Чаша под строкой и две точки снизу.

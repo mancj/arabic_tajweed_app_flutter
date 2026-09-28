@@ -1,0 +1,7 @@
+title: "Ро с касрой"
+blocks:
+  - letter:
+      glyph: "رِ"
+      audio: "audio/harakat/ra_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: رِ. Звук «и» краткий.

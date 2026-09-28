@@ -1,0 +1,11 @@
+title: "Дод (ḍ) в конце"
+blocks:
+  - letter:
+      glyph: "ــض"
+      audio: "audio/alphabet/dod.wav"
+  - text: |
+      Дод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней.
+  - word:
+      text: "بيض"
+      highlight: 2
+      form: finalForm

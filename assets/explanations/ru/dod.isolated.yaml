@@ -1,0 +1,7 @@
+title: "Дод (ḍ)"
+blocks:
+  - letter:
+      glyph: "ض"
+      audio: "audio/alphabet/dod.wav"
+  - text: |
+      Дод. Та же петля с чашей, и одна точка сверху.

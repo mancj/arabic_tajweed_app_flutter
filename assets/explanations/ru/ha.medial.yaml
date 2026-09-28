@@ -1,0 +1,11 @@
+title: "Хэ (h) в середине"
+blocks:
+  - letter:
+      glyph: "ــهــ"
+      audio: "audio/alphabet/ha.wav"
+  - text: |
+      Хэ в середине слова: петелька со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "نهر"
+      highlight: 1
+      form: medial

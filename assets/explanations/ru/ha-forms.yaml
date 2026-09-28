@@ -1,0 +1,22 @@
+title: "Все формы буквы ه"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ه"
+      - position: initial
+        glyph: "هــ"
+        example:
+          text: "هلال"
+          highlight: 0
+      - position: medial
+        glyph: "ــهــ"
+        example:
+          text: "نهر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــه"
+        example:
+          text: "فقه"
+          highlight: 2

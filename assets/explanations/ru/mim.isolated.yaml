@@ -1,0 +1,7 @@
+title: "Мим"
+blocks:
+  - letter:
+      glyph: "م"
+      audio: "audio/alphabet/mim.wav"
+  - text: |
+      Мим. Кружок на строке с хвостиком, уходящим вниз.

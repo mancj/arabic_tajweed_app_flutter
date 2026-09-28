@@ -1,0 +1,11 @@
+title: "Лям в середине"
+blocks:
+  - letter:
+      glyph: "ــلــ"
+      audio: "audio/alphabet/lam.wav"
+  - text: |
+      Лям в середине слова: высокая палочка со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بلد"
+      highlight: 1
+      form: medial

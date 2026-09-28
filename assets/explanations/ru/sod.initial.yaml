@@ -1,0 +1,11 @@
+title: "Сод (ṣ) в начале"
+blocks:
+  - letter:
+      glyph: "صــ"
+      audio: "audio/alphabet/sod.wav"
+  - text: |
+      Сод в начале слова: остаётся петля. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "صبر"
+      highlight: 0
+      form: initial

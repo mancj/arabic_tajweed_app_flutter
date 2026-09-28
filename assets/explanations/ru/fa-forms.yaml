@@ -1,0 +1,22 @@
+title: "Все формы буквы ف"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ف"
+      - position: initial
+        glyph: "فــ"
+        example:
+          text: "فتح"
+          highlight: 0
+      - position: medial
+        glyph: "ــفــ"
+        example:
+          text: "سفر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــف"
+        example:
+          text: "صف"
+          highlight: 1

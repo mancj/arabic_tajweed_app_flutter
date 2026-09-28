@@ -1,0 +1,22 @@
+title: "Все формы буквы ش"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ش"
+      - position: initial
+        glyph: "شــ"
+        example:
+          text: "شجر"
+          highlight: 0
+      - position: medial
+        glyph: "ــشــ"
+        example:
+          text: "بشر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــش"
+        example:
+          text: "عيش"
+          highlight: 2

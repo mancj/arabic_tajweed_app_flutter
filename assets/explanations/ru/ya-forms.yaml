@@ -1,0 +1,22 @@
+title: "Все формы буквы ي"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ي"
+      - position: initial
+        glyph: "يــ"
+        example:
+          text: "يد"
+          highlight: 0
+      - position: medial
+        glyph: "ــيــ"
+        example:
+          text: "بيت"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــي"
+        example:
+          text: "كرسي"
+          highlight: 3

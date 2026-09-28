@@ -1,0 +1,11 @@
+title: "Сод (ṣ) в середине"
+blocks:
+  - letter:
+      glyph: "ــصــ"
+      audio: "audio/alphabet/sod.wav"
+  - text: |
+      Сод в середине слова: петля со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بصر"
+      highlight: 1
+      form: medial

@@ -1,0 +1,11 @@
+title: "Мим в конце"
+blocks:
+  - letter:
+      glyph: "ــم"
+      audio: "audio/alphabet/mim.wav"
+  - text: |
+      Мим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок с хвостиком вниз.
+  - word:
+      text: "علم"
+      highlight: 2
+      form: finalForm

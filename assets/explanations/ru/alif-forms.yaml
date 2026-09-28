@@ -1,0 +1,12 @@
+title: "Все формы буквы ا"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ا"
+      - position: finalForm
+        glyph: "ــا"
+        example:
+          text: "بابا"
+          highlight: 1

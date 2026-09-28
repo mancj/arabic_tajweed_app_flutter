@@ -1,0 +1,33 @@
+# Образец всех типов блоков. Карточка курса: ba.isolated.yaml.
+title: Буква Ба
+blocks:
+  - text: |
+      У буквы Ба **одна точка снизу**.
+
+      *Посмотри*, как она выглядит отдельно.
+  - letter:
+      glyph: ب
+      audio: audio/alphabet/ba.wav
+  - makhraj: |
+      Сомкните губы, затем разомкните их со звуком «б».
+  - sifat: |
+      Ба произносится с голосом; сам звук «б» остаётся коротким.
+  - text: |
+      В слове начертание меняется в зависимости от положения буквы.
+  - forms:
+      - {position: isolated, glyph: ب}
+      - {position: initial, glyph: بـ, example: {text: بات, highlight: 0}}
+      - {position: medial, glyph: ـبـ, example: {text: ثبت, highlight: 1}}
+      - {position: finalForm, glyph: ـب, example: {text: كتب, highlight: 2}}
+  - word: {text: بات, highlight: 0, form: initial}
+  - text: |
+      Нажми на примеры и сравни звучание:
+
+      - **Фатха** даёт краткий звук «а».
+      - **Касра** даёт краткий звук «и».
+      - **Дамма** даёт краткий звук «у».
+  - examples:
+      - {glyph: بَ, audio: audio/harakat/ba_fatha.mp3, caption: Фатха}
+      - {glyph: بِ, audio: audio/harakat/ba_kasra.mp3}
+      - {glyph: بُ, audio: audio/harakat/ba_damma.mp3}
+  - sound: {label: Звук буквы, audio: audio/alphabet/ba.wav}

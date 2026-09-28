@@ -1,0 +1,22 @@
+title: "Все формы буквы ق"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ق"
+      - position: initial
+        glyph: "قــ"
+        example:
+          text: "قصر"
+          highlight: 0
+      - position: medial
+        glyph: "ــقــ"
+        example:
+          text: "بقر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــق"
+        example:
+          text: "حق"
+          highlight: 1

@@ -1,0 +1,7 @@
+title: "Ба с касрой"
+blocks:
+  - letter:
+      glyph: "بِ"
+      audio: "audio/harakat/ba_kasra.mp3"
+  - text: |
+      Касра даёт краткий звук «и». Послушайте, как звучит بِ.

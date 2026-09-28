@@ -1,0 +1,11 @@
+title: "Кяф (k) в конце"
+blocks:
+  - letter:
+      glyph: "ــك"
+      audio: "audio/alphabet/kaf.wav"
+  - text: |
+      Кяф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: угол с чёрточкой внутри.
+  - word:
+      text: "ضحك"
+      highlight: 2
+      form: finalForm

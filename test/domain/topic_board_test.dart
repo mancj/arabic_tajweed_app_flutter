@@ -35,6 +35,7 @@ void main() {
 
   const firstLesson = [
     'concept.letter',
+    'concept.makhraj',
     'alif.isolated',
     'ba.isolated',
     'ta.isolated',
@@ -42,7 +43,7 @@ void main() {
   ];
 
   test('первая тема — это первый урок целиком', () {
-    // Тема и есть урок: объяснение про алфавит плюс четыре буквы.
+    // Тема и есть урок: два вступления плюс четыре буквы.
     // Понятие в одиночку уроком не было — спросить его нечем.
     final plan = board.planFor(statusOf('m.first', ctxOf({})).topic, ctxOf({}));
     expect(plan.newAtoms.map((a) => a.id), firstLesson);
@@ -120,6 +121,7 @@ void main() {
   test('тема делит атомы на новые и знакомые', () {
     final ctx = ctxOf({
       'concept.letter': AtomState.introduced,
+      'concept.makhraj': AtomState.introduced,
       'alif.isolated': AtomState.known,
       'ba.isolated': AtomState.known,
     });
@@ -128,6 +130,7 @@ void main() {
     expect(plan.newAtoms.map((a) => a.id), ['ta.isolated', 'tha.isolated']);
     expect(plan.reviewAtoms, [
       'concept.letter',
+      'concept.makhraj',
       'alif.isolated',
       'ba.isolated',
     ]);

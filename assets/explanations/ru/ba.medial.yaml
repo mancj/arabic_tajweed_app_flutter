@@ -1,0 +1,11 @@
+title: "Ба в середине"
+blocks:
+  - letter:
+      glyph: "ــبــ"
+      audio: "audio/alphabet/ba.wav"
+  - text: |
+      Ба в середине слова: зубчик с точкой снизу со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "ثبت"
+      highlight: 1
+      form: medial

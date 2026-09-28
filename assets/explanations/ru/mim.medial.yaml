@@ -1,0 +1,11 @@
+title: "Мим в середине"
+blocks:
+  - letter:
+      glyph: "ــمــ"
+      audio: "audio/alphabet/mim.wav"
+  - text: |
+      Мим в середине слова: кружок на строке со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "شمس"
+      highlight: 1
+      form: medial

@@ -45,6 +45,7 @@ void main() {
       final at = DateTime(2026, 9, 10);
       await repository.recordAll([
         AtomIntroduced(atomId: 'concept.letter', sessionId: 1, at: at),
+        AtomIntroduced(atomId: 'concept.makhraj', sessionId: 1, at: at),
         for (final id in ['alif.isolated', 'ba.isolated', 'ta.isolated'])
           KnowledgeConfirmed(atomId: id, sessionId: 1, at: at),
         AtomIntroduced(atomId: 'tha.isolated', sessionId: 1, at: at),
@@ -219,7 +220,8 @@ void main() {
     await ready.future.timeout(const Duration(seconds: 5));
     await subscription.cancel();
 
-    await controller.nextIntro(); // Понятие алфавита.
+    await controller.nextIntro(); // Приветствие.
+    await controller.nextIntro(); // Махрадж и сыфат.
     await controller.nextIntro(); // Алиф и первое произношение.
     expect(controller.current!.mode, ExerciseMode.sayName);
     await controller.startRecording();

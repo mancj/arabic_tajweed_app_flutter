@@ -1,0 +1,11 @@
+title: "Зай (z) в конце"
+blocks:
+  - letter:
+      glyph: "ــز"
+      audio: "audio/alphabet/zay.wav"
+  - text: |
+      Зай в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.
+  - word:
+      text: "خبز"
+      highlight: 2
+      form: finalForm

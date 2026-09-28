@@ -1,0 +1,7 @@
+title: "Зай (z)"
+blocks:
+  - letter:
+      glyph: "ز"
+      audio: "audio/alphabet/zay.wav"
+  - text: |
+      Зай. Тот же хвостик, что у ро, с одной точкой сверху.

@@ -1,0 +1,11 @@
+title: "Йа в начале"
+blocks:
+  - letter:
+      glyph: "يــ"
+      audio: "audio/alphabet/ya.wav"
+  - text: |
+      Йа в начале слова: остаётся зубчик с двумя точками снизу. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "يد"
+      highlight: 0
+      form: initial

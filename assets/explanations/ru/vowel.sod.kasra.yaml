@@ -1,0 +1,7 @@
+title: "Сод с касрой"
+blocks:
+  - letter:
+      glyph: "صِ"
+      audio: "audio/harakat/sod_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: صِ. Звук «и» краткий.

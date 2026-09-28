@@ -1,0 +1,7 @@
+title: "Нун"
+blocks:
+  - letter:
+      glyph: "ن"
+      audio: "audio/alphabet/nun.wav"
+  - text: |
+      Нун. Глубокая чаша под строкой и одна точка сверху.

@@ -54,7 +54,7 @@ class UITextStyles {
     height: height,
     letterSpacing: letterSpacing,
     fontFamily: family,
-    fontFamilyFallback: fallback,
+    fontFamilyFallback: fallback ?? const [fontScheherazadeNew],
     fontVariations: variations,
   );
 

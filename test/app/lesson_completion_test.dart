@@ -5,8 +5,6 @@ import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
-import 'package:arabic_tajweed_app/data/letter_audio.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/domain/learning_rules.dart';
@@ -20,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../helpers/plugin_mocks.dart';
+import '../helpers/text_asset_bundle.dart';
 
 /// Урок считается пройденным только когда человек дошёл до конца сессии.
 /// Открыть и выйти — не прохождение.
@@ -67,8 +66,10 @@ void main() {
         shapeLoader: shapeFromDisk,
         database: db,
         curriculum: curriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(curriculum),
         topicId: 'm.first',
-        audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
+        // Здесь проверяется прогресс; звук карточек проверяет lesson_page_test.
+        audio: _SilentAudio(),
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
@@ -168,6 +169,7 @@ void main() {
       LessonController(
         database: delayedDatabase,
         curriculum: harakaCurriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(harakaCurriculum),
         plan: plan,
         rules: const LearningRules(
           tasksPerSession: 1,
@@ -253,6 +255,7 @@ void main() {
     final again = await open(tester);
     expect(again.introAtoms.map((a) => a.id), [
       'concept.letter',
+      'concept.makhraj',
       'alif.isolated',
       'ba.isolated',
       'ta.isolated',

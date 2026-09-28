@@ -1,0 +1,11 @@
+title: "Та (t) в середине"
+blocks:
+  - letter:
+      glyph: "ــتــ"
+      audio: "audio/alphabet/ta.wav"
+  - text: |
+      Та в середине слова: зубчик с двумя точками со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "كتاب"
+      highlight: 1
+      form: medial

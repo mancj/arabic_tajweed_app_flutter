@@ -1,0 +1,11 @@
+title: "Хо (kh) в начале"
+blocks:
+  - letter:
+      glyph: "خــ"
+      audio: "audio/alphabet/kha.wav"
+  - text: |
+      Хо в начале слова: остаётся крючок с точкой сверху. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "خبز"
+      highlight: 0
+      form: initial

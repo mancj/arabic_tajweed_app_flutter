@@ -11,11 +11,10 @@ DESTINATION = ROOT / "assets/curriculum/stage3.json"
 
 LETTERS = HARAKAT_LETTERS
 VOWELS = [
-    ("fatha", "َ", "фатхой", "а"),
-    ("kasra", "ِ", "касрой", "и"),
-    ("damma", "ُ", "даммой", "у"),
+    ("fatha", "َ", "фатхой"),
+    ("kasra", "ِ", "касрой"),
+    ("damma", "ُ", "даммой"),
 ]
-VOWEL_NAMES = {"fatha": "Фатха", "kasra": "Касра", "damma": "Дамма"}
 # В каждом блоке не больше пяти новых слогов: остаётся место для повторения
 # и обязательного рисунка огласовки, не растягивая этап на 16+ уроков.
 GROUP_LETTER_IDS = (
@@ -77,7 +76,7 @@ def node(atom, requirement):
 
 
 def spoken_atom(
-    atom_id, kind, display, label, note, letter_id=None, audio_asset=None,
+    atom_id, kind, display, label, letter_id=None, audio_asset=None,
     tracing=None,
 ):
     atom = {
@@ -85,7 +84,7 @@ def spoken_atom(
         "kind": kind,
         "display": display,
         "label": label,
-        "note": note,
+        "explanationAsset": f"assets/explanations/ru/{atom_id}.yaml",
         "audioAsset": audio_asset or f"tts:{display}",
     }
     if letter_id is not None:
@@ -97,7 +96,9 @@ def spoken_atom(
 
 def harakat_asset(letter_id, vowel):
     relative = f"audio/harakat/{letter_id}_{vowel}.mp3"
-    return relative if (ROOT / "assets" / relative).exists() else None
+    if not (ROOT / "assets" / relative).is_file():
+        raise FileNotFoundError(f"Нет записи огласовки: assets/{relative}")
+    return relative
 
 
 def syllable_ids(letters):
@@ -124,17 +125,16 @@ def build():
         "kind": "concept",
         "display": "огласовки",
         "label": "Краткие огласовки",
-        "note": "Знак над или под буквой меняет её звучание. Нажмите на пример, чтобы услышать его.",
+        "explanationAsset": f"assets/explanations/ru/{concept_id}.yaml",
     }, prerequisite))
 
-    signs = [f"haraka.{name}" for name, _, _, _ in VOWELS]
+    signs = [f"haraka.{name}" for name, _, _ in VOWELS]
     topics.append(topic("m.haraka.signs", "Три огласовки на ب", introduced(concept_id), signs))
-    for name, mark, title, sound in VOWELS:
+    for name, mark, title in VOWELS:
         display = f"ب{mark}"
         nodes.append(node(spoken_atom(
             f"haraka.{name}", "haraka", display,
             f"Ба с {title}",
-            f"{VOWEL_NAMES[name]} даёт краткий звук «{sound}». Послушайте, как звучит {display}.",
             "ba",
             harakat_asset("ba", name),
             f"harakat/{name}",
@@ -142,12 +142,11 @@ def build():
 
     ba_ids = syllable_ids(LETTERS[:1])
     topics.append(topic("m.haraka.ba", "Читаем ب с огласовками", all_of(map(known, signs)), ba_ids))
-    for name, mark, title, sound in VOWELS:
+    for name, mark, title in VOWELS:
         display = f"ب{mark}"
         nodes.append(node(spoken_atom(
             f"vowel.ba.{name}", "syllable", display,
             f"Ба с {title}",
-            f"Послушайте и прочитайте: {display} — краткий звук «{sound}».",
             "ba",
             harakat_asset("ba", name),
             f"harakat/{name}",
@@ -160,20 +159,15 @@ def build():
         titles = " и ".join(glyph for _, glyph, _ in group)
         topics.append(topic(f"m.haraka.group{index}", f"Огласовки на {titles}", requirement, ids))
         for letter_id, glyph, letter_name in group:
-            for name, mark, title, sound in VOWELS:
+            for name, mark, title in VOWELS:
                 if name not in core_vowels(letter_id):
                     continue
                 base = "إ" if letter_id == "alif" and name == "kasra" else (
                     "أ" if letter_id == "alif" else glyph)
                 display = f"{base}{mark}"
-                note = (f"Послушайте и прочитайте: {display}. Хамза под алифом "
-                        "для касры, над алифом для фатхи и даммы."
-                        if letter_id == "alif" else
-                        f"Послушайте и прочитайте: {display}. Звук «{sound}» краткий.")
                 nodes.append(node(spoken_atom(
                     f"vowel.{letter_id}.{name}", "syllable", display,
                     f"{letter_name.capitalize()} с {title}",
-                    note,
                     letter_id,
                     harakat_asset(letter_id, name),
                     f"harakat/{name}",
@@ -204,7 +198,6 @@ def build():
             nodes.append(node(spoken_atom(
                 f"word.{word_id}", "word", display,
                 "Короткое слово",
-                "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
             ), requirement))
         previous = ids
 

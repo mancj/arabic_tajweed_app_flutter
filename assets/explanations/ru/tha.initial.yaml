@@ -1,0 +1,11 @@
+title: "Са (th) в начале"
+blocks:
+  - letter:
+      glyph: "ثــ"
+      audio: "audio/alphabet/tha.wav"
+  - text: |
+      Са в начале слова: остаётся зубчик с тремя точками. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "ثابت"
+      highlight: 0
+      form: initial

@@ -1,0 +1,22 @@
+title: "Все формы буквы م"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "م"
+      - position: initial
+        glyph: "مــ"
+        example:
+          text: "مصر"
+          highlight: 0
+      - position: medial
+        glyph: "ــمــ"
+        example:
+          text: "شمس"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــم"
+        example:
+          text: "علم"
+          highlight: 2

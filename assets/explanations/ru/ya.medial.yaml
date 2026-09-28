@@ -1,0 +1,11 @@
+title: "Йа в середине"
+blocks:
+  - letter:
+      glyph: "ــيــ"
+      audio: "audio/alphabet/ya.wav"
+  - text: |
+      Йа в середине слова: зубчик с двумя точками снизу со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بيت"
+      highlight: 1
+      form: medial

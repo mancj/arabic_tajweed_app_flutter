@@ -12,6 +12,8 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
   display: json['display'] as String,
   label: json['label'] as String? ?? '',
   note: json['note'] as String? ?? '',
+  explanationAsset: json['explanationAsset'] as String?,
+  formsOverviewAsset: json['formsOverviewAsset'] as String?,
   letterId: json['letterId'] as String?,
   form: $enumDecodeNullable(_$LetterFormEnumMap, json['form']),
   confusableWith:
@@ -32,6 +34,8 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'display': instance.display,
   'label': instance.label,
   'note': instance.note,
+  'explanationAsset': ?instance.explanationAsset,
+  'formsOverviewAsset': ?instance.formsOverviewAsset,
   'letterId': instance.letterId,
   'form': _$LetterFormEnumMap[instance.form],
   'confusableWith': instance.confusableWith,

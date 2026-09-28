@@ -1,0 +1,60 @@
+title: "Краткие огласовки"
+blocks:
+  - text: |
+      Знак над или под буквой меняет её звучание. Нажмите на пример, чтобы услышать его.
+  - text: |
+      ### Фатха  َ
+
+      Ставится над буквой и даёт краткий звук «а».
+  - examples:
+      - glyph: "بَ"
+        audio: "audio/harakat/ba_fatha.mp3"
+      - glyph: "تَ"
+        audio: "audio/harakat/ta_fatha.mp3"
+      - glyph: "كَ"
+        audio: "audio/harakat/kaf_fatha.mp3"
+  - text: |
+      ### Касра  ِ
+
+      Ставится под буквой и даёт краткий звук «и».
+  - examples:
+      - glyph: "مِ"
+        audio: "audio/harakat/mim_kasra.mp3"
+      - glyph: "لِ"
+        audio: "audio/harakat/lam_kasra.mp3"
+      - glyph: "نِ"
+        audio: "audio/harakat/nun_kasra.mp3"
+  - text: |
+      ### Дамма  ُ
+
+      Ставится над буквой и даёт краткий звук «у».
+  - examples:
+      - glyph: "شُ"
+        audio: "audio/harakat/shin_damma.mp3"
+      - glyph: "عُ"
+        audio: "audio/harakat/ayn_damma.mp3"
+      - glyph: "جُ"
+        audio: "audio/harakat/jim_damma.mp3"
+  - text: |
+      ### Все вместе
+
+      Одна и та же буква звучит по-разному в зависимости от знака. Нажмите на примеры и сравните.
+  - examples:
+      - glyph: "بَ"
+        audio: "audio/harakat/ba_fatha.mp3"
+      - glyph: "بِ"
+        audio: "audio/harakat/ba_kasra.mp3"
+      - glyph: "بُ"
+        audio: "audio/harakat/ba_damma.mp3"
+      - glyph: "تَ"
+        audio: "audio/harakat/ta_fatha.mp3"
+      - glyph: "تِ"
+        audio: "audio/harakat/ta_kasra.mp3"
+      - glyph: "تُ"
+        audio: "audio/harakat/ta_damma.mp3"
+      - glyph: "كَ"
+        audio: "audio/harakat/kaf_fatha.mp3"
+      - glyph: "كِ"
+        audio: "audio/harakat/kaf_kasra.mp3"
+      - glyph: "كُ"
+        audio: "audio/harakat/kaf_damma.mp3"

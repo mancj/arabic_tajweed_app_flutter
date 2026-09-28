@@ -1,0 +1,22 @@
+title: "Все формы буквы غ"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "غ"
+      - position: initial
+        glyph: "غــ"
+        example:
+          text: "غرب"
+          highlight: 0
+      - position: medial
+        glyph: "ــغــ"
+        example:
+          text: "بغداد"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــغ"
+        example:
+          text: "صبغ"
+          highlight: 2

@@ -1,0 +1,11 @@
+title: "Син (s) в конце"
+blocks:
+  - letter:
+      glyph: "ــس"
+      audio: "audio/alphabet/sin.wav"
+  - text: |
+      Син в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними.
+  - word:
+      text: "شمس"
+      highlight: 2
+      form: finalForm

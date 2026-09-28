@@ -1,0 +1,7 @@
+title: "Вав"
+blocks:
+  - letter:
+      glyph: "و"
+      audio: "audio/alphabet/waw.wav"
+  - text: |
+      Вав. Кружок с хвостом, уходящим под строку. Слева не соединяется.

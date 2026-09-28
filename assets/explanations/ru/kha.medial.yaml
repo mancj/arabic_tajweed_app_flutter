@@ -1,0 +1,11 @@
+title: "Хо (kh) в середине"
+blocks:
+  - letter:
+      glyph: "ــخــ"
+      audio: "audio/alphabet/kha.wav"
+  - text: |
+      Хо в середине слова: крючок с точкой сверху со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بخت"
+      highlight: 1
+      form: medial

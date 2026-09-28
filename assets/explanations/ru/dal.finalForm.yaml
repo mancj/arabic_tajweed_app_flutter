@@ -1,0 +1,11 @@
+title: "Даль (d) в конце"
+blocks:
+  - letter:
+      glyph: "ــد"
+      audio: "audio/alphabet/dal.wav"
+  - text: |
+      Даль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.
+  - word:
+      text: "جد"
+      highlight: 1
+      form: finalForm

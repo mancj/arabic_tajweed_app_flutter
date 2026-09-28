@@ -1,0 +1,22 @@
+title: "Все формы буквы خ"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "خ"
+      - position: initial
+        glyph: "خــ"
+        example:
+          text: "خبز"
+          highlight: 0
+      - position: medial
+        glyph: "ــخــ"
+        example:
+          text: "بخت"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــخ"
+        example:
+          text: "شيخ"
+          highlight: 2

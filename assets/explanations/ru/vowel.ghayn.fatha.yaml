@@ -1,0 +1,7 @@
+title: "Гойн с фатхой"
+blocks:
+  - letter:
+      glyph: "غَ"
+      audio: "audio/harakat/ghayn_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: غَ. Звук «а» краткий.

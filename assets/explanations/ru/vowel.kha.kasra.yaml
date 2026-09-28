@@ -1,0 +1,7 @@
+title: "Хо с касрой"
+blocks:
+  - letter:
+      glyph: "خِ"
+      audio: "audio/harakat/kha_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: خِ. Звук «и» краткий.

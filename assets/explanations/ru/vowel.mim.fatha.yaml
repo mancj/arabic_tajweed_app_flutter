@@ -1,0 +1,7 @@
+title: "Мим с фатхой"
+blocks:
+  - letter:
+      glyph: "مَ"
+      audio: "audio/harakat/mim_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: مَ. Звук «а» краткий.

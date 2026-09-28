@@ -1,0 +1,12 @@
+title: "Все формы буквы د"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "د"
+      - position: finalForm
+        glyph: "ــد"
+        example:
+          text: "جد"
+          highlight: 1

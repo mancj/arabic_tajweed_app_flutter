@@ -1,0 +1,7 @@
+title: "Сод (ṣ)"
+blocks:
+  - letter:
+      glyph: "ص"
+      audio: "audio/alphabet/sod.wav"
+  - text: |
+      Сод. Петля на строке и чаша за ней. Точек нет.

@@ -1,0 +1,7 @@
+title: "Зо (ẓ)"
+blocks:
+  - letter:
+      glyph: "ظ"
+      audio: "audio/alphabet/zho.wav"
+  - text: |
+      Зо. Та же петля с палочкой, и одна точка сверху.

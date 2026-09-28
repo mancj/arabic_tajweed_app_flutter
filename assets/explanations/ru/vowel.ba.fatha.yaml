@@ -1,0 +1,7 @@
+title: "Ба с фатхой"
+blocks:
+  - letter:
+      glyph: "بَ"
+      audio: "audio/harakat/ba_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: بَ — краткий звук «а».

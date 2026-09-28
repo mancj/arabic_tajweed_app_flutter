@@ -1,0 +1,11 @@
+title: "Йа в конце"
+blocks:
+  - letter:
+      glyph: "ــي"
+      audio: "audio/alphabet/ya.wav"
+  - text: |
+      Йа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками снизу.
+  - word:
+      text: "كرسي"
+      highlight: 3
+      form: finalForm

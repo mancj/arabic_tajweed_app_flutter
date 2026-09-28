@@ -1,0 +1,22 @@
+title: "Все формы буквы ط"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ط"
+      - position: initial
+        glyph: "طــ"
+        example:
+          text: "طبخ"
+          highlight: 0
+      - position: medial
+        glyph: "ــطــ"
+        example:
+          text: "خطر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــط"
+        example:
+          text: "خط"
+          highlight: 1

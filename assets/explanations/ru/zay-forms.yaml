@@ -1,0 +1,12 @@
+title: "Все формы буквы ز"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ز"
+      - position: finalForm
+        glyph: "ــز"
+        example:
+          text: "خبز"
+          highlight: 2

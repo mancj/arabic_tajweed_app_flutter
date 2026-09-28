@@ -1,0 +1,11 @@
+title: "Зо (ẓ) в начале"
+blocks:
+  - letter:
+      glyph: "ظــ"
+      audio: "audio/alphabet/zho.wav"
+  - text: |
+      Зо в начале слова: остаётся петля с палочкой и точкой. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "ظهر"
+      highlight: 0
+      form: initial

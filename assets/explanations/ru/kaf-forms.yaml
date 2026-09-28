@@ -1,0 +1,22 @@
+title: "Все формы буквы ك"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ك"
+      - position: initial
+        glyph: "كــ"
+        example:
+          text: "كتب"
+          highlight: 0
+      - position: medial
+        glyph: "ــكــ"
+        example:
+          text: "سكر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــك"
+        example:
+          text: "ضحك"
+          highlight: 2

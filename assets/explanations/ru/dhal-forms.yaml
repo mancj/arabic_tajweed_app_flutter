@@ -1,0 +1,12 @@
+title: "Все формы буквы ذ"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ذ"
+      - position: finalForm
+        glyph: "ــذ"
+        example:
+          text: "خذ"
+          highlight: 1

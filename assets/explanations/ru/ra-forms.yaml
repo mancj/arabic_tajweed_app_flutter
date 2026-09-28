@@ -1,0 +1,12 @@
+title: "Все формы буквы ر"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ر"
+      - position: finalForm
+        glyph: "ــر"
+        example:
+          text: "بحر"
+          highlight: 2

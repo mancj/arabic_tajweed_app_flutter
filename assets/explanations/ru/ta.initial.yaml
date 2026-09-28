@@ -1,0 +1,11 @@
+title: "Та (t) в начале"
+blocks:
+  - letter:
+      glyph: "تــ"
+      audio: "audio/alphabet/ta.wav"
+  - text: |
+      Та в начале слова: остаётся зубчик с двумя точками. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "تاب"
+      highlight: 0
+      form: initial

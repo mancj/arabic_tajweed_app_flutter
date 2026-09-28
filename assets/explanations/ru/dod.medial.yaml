@@ -1,0 +1,11 @@
+title: "Дод (ḍ) в середине"
+blocks:
+  - letter:
+      glyph: "ــضــ"
+      audio: "audio/alphabet/dod.wav"
+  - text: |
+      Дод в середине слова: петля с точкой сверху со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "خضر"
+      highlight: 1
+      form: medial

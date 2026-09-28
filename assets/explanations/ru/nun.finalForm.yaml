@@ -1,0 +1,11 @@
+title: "Нун в конце"
+blocks:
+  - letter:
+      glyph: "ــن"
+      audio: "audio/alphabet/nun.wav"
+  - text: |
+      Нун в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: глубокая чаша с точкой.
+  - word:
+      text: "لبن"
+      highlight: 2
+      form: finalForm

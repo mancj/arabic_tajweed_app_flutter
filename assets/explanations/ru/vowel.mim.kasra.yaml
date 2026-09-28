@@ -1,0 +1,7 @@
+title: "Мим с касрой"
+blocks:
+  - letter:
+      glyph: "مِ"
+      audio: "audio/harakat/mim_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: مِ. Звук «и» краткий.

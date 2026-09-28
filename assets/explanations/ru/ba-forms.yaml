@@ -1,0 +1,22 @@
+title: "Все формы буквы ب"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ب"
+      - position: initial
+        glyph: "بــ"
+        example:
+          text: "بات"
+          highlight: 0
+      - position: medial
+        glyph: "ــبــ"
+        example:
+          text: "ثبت"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــب"
+        example:
+          text: "كتب"
+          highlight: 2

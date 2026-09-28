@@ -1,0 +1,11 @@
+title: "Син (s) в начале"
+blocks:
+  - letter:
+      glyph: "ســ"
+      audio: "audio/alphabet/sin.wav"
+  - text: |
+      Син в начале слова: остаётся три зубчика. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "سبت"
+      highlight: 0
+      form: initial

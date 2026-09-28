@@ -57,6 +57,8 @@ class Atom {
     required this.display,
     this.label = '',
     this.note = '',
+    this.explanationAsset,
+    this.formsOverviewAsset,
     this.letterId,
     this.form,
     this.confusableWith = const [],
@@ -78,9 +80,16 @@ class Atom {
   /// буквы, а не её начертание.
   final String label;
 
-  /// Объяснение для блока «новое»: чем эта буква отличается от соседей.
-  /// Пусто — показываем только глиф и название.
+  /// Совместимость со старыми графами без YAML; в файлах курса поле не задано.
   final String note;
+
+  /// YAML-карточка с блоками объяснения.
+  @JsonKey(includeIfNull: false)
+  final String? explanationAsset;
+
+  /// Сводная карточка форм перед первым объяснением соединённой формы.
+  @JsonKey(includeIfNull: false)
+  final String? formsOverviewAsset;
 
   final String? letterId;
   final LetterForm? form;
@@ -95,9 +104,8 @@ class Atom {
   /// `ba_mid`, `ba_end`. Атом без этого поля обводкой не спрашивается.
   final String? tracing;
 
-  /// Слово, в котором форма встречается: соединённая форма показывается
-  /// не только глифом с татвилями, но и в контексте. Только у форм,
-  /// отличных от изолированной.
+  /// Временная модель примера для LetterFormsOverview. В JSON курса поле
+  /// больше не задаётся: виджет получает слова из YAML-карточки.
   final WordExample? example;
 
   /// Запись для этого материала, путь внутри assets/. У букв без этого поля

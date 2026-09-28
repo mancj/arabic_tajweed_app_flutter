@@ -1,0 +1,7 @@
+title: "Коф с фатхой"
+blocks:
+  - letter:
+      glyph: "قَ"
+      audio: "audio/harakat/qof_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: قَ. Звук «а» краткий.

@@ -1,0 +1,7 @@
+title: "То (ṭ)"
+blocks:
+  - letter:
+      glyph: "ط"
+      audio: "audio/alphabet/to.wav"
+  - text: |
+      То. Петля на строке, а из неё вверх торчит прямая палочка.

@@ -1,0 +1,11 @@
+title: "Айн (ʿ) в конце"
+blocks:
+  - letter:
+      glyph: "ــع"
+      audio: "audio/alphabet/ayn.wav"
+  - text: |
+      Айн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой.
+  - word:
+      text: "ربع"
+      highlight: 2
+      form: finalForm

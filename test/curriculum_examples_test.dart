@@ -1,74 +1,101 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/data/explanation_loader.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/explanation_document.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Соединённая форма показывается в слове-примере с подсветкой буквы.
-/// Слово и индекс задаются в контенте руками, поэтому сверяем: пример
-/// есть у каждой такой формы, и по индексу стоит именно эта буква.
+/// Регрессия: при пересборке курса объяснения и слова-примеры должны
+/// оставаться в YAML, а все ссылки из JSON должны вести к валидным карточкам.
 void main() {
-  final atoms = [
+  final stages = [
     for (final asset in CurriculumLoader.defaultStageAssets)
-      ...CurriculumLoader.parse(
-        File(asset).readAsStringSync(),
-      ).nodes.map((node) => node.atom),
+      jsonDecode(File(asset).readAsStringSync()) as Map<String, dynamic>,
   ];
+  final atoms = [
+    for (final stage in stages)
+      ...CurriculumLoader.parse(jsonEncode(stage)).nodes.map((n) => n.atom),
+  ];
+  final byId = {for (final atom in atoms) atom.id: atom};
 
-  test('у каждой соединённой формы есть слово, и буква стоит по индексу', () {
-    final joined = atoms.where(
-      (a) => a.kind == AtomKind.letterForm && a.form != LetterForm.isolated,
-    );
-    expect(joined, isNotEmpty);
+  ExplanationContent load(String path) =>
+      ExplanationLoader.parse(File(path).readAsStringSync(), sourceName: path);
 
-    for (final atom in joined) {
-      final example = atom.example;
-      expect(example, isNotNull, reason: 'у ${atom.id} нет слова-примера');
-
-      final isolated = atoms.firstWhereOrNull(
-        (a) => a.id == '${atom.letterId}.isolated',
-      );
-      expect(isolated, isNotNull, reason: 'у ${atom.id} нет изолированной');
-      expect(
-        example!.word[example.index],
-        isolated!.display,
-        reason: '${atom.id}: в ${example.word}[${example.index}] не та буква',
-      );
+  test('каждый атом курса имеет отдельную валидную YAML-карточку', () {
+    for (final stage in stages) {
+      for (final node in stage['nodes'] as List<dynamic>) {
+        final raw =
+            (node as Map<String, dynamic>)['atom'] as Map<String, dynamic>;
+        expect(raw, isNot(contains('note')), reason: raw['id'] as String);
+        expect(raw, isNot(contains('example')), reason: raw['id'] as String);
+        expect(raw['explanationAsset'], isNotNull, reason: raw['id'] as String);
+      }
+    }
+    for (final atom in atoms) {
+      final path = atom.explanationAsset!;
+      expect(File(path).existsSync(), isTrue, reason: atom.id);
+      final card = load(path);
+      expect(card.document.blocks, isNotEmpty, reason: atom.id);
     }
   });
 
-  test('в слове буква действительно стоит в показываемой форме', () {
-    // Соединяется влево та буква, у которой есть начальная форма.
+  test('слова в карточках соединённых форм подсвечивают нужную букву', () {
     final connectors = {
-      for (final a in atoms)
-        if (a.form == LetterForm.initial)
-          atoms.firstWhere((b) => b.id == '${a.letterId}.isolated').display,
+      for (final a in atoms.where((a) => a.form == LetterForm.initial))
+        byId['${a.letterId}.isolated']!.display,
     };
-
-    for (final atom in atoms.where((a) => a.example != null)) {
-      final WordExample(:word, :index) = atom.example!;
+    for (final atom in atoms.where(
+      (a) => a.kind == AtomKind.letterForm && a.form != LetterForm.isolated,
+    )) {
+      final card = load(atom.explanationAsset!);
+      final word = card.document.blocks
+          .whereType<ExplanationWord>()
+          .single
+          .word;
+      final isolated = byId['${atom.letterId}.isolated']!;
+      expect(word.text[word.highlight], isolated.display, reason: atom.id);
       if (atom.form == LetterForm.finalForm || atom.form == LetterForm.medial) {
         expect(
-          index > 0 && connectors.contains(word[index - 1]),
+          word.highlight > 0 &&
+              connectors.contains(word.text[word.highlight - 1]),
           isTrue,
-          reason:
-              '${atom.id}: в $word буква не соединена справа, '
-              'после ا د ذ ر ز و она рисуется отдельной',
+          reason: atom.id,
         );
       }
       if (atom.form == LetterForm.initial || atom.form == LetterForm.medial) {
-        expect(
-          index,
-          lessThan(word.length - 1),
-          reason: '${atom.id}: в $word буква последняя',
-        );
+        expect(word.highlight, lessThan(word.text.length - 1), reason: atom.id);
       }
     }
   });
 
-  test('у изолированных форм слова-примера нет', () {
-    final isolated = atoms.where((a) => a.form == LetterForm.isolated);
-    expect(isolated.map((a) => a.example).nonNulls, isEmpty);
+  test('у каждой буквы есть обзор форм со словами из её карточек', () {
+    for (final isolated in atoms.where((a) => a.form == LetterForm.isolated)) {
+      final path = isolated.formsOverviewAsset;
+      expect(path, isNotNull, reason: isolated.id);
+      final forms = load(
+        path!,
+      ).document.blocks.whereType<ExplanationForms>().single.forms;
+      final letterAtoms = atoms.where(
+        (a) => a.letterId == isolated.letterId && a.form != null,
+      );
+      expect(forms.length, letterAtoms.length, reason: isolated.id);
+      for (final form in forms) {
+        final atom = letterAtoms.firstWhereOrNull(
+          (a) => a.form == form.position,
+        );
+        expect(atom, isNotNull, reason: isolated.id);
+        expect(form.glyph, atom!.display);
+        if (form.position != LetterForm.isolated) {
+          final word = load(
+            atom.explanationAsset!,
+          ).document.blocks.whereType<ExplanationWord>().single.word;
+          expect(form.example?.text, word.text);
+          expect(form.example?.highlight, word.highlight);
+        }
+      }
+    }
   });
 }

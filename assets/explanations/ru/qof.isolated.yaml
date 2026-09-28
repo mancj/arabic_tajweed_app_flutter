@@ -1,0 +1,7 @@
+title: "Коф (q)"
+blocks:
+  - letter:
+      glyph: "ق"
+      audio: "audio/alphabet/qof.wav"
+  - text: |
+      Коф. Тот же кружок, но чаша уходит под строку, а точек сверху две.

@@ -1,0 +1,7 @@
+title: "Ро"
+blocks:
+  - letter:
+      glyph: "ر"
+      audio: "audio/alphabet/ra.wav"
+  - text: |
+      Ро. Хвостик, уходящий под строку. Точек нет.

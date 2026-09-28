@@ -1,0 +1,11 @@
+title: "Мим в начале"
+blocks:
+  - letter:
+      glyph: "مــ"
+      audio: "audio/alphabet/mim.wav"
+  - text: |
+      Мим в начале слова: остаётся кружок на строке. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "مصر"
+      highlight: 0
+      form: initial

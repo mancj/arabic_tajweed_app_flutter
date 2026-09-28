@@ -1,0 +1,11 @@
+title: "Коф (q) в конце"
+blocks:
+  - letter:
+      glyph: "ــق"
+      audio: "audio/alphabet/qof.wav"
+  - text: |
+      Коф в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и чаша под строкой.
+  - word:
+      text: "حق"
+      highlight: 1
+      form: finalForm

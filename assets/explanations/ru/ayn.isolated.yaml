@@ -1,0 +1,7 @@
+title: "Айн (ʿ)"
+blocks:
+  - letter:
+      glyph: "ع"
+      audio: "audio/alphabet/ayn.wav"
+  - text: |
+      Айн. Открытый крючок сверху и чаша снизу. Точек нет.

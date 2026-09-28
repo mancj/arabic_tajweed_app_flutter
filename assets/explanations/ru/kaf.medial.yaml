@@ -1,0 +1,11 @@
+title: "Кяф (k) в середине"
+blocks:
+  - letter:
+      glyph: "ــكــ"
+      audio: "audio/alphabet/kaf.wav"
+  - text: |
+      Кяф в середине слова: угловатая палочка со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "سكر"
+      highlight: 1
+      form: medial

@@ -1,0 +1,7 @@
+title: "Ха с фатхой"
+blocks:
+  - letter:
+      glyph: "حَ"
+      audio: "audio/harakat/hha_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: حَ. Звук «а» краткий.

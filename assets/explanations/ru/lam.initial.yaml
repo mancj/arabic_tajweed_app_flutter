@@ -1,0 +1,11 @@
+title: "Лям в начале"
+blocks:
+  - letter:
+      glyph: "لــ"
+      audio: "audio/alphabet/lam.wav"
+  - text: |
+      Лям в начале слова: остаётся высокая палочка. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "لعب"
+      highlight: 0
+      form: initial

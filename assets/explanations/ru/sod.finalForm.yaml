@@ -1,0 +1,11 @@
+title: "Сод (ṣ) в конце"
+blocks:
+  - letter:
+      glyph: "ــص"
+      audio: "audio/alphabet/sod.wav"
+  - text: |
+      Сод в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля и чаша за ней.
+  - word:
+      text: "نص"
+      highlight: 1
+      form: finalForm

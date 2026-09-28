@@ -1,0 +1,11 @@
+title: "Джим в середине"
+blocks:
+  - letter:
+      glyph: "ــجــ"
+      audio: "audio/alphabet/jim.wav"
+  - text: |
+      Джим в середине слова: крючок с точкой внутри со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "نجم"
+      highlight: 1
+      form: medial

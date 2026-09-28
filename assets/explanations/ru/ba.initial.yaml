@@ -1,0 +1,11 @@
+title: "Ба в начале"
+blocks:
+  - letter:
+      glyph: "بــ"
+      audio: "audio/alphabet/ba.wav"
+  - text: |
+      Ба в начале слова: остаётся зубчик с точкой снизу. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "بات"
+      highlight: 0
+      form: initial

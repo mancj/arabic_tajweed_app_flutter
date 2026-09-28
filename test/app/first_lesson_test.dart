@@ -14,8 +14,10 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../helpers/plugin_mocks.dart';
+import '../helpers/text_asset_bundle.dart';
 
-/// Произношение идёт после карточки каждой новой буквы. Проверяем экран,
+/// Приветствие и махрадж идут до букв, произношение — после каждой буквы.
+/// Правки программы курса не должны пропускать вступления. Проверяем экран,
 /// чтобы переходы intro/exercise и счётчик не отставали от контроллера.
 /// Фигуры для обводки читаем с диска, а не через rootBundle: в тестах он
 /// отвечает только первому тесту файла, а остальные вешает.
@@ -56,10 +58,15 @@ void main() {
   testWidgets('после каждой новой буквы открывается её произношение', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     Get.put(
       LessonController(
         database: db,
         curriculum: curriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(curriculum),
         shapeLoader: shapeFromDisk,
         audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
@@ -70,17 +77,28 @@ void main() {
     final controller = Get.find<LessonController>();
     expect(controller.introAtoms.map((a) => a.id), [
       'concept.letter',
+      'concept.makhraj',
       'alif.isolated',
       'ba.isolated',
       'ta.isolated',
       'tha.isolated',
     ]);
 
-    // Сколько букв в алфавите — первое, что человек видит.
-    expect(find.textContaining('28 букв'), findsOneWidget);
+    expect(find.text('Ассаляму алейкум!'), findsOneWidget);
+    expect(controller.current, isNull);
 
     await tester.tap(find.text('Понятно'));
     await settle(tester);
+    expect(controller.introAtom!.id, 'concept.makhraj');
+    expect(find.text('Махрадж и сыфат'), findsOneWidget);
+    expect(controller.current, isNull);
+
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    expect(
+      (await db.readAll()).whereType<AtomIntroduced>().map((e) => e.atomId),
+      ['concept.letter', 'concept.makhraj'],
+    );
     for (final (index, id) in [
       'alif.isolated',
       'ba.isolated',
@@ -89,6 +107,26 @@ void main() {
     ].indexed) {
       expect(controller.stage.value, LessonStage.intro);
       expect(controller.introAtom!.id, id);
+      if (id == 'ba.isolated') {
+        // Ссылка из Markdown должна загружать включённую в приложение
+        // картинку офлайн, а не искать её как файл или сетевой ресурс.
+        final image = find.byWidgetPredicate(
+          (widget) =>
+              widget is Image &&
+              widget.image is AssetImage &&
+              (widget.image as AssetImage).assetName ==
+                  'assets/img/ba-makhraj.jpg',
+        );
+        expect(image, findsOneWidget);
+        expect(
+          tester
+              .widget<RawImage>(
+                find.descendant(of: image, matching: find.byType(RawImage)),
+              )
+              .image,
+          isNotNull,
+        );
+      }
       await tester.tap(find.text('Понятно'));
       await settle(tester);
       expect(controller.current!.atom.id, id);
@@ -139,6 +177,7 @@ void main() {
       LessonController(
         database: db,
         curriculum: curriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(curriculum),
         shapeLoader: shapeFromDisk,
         audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),
@@ -187,6 +226,7 @@ void main() {
       LessonController(
         database: db,
         curriculum: curriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(curriculum),
         shapeLoader: shapeFromDisk,
         audio: LetterAudio(player: AudioPlayer(playerId: 'test')),
       ),

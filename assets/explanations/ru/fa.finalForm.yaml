@@ -1,0 +1,11 @@
+title: "Фа в конце"
+blocks:
+  - letter:
+      glyph: "ــف"
+      audio: "audio/alphabet/fa.wav"
+  - text: |
+      Фа в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок и хвост на строке.
+  - word:
+      text: "صف"
+      highlight: 1
+      form: finalForm

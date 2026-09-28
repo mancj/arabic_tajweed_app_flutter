@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show AssetBundle;
 import 'package:get/get.dart';
 
 import '../../../data/curriculum_loader.dart';
+import '../../../data/explanation_loader.dart';
 import '../../../data/letter_audio.dart';
 import '../../../data/lesson_audio.dart';
 import '../../../data/progress_database.dart';
@@ -19,6 +21,7 @@ import '../../../domain/atom_state.dart';
 import '../../../domain/audio_track.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/exercise.dart';
+import '../../../domain/explanation_document.dart';
 import '../../../domain/exercise_generator.dart';
 import '../../../domain/learning_rules.dart';
 import '../../../domain/letter_learning.dart';
@@ -45,6 +48,7 @@ class LessonController extends GetxController {
     LearningRules? rules,
     ProgressDatabase? database,
     Curriculum? curriculum,
+    AssetBundle? explanationBundle,
     String? topicId,
     LessonPlan? plan,
     this.continuePlanning = false,
@@ -57,6 +61,7 @@ class LessonController extends GetxController {
   }) : _baseRules = rules ?? const LearningRules(),
        _database = database,
        _injectedCurriculum = curriculum,
+       _explanationBundle = explanationBundle,
        _topicId = topicId,
        _previewPlan = plan,
        _injectedPronunciationPreference = pronunciationPreference,
@@ -87,6 +92,19 @@ class LessonController extends GetxController {
   /// В тестах база подставляется в памяти; в приложении берётся из Get.
   final ProgressDatabase? _database;
   final AppClock _clock;
+  final AssetBundle? _explanationBundle;
+  final _explanationCards = <String, ExplanationContent>{};
+
+  ExplanationContent? explanationFor(Atom atom) =>
+      _explanationCards[atom.explanationAsset];
+
+  ExplanationContent? formsExplanationFor(String? letterId) {
+    if (letterId == null) return null;
+    final isolated = _curriculum.nodes
+        .firstWhereOrNull((node) => node.atom.id == '$letterId.isolated')
+        ?.atom;
+    return _explanationCards[isolated?.formsOverviewAsset];
+  }
 
   /// Готовый граф вместо чтения ассета — нужен тестам.
   final Curriculum? _injectedCurriculum;
@@ -422,6 +440,19 @@ class LessonController extends GetxController {
       _pronunciationSessionId = await _pronunciationPreference?.beginSession();
     }
     _curriculum = _injectedCurriculum ?? await const CurriculumLoader().load();
+    final atoms = _curriculum.nodes.map((node) => node.atom);
+    final explanationLoader = ExplanationLoader(bundle: _explanationBundle);
+    final assets = {
+      ...atoms.map((atom) => atom.explanationAsset).nonNulls,
+      ...atoms.map((atom) => atom.formsOverviewAsset).nonNulls,
+    };
+    _explanationCards.addEntries(
+      await Future.wait(
+        assets.map(
+          (asset) async => MapEntry(asset, await explanationLoader.load(asset)),
+        ),
+      ),
+    );
     _explanations = LessonExplanationQueue(_curriculum);
     _progress = ProgressRepository(
       database: _database ?? Get.find<ProgressDatabase>(),

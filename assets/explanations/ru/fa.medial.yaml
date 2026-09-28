@@ -1,0 +1,11 @@
+title: "Фа в середине"
+blocks:
+  - letter:
+      glyph: "ــفــ"
+      audio: "audio/alphabet/fa.wav"
+  - text: |
+      Фа в середине слова: кружок с точкой сверху со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "سفر"
+      highlight: 1
+      form: medial

@@ -1,0 +1,7 @@
+title: "Нун с фатхой"
+blocks:
+  - letter:
+      glyph: "نَ"
+      audio: "audio/harakat/nun_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: نَ. Звук «а» краткий.

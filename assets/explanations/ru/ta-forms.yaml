@@ -1,0 +1,22 @@
+title: "Все формы буквы ت"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ت"
+      - position: initial
+        glyph: "تــ"
+        example:
+          text: "تاب"
+          highlight: 0
+      - position: medial
+        glyph: "ــتــ"
+        example:
+          text: "كتاب"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــت"
+        example:
+          text: "بنت"
+          highlight: 2

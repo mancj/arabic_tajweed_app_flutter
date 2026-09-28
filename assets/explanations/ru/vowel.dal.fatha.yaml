@@ -1,0 +1,7 @@
+title: "Даль с фатхой"
+blocks:
+  - letter:
+      glyph: "دَ"
+      audio: "audio/harakat/dal_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: دَ. Звук «а» краткий.

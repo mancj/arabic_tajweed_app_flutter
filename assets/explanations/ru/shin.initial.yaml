@@ -1,0 +1,11 @@
+title: "Шин (sh) в начале"
+blocks:
+  - letter:
+      glyph: "شــ"
+      audio: "audio/alphabet/shin.wav"
+  - text: |
+      Шин в начале слова: остаётся три зубчика с точками сверху. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "شجر"
+      highlight: 0
+      form: initial

@@ -1,0 +1,22 @@
+title: "Все формы буквы ل"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ل"
+      - position: initial
+        glyph: "لــ"
+        example:
+          text: "لعب"
+          highlight: 0
+      - position: medial
+        glyph: "ــلــ"
+        example:
+          text: "بلد"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــل"
+        example:
+          text: "جبل"
+          highlight: 2

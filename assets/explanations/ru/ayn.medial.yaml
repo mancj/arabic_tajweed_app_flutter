@@ -1,0 +1,11 @@
+title: "Айн (ʿ) в середине"
+blocks:
+  - letter:
+      glyph: "ــعــ"
+      audio: "audio/alphabet/ayn.wav"
+  - text: |
+      Айн в середине слова: открытый крючок со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "شعر"
+      highlight: 1
+      form: medial

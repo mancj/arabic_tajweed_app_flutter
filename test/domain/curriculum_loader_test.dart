@@ -20,7 +20,7 @@ void main() {
 
   test('граф этапа 1 читается из ассета', () {
     // 28 букв × их формы + понятия + пять начертаний хамзы.
-    expect(curriculum.nodes, hasLength(109));
+    expect(curriculum.nodes, hasLength(110));
     expect(curriculum.topics, hasLength(23));
   });
 
@@ -28,6 +28,7 @@ void main() {
     final available = curriculum.availableAtoms(ctxWith({}));
     expect(available.map((a) => a.id), [
       'concept.letter',
+      'concept.makhraj',
       'alif.isolated',
       'ba.isolated',
       'ta.isolated',
@@ -39,7 +40,7 @@ void main() {
     final first = curriculum.nodes
         .where((n) => n.requirement is Always)
         .map((n) => n.atom);
-    expect(first.every((a) => a.note.isNotEmpty), isTrue);
+    expect(first.every((a) => a.explanationAsset != null), isTrue);
   });
 
   test('у алифа только две формы — он не соединяется слева', () {

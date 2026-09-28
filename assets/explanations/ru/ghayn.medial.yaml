@@ -1,0 +1,11 @@
+title: "Гойн (gh) в середине"
+blocks:
+  - letter:
+      glyph: "ــغــ"
+      audio: "audio/alphabet/ghayn.wav"
+  - text: |
+      Гойн в середине слова: открытый крючок с точкой со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بغداد"
+      highlight: 1
+      form: medial

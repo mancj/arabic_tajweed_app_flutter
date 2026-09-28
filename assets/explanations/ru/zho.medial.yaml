@@ -1,0 +1,11 @@
+title: "Зо (ẓ) в середине"
+blocks:
+  - letter:
+      glyph: "ــظــ"
+      audio: "audio/alphabet/zho.wav"
+  - text: |
+      Зо в середине слова: петля с палочкой и точкой со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "حظر"
+      highlight: 1
+      form: medial

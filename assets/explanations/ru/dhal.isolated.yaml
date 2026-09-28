@@ -1,0 +1,7 @@
+title: "Заль (dh)"
+blocks:
+  - letter:
+      glyph: "ذ"
+      audio: "audio/alphabet/dhal.wav"
+  - text: |
+      Заль. Тот же уголок, что у даля, и одна точка сверху.

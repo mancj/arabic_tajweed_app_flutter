@@ -1,0 +1,22 @@
+title: "Все формы буквы ج"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ج"
+      - position: initial
+        glyph: "جــ"
+        example:
+          text: "جبل"
+          highlight: 0
+      - position: medial
+        glyph: "ــجــ"
+        example:
+          text: "نجم"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــج"
+        example:
+          text: "ثلج"
+          highlight: 2

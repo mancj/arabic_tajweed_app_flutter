@@ -1,0 +1,11 @@
+title: "Ха (ḥ) в середине"
+blocks:
+  - letter:
+      glyph: "ــحــ"
+      audio: "audio/alphabet/hha.wav"
+  - text: |
+      Ха в середине слова: крючок без точек со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بحث"
+      highlight: 1
+      form: medial

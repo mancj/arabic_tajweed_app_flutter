@@ -1,0 +1,11 @@
+title: "Ха (ḥ) в начале"
+blocks:
+  - letter:
+      glyph: "حــ"
+      audio: "audio/alphabet/hha.wav"
+  - text: |
+      Ха в начале слова: остаётся крючок без точек. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "حب"
+      highlight: 0
+      form: initial

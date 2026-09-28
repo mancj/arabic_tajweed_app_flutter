@@ -1,0 +1,7 @@
+title: "Фа"
+blocks:
+  - letter:
+      glyph: "ف"
+      audio: "audio/alphabet/fa.wav"
+  - text: |
+      Фа. Кружок на строке с хвостом и одной точкой сверху.

@@ -1,0 +1,11 @@
+title: "Зо (ẓ) в конце"
+blocks:
+  - letter:
+      glyph: "ــظ"
+      audio: "audio/alphabet/zho.wav"
+  - text: |
+      Зо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой.
+  - word:
+      text: "حظ"
+      highlight: 1
+      form: finalForm

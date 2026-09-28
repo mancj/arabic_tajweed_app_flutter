@@ -1,0 +1,11 @@
+title: "Коф (q) в начале"
+blocks:
+  - letter:
+      glyph: "قــ"
+      audio: "audio/alphabet/qof.wav"
+  - text: |
+      Коф в начале слова: остаётся кружок с двумя точками. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "قصر"
+      highlight: 0
+      form: initial

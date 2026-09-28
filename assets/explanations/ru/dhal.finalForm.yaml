@@ -1,0 +1,11 @@
+title: "Заль (dh) в конце"
+blocks:
+  - letter:
+      glyph: "ــذ"
+      audio: "audio/alphabet/dhal.wav"
+  - text: |
+      Заль в конце слова. Слева она и так ни с чем не соединяется, поэтому меняется только справа: появляется связка с предыдущей буквой.
+  - word:
+      text: "خذ"
+      highlight: 1
+      form: finalForm

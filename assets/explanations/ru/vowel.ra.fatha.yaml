@@ -1,0 +1,7 @@
+title: "Ро с фатхой"
+blocks:
+  - letter:
+      glyph: "رَ"
+      audio: "audio/harakat/ra_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: رَ. Звук «а» краткий.

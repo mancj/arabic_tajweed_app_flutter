@@ -1,0 +1,11 @@
+title: "Джим в начале"
+blocks:
+  - letter:
+      glyph: "جــ"
+      audio: "audio/alphabet/jim.wav"
+  - text: |
+      Джим в начале слова: остаётся крючок с точкой внутри. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "جبل"
+      highlight: 0
+      form: initial

@@ -1,0 +1,11 @@
+title: "Хэ (h) в конце"
+blocks:
+  - letter:
+      glyph: "ــه"
+      audio: "audio/alphabet/ha.wav"
+  - text: |
+      Хэ в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: кружок.
+  - word:
+      text: "فقه"
+      highlight: 2
+      form: finalForm

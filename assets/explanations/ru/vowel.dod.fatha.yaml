@@ -1,0 +1,7 @@
+title: "Дод с фатхой"
+blocks:
+  - letter:
+      glyph: "ضَ"
+      audio: "audio/harakat/dod_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: ضَ. Звук «а» краткий.

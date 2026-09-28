@@ -1,0 +1,11 @@
+title: "Лям в конце"
+blocks:
+  - letter:
+      glyph: "ــل"
+      audio: "audio/alphabet/lam.wav"
+  - text: |
+      Лям в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: палочка и чаша под строкой.
+  - word:
+      text: "جبل"
+      highlight: 2
+      form: finalForm

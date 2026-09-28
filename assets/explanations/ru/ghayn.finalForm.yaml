@@ -1,0 +1,11 @@
+title: "Гойн (gh) в конце"
+blocks:
+  - letter:
+      glyph: "ــغ"
+      audio: "audio/alphabet/ghayn.wav"
+  - text: |
+      Гойн в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок и чаша под строкой.
+  - word:
+      text: "صبغ"
+      highlight: 2
+      form: finalForm

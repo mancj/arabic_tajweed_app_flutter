@@ -1,0 +1,7 @@
+title: "Лям с фатхой"
+blocks:
+  - letter:
+      glyph: "لَ"
+      audio: "audio/harakat/lam_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: لَ. Звук «а» краткий.

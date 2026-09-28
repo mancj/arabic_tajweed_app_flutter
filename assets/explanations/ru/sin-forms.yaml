@@ -1,0 +1,22 @@
+title: "Все формы буквы س"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "س"
+      - position: initial
+        glyph: "ســ"
+        example:
+          text: "سبت"
+          highlight: 0
+      - position: medial
+        glyph: "ــســ"
+        example:
+          text: "جسر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــس"
+        example:
+          text: "شمس"
+          highlight: 2

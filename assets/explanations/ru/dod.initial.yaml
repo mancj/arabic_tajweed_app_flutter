@@ -1,0 +1,11 @@
+title: "Дод (ḍ) в начале"
+blocks:
+  - letter:
+      glyph: "ضــ"
+      audio: "audio/alphabet/dod.wav"
+  - text: |
+      Дод в начале слова: остаётся петля с точкой сверху. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "ضرب"
+      highlight: 0
+      form: initial

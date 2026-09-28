@@ -136,6 +136,8 @@ class HarakaExamplesGrid extends StatelessWidget {
     required this.activeId,
     required this.isPlaying,
     required this.onPlay,
+    this.canPlay,
+    this.captions,
     super.key,
   });
 
@@ -143,6 +145,8 @@ class HarakaExamplesGrid extends StatelessWidget {
   final String? activeId;
   final bool isPlaying;
   final ValueChanged<Atom> onPlay;
+  final bool Function(Atom)? canPlay;
+  final Map<String, String>? captions;
 
   @override
   Widget build(BuildContext context) => GridView.builder(
@@ -157,49 +161,70 @@ class HarakaExamplesGrid extends StatelessWidget {
     itemCount: examples.length,
     itemBuilder: (context, index) {
       final example = examples[index];
+      final playable = canPlay?.call(example) ?? true;
+      final caption = captions?[example.id];
       final exampleIsPlaying = isPlaying && activeId == example.id;
       return Semantics(
-        button: true,
-        label:
-            '${exampleIsPlaying ? 'Остановить' : 'Воспроизвести'} ${example.display}',
-        child: AppGestureDetector(
-          onTap: () => onPlay(example),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            constraints: const BoxConstraints(minHeight: 44),
-            decoration: SquircleBorders.squircleBorder(
-              color: exampleIsPlaying
-                  ? UIColors.primary10
-                  : UIColors.highlightArea,
-              borderRadius: 16,
-              cornerSmoothing: .8,
-              borderSide: BorderSide(
-                color: exampleIsPlaying ? UIColors.primary : UIColors.borders,
+        button: playable,
+        label: playable
+            ? '${exampleIsPlaying ? 'Остановить' : 'Воспроизвести'} ${example.display}${caption == null ? '' : ', $caption'}'
+            : '${example.display}${caption == null ? '' : ', $caption'}',
+        child: IgnorePointer(
+          ignoring: !playable,
+          child: AppGestureDetector(
+            onTap: playable ? () => onPlay(example) : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              constraints: const BoxConstraints(minHeight: 44),
+              decoration: SquircleBorders.squircleBorder(
+                color: exampleIsPlaying
+                    ? UIColors.primary10
+                    : UIColors.highlightArea,
+                borderRadius: 16,
+                cornerSmoothing: .8,
+                borderSide: BorderSide(
+                  color: exampleIsPlaying ? UIColors.primary : UIColors.borders,
+                ),
               ),
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Text(
-                    example.display,
-                    textDirection: TextDirection.rtl,
-                    style: UITextStyles.arabicRegular38Compact,
+              child: Stack(
+                children: [
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          example.display,
+                          textDirection: TextDirection.rtl,
+                          style: UITextStyles.arabicRegular38Compact,
+                        ),
+                        if (caption != null) ...[
+                          const Margin.vertical(4),
+                          Text(
+                            caption,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: UITextStyles.regular11,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                Positioned(
-                  right: 6,
-                  bottom: 6,
-                  child: Icon(
-                    exampleIsPlaying
-                        ? Icons.stop_rounded
-                        : Icons.volume_up_rounded,
-                    size: 16,
-                    color: exampleIsPlaying
-                        ? UIColors.primary
-                        : UIColors.secondary1,
-                  ),
-                ),
-              ],
+                  if (playable)
+                    Positioned(
+                      right: 6,
+                      bottom: 6,
+                      child: Icon(
+                        exampleIsPlaying
+                            ? Icons.stop_rounded
+                            : Icons.volume_up_rounded,
+                        size: 16,
+                        color: exampleIsPlaying
+                            ? UIColors.primary
+                            : UIColors.secondary1,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

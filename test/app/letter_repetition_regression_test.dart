@@ -113,6 +113,7 @@ void main() {
     final at = DateTime(2026, 9, 12);
     await repository.recordAll([
       AtomIntroduced(atomId: 'concept.letter', sessionId: 1, at: at),
+      AtomIntroduced(atomId: 'concept.makhraj', sessionId: 1, at: at),
       for (final id in ['ba.isolated', 'ta.isolated', 'tha.isolated'])
         KnowledgeConfirmed(atomId: id, sessionId: 1, at: at),
       AtomIntroduced(atomId: 'alif.isolated', sessionId: 1, at: at),

@@ -1,0 +1,22 @@
+title: "Все формы буквы ض"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ض"
+      - position: initial
+        glyph: "ضــ"
+        example:
+          text: "ضرب"
+          highlight: 0
+      - position: medial
+        glyph: "ــضــ"
+        example:
+          text: "خضر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــض"
+        example:
+          text: "بيض"
+          highlight: 2

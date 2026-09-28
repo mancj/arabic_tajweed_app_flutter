@@ -1,0 +1,7 @@
+title: "Гойн с касрой"
+blocks:
+  - letter:
+      glyph: "غِ"
+      audio: "audio/harakat/ghayn_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: غِ. Звук «и» краткий.

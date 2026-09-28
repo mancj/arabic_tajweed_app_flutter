@@ -1,0 +1,11 @@
+title: "Ба в конце"
+blocks:
+  - letter:
+      glyph: "ــب"
+      audio: "audio/alphabet/ba.wav"
+  - text: |
+      Ба в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с точкой снизу.
+  - word:
+      text: "كتب"
+      highlight: 2
+      form: finalForm

@@ -1,0 +1,7 @@
+title: "Айн с касрой"
+blocks:
+  - letter:
+      glyph: "عِ"
+      audio: "audio/harakat/ayn_kasra.mp3"
+  - text: |
+      Послушайте и прочитайте: عِ. Звук «и» краткий.

@@ -1,0 +1,11 @@
+title: "Джим в конце"
+blocks:
+  - letter:
+      glyph: "ــج"
+      audio: "audio/alphabet/jim.wav"
+  - text: |
+      Джим в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.
+  - word:
+      text: "ثلج"
+      highlight: 2
+      form: finalForm

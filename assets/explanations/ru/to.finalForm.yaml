@@ -1,0 +1,11 @@
+title: "То (ṭ) в конце"
+blocks:
+  - letter:
+      glyph: "ــط"
+      audio: "audio/alphabet/to.wav"
+  - text: |
+      То в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: петля с палочкой.
+  - word:
+      text: "خط"
+      highlight: 1
+      form: finalForm

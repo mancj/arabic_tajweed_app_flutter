@@ -1,0 +1,22 @@
+title: "Все формы буквы ظ"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ظ"
+      - position: initial
+        glyph: "ظــ"
+        example:
+          text: "ظهر"
+          highlight: 0
+      - position: medial
+        glyph: "ــظــ"
+        example:
+          text: "حظر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــظ"
+        example:
+          text: "حظ"
+          highlight: 1

@@ -1,0 +1,22 @@
+title: "Все формы буквы ع"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ع"
+      - position: initial
+        glyph: "عــ"
+        example:
+          text: "عرب"
+          highlight: 0
+      - position: medial
+        glyph: "ــعــ"
+        example:
+          text: "شعر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــع"
+        example:
+          text: "ربع"
+          highlight: 2

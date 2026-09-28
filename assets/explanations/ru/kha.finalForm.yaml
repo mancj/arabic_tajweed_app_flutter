@@ -1,0 +1,11 @@
+title: "Хо (kh) в конце"
+blocks:
+  - letter:
+      glyph: "ــخ"
+      audio: "audio/alphabet/kha.wav"
+  - text: |
+      Хо в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: крючок с животиком под строкой.
+  - word:
+      text: "شيخ"
+      highlight: 2
+      form: finalForm

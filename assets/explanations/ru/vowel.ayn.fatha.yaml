@@ -1,0 +1,7 @@
+title: "Айн с фатхой"
+blocks:
+  - letter:
+      glyph: "عَ"
+      audio: "audio/harakat/ayn_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: عَ. Звук «а» краткий.

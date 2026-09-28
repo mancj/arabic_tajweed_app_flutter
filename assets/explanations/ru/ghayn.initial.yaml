@@ -1,0 +1,11 @@
+title: "Гойн (gh) в начале"
+blocks:
+  - letter:
+      glyph: "غــ"
+      audio: "audio/alphabet/ghayn.wav"
+  - text: |
+      Гойн в начале слова: остаётся открытый крючок с точкой. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "غرب"
+      highlight: 0
+      form: initial

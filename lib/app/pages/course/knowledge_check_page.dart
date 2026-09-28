@@ -13,6 +13,7 @@ import '../../resources/ui_resources.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/answer_option.dart';
+import '../../widgets/ui_kit/explanation_asset_card.dart';
 import '../../widgets/ui_kit/mono_text_button.dart';
 import '../../widgets/ui_kit/next_button.dart';
 import '../../widgets/ui_kit/question_card.dart';
@@ -222,11 +223,12 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
                   'Можно выйти: подтверждённые знания сохранятся.',
             )
           else if (concept != null)
-            RuleCard(
-              title: concept.label,
-              text: concept.note,
-              badge: 'Перед проверкой',
-            )
+            concept.explanationAsset != null
+                ? ExplanationAssetCard(
+                    asset: concept.explanationAsset!,
+                    badge: 'Перед проверкой',
+                  )
+                : RuleCard(title: concept.label, badge: 'Перед проверкой')
           else if (question != null) ...[
             Text(
               'Задание ${index + 1} из ${check.questions.length}',

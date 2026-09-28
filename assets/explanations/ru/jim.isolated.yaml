@@ -1,0 +1,17 @@
+title: "Джим — ج"
+blocks:
+  - letter:
+      glyph: "ج"
+      audio: "audio/alphabet/jim.wav"
+  - text: |
+      Звучит похоже на слитное **«дж»** в слове «джем».
+
+      ## Как пишется
+
+      Внизу — округлая часть, похожая на чашу, и одна точка внутри неё.
+  - makhraj: |
+      Прижмите середину языка к нёбу, затем отпустите её, произнося «дж».
+      [Источник](https://tajweed.quranpedia.net/lessons/show/content/18).
+  - sifat: |
+      Звук короткий, с голосом, без утолщения. Не растягивайте его в «ж-ж-ж».
+      [Источник](https://tajweed.quranpedia.net/lessons/show/content/19).

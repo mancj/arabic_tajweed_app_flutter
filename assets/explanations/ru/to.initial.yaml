@@ -1,0 +1,11 @@
+title: "То (ṭ) в начале"
+blocks:
+  - letter:
+      glyph: "طــ"
+      audio: "audio/alphabet/to.wav"
+  - text: |
+      То в начале слова: остаётся петля с прямой палочкой. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "طبخ"
+      highlight: 0
+      form: initial

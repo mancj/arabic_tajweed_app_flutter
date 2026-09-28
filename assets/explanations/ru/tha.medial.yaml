@@ -1,0 +1,11 @@
+title: "Са (th) в середине"
+blocks:
+  - letter:
+      glyph: "ــثــ"
+      audio: "audio/alphabet/tha.wav"
+  - text: |
+      Са в середине слова: зубчик с тремя точками со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "مثل"
+      highlight: 1
+      form: medial

@@ -1,0 +1,11 @@
+title: "Шин (sh) в середине"
+blocks:
+  - letter:
+      glyph: "ــشــ"
+      audio: "audio/alphabet/shin.wav"
+  - text: |
+      Шин в середине слова: три зубчика с точками сверху со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بشر"
+      highlight: 1
+      form: medial

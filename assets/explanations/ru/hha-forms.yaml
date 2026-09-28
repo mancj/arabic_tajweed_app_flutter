@@ -1,0 +1,22 @@
+title: "Все формы буквы ح"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ح"
+      - position: initial
+        glyph: "حــ"
+        example:
+          text: "حب"
+          highlight: 0
+      - position: medial
+        glyph: "ــحــ"
+        example:
+          text: "بحث"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــح"
+        example:
+          text: "ربح"
+          highlight: 2

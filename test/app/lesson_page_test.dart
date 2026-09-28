@@ -1,4 +1,8 @@
 import '../helpers/plugin_mocks.dart';
+import '../helpers/text_asset_bundle.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/explanation_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
+import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/data/letter_audio.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
@@ -65,13 +69,36 @@ void main() {
     String? topicId,
     bool continuePlanning = false,
     LessonAudio? audio,
+    Curriculum? content,
+    AssetBundle? explanationBundle,
   }) async {
+    final lessonContent = content ?? curriculum;
+    final paths = {
+      for (final node in lessonContent.nodes)
+        if (node.atom.explanationAsset case final path?) path,
+      for (final node in lessonContent.nodes)
+        if (node.atom.formsOverviewAsset case final path?) path,
+    };
+    final cardBundle = explanationBundle is TextAssetBundle
+        ? explanationBundle
+        : explanationBundle == null
+        ? TextAssetBundle({})
+        : null;
+    if (cardBundle != null) {
+      for (final path in paths) {
+        cardBundle.sources.putIfAbsent(
+          path,
+          () => File(path).readAsStringSync(),
+        );
+      }
+    }
     // Граф отдаём готовым: rootBundle в тестах отвечает только первому
     // тесту файла, дальше запрос повисает.
     Get.put(
       LessonController(
         database: db,
-        curriculum: curriculum,
+        curriculum: lessonContent,
+        explanationBundle: cardBundle ?? explanationBundle,
         topicId: topicId,
         continuePlanning: continuePlanning,
         shapeLoader: shapeFromDisk,
@@ -91,6 +118,144 @@ void main() {
     expect(controller.stage.value, LessonStage.intro);
     expect(controller.introAtom?.id, 'concept.letter');
     expect(find.text('Понятно'), findsOneWidget);
+  });
+
+  // После переноса буквы в YAML её карточка должна по-прежнему произносить
+  // имя сама; ручное нажатие должно идти через переключение плеера.
+  testWidgets('буква из YAML звучит при появлении в уроке', (tester) async {
+    final audio = _RecordingAudio();
+    await pumpLesson(tester, topicId: 'm.first', audio: audio);
+    expect(audio.played, isEmpty);
+
+    // Оба вступления проходят до первой звучащей буквы.
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    expect(audio.played, isEmpty);
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+
+    final controller = Get.find<LessonController>();
+    expect(controller.introAtom?.id, 'alif.isolated');
+    expect(audio.played, contains(LetterAudio.assetOf('alif')));
+    await tester.tap(find.byType(PlayControl));
+    await tester.pump();
+    expect(audio.toggled, contains(LetterAudio.assetOf('alif')));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
+  // Перенос одной карточки в YAML не должен дублировать старую иллюстрацию
+  // или менять запись знакомства с атомом в журнале.
+  testWidgets('ссылка на YAML заменяет объяснение в интро урока', (
+    tester,
+  ) async {
+    const asset = 'cards/intro.yaml';
+    final content = Curriculum(
+      nodes: [
+        for (final node in curriculum.nodes)
+          if (node.atom.id == 'concept.letter')
+            CurriculumNode(
+              atom: Atom.fromJson({
+                ...node.atom.toJson(),
+                'example': node.atom.example?.toJson(),
+                'explanationAsset': asset,
+              }),
+              requirement: node.requirement,
+            )
+          else
+            node,
+      ],
+      topics: curriculum.topics,
+    );
+    final bundle = TextAssetBundle({
+      asset: '''
+title: Заголовок из YAML
+blocks:
+  - text: '**Текст из YAML**'
+  - letter: {glyph: ب, audio: audio/alphabet/ba.wav}
+  - sound: {label: Звук буквы, audio: audio/alphabet/ba.wav}
+''',
+    });
+    final audio = _RecordingAudio();
+    await pumpLesson(
+      tester,
+      content: content,
+      explanationBundle: bundle,
+      audio: audio,
+    );
+    expect(find.byType(ExplanationCard), findsOneWidget);
+    expect(find.text('Заголовок из YAML'), findsOneWidget);
+    expect(find.text('Текст из YAML', findRichText: true), findsOneWidget);
+    expect(find.textContaining('28 букв'), findsNothing);
+    expect(find.byType(LetterWidgetCard), findsOneWidget);
+    expect(bundle.loads.where((path) => path == asset), hasLength(1));
+    final sound = find.byType(PlayControl).last;
+    await tester.ensureVisible(sound);
+    await tester.tap(sound);
+    await tester.pump();
+    expect(audio.toggled, ['audio/alphabet/ba.wav']);
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    expect(
+      (await db.readAll()).map((event) => event.atomId),
+      contains('concept.letter'),
+    );
+  });
+
+  // После общего обзора форма должна открывать свою YAML-карточку;
+  // одинаковая ссылка у нескольких форм должна загружаться один раз.
+  testWidgets('YAML работает и у объяснения формы перед вопросом', (
+    tester,
+  ) async {
+    const asset = 'cards/form.yaml';
+    final content = Curriculum(
+      nodes: [
+        for (final node in curriculum.nodes)
+          if (node.atom.form != null && node.atom.form != LetterForm.isolated)
+            CurriculumNode(
+              atom: Atom.fromJson({
+                ...node.atom.toJson(),
+                'example': node.atom.example?.toJson(),
+                'explanationAsset': asset,
+              }),
+              requirement: node.requirement,
+            )
+          else
+            node,
+      ],
+      topics: curriculum.topics,
+    );
+    final bundle = TextAssetBundle({
+      asset: '''
+title: Форма из YAML
+blocks:
+  - text: 'Объяснение перед заданием.'
+''',
+    });
+    await tester.runAsync(
+      () => db.appendAll([
+        for (final id in curriculum.topics.first.counterOf)
+          AtomIntroduced(atomId: id, sessionId: 1, at: DateTime(2026)),
+      ]),
+    );
+    await pumpLesson(
+      tester,
+      topicId: 'm.forms',
+      content: content,
+      explanationBundle: bundle,
+    );
+    final controller = Get.find<LessonController>();
+    while (controller.stage.value == LessonStage.intro) {
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+    }
+    expect(controller.formsOverview, isNotEmpty);
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    expect(find.byType(ExplanationCard), findsOneWidget);
+    expect(find.text('Форма из YAML'), findsOneWidget);
+    expect(find.byType(LetterWidgetCard), findsNothing);
+    expect(bundle.loads.where((path) => path == asset), hasLength(1));
   });
 
   testWidgets('после интро понятие записано в лог', (tester) async {
@@ -126,15 +291,16 @@ void main() {
     expect(controller.isTopicLesson, isTrue);
     expect(controller.stage.value, LessonStage.intro);
 
-    // Тема = урок: объяснение про алфавит и следом четыре буквы.
+    // Тема = урок: два вступления и следом четыре буквы.
     expect(controller.introAtoms.map((a) => a.id), [
       'concept.letter',
+      'concept.makhraj',
       'alif.isolated',
       'ba.isolated',
       'ta.isolated',
       'tha.isolated',
     ]);
-    expect(find.textContaining('28 букв'), findsOneWidget);
+    expect(find.text('Ассаляму алейкум!'), findsOneWidget);
   });
 
   // Обзор должен озвучивать букву сам; кнопка лежит поверх нижней волны,
@@ -193,10 +359,13 @@ void main() {
     expect(tester.getCenter(play).dx, closeTo(tester.getCenter(card).dx, 1));
     expect(
       tester.getBottomRight(card).dy - tester.getBottomRight(play).dy,
-      inInclusiveRange(4, 14),
+      // Нижний отступ 16 px и граница карточки 1 px.
+      closeTo(17, 1),
     );
     expect(tester.getTopLeft(play).dy, greaterThan(tester.getTopLeft(wave).dy));
 
+    await tester.ensureVisible(play);
+    await tester.pump();
     await tester.tap(play);
     await tester.pump();
     expect(audio.toggled, [asset]);

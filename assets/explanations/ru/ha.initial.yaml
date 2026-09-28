@@ -1,0 +1,11 @@
+title: "Хэ (h) в начале"
+blocks:
+  - letter:
+      glyph: "هــ"
+      audio: "audio/alphabet/ha.wav"
+  - text: |
+      Хэ в начале слова: остаётся петелька. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "هلال"
+      highlight: 0
+      form: initial

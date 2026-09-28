@@ -1,0 +1,11 @@
+title: "То (ṭ) в середине"
+blocks:
+  - letter:
+      glyph: "ــطــ"
+      audio: "audio/alphabet/to.wav"
+  - text: |
+      То в середине слова: петля с прямой палочкой со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "خطر"
+      highlight: 1
+      form: medial

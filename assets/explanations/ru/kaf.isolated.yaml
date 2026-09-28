@@ -1,0 +1,7 @@
+title: "Кяф (k)"
+blocks:
+  - letter:
+      glyph: "ك"
+      audio: "audio/alphabet/kaf.wav"
+  - text: |
+      Кяф. Угловатая буква с маленькой чёрточкой внутри.

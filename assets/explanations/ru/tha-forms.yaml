@@ -1,0 +1,22 @@
+title: "Все формы буквы ث"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ث"
+      - position: initial
+        glyph: "ثــ"
+        example:
+          text: "ثابت"
+          highlight: 0
+      - position: medial
+        glyph: "ــثــ"
+        example:
+          text: "مثل"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــث"
+        example:
+          text: "ثلث"
+          highlight: 2

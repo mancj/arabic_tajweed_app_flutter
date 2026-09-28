@@ -1,0 +1,22 @@
+title: "Все формы буквы ص"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ص"
+      - position: initial
+        glyph: "صــ"
+        example:
+          text: "صبر"
+          highlight: 0
+      - position: medial
+        glyph: "ــصــ"
+        example:
+          text: "بصر"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــص"
+        example:
+          text: "نص"
+          highlight: 1

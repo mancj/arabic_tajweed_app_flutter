@@ -1,0 +1,11 @@
+title: "Син (s) в середине"
+blocks:
+  - letter:
+      glyph: "ــســ"
+      audio: "audio/alphabet/sin.wav"
+  - text: |
+      Син в середине слова: три зубчика со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "جسر"
+      highlight: 1
+      form: medial

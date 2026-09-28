@@ -1,0 +1,11 @@
+title: "Айн (ʿ) в начале"
+blocks:
+  - letter:
+      glyph: "عــ"
+      audio: "audio/alphabet/ayn.wav"
+  - text: |
+      Айн в начале слова: остаётся открытый крючок. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "عرب"
+      highlight: 0
+      form: initial

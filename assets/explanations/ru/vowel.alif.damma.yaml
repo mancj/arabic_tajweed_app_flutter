@@ -1,0 +1,7 @@
+title: "Алиф с даммой"
+blocks:
+  - letter:
+      glyph: "أُ"
+      audio: "audio/harakat/alif_damma.mp3"
+  - text: |
+      Послушайте и прочитайте: أُ. Хамза под алифом для касры, над алифом для фатхи и даммы.

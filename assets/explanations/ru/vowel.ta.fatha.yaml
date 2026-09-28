@@ -1,0 +1,7 @@
+title: "Та с фатхой"
+blocks:
+  - letter:
+      glyph: "تَ"
+      audio: "audio/harakat/ta_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: تَ. Звук «а» краткий.

@@ -1070,7 +1070,7 @@
         "kind": "concept",
         "display": "огласовки",
         "label": "Краткие огласовки",
-        "note": "Знак над или под буквой меняет её звучание. Нажмите на пример, чтобы услышать его."
+        "explanationAsset": "assets/explanations/ru/concept.haraka.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -1524,7 +1524,7 @@
         "kind": "haraka",
         "display": "بَ",
         "label": "Ба с фатхой",
-        "note": "Фатха даёт краткий звук «а». Послушайте, как звучит بَ.",
+        "explanationAsset": "assets/explanations/ru/haraka.fatha.yaml",
         "audioAsset": "audio/harakat/ba_fatha.mp3",
         "letterId": "ba",
         "tracing": "harakat/fatha"
@@ -1540,7 +1540,7 @@
         "kind": "haraka",
         "display": "بِ",
         "label": "Ба с касрой",
-        "note": "Касра даёт краткий звук «и». Послушайте, как звучит بِ.",
+        "explanationAsset": "assets/explanations/ru/haraka.kasra.yaml",
         "audioAsset": "audio/harakat/ba_kasra.mp3",
         "letterId": "ba",
         "tracing": "harakat/kasra"
@@ -1556,7 +1556,7 @@
         "kind": "haraka",
         "display": "بُ",
         "label": "Ба с даммой",
-        "note": "Дамма даёт краткий звук «у». Послушайте, как звучит بُ.",
+        "explanationAsset": "assets/explanations/ru/haraka.damma.yaml",
         "audioAsset": "audio/harakat/ba_damma.mp3",
         "letterId": "ba",
         "tracing": "harakat/damma"
@@ -1572,7 +1572,7 @@
         "kind": "syllable",
         "display": "بَ",
         "label": "Ба с фатхой",
-        "note": "Послушайте и прочитайте: بَ — краткий звук «а».",
+        "explanationAsset": "assets/explanations/ru/vowel.ba.fatha.yaml",
         "audioAsset": "audio/harakat/ba_fatha.mp3",
         "letterId": "ba",
         "tracing": "harakat/fatha"
@@ -1601,7 +1601,7 @@
         "kind": "syllable",
         "display": "بِ",
         "label": "Ба с касрой",
-        "note": "Послушайте и прочитайте: بِ — краткий звук «и».",
+        "explanationAsset": "assets/explanations/ru/vowel.ba.kasra.yaml",
         "audioAsset": "audio/harakat/ba_kasra.mp3",
         "letterId": "ba",
         "tracing": "harakat/kasra"
@@ -1630,7 +1630,7 @@
         "kind": "syllable",
         "display": "بُ",
         "label": "Ба с даммой",
-        "note": "Послушайте и прочитайте: بُ — краткий звук «у».",
+        "explanationAsset": "assets/explanations/ru/vowel.ba.damma.yaml",
         "audioAsset": "audio/harakat/ba_damma.mp3",
         "letterId": "ba",
         "tracing": "harakat/damma"
@@ -1659,7 +1659,7 @@
         "kind": "syllable",
         "display": "تَ",
         "label": "Та с фатхой",
-        "note": "Послушайте и прочитайте: تَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ta.fatha.yaml",
         "audioAsset": "audio/harakat/ta_fatha.mp3",
         "letterId": "ta",
         "tracing": "harakat/fatha"
@@ -1688,7 +1688,7 @@
         "kind": "syllable",
         "display": "كَ",
         "label": "Кяф с фатхой",
-        "note": "Послушайте и прочитайте: كَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.kaf.fatha.yaml",
         "audioAsset": "audio/harakat/kaf_fatha.mp3",
         "letterId": "kaf",
         "tracing": "harakat/fatha"
@@ -1717,7 +1717,7 @@
         "kind": "syllable",
         "display": "دَ",
         "label": "Даль с фатхой",
-        "note": "Послушайте и прочитайте: دَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.dal.fatha.yaml",
         "audioAsset": "audio/harakat/dal_fatha.mp3",
         "letterId": "dal",
         "tracing": "harakat/fatha"
@@ -1746,7 +1746,7 @@
         "kind": "syllable",
         "display": "رَ",
         "label": "Ро с фатхой",
-        "note": "Послушайте и прочитайте: رَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ra.fatha.yaml",
         "audioAsset": "audio/harakat/ra_fatha.mp3",
         "letterId": "ra",
         "tracing": "harakat/fatha"
@@ -1775,7 +1775,7 @@
         "kind": "syllable",
         "display": "رِ",
         "label": "Ро с касрой",
-        "note": "Послушайте и прочитайте: رِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ra.kasra.yaml",
         "audioAsset": "audio/harakat/ra_kasra.mp3",
         "letterId": "ra",
         "tracing": "harakat/kasra"
@@ -1804,7 +1804,7 @@
         "kind": "syllable",
         "display": "سَ",
         "label": "Син с фатхой",
-        "note": "Послушайте и прочитайте: سَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.sin.fatha.yaml",
         "audioAsset": "audio/harakat/sin_fatha.mp3",
         "letterId": "sin",
         "tracing": "harakat/fatha"
@@ -1841,8 +1841,8 @@
         "kind": "syllable",
         "display": "مَ",
         "label": "Мим с фатхой",
-        "note": "Послушайте и прочитайте: مَ. Звук «а» краткий.",
-        "audioAsset": "tts:مَ",
+        "explanationAsset": "assets/explanations/ru/vowel.mim.fatha.yaml",
+        "audioAsset": "audio/harakat/mim_fatha.mp3",
         "letterId": "mim",
         "tracing": "harakat/fatha"
       },
@@ -1878,8 +1878,8 @@
         "kind": "syllable",
         "display": "مِ",
         "label": "Мим с касрой",
-        "note": "Послушайте и прочитайте: مِ. Звук «и» краткий.",
-        "audioAsset": "tts:مِ",
+        "explanationAsset": "assets/explanations/ru/vowel.mim.kasra.yaml",
+        "audioAsset": "audio/harakat/mim_kasra.mp3",
         "letterId": "mim",
         "tracing": "harakat/kasra"
       },
@@ -1915,7 +1915,7 @@
         "kind": "syllable",
         "display": "لَ",
         "label": "Лям с фатхой",
-        "note": "Послушайте и прочитайте: لَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.lam.fatha.yaml",
         "audioAsset": "audio/harakat/lam_fatha.mp3",
         "letterId": "lam",
         "tracing": "harakat/fatha"
@@ -1952,7 +1952,7 @@
         "kind": "syllable",
         "display": "شَ",
         "label": "Шин с фатхой",
-        "note": "Послушайте и прочитайте: شَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.shin.fatha.yaml",
         "audioAsset": "audio/harakat/shin_fatha.mp3",
         "letterId": "shin",
         "tracing": "harakat/fatha"
@@ -1989,7 +1989,7 @@
         "kind": "syllable",
         "display": "عَ",
         "label": "Айн с фатхой",
-        "note": "Послушайте и прочитайте: عَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ayn.fatha.yaml",
         "audioAsset": "audio/harakat/ayn_fatha.mp3",
         "letterId": "ayn",
         "tracing": "harakat/fatha"
@@ -2026,7 +2026,7 @@
         "kind": "syllable",
         "display": "عِ",
         "label": "Айн с касрой",
-        "note": "Послушайте и прочитайте: عِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ayn.kasra.yaml",
         "audioAsset": "audio/harakat/ayn_kasra.mp3",
         "letterId": "ayn",
         "tracing": "harakat/kasra"
@@ -2063,7 +2063,7 @@
         "kind": "syllable",
         "display": "جَ",
         "label": "Джим с фатхой",
-        "note": "Послушайте и прочитайте: جَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.jim.fatha.yaml",
         "audioAsset": "audio/harakat/jim_fatha.mp3",
         "letterId": "jim",
         "tracing": "harakat/fatha"
@@ -2100,7 +2100,7 @@
         "kind": "syllable",
         "display": "حَ",
         "label": "Ха с фатхой",
-        "note": "Послушайте и прочитайте: حَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.hha.fatha.yaml",
         "audioAsset": "audio/harakat/hha_fatha.mp3",
         "letterId": "hha",
         "tracing": "harakat/fatha"
@@ -2137,7 +2137,7 @@
         "kind": "syllable",
         "display": "فَ",
         "label": "Фа с фатхой",
-        "note": "Послушайте и прочитайте: فَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.fa.fatha.yaml",
         "audioAsset": "audio/harakat/fa_fatha.mp3",
         "letterId": "fa",
         "tracing": "harakat/fatha"
@@ -2174,7 +2174,7 @@
         "kind": "syllable",
         "display": "نَ",
         "label": "Нун с фатхой",
-        "note": "Послушайте и прочитайте: نَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.nun.fatha.yaml",
         "audioAsset": "audio/harakat/nun_fatha.mp3",
         "letterId": "nun",
         "tracing": "harakat/fatha"
@@ -2211,7 +2211,7 @@
         "kind": "syllable",
         "display": "أَ",
         "label": "Алиф с фатхой",
-        "note": "Послушайте и прочитайте: أَ. Хамза под алифом для касры, над алифом для фатхи и даммы.",
+        "explanationAsset": "assets/explanations/ru/vowel.alif.fatha.yaml",
         "audioAsset": "audio/harakat/alif_fatha.mp3",
         "letterId": "alif",
         "tracing": "harakat/fatha"
@@ -2248,7 +2248,7 @@
         "kind": "syllable",
         "display": "إِ",
         "label": "Алиф с касрой",
-        "note": "Послушайте и прочитайте: إِ. Хамза под алифом для касры, над алифом для фатхи и даммы.",
+        "explanationAsset": "assets/explanations/ru/vowel.alif.kasra.yaml",
         "audioAsset": "audio/harakat/alif_kasra.mp3",
         "letterId": "alif",
         "tracing": "harakat/kasra"
@@ -2285,7 +2285,7 @@
         "kind": "syllable",
         "display": "أُ",
         "label": "Алиф с даммой",
-        "note": "Послушайте и прочитайте: أُ. Хамза под алифом для касры, над алифом для фатхи и даммы.",
+        "explanationAsset": "assets/explanations/ru/vowel.alif.damma.yaml",
         "audioAsset": "audio/harakat/alif_damma.mp3",
         "letterId": "alif",
         "tracing": "harakat/damma"
@@ -2322,7 +2322,7 @@
         "kind": "syllable",
         "display": "ثُ",
         "label": "Са с даммой",
-        "note": "Послушайте и прочитайте: ثُ. Звук «у» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.tha.damma.yaml",
         "audioAsset": "audio/harakat/tha_damma.mp3",
         "letterId": "tha",
         "tracing": "harakat/damma"
@@ -2359,7 +2359,7 @@
         "kind": "syllable",
         "display": "خَ",
         "label": "Хо с фатхой",
-        "note": "Послушайте и прочитайте: خَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.kha.fatha.yaml",
         "audioAsset": "audio/harakat/kha_fatha.mp3",
         "letterId": "kha",
         "tracing": "harakat/fatha"
@@ -2396,7 +2396,7 @@
         "kind": "syllable",
         "display": "خِ",
         "label": "Хо с касрой",
-        "note": "Послушайте и прочитайте: خِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.kha.kasra.yaml",
         "audioAsset": "audio/harakat/kha_kasra.mp3",
         "letterId": "kha",
         "tracing": "harakat/kasra"
@@ -2433,7 +2433,7 @@
         "kind": "syllable",
         "display": "ذُ",
         "label": "Заль с даммой",
-        "note": "Послушайте и прочитайте: ذُ. Звук «у» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.dhal.damma.yaml",
         "audioAsset": "audio/harakat/dhal_damma.mp3",
         "letterId": "dhal",
         "tracing": "harakat/damma"
@@ -2470,7 +2470,7 @@
         "kind": "syllable",
         "display": "زِ",
         "label": "Зай с касрой",
-        "note": "Послушайте и прочитайте: زِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.zay.kasra.yaml",
         "audioAsset": "audio/harakat/zay_kasra.mp3",
         "letterId": "zay",
         "tracing": "harakat/kasra"
@@ -2507,7 +2507,7 @@
         "kind": "syllable",
         "display": "صَ",
         "label": "Сод с фатхой",
-        "note": "Послушайте и прочитайте: صَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.sod.fatha.yaml",
         "audioAsset": "audio/harakat/sod_fatha.mp3",
         "letterId": "sod",
         "tracing": "harakat/fatha"
@@ -2540,7 +2540,7 @@
         "kind": "syllable",
         "display": "صِ",
         "label": "Сод с касрой",
-        "note": "Послушайте и прочитайте: صِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.sod.kasra.yaml",
         "audioAsset": "audio/harakat/sod_kasra.mp3",
         "letterId": "sod",
         "tracing": "harakat/kasra"
@@ -2573,7 +2573,7 @@
         "kind": "syllable",
         "display": "ضَ",
         "label": "Дод с фатхой",
-        "note": "Послушайте и прочитайте: ضَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.dod.fatha.yaml",
         "audioAsset": "audio/harakat/dod_fatha.mp3",
         "letterId": "dod",
         "tracing": "harakat/fatha"
@@ -2606,7 +2606,7 @@
         "kind": "syllable",
         "display": "ضِ",
         "label": "Дод с касрой",
-        "note": "Послушайте и прочитайте: ضِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.dod.kasra.yaml",
         "audioAsset": "audio/harakat/dod_kasra.mp3",
         "letterId": "dod",
         "tracing": "harakat/kasra"
@@ -2639,7 +2639,7 @@
         "kind": "syllable",
         "display": "هُ",
         "label": "Хэ с даммой",
-        "note": "Послушайте и прочитайте: هُ. Звук «у» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ha.damma.yaml",
         "audioAsset": "audio/harakat/ha_damma.mp3",
         "letterId": "ha",
         "tracing": "harakat/damma"
@@ -2672,7 +2672,7 @@
         "kind": "syllable",
         "display": "طَ",
         "label": "То с фатхой",
-        "note": "Послушайте и прочитайте: طَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.to.fatha.yaml",
         "audioAsset": "audio/harakat/to_fatha.mp3",
         "letterId": "to",
         "tracing": "harakat/fatha"
@@ -2709,7 +2709,7 @@
         "kind": "syllable",
         "display": "طِ",
         "label": "То с касрой",
-        "note": "Послушайте и прочитайте: طِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.to.kasra.yaml",
         "audioAsset": "audio/harakat/to_kasra.mp3",
         "letterId": "to",
         "tracing": "harakat/kasra"
@@ -2746,7 +2746,7 @@
         "kind": "syllable",
         "display": "ظَ",
         "label": "Зо с фатхой",
-        "note": "Послушайте и прочитайте: ظَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.zho.fatha.yaml",
         "audioAsset": "audio/harakat/zho_fatha.mp3",
         "letterId": "zho",
         "tracing": "harakat/fatha"
@@ -2783,7 +2783,7 @@
         "kind": "syllable",
         "display": "ظِ",
         "label": "Зо с касрой",
-        "note": "Послушайте и прочитайте: ظِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.zho.kasra.yaml",
         "audioAsset": "audio/harakat/zho_kasra.mp3",
         "letterId": "zho",
         "tracing": "harakat/kasra"
@@ -2820,7 +2820,7 @@
         "kind": "syllable",
         "display": "وِ",
         "label": "Вав с касрой",
-        "note": "Послушайте и прочитайте: وِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.waw.kasra.yaml",
         "audioAsset": "audio/harakat/waw_kasra.mp3",
         "letterId": "waw",
         "tracing": "harakat/kasra"
@@ -2857,7 +2857,7 @@
         "kind": "syllable",
         "display": "غَ",
         "label": "Гойн с фатхой",
-        "note": "Послушайте и прочитайте: غَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ghayn.fatha.yaml",
         "audioAsset": "audio/harakat/ghayn_fatha.mp3",
         "letterId": "ghayn",
         "tracing": "harakat/fatha"
@@ -2894,7 +2894,7 @@
         "kind": "syllable",
         "display": "غِ",
         "label": "Гойн с касрой",
-        "note": "Послушайте и прочитайте: غِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ghayn.kasra.yaml",
         "audioAsset": "audio/harakat/ghayn_kasra.mp3",
         "letterId": "ghayn",
         "tracing": "harakat/kasra"
@@ -2931,7 +2931,7 @@
         "kind": "syllable",
         "display": "قَ",
         "label": "Коф с фатхой",
-        "note": "Послушайте и прочитайте: قَ. Звук «а» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.qof.fatha.yaml",
         "audioAsset": "audio/harakat/qof_fatha.mp3",
         "letterId": "qof",
         "tracing": "harakat/fatha"
@@ -2968,7 +2968,7 @@
         "kind": "syllable",
         "display": "قِ",
         "label": "Коф с касрой",
-        "note": "Послушайте и прочитайте: قِ. Звук «и» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.qof.kasra.yaml",
         "audioAsset": "audio/harakat/qof_kasra.mp3",
         "letterId": "qof",
         "tracing": "harakat/kasra"
@@ -3005,7 +3005,7 @@
         "kind": "syllable",
         "display": "يُ",
         "label": "Йа с даммой",
-        "note": "Послушайте и прочитайте: يُ. Звук «у» краткий.",
+        "explanationAsset": "assets/explanations/ru/vowel.ya.damma.yaml",
         "audioAsset": "audio/harakat/ya_damma.mp3",
         "letterId": "ya",
         "tracing": "harakat/damma"
@@ -3042,7 +3042,7 @@
         "kind": "word",
         "display": "كَتَبَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.kataba.yaml",
         "audioAsset": "tts:كَتَبَ"
       },
       "requirement": {
@@ -3273,7 +3273,7 @@
         "kind": "word",
         "display": "دَرَسَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.darasa.yaml",
         "audioAsset": "tts:دَرَسَ"
       },
       "requirement": {
@@ -3504,7 +3504,7 @@
         "kind": "word",
         "display": "رَسَمَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.rasama.yaml",
         "audioAsset": "tts:رَسَمَ"
       },
       "requirement": {
@@ -3735,7 +3735,7 @@
         "kind": "word",
         "display": "شَرِبَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.shariba.yaml",
         "audioAsset": "tts:شَرِبَ"
       },
       "requirement": {
@@ -3762,7 +3762,7 @@
         "kind": "word",
         "display": "سَمِعَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.samia.yaml",
         "audioAsset": "tts:سَمِعَ"
       },
       "requirement": {
@@ -3789,7 +3789,7 @@
         "kind": "word",
         "display": "عَمِلَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.amila.yaml",
         "audioAsset": "tts:عَمِلَ"
       },
       "requirement": {
@@ -3816,7 +3816,7 @@
         "kind": "word",
         "display": "فَرِحَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.fariha.yaml",
         "audioAsset": "tts:فَرِحَ"
       },
       "requirement": {
@@ -3843,7 +3843,7 @@
         "kind": "word",
         "display": "لَعِبَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.laiba.yaml",
         "audioAsset": "tts:لَعِبَ"
       },
       "requirement": {
@@ -3870,7 +3870,7 @@
         "kind": "word",
         "display": "نَجَحَ",
         "label": "Короткое слово",
-        "note": "Прочитайте буквы с огласовками по порядку, затем произнесите слово целиком. Перевод появится позже.",
+        "explanationAsset": "assets/explanations/ru/word.najaha.yaml",
         "audioAsset": "tts:نَجَحَ"
       },
       "requirement": {

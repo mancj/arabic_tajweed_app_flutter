@@ -53,7 +53,7 @@ class RuleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, footer == null ? 24 : 0),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, footer == null ? 24 : 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -65,13 +65,17 @@ class RuleCard extends StatelessWidget {
                     ),
                     const Margin.vertical(8),
                   ],
-                  Text(title, style: UITextStyles.semibold22),
+                  if (title.isNotEmpty)
+                    Text(title, style: UITextStyles.semibold22),
                   if (text != null && text.isNotEmpty) ...[
                     const Margin.vertical(16),
                     Text(text, style: UITextStyles.regular15),
                   ],
                   if (child != null) ...[
-                    const Margin.vertical(16),
+                    if (title.isNotEmpty ||
+                        badge != null ||
+                        (text?.isNotEmpty ?? false))
+                      const Margin.vertical(16),
                     Center(child: child),
                   ],
                 ],

@@ -1,0 +1,11 @@
+title: "Нун в середине"
+blocks:
+  - letter:
+      glyph: "ــنــ"
+      audio: "audio/alphabet/nun.wav"
+  - text: |
+      Нун в середине слова: зубчик с точкой сверху со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بنت"
+      highlight: 1
+      form: medial

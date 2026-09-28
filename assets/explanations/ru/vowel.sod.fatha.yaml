@@ -1,0 +1,7 @@
+title: "Сод с фатхой"
+blocks:
+  - letter:
+      glyph: "صَ"
+      audio: "audio/harakat/sod_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: صَ. Звук «а» краткий.

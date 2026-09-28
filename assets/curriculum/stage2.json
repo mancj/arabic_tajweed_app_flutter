@@ -6,7 +6,7 @@
         "kind": "concept",
         "display": "Как буквы соединяются",
         "label": "Как буквы соединяются",
-        "note": "В слове буквы слипаются. Первая берёт начальную форму, последняя — конечную, а те, что между ними, — среднюю. Пока читаем молча: только смотрим, как буквы соединились."
+        "explanationAsset": "assets/explanations/ru/concept.join.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -212,7 +212,8 @@
         "id": "syl.ba_ta",
         "kind": "syllable",
         "display": "بت",
-        "label": "Ба и та"
+        "label": "Ба и та",
+        "explanationAsset": "assets/explanations/ru/syl.ba_ta.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -414,7 +415,8 @@
         "id": "syl.ta_ba",
         "kind": "syllable",
         "display": "تب",
-        "label": "Та и ба"
+        "label": "Та и ба",
+        "explanationAsset": "assets/explanations/ru/syl.ta_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -616,7 +618,8 @@
         "id": "syl.na_ba",
         "kind": "syllable",
         "display": "نب",
-        "label": "Нун и ба"
+        "label": "Нун и ба",
+        "explanationAsset": "assets/explanations/ru/syl.na_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -654,7 +657,8 @@
         "id": "syl.sa_ba",
         "kind": "syllable",
         "display": "سب",
-        "label": "Син и ба"
+        "label": "Син и ба",
+        "explanationAsset": "assets/explanations/ru/syl.sa_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -692,7 +696,8 @@
         "id": "syl.mi_na",
         "kind": "syllable",
         "display": "من",
-        "label": "Мим и нун"
+        "label": "Мим и нун",
+        "explanationAsset": "assets/explanations/ru/syl.mi_na.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -730,7 +735,8 @@
         "id": "syl.la_ba",
         "kind": "syllable",
         "display": "لب",
-        "label": "Лям и ба"
+        "label": "Лям и ба",
+        "explanationAsset": "assets/explanations/ru/syl.la_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -769,7 +775,7 @@
         "kind": "concept",
         "display": "Разрыв в слове",
         "label": "Разрыв в слове",
-        "note": "После ا د ذ ر ز و соединения нет. Следующая буква начинается заново — как будто с начала слова, хотя слово продолжается."
+        "explanationAsset": "assets/explanations/ru/concept.break.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -967,7 +973,8 @@
         "id": "syl.dal_ba",
         "kind": "syllable",
         "display": "دب",
-        "label": "Даль и ба"
+        "label": "Даль и ба",
+        "explanationAsset": "assets/explanations/ru/syl.dal_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -1005,7 +1012,8 @@
         "id": "syl.ra_ba",
         "kind": "syllable",
         "display": "رب",
-        "label": "Ро и ба"
+        "label": "Ро и ба",
+        "explanationAsset": "assets/explanations/ru/syl.ra_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -1043,7 +1051,8 @@
         "id": "syl.alif_ba",
         "kind": "syllable",
         "display": "اب",
-        "label": "Алиф и ба"
+        "label": "Алиф и ба",
+        "explanationAsset": "assets/explanations/ru/syl.alif_ba.yaml"
       },
       "requirement": {
         "type": "allOf",
@@ -1081,7 +1090,8 @@
         "id": "syl.waw_ba",
         "kind": "syllable",
         "display": "وب",
-        "label": "Вав и ба"
+        "label": "Вав и ба",
+        "explanationAsset": "assets/explanations/ru/syl.waw_ba.yaml"
       },
       "requirement": {
         "type": "allOf",

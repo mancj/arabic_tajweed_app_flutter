@@ -1,0 +1,7 @@
+title: "Лям"
+blocks:
+  - letter:
+      glyph: "ل"
+      audio: "audio/alphabet/lam.wav"
+  - text: |
+      Лям. Высокая палочка, которая внизу заворачивается в чашу.

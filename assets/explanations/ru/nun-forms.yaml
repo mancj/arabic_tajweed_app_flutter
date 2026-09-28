@@ -1,0 +1,22 @@
+title: "Все формы буквы ن"
+blocks:
+  - text: |
+      Посмотрите на формы и примеры в словах. Дальше разберём каждую форму отдельно.
+  - forms:
+      - position: isolated
+        glyph: "ن"
+      - position: initial
+        glyph: "نــ"
+        example:
+          text: "نجم"
+          highlight: 0
+      - position: medial
+        glyph: "ــنــ"
+        example:
+          text: "بنت"
+          highlight: 1
+      - position: finalForm
+        glyph: "ــن"
+        example:
+          text: "لبن"
+          highlight: 2

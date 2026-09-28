@@ -1,0 +1,11 @@
+title: "Та (t) в конце"
+blocks:
+  - letter:
+      glyph: "ــت"
+      audio: "audio/alphabet/ta.wav"
+  - text: |
+      Та в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: чаша с двумя точками.
+  - word:
+      text: "بنت"
+      highlight: 2
+      form: finalForm

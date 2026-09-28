@@ -9,6 +9,7 @@ import '../../widgets/margin.dart';
 import '../../widgets/squircle_borders.dart';
 import '../../widgets/ui_kit/badge_label.dart';
 import '../../widgets/ui_kit/next_button.dart';
+import '../../widgets/ui_kit/explanation_asset_card.dart';
 import '../../widgets/ui_kit/rule_card.dart';
 import 'course_controller.dart';
 import 'knowledge_check_page.dart';
@@ -279,17 +280,9 @@ class CourseTopicPage extends StatelessWidget {
                 for (final atom in atoms)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: RuleCard(
-                      title: atom.label,
-                      text: atom.note,
-                      child: atom.kind == AtomKind.concept
-                          ? null
-                          : Text(
-                              atom.display,
-                              textDirection: TextDirection.rtl,
-                              style: UITextStyles.arabicRegular64,
-                            ),
-                    ),
+                    child: atom.explanationAsset != null
+                        ? ExplanationAssetCard(asset: atom.explanationAsset!)
+                        : RuleCard(title: atom.label),
                   ),
               ],
             ),

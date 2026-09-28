@@ -1,0 +1,11 @@
+title: "Коф (q) в середине"
+blocks:
+  - letter:
+      glyph: "ــقــ"
+      audio: "audio/alphabet/qof.wav"
+  - text: |
+      Коф в середине слова: кружок с двумя точками со связками с обеих сторон. Это самая короткая её форма.
+  - word:
+      text: "بقر"
+      highlight: 1
+      form: medial

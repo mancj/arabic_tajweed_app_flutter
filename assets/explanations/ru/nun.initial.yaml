@@ -1,0 +1,11 @@
+title: "Нун в начале"
+blocks:
+  - letter:
+      glyph: "نــ"
+      audio: "audio/alphabet/nun.wav"
+  - text: |
+      Нун в начале слова: остаётся зубчик с точкой сверху. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "نجم"
+      highlight: 0
+      form: initial

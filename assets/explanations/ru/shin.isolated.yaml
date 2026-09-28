@@ -1,0 +1,7 @@
+title: "Шин (sh)"
+blocks:
+  - letter:
+      glyph: "ش"
+      audio: "audio/alphabet/shin.wav"
+  - text: |
+      Шин. Те же три зубчика, а сверху три точки.

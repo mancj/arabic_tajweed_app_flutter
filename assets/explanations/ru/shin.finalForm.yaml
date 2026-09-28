@@ -1,0 +1,11 @@
+title: "Шин (sh) в конце"
+blocks:
+  - letter:
+      glyph: "ــش"
+      audio: "audio/alphabet/shin.wav"
+  - text: |
+      Шин в конце слова. Справа — связка с предыдущей буквой, слева хвост возвращается: три зубчика и чаша за ними.
+  - word:
+      text: "عيش"
+      highlight: 2
+      form: finalForm

@@ -1,0 +1,7 @@
+title: "Зо с фатхой"
+blocks:
+  - letter:
+      glyph: "ظَ"
+      audio: "audio/harakat/zho_fatha.mp3"
+  - text: |
+      Послушайте и прочитайте: ظَ. Звук «а» краткий.

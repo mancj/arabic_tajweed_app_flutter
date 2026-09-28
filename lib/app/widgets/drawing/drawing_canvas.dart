@@ -105,13 +105,6 @@ class DrawingCanvas extends StatefulWidget {
   /// линия в макете выглядит плохо.
   final double bandScale;
 
-  /// Сдвиг чернил относительно пальца в режиме письма по памяти. При
-  /// обводке контур должен оставаться прямо под пальцем, поэтому там сдвига
-  /// нет. По памяти линия идёт немного выше и палец её не закрывает.
-  final Offset drawingOffset;
-
-  static const defaultDrawingOffset = Offset(0, -20);
-
   final Color backgroundColor;
 
   /// Что делает холст с фигурой: показывает для обводки или прячет и
@@ -209,7 +202,6 @@ class DrawingCanvas extends StatefulWidget {
     this.strokeWidth,
     this.penScale = 1.1,
     this.bandScale = 1.65,
-    this.drawingOffset = defaultDrawingOffset,
     this.backgroundColor = UIColors.transparent,
     this.mode = TracingMode.tracing,
     this.placement = TracingPlacement.free,
@@ -839,13 +831,13 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     // Отклик уже на касание: перо «легло на бумагу». Иначе точка —
     // касание без пути — проходила беззвучно, тик идёт только по длине.
     AppHaptics.tick();
-    _controller.startStroke(_drawingPosition(event.localPosition));
+    _controller.startStroke(event.localPosition);
     widget.onStrokeStart?.call();
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     if (event.pointer != _activePointer) return;
-    _controller.extendStroke(_drawingPosition(event.localPosition));
+    _controller.extendStroke(event.localPosition);
     _tickHaptic(event.localPosition);
   }
 
@@ -867,7 +859,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     // Позиция отрыва идёт прямо в endStroke, а не обычным движением:
     // подворот пальца при отрыве должен попасть под сглаживание хвоста,
     // а не в линию как есть.
-    _controller.endStroke(_drawingPosition(event.localPosition));
+    _controller.endStroke(event.localPosition);
 
     final stroke = _controller.strokes.isEmpty
         ? null
@@ -884,11 +876,6 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     _activePointer = null;
     _controller.cancelStroke();
   }
-
-  Offset _drawingPosition(Offset pointerPosition) =>
-      widget.mode == TracingMode.freehand
-      ? pointerPosition + widget.drawingOffset
-      : pointerPosition;
 }
 
 /// Собранная часть и число штрихов, которыми её нарисовали.

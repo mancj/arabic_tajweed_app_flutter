@@ -1,0 +1,11 @@
+title: "Фа в начале"
+blocks:
+  - letter:
+      glyph: "فــ"
+      audio: "audio/alphabet/fa.wav"
+  - text: |
+      Фа в начале слова: остаётся кружок с точкой сверху. Хвост убирается, вместо него связка к следующей букве.
+  - word:
+      text: "فتح"
+      highlight: 0
+      form: initial

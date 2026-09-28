@@ -1,0 +1,7 @@
+title: "Ба с даммой"
+blocks:
+  - letter:
+      glyph: "بُ"
+      audio: "audio/harakat/ba_damma.mp3"
+  - text: |
+      Дамма даёт краткий звук «у». Послушайте, как звучит بُ.
