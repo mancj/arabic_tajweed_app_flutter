@@ -51,8 +51,8 @@ void main() {
       findsNothing,
     );
     expect(find.text('Буква Ба'), findsOneWidget);
-    final makhraj = find.widgetWithText(RuleCard, 'Махрадж — как произнести');
-    final sifat = find.widgetWithText(RuleCard, 'Сыфат — как звучит');
+    final makhraj = find.widgetWithText(RuleCard, 'Как произнести');
+    final sifat = find.widgetWithText(RuleCard, 'Как звучит');
     expect(makhraj, findsOneWidget);
     expect(sifat, findsOneWidget);
     expect(
@@ -152,7 +152,7 @@ void main() {
     expect(image, findsOneWidget);
     expect(
       find.descendant(
-        of: find.widgetWithText(RuleCard, 'Махрадж — как произнести'),
+        of: find.widgetWithText(RuleCard, 'Как произнести'),
         matching: image,
       ),
       findsOneWidget,

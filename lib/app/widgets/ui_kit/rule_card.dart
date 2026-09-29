@@ -17,6 +17,10 @@ class RuleCard extends StatelessWidget {
   final String? text;
   final Widget? child;
   final Widget? footer;
+  final EdgeInsets? contentPadding;
+  final double childSpacing;
+  final Color? badgeColor;
+  final Color? badgeTextColor;
 
   const RuleCard({
     required this.title,
@@ -24,6 +28,10 @@ class RuleCard extends StatelessWidget {
     this.text,
     this.child,
     this.footer,
+    this.contentPadding,
+    this.childSpacing = 16,
+    this.badgeColor,
+    this.badgeTextColor,
     Key? key,
   }) : super(key: key);
 
@@ -31,6 +39,7 @@ class RuleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = this.text;
     final badge = this.badge;
+    final insets = contentPadding ?? const EdgeInsets.fromLTRB(16, 16, 16, 24);
 
     return Container(
       width: double.infinity,
@@ -53,15 +62,20 @@ class RuleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, footer == null ? 24 : 0),
+              padding: EdgeInsets.fromLTRB(
+                insets.left,
+                insets.top,
+                insets.right,
+                footer == null ? insets.bottom : 0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (badge != null) ...[
                     BadgeLabel(
                       text: badge,
-                      color: UIColors.primary,
-                      textColor: UIColors.badgeText1,
+                      color: badgeColor ?? UIColors.primary,
+                      textColor: badgeTextColor ?? UIColors.badgeText1,
                     ),
                     const Margin.vertical(8),
                   ],
@@ -75,7 +89,7 @@ class RuleCard extends StatelessWidget {
                     if (title.isNotEmpty ||
                         badge != null ||
                         (text?.isNotEmpty ?? false))
-                      const Margin.vertical(16),
+                      Margin.vertical(childSpacing),
                     Center(child: child),
                   ],
                 ],

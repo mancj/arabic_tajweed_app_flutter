@@ -45,6 +45,8 @@ class ExplanationCard extends StatefulWidget {
 }
 
 class _ExplanationCardState extends State<ExplanationCard> {
+  static const _contentPadding = EdgeInsets.all(16);
+  static const _childSpacing = 12.0;
   String? _activeId;
 
   @override
@@ -99,6 +101,8 @@ class _ExplanationCardState extends State<ExplanationCard> {
                   : '',
               badge: partIndex == firstRule ? widget.badge : null,
               footer: partIndex == lastRule ? widget.footer : null,
+              contentPadding: _contentPadding,
+              childSpacing: _childSpacing,
               child: part.isEmpty ? null : _ruleBlocks(part),
             ),
         ],
@@ -117,11 +121,21 @@ class _ExplanationCardState extends State<ExplanationCard> {
   Widget _standalone(ExplanationBlock block, int index) => switch (block) {
     ExplanationLetter(:final letter) => _letter(letter, index),
     ExplanationMakhraj() => RuleCard(
-      title: 'Махрадж — как произнести',
+      badge: 'Махрадж',
+      badgeColor: UIColors.primary10,
+      badgeTextColor: UIColors.primary,
+      title: 'Как произнести',
+      contentPadding: _contentPadding,
+      childSpacing: _childSpacing,
       child: _ruleBlocks([MapEntry(index, block)]),
     ),
     ExplanationSifat() => RuleCard(
-      title: 'Сыфат — как звучит',
+      badge: 'Сыфат',
+      badgeColor: UIColors.primary10,
+      badgeTextColor: UIColors.primary,
+      title: 'Как звучит',
+      contentPadding: _contentPadding,
+      childSpacing: _childSpacing,
       child: _ruleBlocks([MapEntry(index, block)]),
     ),
     _ => throw StateError('Блок не является отдельной карточкой'),
@@ -186,7 +200,7 @@ class _ExplanationCardState extends State<ExplanationCard> {
     onTapLink: widget.onTapLink,
     imageBuilder: _markdownImage,
     styleSheet: MarkdownStyleSheet(
-      p: UITextStyles.regular15.copyWith(),
+      p: UITextStyles.regular16,
       h1: UITextStyles.semibold22.copyWith(),
       h2: UITextStyles.semibold20.copyWith(),
       h3: UITextStyles.semibold17.copyWith(),
@@ -194,12 +208,12 @@ class _ExplanationCardState extends State<ExplanationCard> {
       h5: UITextStyles.semibold15.copyWith(),
       h6: UITextStyles.semibold15.copyWith(),
       code: UITextStyles.monoRegular14,
-      a: UITextStyles.semibold15.copyWith().copyWith(
+      a: UITextStyles.semibold16.copyWith(
         color: UIColors.primary,
         decoration: TextDecoration.underline,
       ),
-      listBullet: UITextStyles.regular15,
-      blockquote: UITextStyles.regular15,
+      listBullet: UITextStyles.regular16,
+      blockquote: UITextStyles.regular16,
       tableBody: UITextStyles.regular15,
       tableHead: UITextStyles.semibold15,
       blockSpacing: 12,
