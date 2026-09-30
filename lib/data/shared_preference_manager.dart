@@ -14,18 +14,10 @@ class SharedPreferenceManager {
     _prefs,
     defaultValue: ApiConfig.baseUrl,
   );
-  late final pronunciationDisabled = BoolSharedPref(
-    'pronunciationDisabled',
-    _prefs,
-    defaultValue: false,
-  );
-  late final pronunciationTechnicalSkipSessions = StringListSharedPref(
-    'pronunciationTechnicalSkipSessions',
-    _prefs,
-  );
-  late final pronunciationSessionCounter = IntSharedPref(
-    'pronunciationSessionCounter',
-    _prefs,
-    defaultValue: 0,
-  );
+  late final colorScheme = StringSharedPref('debugColorScheme', _prefs);
+  // Создаётся один раз при запуске приложения. Сбой голоса и выбор пропуска
+  // действуют до завершения этого запуска, а не сохраняются на устройстве.
+  bool pronunciationDisabledForRun = false;
+  final pronunciationTechnicalSkipSessionsForRun = <int>{};
+  int pronunciationSessionCounterForRun = 0;
 }

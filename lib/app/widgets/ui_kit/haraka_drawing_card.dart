@@ -11,6 +11,9 @@ import 'tracing_card.dart';
 /// Рисование огласовки относительно неподвижной буквы.
 /// Жесты, проверка и подсказки остаются в общем [DrawingCanvas].
 class HarakaDrawingCard extends StatefulWidget {
+  static const strokeWidth = 10.0;
+  static const bandScale = 2.0;
+
   const HarakaDrawingCard({
     required this.letterId,
     required this.title,
@@ -136,6 +139,8 @@ class _HarakaDrawingCardState extends State<HarakaDrawingCard> {
       mode: widget.mode,
       placement: TracingPlacement.anchored,
       shape: shape,
+      strokeWidth: HarakaDrawingCard.strokeWidth,
+      bandScale: HarakaDrawingCard.bandScale,
       canvasBackground: letterShape == null
           ? null
           : SizedBox.expand(
@@ -164,7 +169,8 @@ class _ShapePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    shape.resolve(size, padding: 0).paint(canvas, color);
+    final resolved = shape.resolve(size, padding: 0);
+    resolved.paint(canvas, color, strokeWidth: resolved.strokeWidth * .85);
   }
 
   @override

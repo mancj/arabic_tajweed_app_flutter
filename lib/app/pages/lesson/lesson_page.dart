@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
@@ -10,6 +10,7 @@ import 'lesson_controller.dart';
 import 'lesson_controls.dart';
 import 'lesson_content_view.dart';
 import 'lesson_finish_screen.dart';
+import 'lesson_notes_page.dart';
 import 'lesson_result_sheet.dart';
 
 export 'lesson_binding.dart';
@@ -45,6 +46,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   late final Worker _wrongWorker;
   bool _sheetOpen = false;
   bool _popupOpen = false;
+  bool _notesOpen = false;
 
   LessonController get controller => widget.controller;
 
@@ -86,6 +88,19 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
     });
   }
 
+  Future<void> _showNotes() async {
+    if (_notesOpen || _sheetOpen) return;
+    _notesOpen = true;
+    try {
+      await Get.to<void>(
+        () => LessonNotesPage(controller: controller),
+        routeName: LessonNotesPage.routeName,
+      );
+    } finally {
+      _notesOpen = false;
+    }
+  }
+
   Future<void> _showLearnedPopups() async {
     if (!mounted || _popupOpen) return;
     _popupOpen = true;
@@ -114,15 +129,29 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
       }
       return AppScaffold(
         title: controller.isReviewOnly ? 'Повторение' : 'Урок',
-        actions: kDebugMode
-            ? [
-                Obx(
-                  () => controller.stage.value == LessonStage.exercise
-                      ? const LessonDebugMenu()
-                      : const SizedBox.shrink(),
-                ),
-              ]
-            : const [],
+        actions: [
+          Obx(() {
+            final stage = controller.stage.value;
+            return stage == LessonStage.intro || stage == LessonStage.exercise
+                ? AppScaffoldActionButton(
+                    icon: SvgPicture.asset(
+                      UISVGAssets.notes,
+                      colorFilter: ColorFilter.mode(
+                        UIColors.text,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    onPressed: _showNotes,
+                    semanticLabel: 'Конспект занятия',
+                  )
+                : const SizedBox.shrink();
+          }),
+          Obx(
+            () => controller.stage.value == LessonStage.exercise
+                ? const LessonDebugMenu()
+                : const SizedBox.shrink(),
+          ),
+        ],
         bottomBar: Obx(() => LessonBottomBar(stage: controller.stage.value)),
         builder: (context, insets) => Obx(() {
           final stage = controller.stage.value;

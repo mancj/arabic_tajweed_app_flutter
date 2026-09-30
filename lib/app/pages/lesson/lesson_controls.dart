@@ -6,7 +6,7 @@ import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/record_bar.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 import 'lesson_controller.dart';
@@ -55,7 +55,7 @@ class LessonBottomBar extends GetView<LessonController> {
             if (isTracing)
               _TracingBar(mode: exercise!.mode)
             else if (isSayName)
-              const _RecordBar()
+              const _PronunciationRecorderBar()
             else if (isFormSequence)
               const SizedBox.shrink()
             else if (isStub)
@@ -196,52 +196,50 @@ class _TracingBar extends GetView<LessonController> {
 
 /// Нижняя панель задания «назови букву». Если сервера нет, под кнопкой
 /// выход из задания.
-class _RecordBar extends GetView<LessonController> {
-  const _RecordBar();
+class _PronunciationRecorderBar extends GetView<LessonController> {
+  const _PronunciationRecorderBar();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final checker = controller.pronunciation;
-      return RecordBar(
-        recording: checker.isRecording.value,
-        checking: checker.isChecking.value,
-        idleHint: 'Удерживайте кнопку и назовите букву',
-        onPressStart: controller.startRecording,
-        onPressEnd: controller.stopRecording,
-        footer: checker.error.value == null
-            ? null
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: controller.skipExercise,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        'Продолжить без произношения',
-                        style: UITextStyles.regular12.copyWith(
-                          color: UIColors.secondary2,
-                        ),
-                      ),
-                    ),
+      final state = switch ((
+        checker.isRecording.value,
+        checker.isChecking.value,
+      )) {
+        (_, true) => PronunciationRecorderState.checking,
+        (true, false) => PronunciationRecorderState.recording,
+        _ => PronunciationRecorderState.idle,
+      };
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PronunciationRecorderWidget(
+            state: state,
+            level: checker.level,
+            onRecordPressed: controller.startRecording,
+            onStopPressed: controller.stopRecording,
+          ),
+          Visibility(
+            visible: checker.error.value != null,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: controller.skipExercise,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Продолжить без произношения',
+                  style: UITextStyles.monoMedium12.copyWith(
+                    color: UIColors.primary,
                   ),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: controller.optOutOfPronunciation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        'Больше не предлагать произношение',
-                        style: UITextStyles.regular12.copyWith(
-                          color: UIColors.secondary2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
+            ),
+          ),
+        ],
       );
     });
   }

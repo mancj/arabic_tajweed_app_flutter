@@ -39,5 +39,8 @@ void main() {
     expect(canvas.mode, TracingMode.freehand);
     expect(canvas.placement, TracingPlacement.anchored);
     expect(canvas.placeholderOffset.dy, lessThan(0));
+    expect(canvas.strokeWidth, HarakaDrawingCard.strokeWidth);
+    expect(canvas.bandScale, HarakaDrawingCard.bandScale);
+    expect(canvas.bandScale, greaterThan(1.65));
   });
 }

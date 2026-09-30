@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
+import 'letter_specimen.dart';
 
 class LetterWidgetCard extends StatelessWidget {
   static const _shape = SmoothBorderRadius.all(
@@ -63,6 +64,7 @@ class LetterWidgetCard extends StatelessWidget {
   /// про букву, и озвучка была бы подсказкой — там кнопку прячут вместе
   /// с автоматическим звучанием.
   final bool showPlay;
+  final bool specimen;
 
   const LetterWidgetCard({
     super.key,
@@ -78,6 +80,7 @@ class LetterWidgetCard extends StatelessWidget {
     this.track,
     this.autoPlay = true,
     this.showPlay = true,
+    this.specimen = false,
   });
 
   /// Есть ли на карточке звучание. Волна внизу — это дорожка кнопки,
@@ -122,6 +125,18 @@ class LetterWidgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (specimen) {
+      return LetterSpecimen(
+        letter: letter,
+        title: question,
+        badge: labelText,
+        caption: subtitle,
+        onPlay: _playable ? onPlay : null,
+        onAutoPlay: onAutoPlay,
+        autoPlay: autoPlay,
+        track: track,
+      );
+    }
     return Tilt(
       tiltConfig: _tiltConfig,
       child: Container(

@@ -3,7 +3,7 @@ import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/record_bar.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/data/rest/letter_check.dart';
 import 'package:flutter/widgets.dart';
@@ -27,15 +27,23 @@ class PronunciationPage extends GetView<PronunciationController> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Произношение',
-      bottomBar: Obx(
-        () => RecordBar(
-          recording: controller.checker.isRecording.value,
-          checking: controller.checker.isChecking.value,
-          idleHint: 'Удерживайте кнопку и назовите букву',
-          onPressStart: controller.startRecording,
-          onPressEnd: controller.stopRecording,
-        ),
-      ),
+      bottomBar: Obx(() {
+        final checker = controller.checker;
+        final state = switch ((
+          checker.isRecording.value,
+          checker.isChecking.value,
+        )) {
+          (_, true) => PronunciationRecorderState.checking,
+          (true, false) => PronunciationRecorderState.recording,
+          _ => PronunciationRecorderState.idle,
+        };
+        return PronunciationRecorderWidget(
+          state: state,
+          level: checker.level,
+          onRecordPressed: controller.startRecording,
+          onStopPressed: controller.stopRecording,
+        );
+      }),
       builder: (context, insets) => SingleChildScrollView(
         padding: insets,
         child: Column(

@@ -8,8 +8,8 @@ enum PronunciationFailureKind {
   serviceUnavailable,
 }
 
-/// Сохраняет выбор человека и отличает повторный тап в одном занятии от
-/// технической проблемы, которая повторилась в разных занятиях.
+/// Помнит выбор до перезапуска приложения и отличает повторный тап в одном
+/// занятии от технической проблемы в разных занятиях.
 class PronunciationPreference {
   PronunciationPreference(this._preferences);
 
@@ -17,14 +17,12 @@ class PronunciationPreference {
 
   final SharedPreferenceManager _preferences;
 
-  bool get isDisabled => _preferences.pronunciationDisabled.get() ?? false;
+  bool get isDisabled => _preferences.pronunciationDisabledForRun;
 
-  /// Отдельный номер нужен, потому что занятие без единой записи в журнале
-  /// прогресса при следующем запуске получило бы тот же sessionId.
+  /// Отдельный номер нужен, потому что занятия без записи в журнале прогресса
+  /// внутри одного запуска могут получить одинаковый sessionId.
   Future<int> beginSession() async {
-    final next = (_preferences.pronunciationSessionCounter.get() ?? 0) + 1;
-    await _preferences.pronunciationSessionCounter.set(next);
-    return next;
+    return ++_preferences.pronunciationSessionCounterForRun;
   }
 
   Future<bool> recordSkip({
@@ -40,13 +38,8 @@ class PronunciationPreference {
     }
     if (failure == null) return false;
 
-    final sessions = {
-      ..._preferences.pronunciationTechnicalSkipSessions.get(),
-      '$sessionId',
-    };
-    await _preferences.pronunciationTechnicalSkipSessions.set(
-      sessions.toList(),
-    );
+    final sessions = _preferences.pronunciationTechnicalSkipSessionsForRun;
+    sessions.add(sessionId);
     if (sessions.length >= technicalSkipSessionsBeforeDisable) {
       await disable();
       return true;
@@ -54,10 +47,12 @@ class PronunciationPreference {
     return false;
   }
 
-  Future<void> disable() => _preferences.pronunciationDisabled.set(true);
+  Future<void> disable() async {
+    _preferences.pronunciationDisabledForRun = true;
+  }
 
   Future<void> enable() async {
-    await _preferences.pronunciationDisabled.set(false);
-    await _preferences.pronunciationTechnicalSkipSessions.set([]);
+    _preferences.pronunciationDisabledForRun = false;
+    _preferences.pronunciationTechnicalSkipSessionsForRun.clear();
   }
 }

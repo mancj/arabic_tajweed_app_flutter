@@ -1,6 +1,11 @@
+import 'dart:async';
+
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/widget_extensions.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/atom.dart';
 import '../../../domain/audio_track.dart';
@@ -14,7 +19,7 @@ import 'letter_widget.dart';
 import 'play_control.dart';
 import 'rule_card.dart';
 
-/// Собирает объяснение из RuleCard и отдельных карточек буквы и её звука.
+/// Собирает объяснение как образец буквы и единую страницу разделов.
 /// Звук и переходы выполняет экран.
 class ExplanationCard extends StatefulWidget {
   const ExplanationCard({
@@ -45,7 +50,7 @@ class ExplanationCard extends StatefulWidget {
 }
 
 class _ExplanationCardState extends State<ExplanationCard> {
-  static const _contentPadding = EdgeInsets.all(16);
+  static const _contentPadding = EdgeInsets.all(24);
   static const _childSpacing = 12.0;
   String? _activeId;
 
@@ -68,6 +73,29 @@ class _ExplanationCardState extends State<ExplanationCard> {
     (widget.onAutoPlay ?? widget.onPlay)(atom);
   }
 
+  void _openExternalLink(String _, String? href, String title) {
+    final uri = href == null ? null : Uri.tryParse(href);
+    if (uri == null ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
+        !uri.hasAuthority) {
+      return;
+    }
+    unawaited(_launchExternalLink(uri));
+  }
+
+  Future<void> _launchExternalLink(Uri uri) async {
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } on Exception {
+      // Плагин может не найти приложение для открытия ссылки.
+    }
+    if (mounted) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('Не удалось открыть ссылку')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final parts = <List<MapEntry<int, ExplanationBlock>>>[];
@@ -87,24 +115,83 @@ class _ExplanationCardState extends State<ExplanationCard> {
 
     final firstRule = parts.indexWhere((part) => !_isStandalonePart(part));
     final lastRule = parts.lastIndexWhere((part) => !_isStandalonePart(part));
+    final startsWithLetter =
+        parts.firstOrNull?.singleOrNull?.value is ExplanationLetter;
+    final children = <Widget>[];
+    var pageSections = <Widget>[];
+    var section = 0;
+
+    void finishPage() {
+      if (pageSections.isEmpty) return;
+      children.add(
+        Container(
+          decoration: BoxDecoration(
+            color: UIColors.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (index, child) in pageSections.indexed) ...[
+                if (index > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Divider(height: 1, color: UIColors.backgroundShapes1),
+                  ),
+                child,
+              ],
+            ],
+          ),
+        ),
+      );
+      pageSections = [];
+    }
+
+    for (final (partIndex, part) in parts.indexed) {
+      if (part.singleOrNull?.value case ExplanationLetter(:final letter)) {
+        finishPage();
+        children.add(
+          _letter(
+            letter,
+            part.single.key,
+            showTitle: startsWithLetter && partIndex == 0,
+          ),
+        );
+      } else if (_isStandalonePart(part)) {
+        pageSections.add(
+          _standalone(
+            part.single.value,
+            part.single.key,
+            number: (++section).toString().padLeft(2, '0'),
+          ),
+        );
+      } else {
+        final first = partIndex == firstRule;
+        pageSections.add(
+          RuleCard(
+            flat: true,
+            title: first
+                ? (startsWithLetter ? 'Разбор' : widget.content.document.title)
+                : '',
+            badge: first && !startsWithLetter ? widget.badge : null,
+            sectionNumber: first
+                ? (++section).toString().padLeft(2, '0')
+                : null,
+            footer: partIndex == lastRule ? widget.footer : null,
+            contentPadding: _contentPadding,
+            childSpacing: _childSpacing,
+            child: part.isEmpty ? null : _ruleBlocks(part),
+          ),
+        );
+      }
+    }
+    finishPage();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final (partIndex, part) in parts.indexed) ...[
-          if (partIndex > 0) const Margin.vertical(16),
-          if (_isStandalonePart(part))
-            _standalone(part.single.value, part.single.key)
-          else
-            RuleCard(
-              title: partIndex == firstRule
-                  ? widget.content.document.title
-                  : '',
-              badge: partIndex == firstRule ? widget.badge : null,
-              footer: partIndex == lastRule ? widget.footer : null,
-              contentPadding: _contentPadding,
-              childSpacing: _childSpacing,
-              child: part.isEmpty ? null : _ruleBlocks(part),
-            ),
+        for (final (index, child) in children.indexed) ...[
+          if (index > 0) const Margin.vertical(12),
+          child,
         ],
       ],
     );
@@ -118,36 +205,35 @@ class _ExplanationCardState extends State<ExplanationCard> {
   bool _isStandalonePart(List<MapEntry<int, ExplanationBlock>> part) =>
       part.length == 1 && _isStandaloneBlock(part.single.value);
 
-  Widget _standalone(ExplanationBlock block, int index) => switch (block) {
-    ExplanationLetter(:final letter) => _letter(letter, index),
-    ExplanationMakhraj() => RuleCard(
-      badge: 'Махрадж',
-      badgeColor: UIColors.primary10,
-      badgeTextColor: UIColors.primary,
-      title: 'Как произнести',
-      contentPadding: _contentPadding,
-      childSpacing: _childSpacing,
-      child: _ruleBlocks([MapEntry(index, block)]),
-    ),
-    ExplanationSifat() => RuleCard(
-      badge: 'Сыфат',
-      badgeColor: UIColors.primary10,
-      badgeTextColor: UIColors.primary,
-      title: 'Как звучит',
-      contentPadding: _contentPadding,
-      childSpacing: _childSpacing,
-      child: _ruleBlocks([MapEntry(index, block)]),
-    ),
-    _ => throw StateError('Блок не является отдельной карточкой'),
-  };
+  Widget _standalone(ExplanationBlock block, int index, {String? number}) =>
+      switch (block) {
+        ExplanationLetter(:final letter) => _letter(letter, index),
+        ExplanationMakhraj() => RuleCard(
+          flat: true,
+          sectionNumber: number,
+          title: 'Как произнести',
+          contentPadding: _contentPadding,
+          childSpacing: _childSpacing,
+          child: _ruleBlocks([MapEntry(index, block)]),
+        ),
+        ExplanationSifat() => RuleCard(
+          flat: true,
+          sectionNumber: number,
+          title: 'Как звучит',
+          contentPadding: _contentPadding,
+          childSpacing: _childSpacing,
+          child: _ruleBlocks([MapEntry(index, block)]),
+        ),
+        _ => throw StateError('Блок не является отдельной карточкой'),
+      };
 
   Widget _ruleBlocks(List<MapEntry<int, ExplanationBlock>> blocks) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      for (final (index, block) in blocks.indexed) ...[
-        if (index > 0) const Margin.vertical(16),
-        _block(block.value, block.key),
-      ],
+      ...blocks
+          .map((block) => _block(block.value, block.key))
+          .separator(const Margin.vertical(16))
+          .toList(),
     ],
   );
 
@@ -197,19 +283,19 @@ class _ExplanationCardState extends State<ExplanationCard> {
 
   Widget _markdown(String text) => MarkdownBody(
     data: text,
-    onTapLink: widget.onTapLink,
+    onTapLink: widget.onTapLink ?? _openExternalLink,
     imageBuilder: _markdownImage,
     styleSheet: MarkdownStyleSheet(
-      p: UITextStyles.regular16,
+      p: UITextStyles.regular16Relaxed,
       h1: UITextStyles.semibold22.copyWith(),
-      h2: UITextStyles.semibold20.copyWith(),
+      h2: UITextStyles.semibold17,
       h3: UITextStyles.semibold17.copyWith(),
       h4: UITextStyles.semibold15.copyWith(),
       h5: UITextStyles.semibold15.copyWith(),
       h6: UITextStyles.semibold15.copyWith(),
       code: UITextStyles.monoRegular14,
       a: UITextStyles.semibold16.copyWith(
-        color: UIColors.primary,
+        color: UIColors.studyAccent,
         decoration: TextDecoration.underline,
       ),
       listBullet: UITextStyles.regular16,
@@ -244,7 +330,7 @@ class _ExplanationCardState extends State<ExplanationCard> {
     audioAsset: glyph.audio,
   );
 
-  Widget _letter(ExplanationGlyph glyph, int index) {
+  Widget _letter(ExplanationGlyph glyph, int index, {bool showTitle = false}) {
     final atom = _glyphAtom(glyph, 'card.$index.letter');
     final canPlay = widget.hasVoice(atom);
     final autoPlay =
@@ -253,6 +339,9 @@ class _ExplanationCardState extends State<ExplanationCard> {
         widget.content.document.blocks.whereType<ExplanationLetter>().length ==
             1;
     return LetterWidgetCard(
+      specimen: true,
+      question: showTitle ? widget.content.document.title : null,
+      labelText: showTitle ? widget.badge : null,
       letter: glyph.glyph,
       isArabic: true,
       subtitle: glyph.caption,

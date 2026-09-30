@@ -7,12 +7,17 @@ class UIImages {
   static final background_shape_1_2 = _png("background_shape_1_2");
   static final background_shape_2_1 = _png("background_shape_2_1");
   static final background_shape_2_2 = _png("background_shape_2_2");
+  static final background_shape_3_1 = _png("background_shape_3_1");
+  static final background_shape_3_2 = _png("background_shape_3_2");
 
   static (String, String) get background_shape_1 =>
       (background_shape_1_1, background_shape_1_2);
 
   static (String, String) get background_shape_2 =>
       (background_shape_2_1, background_shape_2_2);
+
+  static (String, String) get background_shape_3 =>
+      (background_shape_3_1, background_shape_3_2);
 
   static String _png(String img) {
     return "assets/img/$img.png";

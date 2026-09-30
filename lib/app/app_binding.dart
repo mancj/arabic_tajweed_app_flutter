@@ -24,7 +24,7 @@ class AppBinding extends Bindings {
 
   Future<void> asyncDependencies() async {
     final preferences = await SharedPreferences.getInstance();
-    Get.put(SharedPreferenceManager(preferences));
+    Get.put(SharedPreferenceManager(preferences), permanent: true);
     Get.put(AppClock(preferences: preferences), permanent: true);
 
     // Одна база на всё приложение: лог событий append-only.

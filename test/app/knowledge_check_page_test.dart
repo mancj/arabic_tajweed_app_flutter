@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/knowledge_check_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/question_card.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/domain/knowledge_check.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,29 +52,22 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Начать проверку'));
       await settle(tester);
-      await tester.tap(find.text('Понятно'));
-      await settle(tester);
+      while (find.text('Понятно').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Понятно'));
+        await settle(tester);
+      }
+      final check =
+          (tester.state(find.byType(KnowledgeCheckPage)) as dynamic).check
+              as KnowledgeCheck;
       for (var i = 0; i < 8; i++) {
-        final q = tester.widget<QuestionCard>(find.byType(QuestionCard));
-        final reverse = i.isOdd;
-        final atom = curriculum.nodes
-            .map((n) => n.atom)
-            .firstWhere(
-              (a) => reverse ? a.label == q.subject : a.display == q.subject,
+        final question = check.questions[i];
+        final choice = find
+            .byType(AnswerOption)
+            .at(
+              missOne && i == 0
+                  ? (question.answerIndex + 1) % question.options.length
+                  : question.answerIndex,
             );
-        var answer = reverse ? atom.display : atom.label;
-        if (missOne && i == 0) {
-          answer = curriculum.nodes
-              .map((n) => n.atom)
-              .firstWhere(
-                (a) =>
-                    a.form == atom.form &&
-                    a.id != atom.id &&
-                    find.text(a.label).evaluate().isNotEmpty,
-              )
-              .label;
-        }
-        final choice = find.text(answer).last;
         await Scrollable.ensureVisible(tester.element(choice), alignment: .5);
         await tester.pump();
         await tester.tap(choice);
@@ -91,7 +84,15 @@ void main() {
       final log = await db.readAll();
       expect(log.whereType<KnowledgeConfirmed>().length, missOne ? 3 : 4);
       expect(
-        find.text(missOne ? 'Часть знаний подтверждена' : 'Тема доступна'),
+        find.text(missOne ? 'Пока есть пробелы' : 'Тема открыта'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(missOne ? 'Вернуться к теме' : 'Начать новую тему'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(missOne ? 'Закрепить пробелы сейчас' : 'Не сейчас'),
         findsOneWidget,
       );
       expect(c.statuses[1].canPractice, !missOne);
@@ -128,26 +129,18 @@ void main() {
         await tester.tap(find.text('Понятно'));
         await settle(tester);
       }
+      final check =
+          (tester.state(find.byType(KnowledgeCheckPage)) as dynamic).check
+              as KnowledgeCheck;
       for (var i = 0; i < 20; i++) {
-        final q = tester.widget<QuestionCard>(find.byType(QuestionCard));
-        final reverse = i.isOdd;
-        final atom = fullCourse.nodes
-            .map((n) => n.atom)
-            .firstWhere(
-              (a) => reverse ? a.label == q.subject : a.display == q.subject,
+        final question = check.questions[i];
+        final choice = find
+            .byType(AnswerOption)
+            .at(
+              missOne && i == 0
+                  ? (question.answerIndex + 1) % question.options.length
+                  : question.answerIndex,
             );
-        final answer = reverse ? atom.display : atom.label;
-        final choice = missOne && i == 0
-            ? List.generate(
-                3,
-                (index) => find.byType(AnswerOption).at(index),
-              ).firstWhere(
-                (option) => find
-                    .descendant(of: option, matching: find.text(answer))
-                    .evaluate()
-                    .isEmpty,
-              )
-            : find.text(answer).last;
         await Scrollable.ensureVisible(tester.element(choice), alignment: .5);
         await tester.pump();
         await tester.tap(choice);
@@ -156,7 +149,11 @@ void main() {
         await settle(tester);
       }
       expect(
-        find.text(missOne ? 'Часть знаний подтверждена' : 'Тема доступна'),
+        find.text(missOne ? 'Пока есть пробелы' : 'Тема открыта'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(missOne ? 'Вернуться к теме' : 'Начать новую тему'),
         findsOneWidget,
       );
       expect(

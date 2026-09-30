@@ -8,19 +8,21 @@ import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/waveform_widget.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
+import 'package:arabic_tajweed_app/app/pages/lesson/lesson_notes_page.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:drift/native.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/drawing_canvas.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -118,6 +120,45 @@ void main() {
     expect(controller.stage.value, LessonStage.intro);
     expect(controller.introAtom?.id, 'concept.letter');
     expect(find.text('Понятно'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    await settle(tester);
+    expect(Get.currentRoute, LessonNotesPage.routeName);
+    expect(find.text('Здесь появятся объяснения'), findsOneWidget);
+    await tester.tap(find.text('Вернуться к уроку'));
+    await settle(tester);
+    expect(controller.introAtom?.id, 'concept.letter');
+  });
+
+  // Повторное чтение не должно заново вводить атом или сбрасывать текущий
+  // шаг занятия: иначе конспект меняет учебный прогресс.
+  testWidgets('конспект возвращает к тому же шагу без записи прогресса', (
+    tester,
+  ) async {
+    await pumpLesson(tester);
+    final controller = Get.find<LessonController>();
+    expect(controller.shownNotes, isEmpty);
+
+    await tester.tap(find.text('Понятно'));
+    await settle(tester);
+    final nextAtom = controller.introAtom;
+    final eventsBefore = await tester.runAsync(db.readAll);
+    expect(controller.shownNotes.map((note) => note.id), ['concept.letter']);
+
+    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    await settle(tester);
+    expect(Get.currentRoute, LessonNotesPage.routeName);
+    expect(find.text('Конспект занятия'), findsOneWidget);
+    expect(find.text('Вернуться к уроку'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('lesson-note-concept.letter')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Вернуться к уроку'));
+    await settle(tester);
+    expect(controller.introAtom, same(nextAtom));
+    expect(controller.shownNotes, hasLength(1));
+    expect(await tester.runAsync(db.readAll), hasLength(eventsBefore!.length));
   });
 
   // После переноса буквы в YAML её карточка должна по-прежнему произносить
@@ -376,6 +417,23 @@ blocks:
     expect(controller.formsOverview, isEmpty);
     expect(controller.card.value, same(detail));
     expect(find.text(detail.label), findsOneWidget);
+
+    expect(controller.shownNotes.last.forms, forms);
+    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    await settle(tester);
+    final firstNote = find.byKey(
+      ValueKey('lesson-note-${controller.shownNotes.first.id}'),
+    );
+    await tester.ensureVisible(firstNote);
+    await tester.tap(firstNote);
+    await settle(tester);
+    final formsNote = find.byKey(
+      ValueKey('lesson-note-forms-${detail.letterId}'),
+    );
+    await tester.ensureVisible(formsNote);
+    await tester.tap(formsNote);
+    await settle(tester);
+    expect(find.text('Все формы буквы ${forms.first.display}'), findsOneWidget);
   });
 
   testWidgets('верный ответ сам переходит дальше через пять секунд', (
@@ -431,6 +489,7 @@ blocks:
     await settle(tester);
 
     expect(controller.isSayNameTask, isTrue);
+    expect(find.byType(PronunciationRecorderWidget), findsOneWidget);
     final exercise = controller.current!;
     await tester.tap(find.bySemanticsLabel('Меню отладки урока'));
     await settle(tester);
@@ -454,6 +513,48 @@ blocks:
     expect(answers, hasLength(1));
     expect(answer.atomId, exercise.atom.id);
     expect(answer.correct, isTrue);
+  });
+
+  // После технической ошибки ссылка пропуска появляется под записью.
+  // Её исчезновение при новой попытке не должно сдвигать карточку по экрану.
+  testWidgets('карточка записи остаётся на месте при смене состояний', (
+    tester,
+  ) async {
+    await pumpLesson(tester, topicId: 'm.first');
+    final controller = Get.find<LessonController>();
+    while (controller.introAtom?.id != 'alif.isolated') {
+      await controller.nextIntro();
+      await settle(tester);
+    }
+    await controller.nextIntro();
+    await settle(tester);
+    expect(controller.isSayNameTask, isTrue);
+
+    final recorder = find.byType(PronunciationRecorderWidget);
+    final checker = controller.pronunciation;
+    final bottomIdle = tester.getBottomLeft(recorder).dy;
+    final leftIdle = tester.getTopLeft(recorder).dx;
+    checker.error.value = 'Сервер проверки недоступен';
+    await tester.pump();
+    expect(find.text('Продолжить без произношения'), findsOneWidget);
+    final bottomWithError = tester.getBottomLeft(recorder).dy;
+    final leftWithError = tester.getTopLeft(recorder).dx;
+    expect(bottomWithError, closeTo(bottomIdle, 0.5));
+    expect(leftWithError, closeTo(leftIdle, 0.5));
+
+    checker.error.value = null;
+    checker.isRecording.value = true;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getBottomLeft(recorder).dy, closeTo(bottomWithError, 0.5));
+    expect(tester.getTopLeft(recorder).dx, closeTo(leftWithError, 0.5));
+
+    checker.isRecording.value = false;
+    checker.isChecking.value = true;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getBottomLeft(recorder).dy, closeTo(bottomWithError, 0.5));
+    expect(tester.getTopLeft(recorder).dx, closeTo(leftWithError, 0.5));
   });
 
   // Массовое debug-завершение должно сохранять обычные ответы каждого режима,

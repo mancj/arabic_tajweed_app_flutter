@@ -50,6 +50,12 @@ class TracingCard extends StatelessWidget {
   final TracingPlacement placement;
   final TracingShape? shape;
 
+  /// Видимая толщина линии и отдельная ширина допуска. По умолчанию они
+  /// одинаковы для букв; карточка огласовок делает линию тоньше, сохраняя
+  /// более широкую невидимую полосу для неточного движения пальцем.
+  final double strokeWidth;
+  final double bandScale;
+
   /// Неподвижная опора под холстом. У огласовок это буква без знака.
   final Widget? canvasBackground;
 
@@ -74,6 +80,8 @@ class TracingCard extends StatelessWidget {
     required this.mode,
     required this.shape,
     required this.missesBeforeReveal,
+    this.strokeWidth = 12,
+    this.bandScale = 1.65,
     this.placement = TracingPlacement.free,
     this.canvasBackground,
     this.enabled = true,
@@ -166,7 +174,8 @@ class TracingCard extends StatelessWidget {
                     // Четыре слоя, четыре цвета: контур под всем,
                     // поверх него показ, дальше чернила руки, и собранная
                     // буква вместо них, когда часть сошлась.
-                    strokeWidth: 12,
+                    strokeWidth: strokeWidth,
+                    bandScale: bandScale,
                     placeholderPadding: 0,
                     missesBeforeReveal: missesBeforeReveal,
                     onProgress: onProgress,

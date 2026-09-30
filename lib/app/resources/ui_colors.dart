@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+enum AppColorScheme { system, light, dark, dark2 }
+
 /// Цветовые токены интерфейса из референса.
 ///
-/// Статические геттеры берут палитру по системной яркости, поэтому при смене
-/// темы устройства уже построенные виджеты получают новые цвета автоматически.
+/// Статические геттеры берут выбранную палитру или яркость системы.
 class UIColors {
   const UIColors._();
+
+  static final selection = ValueNotifier(AppColorScheme.system);
 
   static const light = UIColorPalette(
     pageBackground: Color(0xFFECECEC),
@@ -39,6 +42,9 @@ class UIColors {
     error: Color(0xFFD94F4F),
     badgeText1: Color(0xFFFFFFFF),
     badgeText2: Color(0xFF0C233E),
+    studyAccent: Color(0xFF99401D),
+    inkSurface: Color(0xFF16314B),
+    onInk: Color(0xFFFFF9F1),
   );
 
   static const dark = UIColorPalette(
@@ -73,15 +79,65 @@ class UIColors {
     error: Color(0xFFFF7777),
     badgeText1: Color(0xFF0C233E),
     badgeText2: Color(0xFFFFFFFF),
+    studyAccent: Color(0xFFFFB78F),
+    inkSurface: Color(0xFF0B1B2D),
+    onInk: Color(0xFFFFF9F1),
   );
 
-  static UIColorPalette get _active =>
+  /// Dark 2 из Figma. Токены, не заданные в этом варианте макета,
+  /// сохраняют значения основной тёмной схемы.
+  static const dark2 = UIColorPalette(
+    pageBackground: Color(0xFF000000),
+    secondary1: Color(0xFF8990A0),
+    secondary2: Color(0xFF627182),
+    primary: Color(0xFFEE7740),
+    primary10: Color(0x33EE7740),
+    primary20: Color(0x33EE7740),
+    primary30: Color(0x4DEE7740),
+    primary40: Color(0x66EE7740),
+    primary50: Color(0x80EE7740),
+    primary60: Color(0x99EE7740),
+    primary70: Color(0xB3EE7740),
+    primary80: Color(0xCCEE7740),
+    primary90: Color(0xE6EE7740),
+    backgroundShapes2: Color(0xFF2C2C2C),
+    backgroundShapes1: Color(0xFF292929),
+    ornamentStroke: Color(0xFF43546A),
+    text: Color(0xFFFFFFFF),
+    cardBackground: Color(0xFF131313),
+    coursePreviewGradientStart: Color(0xFF131313),
+    coursePreviewGradientEnd: Color.fromARGB(255, 19, 19, 19),
+    highlightArea: Color(0xFF282828),
+    borders: Color(0xFF1F1F1F),
+    shadows: Color(0x0D0C233E),
+    primaryButtonBottom: Color(0xFFE36024),
+    primaryButtonHighlight: Color(0xFFE66E37),
+    primaryButtonShadow: Color(0xFFA04823),
+    circleButtonBottom: Color(0xFFF19D77),
+    success: Color(0xFF54C887),
+    error: Color(0xFFFF7777),
+    badgeText1: Color(0xFF0C233E),
+    badgeText2: Color(0xFFFFFFFF),
+    studyAccent: Color(0xFFFFB78F),
+    inkSurface: Color.fromARGB(255, 44, 44, 44),
+    onInk: Color(0xFFFFF9F1),
+  );
+
+  static UIColorPalette get _active => switch (selection.value) {
+    AppColorScheme.light => light,
+    AppColorScheme.dark => dark,
+    AppColorScheme.dark2 => dark2,
+    AppColorScheme.system =>
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-          Brightness.dark
-      ? dark
-      : light;
+              Brightness.dark
+          ? dark
+          : light,
+  };
 
   static Color get pageBackground => _active.pageBackground;
+  static Color get studyAccent => _active.studyAccent;
+  static Color get inkSurface => _active.inkSurface;
+  static Color get onInk => _active.onInk;
   static Color get secondary1 => _active.secondary1;
   static Color get secondary2 => _active.secondary2;
   static Color get primary => _active.primary;
@@ -130,6 +186,9 @@ class UIColors {
 }
 
 class UIColorPalette {
+  final Color studyAccent;
+  final Color inkSurface;
+  final Color onInk;
   final Color pageBackground;
   final Color secondary1;
   final Color secondary2;
@@ -174,6 +233,9 @@ class UIColorPalette {
   final Color white = const Color(0xFFFFFFFF);
 
   const UIColorPalette({
+    required this.studyAccent,
+    required this.inkSurface,
+    required this.onInk,
     required this.pageBackground,
     required this.secondary1,
     required this.secondary2,

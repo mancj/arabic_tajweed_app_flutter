@@ -11,6 +11,7 @@ class AppGestureDetector extends StatefulWidget {
   final VoidCallback? onPressEnd;
   final Widget child;
   final double pressedOpacity;
+  final bool hapticOnTap;
 
   static const _minPressedDuration = Duration(milliseconds: 100);
 
@@ -21,6 +22,7 @@ class AppGestureDetector extends StatefulWidget {
     this.onPressEnd,
     required this.child,
     this.pressedOpacity = .98,
+    this.hapticOnTap = true,
   }) : super(key: key);
 
   @override
@@ -37,7 +39,7 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        AppHaptics.tick();
+        if (widget.hapticOnTap) AppHaptics.tick();
         widget.onTap?.call();
       },
       onPanDown: (d) => _tapDownState(),
@@ -47,9 +49,8 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
       child: AnimatedScale(
         duration: const Duration(milliseconds: 200),
         scale: !_isPressed ? 1.0 : widget.pressedOpacity,
-        child: widget.child,
-
         curve: Curves.easeInOut,
+        child: widget.child,
       ),
     );
   }

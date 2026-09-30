@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Короткая запись голоса с микрофона: одна за раз, во временный файл.
@@ -15,15 +16,28 @@ import 'package:path_provider/path_provider.dart';
 /// платформенный канал, которого в тестах нет.
 class VoiceRecorder {
   RecorderController? _controller;
+  final ValueNotifier<double> _level = ValueNotifier(0);
+
+  /// Текущий нормированный уровень микрофона для живой дорожки записи.
+  ValueListenable<double> get level => _level;
 
   RecorderController get _recorder => _controller ??= RecorderController()
     ..androidEncoder = AndroidEncoder.aac
     ..androidOutputFormat = AndroidOutputFormat.mpeg4
     ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
-    ..sampleRate = 44100;
+    ..sampleRate = 44100
+    ..addListener(_updateLevel);
+
+  void _updateLevel() {
+    final wave = _controller?.waveData;
+    _level.value = wave == null || wave.isEmpty
+        ? 0
+        : wave.last.clamp(0, 1).toDouble();
+  }
 
   /// Начать запись. Ложь — нет доступа к микрофону.
   Future<bool> start() async {
+    _level.value = 0;
     if (!await _recorder.checkPermission()) return false;
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().millisecondsSinceEpoch;
@@ -36,6 +50,7 @@ class VoiceRecorder {
   /// об отказе кодировщика не сообщает, а слать пустышку на сервер незачем.
   Future<File?> stop() async {
     final path = await _recorder.stop();
+    _level.value = 0;
     if (path == null || path.isEmpty) return null;
     final file = File(path);
     if (!await file.exists() || await file.length() < _minFileBytes) {
@@ -49,5 +64,6 @@ class VoiceRecorder {
   void dispose() {
     _controller?.dispose();
     _controller = null;
+    _level.dispose();
   }
 }

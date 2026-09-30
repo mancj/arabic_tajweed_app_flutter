@@ -7,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:arabic_tajweed_app/app/media/single_sound_effect.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
-import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_specimen.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
@@ -173,7 +173,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
                           Text(
                             'Продолжение через $secondsLeft сек.',
                             style: UITextStyles.regular12.copyWith(
-                              color: UIColors.secondary2,
+                              color: UIColors.secondary1,
                             ),
                           ),
                           const Margin.vertical(8),
@@ -212,61 +212,53 @@ class _ResultAnswerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasGlyph = LessonAtomPresentation(atom).hasGlyph;
-
-    return Container(
+    final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: UIColors.highlightArea,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: UIColors.borders),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (hasGlyph) ...[
-            Container(
-                  width: 62,
-                  height: 62,
-                  alignment: Alignment.center,
-                  decoration: SquircleBorders.squircleBorder(
-                    color: UIColors.primary10,
-                    borderRadius: 16,
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      atom.display,
-                      style: UITextStyles.arabicRegular80Compact.copyWith(
-                        color: UIColors.primary,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                )
-                .animate()
-                .fadeIn(delay: .2.seconds, duration: .5.seconds)
-                .scaleXY(begin: .8, curve: Curves.easeInOutBack),
-            const Margin.horizontal(16),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ПРАВИЛЬНЫЙ ОТВЕТ',
-                  style: UITextStyles.monoSemibold11.copyWith(
-                    color: UIColors.secondary2,
-                  ),
-                ).animate().fadeIn(delay: .4.seconds, duration: .5.seconds),
-                const Margin.vertical(8),
-                Text(
-                  atom.label.isNotEmpty ? atom.label : atom.display,
-                  style: UITextStyles.semibold22,
-                ).animate().fadeIn(delay: .6.seconds, duration: .5.seconds),
-              ],
+            Semantics(
+              label: 'Буква ${atom.display}',
+              child: ExcludeSemantics(
+                child: LetterSpecimenGlyph(
+                  letter: atom.display,
+                  height: 112,
+                  fontSize: 88,
+                ),
+              ),
             ),
+            const Margin.vertical(16),
+          ],
+          Text(
+            'ПРАВИЛЬНЫЙ ОТВЕТ',
+            style: UITextStyles.monoSemibold11.copyWith(
+              color: UIColors.secondary1,
+            ),
+          ),
+          const Margin.vertical(8),
+          Text(
+            atom.label.isNotEmpty ? atom.label : atom.display,
+            style: UITextStyles.semibold22,
           ),
         ],
       ),
     );
+    if (MediaQuery.disableAnimationsOf(context)) return card;
+    return card
+        .animate()
+        .fadeIn(duration: .28.seconds)
+        .moveY(
+          begin: 12,
+          end: 0,
+          duration: .28.seconds,
+          curve: Curves.easeOutCubic,
+        );
   }
 }

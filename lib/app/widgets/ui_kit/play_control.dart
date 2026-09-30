@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:flutter/foundation.dart';
@@ -22,6 +23,7 @@ class PlayControl extends StatefulWidget {
     this.track,
     this.size = 46,
     this.showHint = true,
+    this.label,
     super.key,
   });
 
@@ -32,6 +34,9 @@ class PlayControl extends StatefulWidget {
   final bool autoPlay;
   final double size;
   final bool showHint;
+
+  /// Подписанная кнопка для объяснений; круглая — для упражнений.
+  final String? label;
 
   @override
   State<PlayControl> createState() => _PlayControlState();
@@ -84,28 +89,73 @@ class _PlayControlState extends State<PlayControl> {
     );
   }
 
-  Widget _button(bool isPlaying) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Semantics(
+  Widget _button(bool isPlaying) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (widget.label case final label?) {
+      return Semantics(
         button: true,
-        label: isPlaying ? 'Остановить' : 'Воспроизвести',
-        child: CircleButton(
-          size: widget.size,
+        label: isPlaying ? 'Остановить' : label,
+        excludeSemantics: true,
+        child: AppGestureDetector(
           onTap: widget.onTap,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 150),
-            transitionBuilder: (child, animation) =>
-                ScaleTransition(scale: animation, child: child),
-            child: Icon(
-              isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-              key: ValueKey(isPlaying),
-              size: 24,
-              color: UIColors.primaryButtonText,
+          pressedOpacity: reduceMotion ? 1 : .97,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 42),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: UIColors.inkSurface,
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: reduceMotion ? 0 : 100),
+                  child: Icon(
+                    isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                    key: ValueKey(isPlaying),
+                    color: UIColors.onInk,
+                    size: 24,
+                  ),
+                ),
+                const Margin.horizontal(8),
+                Flexible(
+                  child: Text(
+                    isPlaying ? 'Остановить' : label,
+                    style: UITextStyles.semibold14.copyWith(
+                      color: UIColors.onInk,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    ],
-  );
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Semantics(
+          button: true,
+          label: isPlaying ? 'Остановить' : 'Воспроизвести',
+          child: CircleButton(
+            size: widget.size,
+            onTap: widget.onTap,
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: reduceMotion ? 0 : 150),
+              transitionBuilder: (child, animation) =>
+                  ScaleTransition(scale: animation, child: child),
+              child: Icon(
+                isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                key: ValueKey(isPlaying),
+                size: 24,
+                color: UIColors.primaryButtonText,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

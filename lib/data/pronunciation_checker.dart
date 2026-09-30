@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 
 import 'rest/api_exception.dart';
@@ -8,7 +10,7 @@ import 'rest/pronunciation_rest_client.dart';
 import 'pronunciation_preference.dart';
 import 'voice_recorder.dart';
 
-/// Одна цепочка «нажал — сказал — отпустил — ответ сервера». Экран урока
+/// Одна цепочка «записал — отправил — ответ сервера». Экран урока
 /// и экран тренировки делят её целиком и различаются только тем, что
 /// делают с ответом.
 ///
@@ -23,8 +25,11 @@ class PronunciationChecker {
 
   final VoiceRecorder _recorder;
   PronunciationRestClient? _client;
+  Future<void>? _starting;
 
-  /// Кнопка удерживается, микрофон пишет.
+  ValueListenable<double> get level => _recorder.level;
+
+  /// Микрофон пишет после нажатия или во время удержания кнопки.
   final isRecording = false.obs;
 
   /// Запись ушла на сервер, ждём вердикт.
@@ -40,9 +45,24 @@ class PronunciationChecker {
   /// обычная учебная ошибка и здесь никогда не появляется.
   final failure = Rxn<PronunciationFailureKind>();
 
-  /// Палец лёг на кнопку: начать запись.
+  /// Начать запись сразу после нажатия. Повторное нажатие во время запуска
+  /// не создаёт вторую запись.
   Future<void> start() async {
+    if (_starting case final starting?) {
+      await starting;
+      return;
+    }
     if (isRecording.value || isChecking.value) return;
+    final starting = _startRecorder();
+    _starting = starting;
+    try {
+      await starting;
+    } finally {
+      _starting = null;
+    }
+  }
+
+  Future<void> _startRecorder() async {
     error.value = null;
     failure.value = null;
     try {
@@ -58,10 +78,11 @@ class PronunciationChecker {
     }
   }
 
-  /// Палец поднят: остановить запись и спросить сервер, названа ли
+  /// Остановить запись и спросить сервер, названа ли
   /// буква [expected] (сам глиф). Null — записи не вышло или сервер
   /// не ответил; причина уже в [error].
   Future<LetterCheck?> stop({required String expected}) async {
+    if (_starting case final starting?) await starting;
     if (!isRecording.value) return null;
     isRecording.value = false;
 
@@ -73,6 +94,7 @@ class PronunciationChecker {
     }
 
     isChecking.value = true;
+    if (kDebugMode) await 200.ms.delay();
     try {
       _client ??= Get.find<PronunciationRestClient>();
       final check = await _client!.checkLetter(audio: file, expected: expected);

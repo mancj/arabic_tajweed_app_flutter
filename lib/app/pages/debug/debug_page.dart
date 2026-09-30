@@ -59,8 +59,17 @@ class DebugPage extends GetView<DebugController> {
                   title: 'Произношение в уроках',
                   subtitle: controller.pronunciationEnabled.value
                       ? 'Включено · обязательное задание'
-                      : 'Отключено · не влияет на завершение темы',
+                      : 'Отключено до перезапуска приложения',
                   onTap: controller.togglePronunciation,
+                ),
+              ),
+              ValueListenableBuilder<AppColorScheme>(
+                valueListenable: UIColors.selection,
+                builder: (context, scheme, _) => _DebugTile(
+                  icon: Icons.palette_outlined,
+                  title: 'Цветовая схема',
+                  subtitle: _colorSchemeName(scheme),
+                  onTap: () => _chooseColorScheme(context),
                 ),
               ),
               _DebugTile(
@@ -112,6 +121,12 @@ class DebugPage extends GetView<DebugController> {
                 subtitle: 'Ответ сервера на произнесённую букву',
                 onTap: controller.openPronunciation,
               ),
+              _DebugTile(
+                icon: Icons.graphic_eq_rounded,
+                title: 'Задание на произношение',
+                subtitle: 'Карточка урока и ожидание проверки',
+                onTap: controller.openPronunciationExercise,
+              ),
             ],
           ),
           const Margin.vertical(32),
@@ -142,6 +157,24 @@ class DebugPage extends GetView<DebugController> {
                 title: 'Полёт между звёздами',
                 subtitle: 'Полноэкранная анимация точек',
                 onTap: controller.openStarfield,
+              ),
+              _DebugTile(
+                icon: Icons.waves_rounded,
+                title: 'Светящаяся волна',
+                subtitle: 'Точки, перемычки и светящиеся капсулы',
+                onTap: controller.openGlowWave,
+              ),
+              _DebugTile(
+                icon: Icons.mic_rounded,
+                title: 'Виджет записи',
+                subtitle: 'Запись, таймер, волна и проверка',
+                onTap: controller.openPronunciationRecorder,
+              ),
+              _DebugTile(
+                icon: Icons.radar_rounded,
+                title: 'Орбитальные кольца',
+                subtitle: 'Кольца и вращающиеся штрихи',
+                onTap: controller.openOrbitalRings,
               ),
               _DebugTile(
                 icon: Icons.auto_awesome_outlined,
@@ -175,6 +208,37 @@ class DebugPage extends GetView<DebugController> {
         ],
       ),
     );
+  }
+
+  static String _colorSchemeName(AppColorScheme scheme) => switch (scheme) {
+    AppColorScheme.system => 'Как в системе',
+    AppColorScheme.light => 'Светлая',
+    AppColorScheme.dark => 'Тёмная',
+    AppColorScheme.dark2 => 'Dark 2',
+  };
+
+  Future<void> _chooseColorScheme(BuildContext context) async {
+    final selected = await showDialog<AppColorScheme>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Цветовая схема'),
+        children: [
+          for (final scheme in AppColorScheme.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(dialogContext).pop(scheme),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_colorSchemeName(scheme)),
+                  if (UIColors.selection.value == scheme)
+                    const Icon(Icons.check_rounded),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (selected != null) await controller.setColorScheme(selected);
   }
 
   Future<void> _editServerUrl(BuildContext context) async {

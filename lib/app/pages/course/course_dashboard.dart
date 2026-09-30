@@ -1,4 +1,5 @@
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/orbital_rings_widget.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -184,7 +185,7 @@ class _CourseLessonTransformation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final decorSide = MediaQuery.sizeOf(context).width;
+    final decorSide = MediaQuery.sizeOf(context).width * .75;
     final showArrow =
         (atom?.kind == AtomKind.syllable && atom?.audioAsset == null) ||
         (atom?.form != null && atom?.form != LetterForm.isolated);
@@ -232,13 +233,18 @@ class _CourseLessonTransformation extends StatelessWidget {
                   children: [
                     if (showBackground)
                       Positioned.fill(
+                        top: 14,
                         child: OverflowBox(
                           alignment: Alignment.center,
                           maxWidth: decorSide,
                           maxHeight: decorSide,
                           child: SizedBox.square(
                             dimension: decorSide,
-                            child: const AnimatedBackgroundShapes(),
+                            child: OrbitalRingsWidget(
+                              color: UIColors.backgroundShapes1,
+                              thickness: 1,
+                              dashThickness: 1.4,
+                            ),
                           ),
                         ),
                       ),
@@ -258,13 +264,14 @@ class _CourseLessonTransformation extends StatelessWidget {
                             shape: BoxShape.circle,
                             color: UIColors.primary,
                             border: Border.all(
-                              color: UIColors.cardBackground,
-                              width: 2,
+                              color: UIColors.borders,
+                              width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: UIColors.primary20,
                                 blurRadius: 16,
+                                spreadRadius: 1,
                                 offset: const Offset(0, 6),
                               ),
                             ],
@@ -280,7 +287,7 @@ class _CourseLessonTransformation extends StatelessWidget {
                                   child: _Glyph(
                                     atom!.display,
                                     size: 70,
-                                    color: UIColors.highlightArea,
+                                    color: UIColors.white,
                                   ),
                                 ),
                         ),
@@ -638,12 +645,13 @@ class _CourseSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AppGestureDetector(
     onTap: onTap,
-    child: DecoratedBox(
+    child: Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: gradient == null ? UIColors.cardBackground : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: UIColors.highlightArea),
+        border: Border.all(color: UIColors.borders),
         boxShadow: [
           BoxShadow(
             color: UIColors.shadows,

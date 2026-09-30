@@ -10,16 +10,18 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Проверяет сохранённое правило именно на доске «Мой путь»: освоенная
-/// письмом буква не должна ждать несуществующего голосового ответа.
+/// Проверяет временное правило на доске «Мой путь»: до перезапуска освоенная
+/// письмом буква не ждёт голосовой ответ, после перезапуска голос нужен снова.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('отключённое произношение снимает его критерий с доски тем', () async {
-    SharedPreferences.setMockInitialValues({'pronunciationDisabled': true});
+    SharedPreferences.setMockInitialValues({});
+    final storage = await SharedPreferences.getInstance();
     final preference = PronunciationPreference(
-      SharedPreferenceManager(await SharedPreferences.getInstance()),
+      SharedPreferenceManager(storage),
     );
+    await preference.disable();
     final curriculum = CurriculumLoader.parse(
       File('assets/curriculum/stage1.json').readAsStringSync(),
     );
@@ -55,5 +57,16 @@ void main() {
       course.context.progress['ba.isolated']!.successfulModes,
       isNot(contains(ExerciseMode.sayName)),
     );
+
+    final restarted = CourseController(
+      database: database,
+      curriculum: curriculum,
+      pronunciationPreference: PronunciationPreference(
+        SharedPreferenceManager(storage),
+      ),
+    );
+    await restarted.refreshBoard();
+    expect(restarted.rules.requirePronunciation, isTrue);
+    expect(restarted.statuses.first.done, lessThan(course.statuses.first.done));
   });
 }

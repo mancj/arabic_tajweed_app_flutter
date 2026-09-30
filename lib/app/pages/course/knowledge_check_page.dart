@@ -18,6 +18,7 @@ import '../../widgets/ui_kit/mono_text_button.dart';
 import '../../widgets/ui_kit/next_button.dart';
 import '../../widgets/ui_kit/question_card.dart';
 import '../../widgets/ui_kit/rule_card.dart';
+import '../lesson/lesson_audio_source.dart';
 import 'course_controller.dart';
 
 class KnowledgeCheckPage extends StatefulWidget {
@@ -40,6 +41,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
   );
   final _scroll = ScrollController();
   final _audio = LetterAudio();
+  final _audioSource = const LessonAudioSource();
   bool started = false;
   bool busy = false;
   bool finished = false;
@@ -163,7 +165,10 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
     final question = index < check.questions.length
         ? check.questions[index]
         : null;
-    final wordQuestion = question?.atom.kind == AtomKind.word;
+    final mode = question?.mode;
+    final soundToForm = mode == KnowledgeQuestionMode.soundToForm;
+    final formToSound = mode == KnowledgeQuestionMode.formToSound;
+    final nameToForm = mode == KnowledgeQuestionMode.nameToForm;
     final target = widget.controller.statuses.firstWhere(
       (s) => s.topic.id == widget.topic.id,
     );
@@ -171,7 +176,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
       title: 'Проверка знаний',
       bottomBar: NextButton(
         title: finished
-            ? (passed ? 'Начать тему' : 'Закрепить пробелы')
+            ? (passed ? 'Начать новую тему' : 'Вернуться к теме')
             : !started
             ? 'Начать проверку'
             : concept != null
@@ -193,9 +198,8 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
                     target,
                     respectCourseGates: false,
                   );
-                } else {
-                  await widget.controller.continueCourse();
                 }
+                if (context.mounted) Navigator.of(context).pop();
               }
             : _advance,
       ),
@@ -207,19 +211,32 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
             Text(error!, style: UITextStyles.regular17),
             const Margin.vertical(12),
           ],
-          if (finished)
+          if (finished) ...[
             RuleCard(
-              title: passed ? 'Тема доступна' : 'Часть знаний подтверждена',
-              text:
-                  'Подтверждено: ${confirmed.length} из ${check.atoms.where((a) => a.kind != AtomKind.concept).length}. '
-                  '${passed ? 'Можно начинать новое.' : 'Остальное закрепим в занятиях.'}',
-            )
-          else if (!started)
+              title: passed ? 'Тема открыта' : 'Пока есть пробелы',
+              text: passed
+                  ? '«${widget.topic.title}» доступна. '
+                        '${check.isCondensed ? 'Остальной пропущенный материал отмечен для закрепления. ' : ''}'
+                        'Вы можете начать новую тему сейчас или позже.'
+                  : 'Подтверждено ${confirmed.length} из ${check.checkedAtoms.length} проверенных элементов. '
+                        'Тема пока закрыта. Подтверждённое сохранено; остальные знания можно закрепить в занятиях.',
+            ),
+            const Margin.vertical(16),
+            MonoTextButton(
+              title: passed ? 'Не сейчас' : 'Закрепить пробелы сейчас',
+              onPressed: passed
+                  ? () => Navigator.of(context).pop()
+                  : () async {
+                      await widget.controller.continueCourse();
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+            ),
+          ] else if (!started)
             RuleCard(
               title: 'Перед темой «${widget.topic.title}»',
               text:
                   'Проверим только недостающие знания: ${check.questions.length} заданий. '
-                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый элемент проверяется дважды. '}Уже освоенное повторно сдавать не нужно. '
+                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый элемент проверяется дважды. '}Задания используют знакомые форматы курса. Уже освоенное повторно сдавать не нужно. '
                   'Можно выйти: подтверждённые знания сохранятся.',
             )
           else if (concept != null)
@@ -239,48 +256,60 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
             const Margin.vertical(12),
             QuestionCard(
               badge: 'Проверка',
-              question: wordQuestion
-                  ? 'Послушайте и выберите слово'
-                  : question.reverse
-                  ? 'Выберите написание'
-                  : 'Выберите название',
-              subject: wordQuestion
+              question: switch (mode) {
+                KnowledgeQuestionMode.soundToForm =>
+                  question.atom.kind == AtomKind.word
+                      ? 'Послушайте и выберите слово'
+                      : 'Послушайте и выберите написание',
+                KnowledgeQuestionMode.formToSound =>
+                  'Прочитайте и выберите звучание',
+                KnowledgeQuestionMode.nameToForm => 'Выберите написание',
+                KnowledgeQuestionMode.formToName => 'Выберите название',
+                null => '',
+              },
+              subject: soundToForm
                   ? '♪'
-                  : question.reverse
+                  : nameToForm
                   ? question.atom.label
                   : question.atom.display,
-              subjectFont: wordQuestion || question.reverse
+              subjectFont: soundToForm || nameToForm
                   ? UITextStyles.fontOnest
                   : UITextStyles.fontScheherazadeNew,
             ),
-            if (wordQuestion) ...[
+            if (soundToForm) ...[
               MonoTextButton(
-                title: 'Прослушать слово',
-                onPressed: () => _audio.playAsset(question.atom.audioAsset),
+                title: 'Прослушать',
+                onPressed: () =>
+                    _audio.playAsset(_audioSource.forAtom(question.atom)),
                 icon: Icons.volume_up_rounded,
               ),
             ],
             const Margin.vertical(16),
             for (final (i, option) in question.options.indexed) ...[
-              AnswerOption(
-                selected: selected == i,
-                onTap: busy
-                    ? null
-                    : () => setState(() {
-                        selected = i;
-                      }),
-                child: Text(
-                  wordQuestion || question.reverse
-                      ? option.display
-                      : option.label,
-                  textDirection: wordQuestion || question.reverse
-                      ? TextDirection.rtl
-                      : TextDirection.ltr,
-                  style: wordQuestion || question.reverse
-                      ? UITextStyles.arabicRegular32
-                      : UITextStyles.regular17,
+              if (formToSound)
+                AudioAnswerOption(
+                  label: 'Звучание ${i + 1}',
+                  selected: selected == i,
+                  isPlaying: false,
+                  onTap: () {
+                    if (!busy) setState(() => selected = i);
+                  },
+                  onPlay: () => _audio.playAsset(_audioSource.forAtom(option)),
+                )
+              else
+                AnswerOption(
+                  selected: selected == i,
+                  onTap: busy ? null : () => setState(() => selected = i),
+                  child: Text(
+                    soundToForm || nameToForm ? option.display : option.label,
+                    textDirection: soundToForm || nameToForm
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    style: soundToForm || nameToForm
+                        ? UITextStyles.arabicRegular32
+                        : UITextStyles.regular17,
+                  ),
                 ),
-              ),
               const Margin.vertical(8),
             ],
           ],

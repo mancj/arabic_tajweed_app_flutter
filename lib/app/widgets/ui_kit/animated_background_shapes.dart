@@ -19,6 +19,7 @@ class AnimatedBackgroundShapes extends StatelessWidget {
     final (String, String) shape = [
       UIImages.background_shape_1,
       UIImages.background_shape_2,
+      UIImages.background_shape_3,
     ].shuffled().first;
 
     return Stack(

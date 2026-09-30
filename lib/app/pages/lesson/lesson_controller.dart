@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/services.dart' show AssetBundle;
 import 'package:get/get.dart';
 
@@ -42,6 +42,20 @@ import 'tracing_task_state.dart';
 
 /// Что показывает экран прямо сейчас.
 enum LessonStage { loading, intro, exercise, finished }
+
+/// Объяснение, которое ученик уже закрыл в текущем занятии.
+class LessonNote {
+  const LessonNote.atom(this.atom) : forms = const [];
+  const LessonNote.forms(this.forms) : atom = null;
+
+  final Atom? atom;
+  final List<Atom> forms;
+
+  String get id => atom?.id ?? 'forms-${forms.first.letterId}';
+  String get title => atom?.label.isNotEmpty == true
+      ? atom!.label
+      : atom?.display ?? 'Формы буквы ${forms.first.display}';
+}
 
 class LessonController extends GetxController {
   LessonController({
@@ -125,6 +139,31 @@ class LessonController extends GetxController {
   /// Атомы блока «новое»: показываем без проверки, потом спрашиваем.
   final introAtoms = <Atom>[].obs;
   final introIndex = 0.obs;
+  final shownNotes = <LessonNote>[].obs;
+
+  int get preferredNoteIndex {
+    final currentAtom = stage.value == LessonStage.intro
+        ? introAtom
+        : current?.atom;
+    if (currentAtom != null) {
+      final index = shownNotes.lastIndexWhere(
+        (note) => note.atom?.id == currentAtom.id,
+      );
+      if (index >= 0) return index;
+      final familyIndex = shownNotes.lastIndexWhere(
+        (note) =>
+            note.forms.isNotEmpty &&
+            note.forms.first.letterId == currentAtom.letterId,
+      );
+      if (familyIndex >= 0) return familyIndex;
+    }
+    return shownNotes.length - 1;
+  }
+
+  void _rememberNote(LessonNote note) {
+    if (shownNotes.any((shown) => shown.id == note.id)) return;
+    shownNotes.add(note);
+  }
 
   /// Выбранный вариант — до нажатия «Далее» ответ ещё можно передумать.
   final selected = Rxn<int>();
@@ -567,6 +606,7 @@ class LessonController extends GetxController {
   Future<void> nextIntro() async {
     if (stage.value != LessonStage.intro) return;
     final atom = introAtom;
+    if (atom != null) _rememberNote(LessonNote.atom(atom));
     if (atom != null && _plan!.newAtoms.any((fresh) => fresh.id == atom.id)) {
       await _progress.record(
         AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: _clock.now),
@@ -775,6 +815,7 @@ class LessonController extends GetxController {
     if (atom == null) return;
 
     if (formsOverview.isNotEmpty) {
+      _rememberNote(LessonNote.forms(List.unmodifiable(formsOverview)));
       _explanations.dismissOverview();
       _publishExplanation();
       return;
@@ -786,6 +827,7 @@ class LessonController extends GetxController {
       );
     }
     _sessionIntroduced[atom.id] = atom;
+    _rememberNote(LessonNote.atom(atom));
     _explanations.dismissCard();
     _publishExplanation();
   }
@@ -916,9 +958,7 @@ class LessonController extends GetxController {
   /// Только для отладки: проходит остаток занятия через обычные верные
   /// ответы, включая новые блоки, карточки и пересчёт плана.
   Future<void> finishLessonCorrectly() async {
-    if (!kDebugMode ||
-        _debugFinishingLesson ||
-        stage.value != LessonStage.exercise) {
+    if (_debugFinishingLesson || stage.value != LessonStage.exercise) {
       return;
     }
     _debugFinishingLesson = true;
@@ -984,8 +1024,8 @@ class LessonController extends GetxController {
     await _afterExercise();
   }
 
-  /// Явный отказ действует и в следующих занятиях, пока человек сам не
-  /// включит голос обратно в настройках.
+  /// Явный отказ действует до перезапуска приложения; в меню отладки голос
+  /// можно включить раньше.
   Future<void> optOutOfPronunciation() =>
       skipExercise(disablePronunciation: true);
 

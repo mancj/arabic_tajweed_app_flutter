@@ -135,11 +135,21 @@ class KnowledgeCheck {
   }
 
   KnowledgeQuestion _question(Atom atom, bool reverse) {
+    final eligibleIds = {
+      for (final previous in curriculum.topics.take(
+        curriculum.topics.indexWhere((t) => t.id == topic.id),
+      ))
+        ...previous.counterOf,
+      for (final checked in atoms) checked.id,
+      for (final id in context.progress.keys)
+        if (context.isKnown(id)) id,
+    };
     final others =
         curriculum.nodes
             .map((n) => n.atom)
             .where(
               (a) =>
+                  eligibleIds.contains(a.id) &&
                   a.id != atom.id &&
                   a.kind == atom.kind &&
                   a.form == atom.form &&
@@ -152,24 +162,35 @@ class KnowledgeCheck {
     if (choices.length < 2) {
       throw StateError('Нет вариантов проверки для ${atom.id}');
     }
+    final hasAudio =
+        atom.audioAsset != null ||
+        (atom.kind == AtomKind.letterForm && atom.letterId != null);
     return KnowledgeQuestion(
       atom: atom,
       options: choices,
-      reverse: reverse,
+      mode: hasAudio
+          ? (reverse
+                ? KnowledgeQuestionMode.formToSound
+                : KnowledgeQuestionMode.soundToForm)
+          : (reverse
+                ? KnowledgeQuestionMode.formToName
+                : KnowledgeQuestionMode.nameToForm),
       answerIndex: choices.indexOf(atom),
     );
   }
 }
 
+enum KnowledgeQuestionMode { soundToForm, formToSound, nameToForm, formToName }
+
 class KnowledgeQuestion {
   const KnowledgeQuestion({
     required this.atom,
     required this.options,
-    required this.reverse,
+    required this.mode,
     required this.answerIndex,
   });
   final Atom atom;
   final List<Atom> options;
-  final bool reverse;
+  final KnowledgeQuestionMode mode;
   final int answerIndex;
 }

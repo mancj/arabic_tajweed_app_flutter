@@ -45,7 +45,7 @@ class LetterFormsOverview extends StatelessWidget {
           const Margin.vertical(8),
           Text(
             'Посмотрите, как буква соединяется с соседними буквами в словах:',
-            style: UITextStyles.serifRegular16,
+            style: UITextStyles.regular16Relaxed,
           ),
           const Margin.vertical(8),
           SizedBox(child: _WordExamples(forms: examples)),

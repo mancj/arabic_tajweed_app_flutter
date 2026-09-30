@@ -13,6 +13,7 @@ import 'package:arabic_tajweed_app/data/explanation_loader.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/plugin_mocks.dart';
@@ -90,7 +91,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  // Буква с узором и кнопкой звучания всегда занимает собственную карточку;
+  // Учебный образец с кнопкой звучания занимает собственную карточку;
   // правило остаётся отдельным даже когда letter стоит первым в YAML.
   testWidgets('буква курса стоит перед отдельной карточкой правила', (
     tester,
@@ -174,6 +175,106 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   });
 
+  // При объединении названия с первым образцом легко потерять заголовок
+  // документа, состоящего только из букв, или сломать длинное слово при 2×.
+  testWidgets(
+    'образец сохраняет название и помещает слово при крупном тексте',
+    (tester) async {
+      final track = ValueNotifier(AudioTrack.silent);
+      addTearDown(track.dispose);
+      for (final blocks in [
+        '  - letter: {glyph: ا}',
+        '  - letter: {glyph: دَرَسَ}\n  - text: Прочитайте слово целиком.',
+      ]) {
+        final content = ExplanationLoader.parse(
+          'title: Учимся читать длинное слово\nblocks:\n$blocks',
+        );
+        await tester.pumpWidget(
+          _host(
+            MediaQuery(
+              data: const MediaQueryData(
+                textScaler: TextScaler.linear(2),
+                disableAnimations: true,
+              ),
+              child: ExplanationCard(
+                content: content,
+                onPlay: (_) => fail('У образца без записи нет воспроизведения'),
+                hasVoice: (_) => false,
+                track: track,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Учимся читать длинное слово'), findsOneWidget);
+        expect(find.byType(PlayControl), findsNothing);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  // У средней формы четыре черты соединения: подсчёт всех символов
+  // ошибочно отправлял одну букву в широкий режим, как длинное слово.
+  testWidgets(
+    'соединённые формы компактны, узкий экран и крупный текст безопасны',
+    (tester) async {
+      final track = ValueNotifier(AudioTrack.silent);
+      addTearDown(track.dispose);
+      for (final (asset, width, scale, compact) in [
+        ('ta.initial', 361.0, 1.0, true),
+        ('ta.medial', 361.0, 1.0, true),
+        ('ta.finalForm', 361.0, 1.0, true),
+        ('ta.medial', 280.0, 1.0, false),
+        ('ta.medial', 361.0, 2.0, false),
+        ('word.darasa', 361.0, 1.0, false),
+      ]) {
+        final content = ExplanationLoader.parse(
+          File('assets/explanations/ru/$asset.yaml').readAsStringSync(),
+        );
+        await tester.pumpWidget(
+          _host(
+            Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: width,
+                child: MediaQuery(
+                  data: MediaQueryData(
+                    textScaler: TextScaler.linear(scale),
+                    disableAnimations: true,
+                  ),
+                  child: ExplanationCard(
+                    content: content,
+                    onPlay: (_) {},
+                    hasVoice: (_) => false,
+                    track: track,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final heading = tester.getRect(find.text(content.document.title));
+        final specimen = find.byType(LetterWidgetCard);
+        final glyphText = tester.widget<LetterWidgetCard>(specimen).letter;
+        final glyph = tester.getRect(
+          find.descendant(of: specimen, matching: find.text(glyphText)),
+        );
+        if (compact) {
+          expect(glyph.left, greaterThan(heading.right), reason: asset);
+          expect(glyph.top, lessThan(heading.bottom), reason: asset);
+        } else {
+          expect(
+            glyph.top,
+            greaterThanOrEqualTo(heading.bottom),
+            reason: asset,
+          );
+        }
+        expect(tester.takeException(), isNull, reason: asset);
+      }
+    },
+  );
+
   testWidgets('жирный и курсив сочетаются, ссылки передаются экрану', (
     tester,
   ) async {
@@ -232,6 +333,46 @@ blocks:
     expect(find.text('Второй пункт', findRichText: true), findsOneWidget);
     await tester.tap(find.text('Подробнее', findRichText: true));
     expect(links, ['https://example.com/lesson']);
+  });
+
+  // В уроке и справочнике onTapLink не передают: источник из YAML всё равно
+  // должен открываться во внешнем браузере при нажатии.
+  testWidgets('ссылка в объяснении открывается без обработчика экрана', (
+    tester,
+  ) async {
+    const channel = MethodChannel('plugins.flutter.io/url_launcher');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    MethodCall? launch;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      launch = call;
+      return true;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    final content = ExplanationLoader.parse('''
+title: Буква
+blocks:
+  - text: '[Источник](https://example.com/lesson)'
+''');
+    final track = ValueNotifier(AudioTrack.silent);
+    addTearDown(track.dispose);
+    await tester.pumpWidget(
+      _host(
+        ExplanationCard(
+          content: content,
+          onPlay: (_) {},
+          hasVoice: (_) => false,
+          track: track,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Источник', findRichText: true));
+    await tester.pump();
+    expect(launch?.method, 'launch');
+    expect(launch?.arguments['url'], 'https://example.com/lesson');
+    expect(launch?.arguments['useWebView'], isFalse);
   });
 
   testWidgets('звук переключается между блоками, немые примеры не нажимаются', (

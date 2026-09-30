@@ -22,6 +22,10 @@ class RuleCard extends StatelessWidget {
   final Color? badgeColor;
   final Color? badgeTextColor;
 
+  /// Раздел единой страницы: без собственной рамки и тени.
+  final bool flat;
+  final String? sectionNumber;
+
   const RuleCard({
     required this.title,
     this.badge,
@@ -32,6 +36,8 @@ class RuleCard extends StatelessWidget {
     this.childSpacing = 16,
     this.badgeColor,
     this.badgeTextColor,
+    this.flat = false,
+    this.sectionNumber,
     Key? key,
   }) : super(key: key);
 
@@ -43,19 +49,21 @@ class RuleCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: SquircleBorders.squircleBorder(
-        color: UIColors.cardBackground,
-        borderRadius: 24,
-        cornerSmoothing: 0,
-        borderSide: BorderSide(color: UIColors.borders),
-        shadows: [
-          BoxShadow(
-            color: UIColors.shadows,
-            offset: const Offset(0, 4),
-            blurRadius: 1.5,
-          ),
-        ],
-      ),
+      decoration: flat
+          ? null
+          : SquircleBorders.squircleBorder(
+              color: UIColors.cardBackground,
+              borderRadius: 24,
+              cornerSmoothing: 0,
+              borderSide: BorderSide(color: UIColors.borders),
+              shadows: [
+                BoxShadow(
+                  color: UIColors.shadows,
+                  offset: const Offset(0, 4),
+                  blurRadius: 1.5,
+                ),
+              ],
+            ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Column(
@@ -80,7 +88,34 @@ class RuleCard extends StatelessWidget {
                     const Margin.vertical(8),
                   ],
                   if (title.isNotEmpty)
-                    Text(title, style: UITextStyles.semibold22),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (sectionNumber != null) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              sectionNumber!,
+                              style: UITextStyles.monoSemibold13.copyWith(
+                                color: UIColors.studyAccent,
+                              ),
+                            ),
+                          ),
+                          const Margin.horizontal(12),
+                        ],
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              title,
+                              style: flat
+                                  ? UITextStyles.semibold20
+                                  : UITextStyles.semibold22,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   if (text != null && text.isNotEmpty) ...[
                     const Margin.vertical(16),
                     Text(text, style: UITextStyles.regular15),

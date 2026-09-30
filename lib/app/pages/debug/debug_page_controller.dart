@@ -4,6 +4,7 @@ import 'package:arabic_tajweed_app/data/rest/api_config.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
+import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
@@ -13,8 +14,12 @@ import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 
 import 'form_sequence_debug_page.dart';
+import 'glow_wave_debug_page.dart';
 import 'haraka_drawing_debug_page.dart';
 import 'haraka_sequence_debug_page.dart';
+import 'orbital_rings_debug_page.dart';
+import 'pronunciation_exercise_debug_page.dart';
+import 'pronunciation_recorder_debug_page.dart';
 import 'starfield_debug_page.dart';
 
 class DebugController extends GetxController {
@@ -42,8 +47,14 @@ class DebugController extends GetxController {
     } else {
       await preference.disable();
       pronunciationEnabled.value = false;
-      Get.snackbar('Произношение отключено', 'Оно не мешает завершать темы');
+      Get.snackbar('Произношение отключено', 'До перезапуска приложения');
     }
+  }
+
+  Future<void> setColorScheme(AppColorScheme scheme) async {
+    UIColors.selection.value = scheme;
+    await _preferences.colorScheme.set(scheme.name);
+    await Get.forceAppUpdate();
   }
 
   /// Сохраняет адрес и сразу переключает уже созданный API-клиент.
@@ -83,6 +94,9 @@ class DebugController extends GetxController {
 
   void openPronunciation() => Get.toNamed(PronunciationPage.routeName);
 
+  void openPronunciationExercise() =>
+      Get.toNamed(PronunciationExerciseDebugPage.routeName);
+
   void openAlphabetLetter() => Get.toNamed(AlphabetLetterPage.routeName);
 
   void openAppWidgetsPage() => Get.toNamed(AppWidgetsPage.routeName);
@@ -94,4 +108,11 @@ class DebugController extends GetxController {
   void openHarakaDrawing() => Get.toNamed(HarakaDrawingDebugPage.routeName);
 
   void openStarfield() => Get.toNamed(StarfieldDebugPage.routeName);
+
+  void openGlowWave() => Get.toNamed(GlowWaveDebugPage.routeName);
+
+  void openPronunciationRecorder() =>
+      Get.toNamed(PronunciationRecorderDebugPage.routeName);
+
+  void openOrbitalRings() => Get.toNamed(OrbitalRingsDebugPage.routeName);
 }

@@ -191,7 +191,7 @@ class LessonIntroBlock extends GetView<LessonController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Margin.vertical(24),
+            const Margin.vertical(8),
             ExplanationCard(
               key: ValueKey(atom.id),
               content: explanation,
@@ -249,23 +249,29 @@ class LessonIntroBlock extends GetView<LessonController> {
 /// Объяснение формы, огласованного слога или слова перед первым вопросом.
 /// Так несколько новых сочетаний не выстраиваются в длинную стопку в начале.
 class _MaterialCard extends GetView<LessonController> {
-  const _MaterialCard({required this.atom});
+  const _MaterialCard({required this.atom, this.inNotes = false});
 
   final Atom atom;
+  final bool inNotes;
 
   @override
   Widget build(BuildContext context) {
     final explanation = controller.explanationFor(atom);
-    final badge = switch (atom.kind) {
-      AtomKind.word => 'Слово',
-      AtomKind.syllable when atom.audioAsset != null => 'Огласовка',
-      _ => 'Соединение',
-    };
+    final badge =
+        inNotes &&
+            (atom.kind == AtomKind.concept ||
+                atom.kind == AtomKind.haraka ||
+                atom.form == LetterForm.isolated)
+        ? 'Новая тема'
+        : switch (atom.kind) {
+            AtomKind.word => 'Слово',
+            AtomKind.syllable when atom.audioAsset != null => 'Огласовка',
+            _ => 'Соединение',
+          };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _LessonProgress(),
-        const Margin.vertical(16),
+        if (!inNotes) ...[const _LessonProgress(), const Margin.vertical(16)],
         if (explanation != null)
           ExplanationCard(
             key: ValueKey(atom.id),
@@ -273,26 +279,37 @@ class _MaterialCard extends GetView<LessonController> {
             badge: badge,
             onPlay: controller.playVoice,
             onAutoPlay: controller.startVoice,
-            autoPlayLetter: true,
+            autoPlayLetter: !inNotes,
             hasVoice: controller.hasVoice,
             track: controller.voiceTrack,
           )
         else ...[
-          _AtomCardFor(atom: atom),
-          const Margin.vertical(16),
+          if (LessonAtomPresentation(atom).hasGlyph) ...[
+            _AtomCardFor(atom: atom, autoPlay: !inNotes),
+            const Margin.vertical(16),
+          ],
           RuleCard(
             badge: badge,
             title: atom.label,
             text: atom.note,
-            child: switch (atom.example) {
-              final example? => HighlightedWord(
-                word: example.word,
-                index: example.index,
-                form: atom.form,
-                fontSize: 48,
-              ),
-              null => null,
-            },
+            child: atom.id == 'concept.haraka'
+                ? HarakaExamplesOverview(
+                    fathaExamples: controller.fathaIntroExamples,
+                    kasraExamples: controller.kasraIntroExamples,
+                    dammaExamples: controller.dammaIntroExamples,
+                    summaryExamples: controller.harakaSummaryExamples,
+                    onPlay: controller.playVoice,
+                    track: controller.voiceTrack,
+                  )
+                : switch (atom.example) {
+                    final example? => HighlightedWord(
+                      word: example.word,
+                      index: example.index,
+                      form: atom.form,
+                      fontSize: 48,
+                    ),
+                    null => null,
+                  },
           ),
         ],
       ],
@@ -302,9 +319,10 @@ class _MaterialCard extends GetView<LessonController> {
 
 /// Общая картина перед разбором отдельных соединённых форм буквы.
 class _FormsOverviewCard extends GetView<LessonController> {
-  const _FormsOverviewCard({required this.forms});
+  const _FormsOverviewCard({required this.forms, this.inNotes = false});
 
   final List<Atom> forms;
+  final bool inNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -317,8 +335,7 @@ class _FormsOverviewCard extends GetView<LessonController> {
       key: ValueKey('forms-overview-${isolated?.letterId}'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _LessonProgress(),
-        const Margin.vertical(16),
+        if (!inNotes) ...[const _LessonProgress(), const Margin.vertical(16)],
         if (explanation != null)
           ExplanationCard(
             content: explanation,
@@ -366,7 +383,7 @@ class _FormsOverviewCard extends GetView<LessonController> {
                 letter: atom.display,
                 onTap: () => controller.playVoice(atom),
                 onAutoPlay: () => controller.startVoice(atom),
-                autoPlay: true,
+                autoPlay: !inNotes,
                 track: controller.voiceTrack,
               ),
             ),
@@ -375,6 +392,18 @@ class _FormsOverviewCard extends GetView<LessonController> {
       ),
     );
   }
+}
+
+/// Повторный просмотр использует те же карточки, что и ход урока.
+class LessonNoteCard extends StatelessWidget {
+  const LessonNoteCard({required this.note, super.key});
+
+  final LessonNote note;
+
+  @override
+  Widget build(BuildContext context) => note.forms.isNotEmpty
+      ? _FormsOverviewCard(forms: note.forms, inNotes: true)
+      : _MaterialCard(atom: note.atom!, inNotes: true);
 }
 
 class LessonExerciseBlock extends GetView<LessonController> {
@@ -415,6 +444,16 @@ class LessonExerciseBlock extends GetView<LessonController> {
           const _LessonProgress(),
           const Margin.vertical(16),
           _QuestionFor(exercise: exercise, presentation: presentation),
+          if (presentation.input == LessonInputKind.pronunciation) ...[
+            const Margin.vertical(12),
+            Text(
+              'Нажмите и удерживайте\nкнопку ниже, чтобы начать запись',
+              textAlign: TextAlign.center,
+              style: UITextStyles.monoRegular12.copyWith(
+                color: UIColors.secondary2,
+              ),
+            ),
+          ],
           const Margin.vertical(16),
           if (presentation.input == LessonInputKind.pronunciation)
             _SayNameFeedback(exercise: exercise)
@@ -767,9 +806,10 @@ class _StubTask extends StatelessWidget {
 /// Кнопка появляется только там, где запись есть. У понятий и слогов её нет,
 /// и мёртвая кнопка обещала бы звук, которого не будет.
 class _AtomCardFor extends GetView<LessonController> {
-  const _AtomCardFor({required this.atom, super.key});
+  const _AtomCardFor({required this.atom, this.autoPlay = true, super.key});
 
   final Atom atom;
+  final bool autoPlay;
 
   @override
   Widget build(BuildContext context) =>
@@ -780,7 +820,7 @@ class _AtomCardFor extends GetView<LessonController> {
                 ? () => controller.playVoice(atom)
                 : null,
             onAutoPlay: () => controller.startVoice(atom),
-            autoPlay: true,
+            autoPlay: autoPlay,
             track: controller.voiceTrack,
           )
           .animate()

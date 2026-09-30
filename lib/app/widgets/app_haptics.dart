@@ -29,6 +29,14 @@ class AppHaptics {
     if (_supported) Gaimon.light();
   }
 
+  static void heavy() {
+    if (_supported) Gaimon.heavy();
+  }
+
+  static void medium() {
+    if (_supported) Gaimon.medium();
+  }
+
   static void success() {
     if (_supported) Gaimon.success();
   }
