@@ -3,7 +3,9 @@
 import json
 from pathlib import Path
 
-from harakat_data import CORE_SYLLABLE_IDS, HARAKAT_LETTERS, core_vowels
+from harakat_data import (
+    HARAKA_SIGN_IDS, HARAKAT_LETTERS, REQUIRED_HARAKA_IDS, core_vowels,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -128,7 +130,7 @@ def build():
         "explanationAsset": f"assets/explanations/ru/{concept_id}.yaml",
     }, prerequisite))
 
-    signs = [f"haraka.{name}" for name, _, _ in VOWELS]
+    signs = HARAKA_SIGN_IDS
     topics.append(topic("m.haraka.signs", "Три огласовки на ب", introduced(concept_id), signs))
     for name, mark, title in VOWELS:
         display = f"ب{mark}"
@@ -140,8 +142,8 @@ def build():
             f"harakat/{name}",
         ), introduced(concept_id)))
 
-    ba_ids = syllable_ids(LETTERS[:1])
-    topics.append(topic("m.haraka.ba", "Читаем ب с огласовками", all_of(map(known, signs)), ba_ids))
+    # Старые ID сохраняются для накопленного прогресса и отладочных заданий.
+    # Отдельной обязательной темы ба больше нет: её уже проверили на знаках.
     for name, mark, title in VOWELS:
         display = f"ب{mark}"
         nodes.append(node(spoken_atom(
@@ -152,7 +154,7 @@ def build():
             f"harakat/{name}",
         ), all_of(map(known, signs))))
 
-    previous = ba_ids
+    previous = signs
     for index, group in enumerate(GROUPS, start=1):
         ids = syllable_ids(group)
         requirement = all_of(map(completed, previous))
@@ -180,7 +182,7 @@ def build():
         for atom_id in topic_data["counterOf"]
     ]
     previous = [
-        *CORE_SYLLABLE_IDS,
+        *REQUIRED_HARAKA_IDS,
         *connection_ids,
     ]
     for index in range(0, len(WORDS), 3):

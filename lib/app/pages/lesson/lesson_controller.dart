@@ -12,7 +12,6 @@ import '../../../data/progress_database.dart';
 import '../../../data/progress_repository.dart';
 import '../../../data/pronunciation_checker.dart';
 import '../../../data/pronunciation_preference.dart';
-import '../../../data/rest/letter_check.dart';
 import '../../../data/rest/pronunciation_rest_client.dart';
 import '../../../data/shared_preference_manager.dart';
 import '../../../data/voice_recorder.dart';
@@ -23,6 +22,7 @@ import '../../../domain/curriculum.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/explanation_document.dart';
 import '../../../domain/exercise_generator.dart';
+import '../../../domain/haraka_syllables.dart';
 import '../../../domain/learning_rules.dart';
 import '../../../domain/letter_learning.dart';
 import '../../../domain/lesson_explanation_queue.dart';
@@ -33,6 +33,7 @@ import '../../../domain/topic_board.dart';
 import '../../../domain/planner.dart';
 import '../../../domain/pronunciation_attempts.dart';
 import '../../../domain/progress_event.dart';
+import '../../../domain/syllable_build_question.dart';
 import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
 import 'lesson_audio_source.dart';
@@ -43,7 +44,7 @@ import 'tracing_task_state.dart';
 /// Что показывает экран прямо сейчас.
 enum LessonStage { loading, intro, exercise, finished }
 
-/// Объяснение, которое ученик уже закрыл в текущем занятии.
+/// Объяснение показанного материала или материала из заданий на повторение.
 class LessonNote {
   const LessonNote.atom(this.atom) : forms = const [];
   const LessonNote.forms(this.forms) : atom = null;
@@ -110,7 +111,8 @@ class LessonController extends GetxController {
   final _explanationCards = <String, ExplanationContent>{};
 
   ExplanationContent? explanationFor(Atom atom) =>
-      _explanationCards[atom.explanationAsset];
+      _explanationCards[atom.explanationAsset] ??
+      HarakaSyllables.explanationFor(atom);
 
   ExplanationContent? formsExplanationFor(String? letterId) {
     if (letterId == null) return null;
@@ -139,35 +141,42 @@ class LessonController extends GetxController {
   /// Атомы блока «новое»: показываем без проверки, потом спрашиваем.
   final introAtoms = <Atom>[].obs;
   final introIndex = 0.obs;
-  final shownNotes = <LessonNote>[].obs;
+  final lessonNotes = <LessonNote>[].obs;
+  final unreadLessonNotes = 0.obs;
 
   int get preferredNoteIndex {
     final currentAtom = stage.value == LessonStage.intro
         ? introAtom
         : current?.atom;
     if (currentAtom != null) {
-      final index = shownNotes.lastIndexWhere(
+      final index = lessonNotes.lastIndexWhere(
         (note) => note.atom?.id == currentAtom.id,
       );
       if (index >= 0) return index;
-      final familyIndex = shownNotes.lastIndexWhere(
+      final familyIndex = lessonNotes.lastIndexWhere(
         (note) =>
             note.forms.isNotEmpty &&
             note.forms.first.letterId == currentAtom.letterId,
       );
       if (familyIndex >= 0) return familyIndex;
     }
-    return shownNotes.length - 1;
+    return lessonNotes.length - 1;
   }
 
-  void _rememberNote(LessonNote note) {
-    if (shownNotes.any((shown) => shown.id == note.id)) return;
-    shownNotes.add(note);
+  void _rememberNote(LessonNote note, {bool newlyExplained = false}) {
+    if (lessonNotes.any((shown) => shown.id == note.id)) return;
+    lessonNotes.add(note);
+    if (newlyExplained) unreadLessonNotes.value++;
   }
+
+  void markLessonNotesSeen() => unreadLessonNotes.value = 0;
 
   /// Выбранный вариант — до нажатия «Далее» ответ ещё можно передумать.
   final selected = Rxn<int>();
   final wasWrong = false.obs;
+  final syllableBuildLetter = RxnString();
+  final syllableBuildMark = RxnString();
+  final syllableBuildEvaluation = Rxn<SyllableBuildEvaluation>();
 
   /// Номер ошибки в задании с четырьмя формами. После разбора виджет получает
   /// новый ключ и начинает следующую попытку с сохранёнными подсказками.
@@ -242,7 +251,7 @@ class LessonController extends GetxController {
   }
 
   Future<void> playSequenceSlot(Exercise exercise, int index) async {
-    if (exercise.mode != ExerciseMode.harakaSequence ||
+    if (!exercise.mode.isHarakaSequence ||
         index < 0 ||
         index >= exercise.sequenceOrder.length ||
         wasWrong.value ||
@@ -259,7 +268,7 @@ class LessonController extends GetxController {
   }
 
   void startSequenceSlot(Exercise exercise, int index) {
-    if (exercise.mode != ExerciseMode.harakaSequence ||
+    if (!exercise.mode.isHarakaSequence ||
         index < 0 ||
         index >= exercise.sequenceOrder.length ||
         wasWrong.value ||
@@ -293,7 +302,7 @@ class LessonController extends GetxController {
   /// Пороги совпадения у холста и у сообщений должны быть одни и те же.
   static const tracingMatcher = TracingTaskState.matcher;
 
-  /// Задание «назови букву»: запись и проверка на сервере. Цепочка общая
+  /// Произношение буквы или слога: запись и проверка на сервере. Цепочка общая
   /// с экраном тренировки, здесь решается только, что делать с ответом.
   final PronunciationChecker pronunciation;
 
@@ -301,33 +310,57 @@ class LessonController extends GetxController {
 
   bool get isSayNameTask {
     _refresh.value;
-    return current?.mode == ExerciseMode.sayName;
+    return current?.mode.isPronunciation ?? false;
   }
 
   /// Палец лёг на кнопку: начать запись. После разбора ошибки не пишем —
   /// сначала «Ясно».
   Future<void> startRecording() async {
-    if (wasWrong.value) return;
+    if (wasWrong.value ||
+        wasCorrect.value ||
+        _skippingExercise ||
+        !isSayNameTask ||
+        card.value != null) {
+      return;
+    }
+    unawaited(_audio.stop());
     await pronunciation.start();
   }
 
   /// Палец поднят: остановить запись, спросить сервер и рассудить ответ.
   Future<void> stopRecording() async {
     final exercise = _session?.current;
-    if (exercise == null) return;
-    final result = await pronunciation.stop(expected: exercise.atom.display);
-    // Ответ пришёл на другое задание — например, после пропуска.
-    if (result == null || _session?.current != exercise) return;
-    await _judgePronunciation(result);
+    if (exercise == null || !exercise.mode.isPronunciation) return;
+    if (exercise.mode == ExerciseMode.saySyllable) {
+      final result = await pronunciation.stopSyllable(
+        expected: exercise.atom.display,
+      );
+      if (result == null || _session?.current != exercise) return;
+      await _judgePronunciation(
+        matched: result.matched,
+        hasWarning: !result.canEvaluate,
+      );
+    } else {
+      final result = await pronunciation.stop(expected: exercise.atom.display);
+      // Ответ пришёл на другое задание — например, после пропуска.
+      if (result == null || _session?.current != exercise) return;
+      await _judgePronunciation(
+        matched: result.matched,
+        hasWarning: result.recording.warning != null,
+      );
+    }
   }
 
   /// Совпало — ответ верный. Не совпало: плохая запись (тихо, шумно)
   /// попытку не тратит, первый настоящий промах даёт ещё одну, последний
   /// засчитывается ошибкой — дальше как в остальных режимах.
-  Future<void> _judgePronunciation(LetterCheck result) async {
+  Future<void> _judgePronunciation({
+    required bool matched,
+    required bool hasWarning,
+  }) async {
     switch (_pronunciationAttempts.evaluate(
-      matched: result.matched,
-      hasWarning: result.recording.warning != null,
+      matched: matched,
+      hasWarning: hasWarning,
       limit: rules.sayNameAttempts,
     )) {
       case PronunciationDecision.accepted:
@@ -356,6 +389,10 @@ class LessonController extends GetxController {
   final _askedCounts = <String, int>{};
   final _formSequenceLetters = <String>{};
   final _harakaSequenceLetters = <String>{};
+  final _mixedHarakaSequences = Set<Exercise>.identity();
+  final _syllableChoices = <ExerciseMode, int>{};
+  final _countedSyllableChoices = Set<Exercise>.identity();
+  final _pronouncedAtoms = <String>{};
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
   final _firstAttemptResults = <bool>[];
@@ -367,8 +404,8 @@ class LessonController extends GetxController {
   bool _pronunciationRequired = true;
   bool _pronunciationAvailable = true;
   bool _debugFinishingLesson = false;
+  bool _skippingExercise = false;
   late final PronunciationPreference? _pronunciationPreference;
-  int? _pronunciationSessionId;
   bool _currentBlockEndsSession = false;
   int? _sessionTarget;
 
@@ -475,9 +512,6 @@ class LessonController extends GetxController {
     _pronunciationRequired =
         _baseRules.requirePronunciation && !pronunciationDisabled;
     _pronunciationAvailable = _pronunciationRequired;
-    if (_pronunciationAvailable) {
-      _pronunciationSessionId = await _pronunciationPreference?.beginSession();
-    }
     _curriculum = _injectedCurriculum ?? await const CurriculumLoader().load();
     final atoms = _curriculum.nodes.map((node) => node.atom);
     final explanationLoader = ExplanationLoader(bundle: _explanationBundle);
@@ -606,7 +640,9 @@ class LessonController extends GetxController {
   Future<void> nextIntro() async {
     if (stage.value != LessonStage.intro) return;
     final atom = introAtom;
-    if (atom != null) _rememberNote(LessonNote.atom(atom));
+    if (atom != null) {
+      _rememberNote(LessonNote.atom(atom), newlyExplained: true);
+    }
     if (atom != null && _plan!.newAtoms.any((fresh) => fresh.id == atom.id)) {
       await _progress.record(
         AtomIntroduced(atomId: atom.id, sessionId: _sessionId, at: _clock.now),
@@ -616,15 +652,16 @@ class LessonController extends GetxController {
     final pronounceNow =
         _pronunciationAvailable &&
         atom != null &&
-        atom.letterId != null &&
-        atom.form == LetterForm.isolated &&
+        rules.requiredPracticeModes(atom).any((mode) => mode.isPronunciation) &&
         _plan!.newAtoms.any((a) => a.id == atom.id);
     if (pronounceNow) {
       if (_session == null) await _buildSession();
-      _session!.prioritizePronunciation(atom.id);
-      _returnToIntro = true;
-      _showExercise();
-      return;
+      if (_session!.hasPendingPronunciation(atom.id)) {
+        _session!.prioritizePronunciation(atom.id);
+        _returnToIntro = true;
+        _showExercise();
+        return;
+      }
     }
     if (introAtom != null) return;
 
@@ -638,6 +675,9 @@ class LessonController extends GetxController {
 
   void _showExercise() {
     _formSequence.reset();
+    syllableBuildLetter.value = null;
+    syllableBuildMark.value = null;
+    syllableBuildEvaluation.value = null;
     sequencePlayingSlot.value = null;
     _refresh.value++;
     _syncCard();
@@ -705,7 +745,7 @@ class LessonController extends GetxController {
     await _activatePlan(next, taskLimit: remaining);
   }
 
-  /// Технически недоступный голос не оставляет дыру в занятии: удалённые
+  /// Отключённый голос не оставляет дыру в занятии: удалённые
   /// задания заменяются доступной практикой, но новый материал не вводится.
   Future<bool> _replaceUnavailablePronunciation({
     required bool endsSession,
@@ -756,10 +796,24 @@ class LessonController extends GetxController {
           previousCounts: _askedCounts,
           previousFormSequences: _formSequenceLetters,
           previousHarakaSequences: _harakaSequenceLetters,
+          previousMixedHarakaSequences: _mixedHarakaSequences.length,
+          previousSyllableChoices: _syllableChoices,
+          previousPronunciations: _pronouncedAtoms,
+          previousTaskCount: _completedExercises,
           unavailableModes: {
             if (!_pronunciationAvailable) ExerciseMode.sayName,
+            if (!_pronunciationAvailable) ExerciseMode.saySyllable,
           },
         );
+    final newAtomIds = {
+      for (final atom in _plan!.newAtoms) atom.id,
+      for (final atom in exercises.expand((e) => e.introductionAtoms)) atom.id,
+    };
+    for (final atom in exercises.expand((exercise) => exercise.resultAtoms)) {
+      if (newAtomIds.contains(atom.id)) continue;
+      if (explanationFor(atom) == null && atom.note.trim().isEmpty) continue;
+      _rememberNote(LessonNote.atom(atom));
+    }
     _sessionTarget ??= continuePlanning
         ? rules.tasksPerSession
         : exercises.length;
@@ -815,7 +869,10 @@ class LessonController extends GetxController {
     if (atom == null) return;
 
     if (formsOverview.isNotEmpty) {
-      _rememberNote(LessonNote.forms(List.unmodifiable(formsOverview)));
+      _rememberNote(
+        LessonNote.forms(List.unmodifiable(formsOverview)),
+        newlyExplained: true,
+      );
       _explanations.dismissOverview();
       _publishExplanation();
       return;
@@ -827,8 +884,17 @@ class LessonController extends GetxController {
       );
     }
     _sessionIntroduced[atom.id] = atom;
-    _rememberNote(LessonNote.atom(atom));
+    _rememberNote(LessonNote.atom(atom), newlyExplained: true);
     _explanations.dismissCard();
+    if (_pronunciationAvailable &&
+        atom.kind == AtomKind.syllable &&
+        _plan!.newAtoms.any((fresh) => fresh.id == atom.id) &&
+        !_pronouncedAtoms.contains(atom.id) &&
+        _session!.hasPendingPronunciation(atom.id)) {
+      _session!.prioritizePronunciation(atom.id);
+      _showExercise();
+      return;
+    }
     _publishExplanation();
   }
 
@@ -904,12 +970,17 @@ class LessonController extends GetxController {
     final exercise = current;
     if (exercise == null) return false;
     if (wasCorrect.value) return true;
+    if (exercise.mode == ExerciseMode.syllableBuild) {
+      return wasWrong.value ||
+          (syllableBuildLetter.value != null &&
+              syllableBuildMark.value != null);
+    }
     if (exercise.isChoice) return selected.value != null;
     if (exercise.mode.isTracing && tracingShape.value != null) {
       return tracingDone.value || wasWrong.value;
     }
     // Голос судит сервер, кнопкой подтверждается только разбор ошибки.
-    if (exercise.mode == ExerciseMode.sayName) return wasWrong.value;
+    if (exercise.mode.isPronunciation) return wasWrong.value;
     return true;
   }
 
@@ -918,12 +989,41 @@ class LessonController extends GetxController {
     selected.value = index;
   }
 
+  void selectSyllableBuildLetter(String id) {
+    final exercise = current;
+    final question = exercise?.syllableBuildQuestion;
+    if (wasWrong.value ||
+        wasCorrect.value ||
+        syllableBuildEvaluation.value != null ||
+        question == null) {
+      return;
+    }
+    if (!question.letterOptions.any((letter) => letter.letterId == id)) return;
+    final enteringMarkStep = syllableBuildLetter.value == null;
+    syllableBuildLetter.value = id;
+    if (enteringMarkStep) startExerciseVoice(exercise!);
+    if (syllableBuildMark.value != null) unawaited(submit());
+  }
+
+  void selectSyllableBuildMark(String id) {
+    if (wasWrong.value ||
+        wasCorrect.value ||
+        syllableBuildEvaluation.value != null ||
+        current?.syllableBuildQuestion == null ||
+        syllableBuildLetter.value == null ||
+        !HarakaSyllables.marks.any((mark) => mark.id == id)) {
+      return;
+    }
+    syllableBuildMark.value = id;
+    unawaited(submit());
+  }
+
   /// Слоты проверяются только вместе, после заполнения последнего.
   Future<void> submitFormSequence(List<Atom> placed) async {
     final exercise = _session?.current;
     if (exercise == null ||
         (exercise.mode != ExerciseMode.positionToForm &&
-            exercise.mode != ExerciseMode.harakaSequence) ||
+            !exercise.mode.isHarakaSequence) ||
         wasWrong.value ||
         wasCorrect.value) {
       return;
@@ -931,7 +1031,16 @@ class LessonController extends GetxController {
     final evaluation = _formSequence.evaluate(
       options: exercise.options,
       placed: placed,
-      expectedAtomIds: exercise.mode == ExerciseMode.harakaSequence
+      expectedAtomIds: exercise.mode.isHarakaSequence
+          ? exercise.sequenceOrder
+                .map(
+                  (atom) => exercise.mode == ExerciseMode.harakaForLetters
+                      ? HarakaSyllables.markIdFor(atom)
+                      : atom.id,
+                )
+                .toList()
+          : null,
+      resultAtomIds: exercise.mode == ExerciseMode.harakaForLetters
           ? exercise.sequenceOrder.map((atom) => atom.id).toList()
           : null,
     );
@@ -949,6 +1058,10 @@ class LessonController extends GetxController {
     final exercise = _session?.current;
     if (exercise == null) return;
     if (exercise.isChoice) selected.value = exercise.answerIndex;
+    if (exercise.syllableBuildQuestion case final question?) {
+      syllableBuildLetter.value = question.prompt.letterId;
+      syllableBuildMark.value = question.expectedMarkId;
+    }
     await submit(directOutcome: true);
     if (advance && wasCorrect.value) await submit();
   }
@@ -984,55 +1097,75 @@ class LessonController extends GetxController {
     }
   }
 
-  /// Ответ засчитывается по нажатию «Далее», а не по тапу по карточке:
-  /// иначе случайное касание стоит атому отката.
   /// Пропустить задание, не отвечая. Ответ в лог не пишется, поэтому
-  /// прогресс букв не искажается. В отладке — чтобы быстро дойти до нужного
-  /// экрана; в бою — когда сервер проверки голоса недоступен и задание
-  /// «назови букву» выполнить нечем.
-  Future<void> skipExercise({bool disablePronunciation = false}) async {
-    if (stage.value != LessonStage.exercise) return;
+  /// прогресс не искажается. Пропуск голоса отключает оба голосовых режима
+  /// до перезапуска приложения независимо от причины.
+  Future<void> skipExercise() async {
+    if (_skippingExercise || stage.value != LessonStage.exercise) return;
     final session = _session;
     if (session == null || session.current == null) return;
 
-    final exercise = session.current!;
-    await _optionAudio.stop();
-    final mode = exercise.mode;
-    session.skip();
-    if (mode == ExerciseMode.sayName) {
-      if (disablePronunciation) _pronunciationRequired = false;
-      final disabled =
-          await _pronunciationPreference?.recordSkip(
-            sessionId: _pronunciationSessionId ?? _sessionId,
-            failure: pronunciation.failure.value,
-            explicitOptOut: disablePronunciation,
-          ) ??
-          false;
-      if (disabled) _pronunciationRequired = false;
-      _pronunciationAvailable = false;
-      session.discardPendingMode(ExerciseMode.sayName);
+    _skippingExercise = true;
+    try {
+      final exercise = session.current!;
+      final mode = exercise.mode;
+      if (mode.isPronunciation) pronunciation.reset();
+      await _optionAudio.stop();
+      session.skip();
+      if (mode.isPronunciation) {
+        _pronouncedAtoms.add(exercise.atom.id);
+        _pronunciationRequired = false;
+        _pronunciationAvailable = false;
+        await _pronunciationPreference?.disable();
+        session.discardPendingMode(ExerciseMode.sayName);
+        session.discardPendingMode(ExerciseMode.saySyllable);
+      }
+      if (mode == ExerciseMode.positionToForm) {
+        final letterId = exercise.atom.letterId;
+        if (letterId != null) _formSequenceLetters.add(letterId);
+      } else if (mode == ExerciseMode.harakaSequence) {
+        final letterId = exercise.atom.letterId;
+        if (letterId != null) _harakaSequenceLetters.add(letterId);
+      } else if (mode == ExerciseMode.harakaForLetters) {
+        _mixedHarakaSequences.add(exercise);
+      }
+      _firstAttemptResults.add(false);
+      _countSyllableChoice(exercise);
+      _countAsked(exercise.resultAtoms);
+      await _afterExercise();
+    } finally {
+      _skippingExercise = false;
     }
-    if (mode == ExerciseMode.positionToForm) {
-      final letterId = exercise.atom.letterId;
-      if (letterId != null) _formSequenceLetters.add(letterId);
-    } else if (mode == ExerciseMode.harakaSequence) {
-      final letterId = exercise.atom.letterId;
-      if (letterId != null) _harakaSequenceLetters.add(letterId);
-    }
-    _firstAttemptResults.add(false);
-    _countAsked(exercise.resultAtoms);
-    await _afterExercise();
   }
 
   /// Явный отказ действует до перезапуска приложения; в меню отладки голос
   /// можно включить раньше.
-  Future<void> optOutOfPronunciation() =>
-      skipExercise(disablePronunciation: true);
+  Future<void> optOutOfPronunciation() async {
+    if (wasWrong.value || wasCorrect.value || !isSayNameTask) return;
+    await skipExercise();
+  }
 
   void _countAsked(Iterable<Atom> atoms) {
     for (final atom in atoms) {
       _askedCounts.update(atom.id, (count) => count + 1, ifAbsent: () => 1);
     }
+  }
+
+  void _countSyllableChoice(Exercise exercise) {
+    if (exercise.atom.kind != AtomKind.syllable ||
+        !const {
+          ExerciseMode.soundToLetter,
+          ExerciseMode.letterToSound,
+          ExerciseMode.syllableBuild,
+        }.contains(exercise.mode) ||
+        !_countedSyllableChoices.add(exercise)) {
+      return;
+    }
+    _syllableChoices.update(
+      exercise.mode,
+      (count) => count + 1,
+      ifAbsent: () => 1,
+    );
   }
 
   /// ВРЕМЕННОЕ. У заданий-заглушек нет своей проверки, поэтому исход
@@ -1058,21 +1191,12 @@ class LessonController extends GetxController {
     final exercise = session?.current;
     if (session == null || exercise == null) return;
 
-    // У заглушки нет своей проверки: исход приходит от кнопки, по умолчанию
-    // верный. Отрицательный индекс сессия трактует как ошибку.
-    final choice = exercise.isChoice
-        ? selected.value
-        : ((directOutcome ?? true)
-              ? Exercise.directAnswer
-              : Exercise.directMiss);
-    if (choice == null) return;
-
     if (wasWrong.value) {
       // Верный ответ уже показан — это подтверждение, а не новая попытка.
       wasWrong.value = false;
       selected.value = null;
       if (exercise.mode == ExerciseMode.positionToForm ||
-          exercise.mode == ExerciseMode.harakaSequence) {
+          exercise.mode.isHarakaSequence) {
         _formSequence.retry();
       }
       _refresh.value++;
@@ -1080,16 +1204,43 @@ class LessonController extends GetxController {
       // пишет букву заново, а не поверх своей ошибки. С голосом так же:
       // подсказка убрана, попытки отсчитываются заново.
       if (exercise.mode.isTracing) _syncTracing();
-      if (exercise.mode == ExerciseMode.sayName) _syncPronunciation();
+      if (exercise.mode.isPronunciation) _syncPronunciation();
       if (exercise.mode == ExerciseMode.letterToSound) {
         startOptionSequence(exercise);
+      }
+      if (exercise.mode == ExerciseMode.syllableBuild) {
+        final result = syllableBuildEvaluation.value;
+        if (result?.letterCorrect != true) syllableBuildLetter.value = null;
+        if (result?.harakaCorrect != true) syllableBuildMark.value = null;
+        syllableBuildEvaluation.value = null;
       }
       return;
     }
 
+    var outcomeCorrect = directOutcome;
+    if (exercise.syllableBuildQuestion case final question?) {
+      if (syllableBuildEvaluation.value != null) return;
+      final letter = syllableBuildLetter.value;
+      final mark = syllableBuildMark.value;
+      if (letter == null || mark == null) return;
+      final result = question.evaluate(letterId: letter, markId: mark);
+      syllableBuildEvaluation.value = result;
+      outcomeCorrect ??= result.correct;
+    }
+    // У заглушки нет своей проверки: исход приходит от кнопки, по умолчанию
+    // верный. Отрицательный индекс сессия трактует как ошибку.
+    final choice = exercise.isChoice
+        ? selected.value
+        : ((outcomeCorrect ?? true)
+              ? Exercise.directAnswer
+              : Exercise.directMiss);
+    if (choice == null) return;
+
     _answeredExercise = exercise;
     final logLength = session.log.length;
     final outcome = session.answer(exercise, choice, atomResults: atomResults);
+    if (exercise.mode.isPronunciation) _pronouncedAtoms.add(exercise.atom.id);
+    _countSyllableChoice(exercise);
     _syncShortSessionTarget();
 
     // Пишем сразу, а не в конце сессии: лог должен пережить убитое
@@ -1110,6 +1261,8 @@ class LessonController extends GetxController {
     } else if (exercise.mode == ExerciseMode.harakaSequence) {
       final letterId = exercise.atom.letterId;
       if (letterId != null) _harakaSequenceLetters.add(letterId);
+    } else if (exercise.mode == ExerciseMode.harakaForLetters) {
+      _mixedHarakaSequences.add(exercise);
     }
 
     if (outcome == AnswerOutcome.wrong) {

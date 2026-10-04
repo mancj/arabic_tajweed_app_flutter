@@ -46,6 +46,8 @@ class TracingCard extends StatelessWidget {
 
   /// Один и тот же матчер у холста и у подсказок — иначе пороги разъедутся.
   final TracingMatcher matcher;
+  final bool allowHiddenGuideMatch;
+  final bool allowAnyPosition;
   final TracingMode mode;
   final TracingPlacement placement;
   final TracingShape? shape;
@@ -82,6 +84,8 @@ class TracingCard extends StatelessWidget {
     required this.missesBeforeReveal,
     this.strokeWidth = 12,
     this.bandScale = 1.65,
+    this.allowHiddenGuideMatch = false,
+    this.allowAnyPosition = false,
     this.placement = TracingPlacement.free,
     this.canvasBackground,
     this.enabled = true,
@@ -125,7 +129,7 @@ class TracingCard extends StatelessWidget {
           final k = constraints.maxWidth / LetterGuides.designWidth;
           final contentOffset = placement == TracingPlacement.free
               ? Offset(0, -_frameHeight * k * .10)
-              : Offset(0, -_frameHeight * k * .10);
+              : Offset.zero;
 
           return SizedBox(
             height: (_frameHeight + 24) * k,
@@ -163,12 +167,14 @@ class TracingCard extends StatelessWidget {
                   child: DrawingCanvas(
                     controller: controller,
                     matcher: matcher,
+                    allowHiddenGuideMatch: allowHiddenGuideMatch,
+                    allowAnyPosition: allowAnyPosition,
                     mode: mode,
                     placement: placement,
                     placeholder: shape,
                     // Обычная буква стоит на 10% выше центра. В заданиях
-                    // на огласовки опорная буква и привязанный к ней знак
-                    // вместе подняты на 10% высоты кадра.
+                    // на огласовки оставляем её по центру, чтобы сверху
+                    // хватало места для знака даже у высоких букв.
                     placeholderOffset: contentOffset,
                     enabled: enabled,
                     // Четыре слоя, четыре цвета: контур под всем,

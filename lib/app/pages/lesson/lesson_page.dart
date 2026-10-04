@@ -92,6 +92,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
     if (_notesOpen || _sheetOpen) return;
     _notesOpen = true;
     try {
+      controller.markLessonNotesSeen();
       await Get.to<void>(
         () => LessonNotesPage(controller: controller),
         routeName: LessonNotesPage.routeName,
@@ -133,16 +134,80 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
           Obx(() {
             final stage = controller.stage.value;
             return stage == LessonStage.intro || stage == LessonStage.exercise
-                ? AppScaffoldActionButton(
-                    icon: SvgPicture.asset(
-                      UISVGAssets.notes,
-                      colorFilter: ColorFilter.mode(
-                        UIColors.text,
-                        BlendMode.srcIn,
+                ? Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AppScaffoldActionButton(
+                        icon: SvgPicture.asset(
+                          UISVGAssets.notes,
+                          colorFilter: ColorFilter.mode(
+                            UIColors.text,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        onPressed: _showNotes,
+                        semanticLabel: 'Конспект занятия',
                       ),
-                    ),
-                    onPressed: _showNotes,
-                    semanticLabel: 'Конспект занятия',
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Semantics(
+                          container: true,
+                          label: controller.unreadLessonNotes.value == 0
+                              ? null
+                              : 'Новых конспектов: ${controller.unreadLessonNotes.value}',
+                          child: IgnorePointer(
+                            child: AnimatedSwitcher(
+                              duration: MediaQuery.disableAnimationsOf(context)
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 300),
+                              switchInCurve: Curves.easeOutBack,
+                              switchOutCurve: Curves.easeIn,
+                              transitionBuilder: (child, animation) =>
+                                  ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  ),
+                              child: controller.unreadLessonNotes.value == 0
+                                  ? const SizedBox.shrink(key: ValueKey(0))
+                                  : ExcludeSemantics(
+                                      key: ValueKey(
+                                        controller.unreadLessonNotes.value,
+                                      ),
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 18,
+                                          minHeight: 18,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: UIColors.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: UIColors.pageBackground,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${controller.unreadLessonNotes.value}',
+                                            style: UITextStyles.monoSemibold11
+                                                .copyWith(
+                                                  color: UIColors
+                                                      .primaryButtonText,
+                                                ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 : const SizedBox.shrink();
           }),
@@ -156,6 +221,17 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
         builder: (context, insets) => Obx(() {
           final stage = controller.stage.value;
           return SingleChildScrollView(
+            // Каждая новая статья начинается сверху, включая переход
+            // от обзора всех форм к объяснению отдельной формы.
+            key: ValueKey((
+              stage,
+              stage == LessonStage.intro
+                  ? controller.introAtom?.id
+                  : controller.card.value?.id,
+              stage == LessonStage.exercise &&
+                  controller.formsOverview.isNotEmpty,
+            )),
+            primary: false,
             // Холст обрабатывает жесты рисования внутри себя. Страница
             // остаётся прокручиваемой, чтобы дойти до кнопок под карточкой.
             padding: insets,

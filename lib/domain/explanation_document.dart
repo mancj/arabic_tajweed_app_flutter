@@ -35,6 +35,7 @@ sealed class ExplanationBlock {
     return switch (json.keys.single) {
       'text' => ExplanationText.fromJson(json),
       'letter' => ExplanationLetter.fromJson(json),
+      'writing' => ExplanationWriting.fromJson(json),
       'makhraj' => ExplanationMakhraj.fromJson(json),
       'sifat' => ExplanationSifat.fromJson(json),
       'forms' => ExplanationForms.fromJson(json),
@@ -70,6 +71,17 @@ class ExplanationLetter extends ExplanationBlock {
   final ExplanationGlyph letter;
   @override
   Map<String, dynamic> toJson() => _$ExplanationLetterToJson(this);
+}
+
+@JsonSerializable(checked: true, disallowUnrecognizedKeys: true)
+class ExplanationWriting extends ExplanationBlock {
+  const ExplanationWriting(this.writing);
+  factory ExplanationWriting.fromJson(Map<String, dynamic> json) =>
+      _$ExplanationWritingFromJson(json);
+
+  final String writing;
+  @override
+  Map<String, dynamic> toJson() => _$ExplanationWritingToJson(this);
 }
 
 @JsonSerializable(checked: true, disallowUnrecognizedKeys: true)
@@ -251,6 +263,12 @@ class ExplanationContent {
             if (makhraj.trim().isEmpty) {
               throw const FormatException(
                 'описание махраджа не должно быть пустым',
+              );
+            }
+          case ExplanationWriting(:final writing):
+            if (writing.trim().isEmpty) {
+              throw const FormatException(
+                'описание написания не должно быть пустым',
               );
             }
           case ExplanationSifat(:final sifat):

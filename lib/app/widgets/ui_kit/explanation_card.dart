@@ -136,7 +136,10 @@ class _ExplanationCardState extends State<ExplanationCard> {
                 if (index > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Divider(height: 1, color: UIColors.backgroundShapes1),
+                    child: Divider(
+                      height: 1,
+                      color: UIColors.backgroundShapes1,
+                    ),
                   ),
                 child,
               ],
@@ -199,6 +202,7 @@ class _ExplanationCardState extends State<ExplanationCard> {
 
   bool _isStandaloneBlock(ExplanationBlock block) =>
       block is ExplanationLetter ||
+      block is ExplanationWriting ||
       block is ExplanationMakhraj ||
       block is ExplanationSifat;
 
@@ -208,6 +212,14 @@ class _ExplanationCardState extends State<ExplanationCard> {
   Widget _standalone(ExplanationBlock block, int index, {String? number}) =>
       switch (block) {
         ExplanationLetter(:final letter) => _letter(letter, index),
+        ExplanationWriting() => RuleCard(
+          flat: true,
+          sectionNumber: number,
+          title: 'Как пишется',
+          contentPadding: _contentPadding,
+          childSpacing: _childSpacing,
+          child: _ruleBlocks([MapEntry(index, block)]),
+        ),
         ExplanationMakhraj() => RuleCard(
           flat: true,
           sectionNumber: number,
@@ -239,6 +251,7 @@ class _ExplanationCardState extends State<ExplanationCard> {
 
   Widget _block(ExplanationBlock block, int index) => switch (block) {
     ExplanationText(:final text) => _markdown(text),
+    ExplanationWriting(:final writing) => _markdown(writing),
     ExplanationMakhraj(:final makhraj) => _markdown(makhraj),
     ExplanationSifat(:final sifat) => _markdown(sifat),
     ExplanationLetter(:final letter) => _letter(letter, index),
@@ -317,6 +330,8 @@ class _ExplanationCardState extends State<ExplanationCard> {
       borderRadius: BorderRadius.circular(16),
       child: Image(
         image: provider,
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
         semanticLabel: alt,
         errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),

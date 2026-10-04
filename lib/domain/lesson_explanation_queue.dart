@@ -50,6 +50,7 @@ class LessonExplanationQueue {
   }
 
   void prepareFor(Exercise? exercise) {
+    final introductions = exercise?.introductionAtoms.toSet() ?? const <Atom>{};
     _pendingCards
       ..clear()
       ..addAll(
@@ -57,10 +58,11 @@ class LessonExplanationQueue {
           if (exercise != null) exercise.atom,
           if (exercise?.prompt case final prompt?) prompt,
           ...?exercise?.options,
+          ...?exercise?.sequenceOrder,
         }.where(
           (atom) =>
               !_belongsToIntro(atom) &&
-              _ownAtoms.contains(atom.id) &&
+              (_ownAtoms.contains(atom.id) || introductions.contains(atom)) &&
               !_shownCards.contains(atom.id),
         ),
       );

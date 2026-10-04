@@ -6,9 +6,11 @@ import 'atom.dart';
 import 'atom_state.dart';
 import 'curriculum.dart';
 import 'exercise.dart';
+import 'haraka_syllables.dart';
 import 'learning_rules.dart';
 import 'planner.dart';
 import 'progress_event.dart';
+import 'syllable_build_question.dart';
 
 /// Превращает план урока в конкретные задания. Отдельный слой, потому что
 /// «какие атомы показать» и «каким заданием их спросить» — разные решения:
@@ -23,6 +25,65 @@ class ExerciseGenerator {
   final Curriculum curriculum;
   final LearningRules rules;
   final Random _random;
+
+  /// Режимы выбора, которые обычный курс строит для данного вида материала.
+  /// Проверка знаний берёт их отсюда, чтобы не спрашивать буквы форматом
+  /// «написание → звук», предназначенным для огласовок и слов.
+  static List<ExerciseMode> choiceModesFor(Atom atom) => switch (atom.kind) {
+    AtomKind.letterForm => const [ExerciseMode.soundToLetter],
+    AtomKind.syllable when atom.audioAsset == null => const [
+      ExerciseMode.nameToForm,
+      ExerciseMode.formToName,
+    ],
+    AtomKind.syllable || AtomKind.haraka || AtomKind.word => const [
+      ExerciseMode.soundToLetter,
+      ExerciseMode.letterToSound,
+    ],
+    AtomKind.sign => const [ExerciseMode.nameToForm, ExerciseMode.formToName],
+    AtomKind.concept => const [],
+  };
+
+  /// Строит вопрос с выбором из того же материала, что и обычный урок.
+  /// Проверка знаний передаёт сюда свой набор уже доступных атомов.
+  Exercise choiceFor({
+    required Atom atom,
+    required List<Atom> pool,
+    required ExerciseMode mode,
+    DistractorLevel level = DistractorLevel.mixed,
+    bool isReview = false,
+    bool isRequired = false,
+  }) {
+    if (atom.kind == AtomKind.syllable && atom.audioAsset == null) {
+      return _connectionQuestion(
+        atom,
+        mode == ExerciseMode.nameToForm ? 0 : 1,
+        isReview,
+        isRequired,
+      );
+    }
+    if (atom.audioAsset != null &&
+        (mode == ExerciseMode.soundToLetter ||
+            mode == ExerciseMode.letterToSound)) {
+      return _vocalizedChoice(
+        atom,
+        pool,
+        mode,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
+    final picked = _pickDistractors(atom, pool, level);
+    final options = [atom, ...picked.distractors]..shuffle(_random);
+    return Exercise(
+      atom: atom,
+      mode: mode,
+      options: options,
+      answerIndex: options.indexOf(atom),
+      level: picked.level,
+      isReview: isReview,
+      isRequired: isRequired,
+    );
+  }
 
   /// Сколько заданий даётся на каждый новый атом в блоке закрепления.
   static const _drillsPerNewAtom = 3;
@@ -45,6 +106,10 @@ class ExerciseGenerator {
     Map<String, int> previousCounts = const {},
     Set<String> previousFormSequences = const {},
     Set<String> previousHarakaSequences = const {},
+    int previousMixedHarakaSequences = 0,
+    Map<ExerciseMode, int> previousSyllableChoices = const {},
+    Set<String> previousPronunciations = const {},
+    int previousTaskCount = 0,
     Set<ExerciseMode> unavailableModes = const {},
   }) {
     final limit = taskLimit ?? rules.tasksPerSession;
@@ -89,6 +154,13 @@ class ExerciseGenerator {
       previousCounts,
       narrowBaseLetters: plan.isNarrowBaseLetterBlock(curriculum),
     );
+    final syllablePronunciationAtoms = _syllablePronunciationAtoms(
+      schedule.map((scheduled) => scheduled.atom).toSet(),
+      plan,
+      ctx,
+      previousPronunciations,
+      previousTaskCount + schedule.length,
+    );
     final slots = <Atom, int>{};
     for (final scheduled in schedule) {
       final atom = scheduled.atom;
@@ -99,8 +171,8 @@ class ExerciseGenerator {
     // только после неё, в том числе когда обе попали в один урок.
     final traced = <String>{};
 
-    // Кого в этом уроке уже просили назвать вслух: ровно раз на букву за урок.
-    final spoken = <String>{};
+    // Уже предложенный голос: раз на букву или слог за всё занятие.
+    final spoken = {...previousPronunciations};
 
     // Сборка четырёх форм возвращается в каждом новом занятии, но одна
     // и та же буква не должна занимать этим упражнением несколько слотов.
@@ -129,49 +201,450 @@ class ExerciseGenerator {
         isRequired: scheduled.isRequired,
         forceFormSequence: scheduled.forceFormSequence,
         forceSoundToLetter: scheduled.forceSoundToLetter,
-        allowPronunciation: !unavailableModes.contains(ExerciseMode.sayName),
+        allowPronunciation:
+            rules.requirePronunciation &&
+            (_isBaseLetter(atom) ||
+                syllablePronunciationAtoms.contains(atom.id)) &&
+            !unavailableModes.any((mode) => mode.isPronunciation),
       );
       if (ex != null) exercises.add(ex);
     }
-    return _includeHarakaSequences(exercises, pool, previousHarakaSequences);
+    final withSequences = _includeHarakaSequences(
+      exercises,
+      pool,
+      ctx,
+      sessionId,
+      previousHarakaSequences,
+      previousCounts,
+      previousMixedHarakaSequences,
+    );
+    final withFormReviews = _includeLetterFormReviews(
+      withSequences,
+      plan,
+      ctx,
+      sessionId,
+      limit,
+      previousFormSequences,
+      previousCounts,
+    );
+    return _includeSyllableBuilds(
+      withFormReviews,
+      pool,
+      ctx,
+      previousSyllableChoices,
+    );
   }
 
-  /// Сборка заменяет одну одиночную проверку «звук → написание», но
-  /// проверяет все три слога. Поэтому число заданий не меняется, а письмо
-  /// и направление «написание → звук» остаются в исходном расписании.
+  /// Только две сборки старых форм в огласовках. Общая очередь раздела
+  /// остаётся прежней: письмо и произношение отдельных букв не возвращаем.
+  /// Обязательные задания темы сохраняем, добавочные места заменяем.
+  List<Exercise> _includeLetterFormReviews(
+    List<Exercise> exercises,
+    LessonPlan plan,
+    CurriculumContext ctx,
+    int sessionId,
+    int taskLimit,
+    Set<String> previousSequences,
+    Map<String, int> previousCounts,
+  ) {
+    if (exercises.isEmpty) return exercises;
+    final topics = curriculum.topics.where((topic) => topic.stage == 2);
+    final ids = topics.expand((topic) => topic.counterOf).toSet();
+    final planIds = {
+      ...plan.newAtoms.map((atom) => atom.id),
+      ...plan.reviewAtoms,
+    };
+    final isHarakaPlan = plan.topicId != null
+        ? topics.any((topic) => topic.id == plan.topicId)
+        : planIds.isNotEmpty && planIds.every(ids.contains);
+    final remaining = max(
+      0,
+      rules.letterFormReviewsPerHarakaSession - previousSequences.length,
+    );
+    if (!isHarakaPlan || remaining == 0) return exercises;
+
+    bool canReplace(Exercise exercise) {
+      final progress = ctx.progress[exercise.atom.id] ?? const AtomProgress();
+      final known = ctx.isKnown(exercise.atom.id);
+      // В общей очереди и смешанном повторе известные элементы задают
+      // объём практики, а не обязательный новый материал темы.
+      final optional =
+          !exercise.isRequired ||
+          (known &&
+              (plan.spacedReview.contains(exercise.atom.id) ||
+                  (plan.topicId == null && plan.isFocusedReview)));
+      final drawingDone =
+          !exercise.mode.isTracing ||
+          (known &&
+              (progress.weak ||
+                  progress.successfulModes.contains(exercise.mode)));
+      return optional &&
+          drawingDone &&
+          !exercise.mode.isPronunciation &&
+          !exercise.mode.isHarakaSequence &&
+          exercise.mode != ExerciseMode.positionToForm;
+    }
+
+    final replaceable =
+        exercises.indexed.where((entry) => canReplace(entry.$2)).toList()
+          ..shuffle(_random);
+    final replacementOrder = replaceable.sortedBy(
+      (entry) => entry.$2.isReview ? 0 : 1,
+    );
+    final free = max(0, taskLimit - exercises.length);
+    final count = min(remaining, free + replaceable.length);
+    if (count == 0) return exercises;
+
+    final families = curriculum.nodes
+        .map((node) => node.atom)
+        .where(
+          (atom) =>
+              atom.kind == AtomKind.letterForm &&
+              atom.letterId != null &&
+              atom.form != null,
+        )
+        .groupListsBy((atom) => atom.letterId!);
+    final candidates =
+        families.entries
+            .whereNot((entry) => previousSequences.contains(entry.key))
+            .where(
+              (entry) =>
+                  (entry.value.length == 2 || entry.value.length == 4) &&
+                  entry.value.every(
+                    (atom) =>
+                        ctx.stateOf(atom.id) != AtomState.fresh &&
+                        (previousCounts[atom.id] ?? 0) < _maxPerAtom &&
+                        !(ctx.progress[atom.id]?.isDeferredAt(
+                              sessionId,
+                              rules,
+                            ) ??
+                            false),
+                  ),
+            )
+            .toList()
+          ..shuffle(_random);
+    int lastSeen(MapEntry<String, List<Atom>> family) => family.value
+        .map((atom) => ctx.progress[atom.id]?.lastSeenSession ?? 0)
+        .max;
+    int weakFirst(MapEntry<String, List<Atom>> family) =>
+        family.value.any(
+          (atom) =>
+              (ctx.progress[atom.id]?.weak ?? false) ||
+              ctx.stateOf(atom.id) == AtomState.learning,
+        )
+        ? 0
+        : 1;
+
+    final sequenced = {...previousSequences};
+    final reviews = <Exercise>[];
+    while (reviews.length < count && candidates.isNotEmpty) {
+      final sorted = reviews.isEmpty && previousSequences.isEmpty
+          ? candidates.sortedBy(lastSeen)
+          : candidates.sorted((a, b) {
+              final weak = weakFirst(a).compareTo(weakFirst(b));
+              return weak != 0 ? weak : lastSeen(a).compareTo(lastSeen(b));
+            });
+      final family = sorted.first;
+      candidates.remove(family);
+      final atom = family.value.firstWhere(
+        (atom) => atom.form == LetterForm.isolated,
+      );
+      final exercise = _formSequenceExercise(
+        atom,
+        family.value,
+        sequenced,
+        level: _levelFor(atom, ctx, sessionId),
+        isReview: true,
+        isRequired: true,
+        isFormMaintenance: true,
+      );
+      if (exercise != null) reviews.add(exercise);
+    }
+
+    final result = [...exercises];
+    final replacements = max(0, reviews.length - free);
+    for (final (index, entry) in replacementOrder.take(replacements).indexed) {
+      result[entry.$1] = reviews[index];
+    }
+    final additions = reviews.skip(replacements).toList();
+    for (final (index, exercise) in additions.indexed) {
+      final at = ((index + 1) * result.length / (additions.length + 1)).round();
+      result.insert(at, exercise);
+    }
+    return result;
+  }
+
+  /// Один слот знакомого слога не обязан становиться голосом. Бюджет общий
+  /// для всех блоков огласовок одного занятия; произношение отдельных букв
+  /// сохраняет прежние правила и не расходует этот бюджет.
+  Set<String> _syllablePronunciationAtoms(
+    Set<Atom> atoms,
+    LessonPlan plan,
+    CurriculumContext ctx,
+    Set<String> previousPronunciations,
+    int taskCount,
+  ) {
+    if (!rules.requirePronunciation ||
+        rules.syllablePronunciationMaxPercent <= 0) {
+      return const {};
+    }
+    bool isSyllable(Atom atom) =>
+        rules.requiredPracticeModes(atom).contains(ExerciseMode.saySyllable);
+    final spokenSyllables = previousPronunciations
+        .map(_atomById)
+        .nonNulls
+        .where(isSyllable)
+        .length;
+    final budget = max(
+      1,
+      min(taskCount, rules.tasksPerSession) *
+          rules.syllablePronunciationMaxPercent ~/
+          100,
+    );
+    final remaining = max(0, budget - spokenSyllables);
+    if (remaining == 0) return const {};
+    final freshIds = plan.newAtoms.map((atom) => atom.id).toSet();
+    final candidates =
+        atoms
+            .whereNot((atom) => previousPronunciations.contains(atom.id))
+            .where(isSyllable)
+            .toList()
+          ..shuffle(_random);
+    int priority(Atom atom) {
+      if (freshIds.contains(atom.id)) return 0;
+      final progress = ctx.progress[atom.id] ?? const AtomProgress();
+      final missingVoice =
+          !progress.weak &&
+          rules
+              .requiredPracticeModes(atom)
+              .where((mode) => mode.isPronunciation)
+              .any((mode) => !progress.successfulModes.contains(mode));
+      if (missingVoice) return 1;
+      if (!plan.isFocusedReview && plan.reviewAtoms.contains(atom.id)) return 2;
+      return 3;
+    }
+
+    return candidates
+        .sortedBy(priority)
+        .take(remaining)
+        .map((atom) => atom.id)
+        .toSet();
+  }
+
+  /// Три одиночных формата чтения делят места поровну. Обязательное письмо
+  /// и семейные сборки сюда не попадают. Счёт уже предложенных заданий
+  /// переживает добор блока.
+  List<Exercise> _includeSyllableBuilds(
+    List<Exercise> exercises,
+    Set<Atom> pool,
+    CurriculumContext ctx,
+    Map<ExerciseMode, int> previousChoices,
+  ) {
+    if (!HarakaSyllables.marks.every(
+      (mark) => ctx.stateOf(mark.id) != AtomState.fresh,
+    )) {
+      return exercises;
+    }
+    final letters = pool.where(_isBaseLetter).toList();
+    if (letters.length < 3) return exercises;
+    final modes = [
+      ExerciseMode.soundToLetter,
+      ExerciseMode.letterToSound,
+      ExerciseMode.syllableBuild,
+    ];
+    final candidates = exercises.indexed
+        .where(
+          (entry) =>
+              _isVocalizedSyllable(entry.$2.atom) &&
+              modes.contains(entry.$2.mode) &&
+              letters.any(
+                (letter) => letter.letterId == entry.$2.atom.letterId,
+              ),
+        )
+        .toList();
+    final counts = {for (final mode in modes) mode: previousChoices[mode] ?? 0};
+    final result = [...exercises];
+    for (final (index, original) in candidates) {
+      // Случайный выбор только при равном счёте: одна удачная жеребьёвка
+      // не должна оставлять весь урок без нового формата.
+      final order = [...modes]..shuffle(_random);
+      final mode = minBy(order, (mode) => counts[mode]!)!;
+      counts[mode] = counts[mode]! + 1;
+      if (mode == original.mode) continue;
+      if (mode != ExerciseMode.syllableBuild) {
+        result[index] = _vocalizedChoice(
+          original.atom,
+          pool.toList(),
+          mode,
+          isReview: original.isReview,
+          isRequired: original.isRequired,
+        );
+        continue;
+      }
+      final letter = letters.firstWhere(
+        (letter) => letter.letterId == original.atom.letterId,
+      );
+      final picked = _pickDistractors(letter, letters, original.level);
+      final options = [letter, ...picked.distractors]..shuffle(_random);
+      result[index] = Exercise(
+        atom: original.atom,
+        mode: mode,
+        level: picked.level,
+        answerIndex: Exercise.directAnswer,
+        isReview: original.isReview,
+        isRequired: original.isRequired,
+        question: 'Соберите слог по звуку',
+        syllableBuildQuestion: SyllableBuildQuestion(
+          prompt: original.atom,
+          letterOptions: options,
+        ),
+      );
+    }
+    return result;
+  }
+
+  /// Три разных буквы получают сборку вместо одиночного выбора. Для новых
+  /// слогов сохраняем место для одиночного чтения и обязательный рисунок;
+  /// у уже освоенного слога можно заменить выбор любого направления.
   List<Exercise> _includeHarakaSequences(
     List<Exercise> exercises,
     Set<Atom> pool,
+    CurriculumContext ctx,
+    int sessionId,
     Set<String> previousSequences,
+    Map<String, int> previousCounts,
+    int previousMixedSequences,
   ) {
+    if (exercises.isEmpty) return exercises;
+    final available = max(
+      0,
+      rules.harakaSequencesPerSession -
+          previousSequences.length -
+          previousMixedSequences,
+    );
+    final target = min(
+      available,
+      (exercises.length *
+              rules.harakaSequencesPerSession /
+              rules.tasksPerSession)
+          .ceil(),
+    );
+    if (target == 0) return exercises;
+    final mixedTarget = min(
+      max(0, rules.mixedHarakaSequencesPerSession - previousMixedSequences),
+      (exercises.length *
+              rules.mixedHarakaSequencesPerSession /
+              rules.tasksPerSession)
+          .ceil(),
+    );
     final families = pool
         .where(_isVocalizedSyllable)
         .groupListsBy((atom) => atom.letterId!);
+    final signsIntroduced = const [
+      'fatha',
+      'kasra',
+      'damma',
+    ].every((sign) => ctx.stateOf('haraka.$sign') != AtomState.fresh);
+    final prompts = {
+      for (final node in curriculum.nodes)
+        if (node.atom.form == LetterForm.isolated)
+          node.atom.letterId: node.atom,
+    };
+    final ready = <String, List<Atom>>{};
+    for (final entry in families.entries) {
+      final prompt = prompts[entry.key];
+      if (prompt == null || previousSequences.contains(entry.key)) continue;
+      if (entry.value.length != 3) {
+        if (!signsIntroduced ||
+            ctx.stateOf(prompt.id).index < AtomState.known.index) {
+          continue;
+        }
+        // Обязательный слог из другой темы нельзя ввести через сборку
+        // раньше его урока. Дополняем только отсутствующие в графе слоги.
+        final mandatory = curriculum.nodes
+            .map((node) => node.atom)
+            .where(_isVocalizedSyllable)
+            .where((atom) => atom.letterId == entry.key);
+        if (mandatory.any((atom) => !pool.contains(atom))) continue;
+      }
+      final family = HarakaSyllables.completeFamily(prompt, entry.value);
+      if (family.any(
+        (atom) =>
+            (previousCounts[atom.id] ?? 0) >= _maxPerAtom ||
+            (ctx.progress[atom.id]?.isDeferredAt(sessionId, rules) ?? false),
+      )) {
+        continue;
+      }
+      ready[entry.key] = family;
+    }
     final candidates = <String, int>{};
     for (final (index, exercise) in exercises.indexed) {
       final atom = exercise.atom;
-      if (!_isVocalizedSyllable(atom) ||
-          exercise.mode != ExerciseMode.soundToLetter ||
-          previousSequences.contains(atom.letterId)) {
+      if (!_isVocalizedSyllable(atom) || !ready.containsKey(atom.letterId)) {
         continue;
       }
-      final family = families[atom.letterId];
-      if (family == null || family.length != 3) continue;
-      // Последняя из первых проверок даёт ученику сначала услышать два
-      // слога поодиночке; третий он сопоставляет уже внутри сборки.
-      candidates[atom.letterId!] = index;
+      if (exercise.mode == ExerciseMode.soundToLetter) {
+        // Последняя слуховая проверка позволяет сначала услышать слоги
+        // поодиночке. Она предпочтительнее замены обратного направления.
+        candidates[atom.letterId!] = index;
+      } else if (exercise.mode == ExerciseMode.letterToSound &&
+          ctx.stateOf(atom.id).index >= AtomState.known.index) {
+        candidates.putIfAbsent(atom.letterId!, () => index);
+      }
     }
+    final selected = candidates.entries.toList()..shuffle(_random);
+    selected.sort(
+      (a, b) => (exercises[a.value].isReview ? 1 : 0).compareTo(
+        exercises[b.value].isReview ? 1 : 0,
+      ),
+    );
     final result = [...exercises];
-    for (final entry in candidates.entries) {
-      final family = families[entry.key]!;
+    final mixedEligible =
+        signsIntroduced &&
+        mixedTarget > 0 &&
+        candidates.length >= 3 &&
+        candidates.keys.every(
+          (letter) =>
+              ctx.stateOf(prompts[letter]!.id).index >= AtomState.known.index,
+        );
+    for (final (selectionIndex, entry) in selected.take(target).indexed) {
+      final family = ready[entry.key]!;
       final original = result[entry.value];
-      final prompt = curriculum.nodes
-          .map((node) => node.atom)
-          .firstWhereOrNull(
-            (atom) =>
-                atom.letterId == entry.key && atom.form == LetterForm.isolated,
-          );
-      if (prompt == null) continue;
+      final prompt = prompts[entry.key]!;
+      if (mixedEligible && selectionIndex < mixedTarget) {
+        final others = selected
+            .where((other) => other.key != entry.key)
+            .take(2)
+            .toList();
+        // Хотя бы один знак повторяется: последний ответ нельзя получить
+        // исключением уже использованных плиток.
+        final repeatedMark = HarakaSyllables.markIdFor(original.atom);
+        final thirdFamily = ready[others[1].key]!;
+        final order = [
+          original.atom,
+          ready[others[0].key]!.firstWhere(
+            (atom) => HarakaSyllables.markIdFor(atom) == repeatedMark,
+          ),
+          thirdFamily[_random.nextInt(thirdFamily.length)],
+        ]..shuffle(_random);
+        final options = [...HarakaSyllables.marks]..shuffle(_random);
+        result[entry.value] = Exercise(
+          atom: original.atom,
+          mode: ExerciseMode.harakaForLetters,
+          level: original.level,
+          options: options,
+          answerIndex: 0,
+          isReview: original.isReview,
+          isRequired: original.isRequired,
+          question: 'Послушайте и добавьте огласовки',
+          sequenceOrder: order,
+          introductionAtoms: order
+              .where((atom) => !pool.contains(atom))
+              .where((atom) => ctx.stateOf(atom.id) == AtomState.fresh)
+              .toList(),
+        );
+        continue;
+      }
       final order = [...family]..shuffle(_random);
       final options = [...family]..shuffle(_random);
       result[entry.value] = Exercise(
@@ -185,6 +658,10 @@ class ExerciseGenerator {
         prompt: prompt,
         question: 'Расставьте огласовки буквы «${prompt.label}»',
         sequenceOrder: order,
+        introductionAtoms: family
+            .where((atom) => !pool.contains(atom))
+            .where((atom) => ctx.stateOf(atom.id) == AtomState.fresh)
+            .toList(),
       );
     }
     return result;
@@ -495,21 +972,64 @@ class ExerciseGenerator {
         ctx,
         isReview: isReview,
         isRequired: isRequired,
+        focused: focused,
+        isTopicAtom: isTopicAtom,
+        spoken: spoken,
+        allowPronunciation: allowPronunciation,
       );
     }
     if (atom.kind == AtomKind.syllable && atom.audioAsset != null) {
       final progress = ctx.progress[atom.id] ?? const AtomProgress();
+      final missing = rules
+          .requiredPracticeModes(atom)
+          .where((mode) => allowPronunciation || !mode.isPronunciation)
+          .whereNot(progress.successfulModes.contains)
+          .where((mode) => !mode.isPronunciation || !spoken.contains(atom.id))
+          .toList();
+      final voicePlanned = allowPronunciation && !spoken.contains(atom.id);
+      final fullPractice = isTopicAtom && !focused;
+      final missingMode = focused && slot.index < missing.length
+          ? missing[slot.index]
+          : null;
+      if ((missingMode == ExerciseMode.saySyllable && voicePlanned) ||
+          (fullPractice && voicePlanned && slot.isLast)) {
+        spoken.add(atom.id);
+        return Exercise.direct(
+          atom: atom,
+          mode: ExerciseMode.saySyllable,
+          isReview: isReview,
+          isRequired: true,
+        );
+      }
       final needsDrawing = !progress.successfulModes.contains(
         ExerciseMode.drawHarakaForSound,
       );
       if (atom.tracing != null &&
-          (slot.index >= 2 || (isReview && needsDrawing))) {
+          (missingMode == ExerciseMode.drawHarakaForSound ||
+              (!focused &&
+                  (fullPractice
+                      ? slot.index ==
+                            min(2, slot.count - (voicePlanned ? 2 : 1))
+                      : slot.index == 2)) ||
+              (!fullPractice && !focused && isReview && needsDrawing))) {
         return Exercise.direct(
           atom: atom,
           mode: ExerciseMode.drawHarakaForSound,
           isReview: isReview,
           isRequired: isRequired,
           question: 'Послушайте и дорисуйте огласовку',
+        );
+      }
+      if (!fullPractice &&
+          voicePlanned &&
+          _isActiveSlot(progress, slot) &&
+          missingMode == null) {
+        spoken.add(atom.id);
+        return Exercise.direct(
+          atom: atom,
+          mode: ExerciseMode.saySyllable,
+          isReview: isReview,
+          isRequired: isRequired,
         );
       }
       return _vocalizedQuestion(
@@ -532,7 +1052,14 @@ class ExerciseGenerator {
       );
     }
     if (atom.kind == AtomKind.syllable) {
-      return _connectionQuestion(atom, slot.index, isReview, isRequired);
+      final modes = choiceModesFor(atom);
+      return choiceFor(
+        atom: atom,
+        pool: pool,
+        mode: modes[slot.index % modes.length],
+        isReview: isReview,
+        isRequired: isRequired,
+      );
     }
 
     if (forceFormSequence) {
@@ -564,14 +1091,20 @@ class ExerciseGenerator {
     final p = ctx.progress[atom.id] ?? const AtomProgress();
     final availablePractice = rules
         .requiredPracticeModes(atom)
-        .where((mode) => allowPronunciation || mode != ExerciseMode.sayName)
+        .where(
+          (mode) =>
+              !mode.isPronunciation ||
+              (allowPronunciation && !spoken.contains(atom.id)),
+        )
         .toList();
     final missingPractice = focused && !p.weak
         ? rules
               .requiredPracticeModes(atom)
               .difference(p.successfulModes)
               .where(
-                (mode) => allowPronunciation || mode != ExerciseMode.sayName,
+                (mode) =>
+                    !mode.isPronunciation ||
+                    (allowPronunciation && !spoken.contains(atom.id)),
               )
               .toList()
         : const <ExerciseMode>[];
@@ -593,7 +1126,7 @@ class ExerciseGenerator {
     }
     if (slot.index < missingPractice.length) {
       final mode = missingPractice[slot.index];
-      if (mode == ExerciseMode.sayName) spoken.add(atom.letterId!);
+      if (mode == ExerciseMode.sayName) spoken.add(atom.id);
       return Exercise.direct(
         atom: atom,
         mode: mode,
@@ -606,13 +1139,14 @@ class ExerciseGenerator {
     if (requiredPractice) {
       final mode = switch (slot.index) {
         0 when atom.tracing != null => ExerciseMode.trace,
-        _ when slot.isLast && allowPronunciation => ExerciseMode.sayName,
+        _ when slot.isLast && allowPronunciation && !spoken.contains(atom.id) =>
+          ExerciseMode.sayName,
         _ when atom.tracing != null && slot.index == min(2, slot.count - 2) =>
           ExerciseMode.traceFromMemory,
         _ => null,
       };
       if (mode != null) {
-        if (mode == ExerciseMode.sayName) spoken.add(atom.letterId!);
+        if (mode == ExerciseMode.sayName) spoken.add(atom.id);
         return Exercise.direct(
           atom: atom,
           mode: mode,
@@ -678,15 +1212,11 @@ class ExerciseGenerator {
     if (sequence != null) return sequence;
 
     if (atom.kind == AtomKind.sign || atom.kind == AtomKind.haraka) {
-      final options = [atom, ..._pickDistractors(atom, pool, level).distractors]
-        ..shuffle(_random);
-      return Exercise(
+      final modes = choiceModesFor(atom);
+      return choiceFor(
         atom: atom,
-        mode: (slot.index + p.cleanStreak).isEven
-            ? ExerciseMode.nameToForm
-            : ExerciseMode.formToName,
-        options: options,
-        answerIndex: options.indexOf(atom),
+        mode: modes[(slot.index + p.cleanStreak) % modes.length],
+        pool: pool,
         level: level,
         isReview: isReview,
         isRequired: isRequired,
@@ -709,23 +1239,58 @@ class ExerciseGenerator {
     CurriculumContext ctx, {
     required bool isReview,
     required bool isRequired,
+    required bool focused,
+    required bool isTopicAtom,
+    required Set<String> spoken,
+    required bool allowPronunciation,
   }) {
     final progress = ctx.progress[atom.id] ?? const AtomProgress();
-    final missingWriting = const [
-      ExerciseMode.trace,
-      ExerciseMode.traceFromMemory,
-    ].firstWhereOrNull((mode) => !progress.successfulModes.contains(mode));
-    final mode = isReview && missingWriting != null
-        ? missingWriting
+    final missing = rules
+        .requiredPracticeModes(atom)
+        .where((mode) => allowPronunciation || !mode.isPronunciation)
+        .whereNot(progress.successfulModes.contains)
+        .where((mode) => !mode.isPronunciation || !spoken.contains(atom.id))
+        .toList();
+    final voicePlanned = allowPronunciation && !spoken.contains(atom.id);
+    final fullPractice = isTopicAtom && !focused;
+    if (!fullPractice &&
+        voicePlanned &&
+        missing.every((mode) => !mode.isTracing) &&
+        _isActiveSlot(progress, slot)) {
+      spoken.add(atom.id);
+      return Exercise.direct(
+        atom: atom,
+        mode: ExerciseMode.saySyllable,
+        isReview: isReview,
+        isRequired: isRequired,
+      );
+    }
+    final mode = focused && slot.index < missing.length
+        ? missing[slot.index]
+        : !fullPractice && isReview && missing.any((mode) => mode.isTracing)
+        ? missing.firstWhere((mode) => mode.isTracing)
+        : fullPractice && voicePlanned && slot.isLast
+        ? ExerciseMode.saySyllable
         : switch (slot.index) {
             0 => ExerciseMode.trace,
             2 => ExerciseMode.traceFromMemory,
             _ => null,
           };
     if (mode != null) {
+      if (mode.isPronunciation) spoken.add(atom.id);
       return Exercise.direct(
         atom: atom,
         mode: mode,
+        isReview: isReview,
+        isRequired: isRequired || mode.isPronunciation,
+      );
+    }
+
+    if (!fullPractice && voicePlanned && _isActiveSlot(progress, slot)) {
+      spoken.add(atom.id);
+      return Exercise.direct(
+        atom: atom,
+        mode: ExerciseMode.saySyllable,
         isReview: isReview,
         isRequired: isRequired,
       );
@@ -755,11 +1320,15 @@ class ExerciseGenerator {
     required bool isReview,
     required bool isRequired,
   }) {
-    final picked = _pickDistractors(atom, pool, level);
+    final available = pool
+        .where(
+          (a) => a.id != atom.id && a.form == atom.form && a.kind == atom.kind,
+        )
+        .length;
     // Вариантов не набирается — на старте курса введённых букв просто мало.
     // Вместо пустого урока даём задание без выбора: обводку. Она работает
     // с одной буквой и заодно тренирует воспроизведение, а не узнавание.
-    if (picked.distractors.length < _distractorCount) {
+    if (available < _distractorCount) {
       return Exercise.direct(
         atom: atom,
         mode: ExerciseMode.trace,
@@ -768,13 +1337,11 @@ class ExerciseGenerator {
         isRequired: isRequired,
       );
     }
-    final options = [atom, ...picked.distractors]..shuffle(_random);
-    return Exercise(
+    return choiceFor(
       atom: atom,
+      pool: pool,
       mode: ExerciseMode.soundToLetter,
-      options: options,
-      answerIndex: options.indexOf(atom),
-      level: picked.level,
+      level: level,
       isReview: isReview,
       isRequired: isRequired,
     );
@@ -782,7 +1349,8 @@ class ExerciseGenerator {
 
   /// Все формы одной буквы собираются в одном задании. Отдельная форма
   /// остаётся образцом в вопросе и одновременно участвует в раскладке.
-  /// Пока хотя бы одна из четырёх форм не введена, упражнение не показываем.
+  /// В алфавите нужны все четыре формы; в повторении огласовок также
+  /// доступны обе формы несоединяющихся букв. Все формы должны быть введены.
   Exercise? _formSequenceExercise(
     Atom atom,
     List<Atom> pool,
@@ -790,6 +1358,7 @@ class ExerciseGenerator {
     required DistractorLevel level,
     required bool isReview,
     required bool isRequired,
+    bool isFormMaintenance = false,
   }) {
     final family = [atom, ..._otherFormsOf(atom, pool)];
     final prompt = family.firstWhereOrNull(
@@ -802,7 +1371,10 @@ class ExerciseGenerator {
     final letterId = atom.letterId;
     if (letterId != null &&
         prompt != null &&
-        forms.length == LetterForm.values.length &&
+        (forms.length == LetterForm.values.length ||
+            (isFormMaintenance &&
+                forms.length == 2 &&
+                forms.last.form == LetterForm.finalForm)) &&
         forms.contains(atom) &&
         !sequenced.contains(letterId)) {
       sequenced.add(letterId);
@@ -818,6 +1390,7 @@ class ExerciseGenerator {
         level: level,
         isReview: isReview,
         isRequired: isRequired,
+        isFormMaintenance: isFormMaintenance,
         prompt: prompt,
       );
     }
@@ -880,11 +1453,25 @@ class ExerciseGenerator {
     required bool isRequired,
   }) {
     final progress = ctx.progress[atom.id] ?? const AtomProgress();
+    final modes = choiceModesFor(atom);
     final mode =
-        forcedMode ??
-        ((index + progress.cleanStreak).isEven
-            ? ExerciseMode.soundToLetter
-            : ExerciseMode.letterToSound);
+        forcedMode ?? modes[(index + progress.cleanStreak) % modes.length];
+    return _vocalizedChoice(
+      atom,
+      pool,
+      mode,
+      isReview: isReview,
+      isRequired: isRequired,
+    );
+  }
+
+  Exercise _vocalizedChoice(
+    Atom atom,
+    List<Atom> pool,
+    ExerciseMode mode, {
+    required bool isReview,
+    required bool isRequired,
+  }) {
     final distractorCount = mode == ExerciseMode.letterToSound
         ? 1
         : _distractorCount;
@@ -986,8 +1573,8 @@ class ExerciseGenerator {
     if (letterId == null || atom.form != LetterForm.isolated) return false;
     if (!activeSlot) return false;
     if (slot.isFirst && !isReview) return false;
-    if (spoken.contains(letterId)) return false;
-    spoken.add(letterId);
+    if (spoken.contains(atom.id)) return false;
+    spoken.add(atom.id);
     return true;
   }
 

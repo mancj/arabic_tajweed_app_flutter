@@ -4,6 +4,8 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'microphone_permission.dart';
+
 /// Короткая запись голоса с микрофона: одна за раз, во временный файл.
 ///
 /// Пишем AAC в m4a на обеих платформах: сервер его принимает, а wav
@@ -15,8 +17,13 @@ import 'package:path_provider/path_provider.dart';
 /// Рекордер создаётся при первой записи, а не вместе с экраном: у него
 /// платформенный канал, которого в тестах нет.
 class VoiceRecorder {
+  VoiceRecorder({MicrophonePermission? permission})
+    : _permission = permission ?? const MicrophonePermission();
+
+  final MicrophonePermission _permission;
   RecorderController? _controller;
   final ValueNotifier<double> _level = ValueNotifier(0);
+  MicrophonePermissionResult? lastPermissionResult;
 
   /// Текущий нормированный уровень микрофона для живой дорожки записи.
   ValueListenable<double> get level => _level;
@@ -38,12 +45,17 @@ class VoiceRecorder {
   /// Начать запись. Ложь — нет доступа к микрофону.
   Future<bool> start() async {
     _level.value = 0;
-    if (!await _recorder.checkPermission()) return false;
+    lastPermissionResult = await _permission.request();
+    if (lastPermissionResult != MicrophonePermissionResult.granted) {
+      return false;
+    }
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().millisecondsSinceEpoch;
     await _recorder.record(path: '${dir.path}/voice_$stamp.m4a');
     return true;
   }
+
+  Future<bool> openSettings() => _permission.openSettings();
 
   /// Остановить и отдать файл. Null — записи не было или она не сохранилась.
   /// Файл короче заголовка контейнера считаем несохранившимся: рекордер

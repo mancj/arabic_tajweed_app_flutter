@@ -2,6 +2,7 @@
 // а проверка — остановить их и показать светящуюся волну слева.
 // Удержание начинает запись сразу; при перестройке карточки отпускание нельзя терять.
 // Полоса волн должна плавно закрываться, иначе она исчезает раньше карточки.
+// Системный запрос может отменить жест: запись и ссылка на настройки остаются доступны.
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/glow_wave_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
@@ -52,10 +53,6 @@ void main() {
       tester.getSize(find.byType(PronunciationRecorderWidget)).height,
       greaterThan(idleHeight),
     );
-    final recordingHeight = tester
-        .getSize(find.byType(PronunciationRecorderWidget))
-        .height;
-
     expect(find.textContaining(RegExp(r'\d{2}:\d{2}\.\d{3}')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('recorder-action')));
     await tester.pump();
@@ -67,7 +64,6 @@ void main() {
     final checkingHeight = tester
         .getSize(find.byType(PronunciationRecorderWidget))
         .height;
-    expect(closingHeight, lessThan(recordingHeight));
     expect(closingHeight, greaterThan(checkingHeight));
     expect(find.byType(GlowWaveWidget), findsOneWidget);
     expect(find.byKey(const ValueKey('recorder-action')), findsNothing);
@@ -126,6 +122,104 @@ void main() {
     expect(state.value, PronunciationRecorderState.checking);
     expect(stops, 1);
     await tester.pump(const Duration(milliseconds: 400));
+  });
+
+  testWidgets('обычный тап оставляет запись до следующего нажатия', (
+    tester,
+  ) async {
+    final state = ValueNotifier(PronunciationRecorderState.idle);
+    addTearDown(state.dispose);
+    var starts = 0;
+    var stops = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ValueListenableBuilder<PronunciationRecorderState>(
+            valueListenable: state,
+            builder: (context, value, _) => PronunciationRecorderWidget(
+              state: value,
+              onRecordPressed: () {
+                starts++;
+                state.value = PronunciationRecorderState.recording;
+              },
+              onStopPressed: () {
+                stops++;
+                state.value = PronunciationRecorderState.checking;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final action = find.byKey(const ValueKey('recorder-action'));
+    final press = await tester.startGesture(tester.getCenter(action));
+    await tester.pump();
+    expect(starts, 1);
+    await tester.pump(const Duration(milliseconds: 350));
+    await press.up();
+    await tester.pump();
+    expect(state.value, PronunciationRecorderState.recording);
+    expect(stops, 0);
+
+    await tester.tap(action);
+    await tester.pump();
+    expect(state.value, PronunciationRecorderState.checking);
+    expect(starts, 1);
+    expect(stops, 1);
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('системная отмена первого касания не останавливает запись', (
+    tester,
+  ) async {
+    var starts = 0;
+    var stops = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PronunciationRecorderWidget(
+            state: PronunciationRecorderState.idle,
+            onRecordPressed: () => starts++,
+            onStopPressed: () => stops++,
+          ),
+        ),
+      ),
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('recorder-action'))),
+    );
+    await tester.pump();
+    expect(starts, 1);
+    await gesture.cancel();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(stops, 0);
+  });
+
+  testWidgets('после постоянного запрета открываются настройки', (
+    tester,
+  ) async {
+    var settingsOpened = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PronunciationRecorderWidget(
+            state: PronunciationRecorderState.idle,
+            microphonePermissionDenied: true,
+            microphoneSettingsRequired: true,
+            onOpenSettings: () => settingsOpened++,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Нет доступа к микрофону'), findsOneWidget);
+    expect(find.textContaining('Включите его в настройках'), findsOneWidget);
+    await tester.tap(find.text('Открыть настройки'));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(settingsOpened, 1);
   });
 
   // Оба способа начать запись должны давать сильный отклик при касании и

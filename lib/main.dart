@@ -1,9 +1,11 @@
 import 'package:arabic_tajweed_app/app/resources/ui_text_styles.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:rive/rive.dart' as rive;
 import 'package:arabic_tajweed_app/app/app_binding.dart';
 import 'package:arabic_tajweed_app/app/diagnostics/app_diagnostics.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
@@ -14,9 +16,12 @@ import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/glow_wave_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_drawing_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/haraka_match_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/orbital_rings_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/starfield_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/syllable_build_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/syllable_pronunciation_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
@@ -30,6 +35,8 @@ void main() async {
   AppDiagnostics.install();
 
   await AppHaptics.init();
+  // В браузере Factory.flutter доступна только после загрузки Rive.
+  if (kIsWeb) await rive.RiveNative.init();
 
   await AppBinding().asyncDependencies();
   final savedColorScheme = Get.find<SharedPreferenceManager>().colorScheme
@@ -142,6 +149,18 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: HarakaDrawingDebugPage.routeName,
           page: () => const HarakaDrawingDebugPage(),
+        ),
+        GetPage(
+          name: HarakaMatchDebugPage.routeName,
+          page: () => const HarakaMatchDebugPage(),
+        ),
+        GetPage(
+          name: SyllablePronunciationDebugPage.routeName,
+          page: () => const SyllablePronunciationDebugPage(),
+        ),
+        GetPage(
+          name: SyllableBuildDebugPage.routeName,
+          page: () => const SyllableBuildDebugPage(),
         ),
         GetPage(
           name: StarfieldDebugPage.routeName,

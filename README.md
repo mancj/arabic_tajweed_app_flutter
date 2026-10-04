@@ -1,16 +1,26 @@
-# arabic_tajweed_app
+# Tajweed AI
 
-Baby cry analyzer Flutter App
+Flutter-приложение для обучения чтению на арабском: буквы, их формы,
+огласовки и слова. Бэкенд — в соседнем `../tajweed_app_backend_dart`.
 
-## Getting Started
+## Документация
 
-This project is a starting point for a Flutter application.
+- [CLAUDE.md](CLAUDE.md) — обязательные правила работы в проекте.
+- [SPEC.md](SPEC.md) — оглавление действующего ТЗ; читать связанную с задачей область.
+- [Карточки объяснений](docs/EXPLANATION_CARDS.md) — формат YAML и подключение контента.
+- [Конспекты букв](docs/letter-definitions/README.md) — редакционные исходники и оригиналы иллюстраций.
+- [Программа чтения слов](docs/word-reading/README.md) — подготовленный контент будущих этапов, источники и проверка данных.
+- [Проблемные сценарии](docs/PROBLEM_CASES.md) — случаи, защищённые постоянными тестами.
+- [TODO.md](TODO.md) — незакрытые задачи, включая подготовку релиза.
+- [IDEAS.md](IDEAS.md) и [идеи упражнений](docs/harakat-exercises/README.md) — предложения вне действующего ТЗ.
 
-A few resources to get you started if this is your first Flutter project:
+## Локальная работа
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Использовать версию Flutter из `.fvmrc` через проектный SDK:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+.fvm/flutter_sdk/bin/flutter pub get
+.fvm/flutter_sdk/bin/flutter run
+```
+
+Требования к выпуску — в [сборке и выпуске](docs/spec/BUILD_AND_RELEASE.md).

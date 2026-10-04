@@ -24,11 +24,13 @@ class FormSequenceTaskState {
     required List<Atom> options,
     required List<Atom> placed,
     List<String>? expectedAtomIds,
+    List<String>? resultAtomIds,
   }) {
     final evaluation = FormSequenceEvaluation.evaluate(
       options: options,
       placed: placed,
       expectedAtomIds: expectedAtomIds,
+      resultAtomIds: resultAtomIds,
     );
     slotResults = evaluation.correct ? null : evaluation.slotResults;
     initialPlaced = evaluation.initialPlaced;

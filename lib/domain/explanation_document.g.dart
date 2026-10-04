@@ -48,6 +48,18 @@ ExplanationLetter _$ExplanationLetterFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ExplanationLetterToJson(ExplanationLetter instance) =>
     <String, dynamic>{'letter': instance.letter.toJson()};
 
+ExplanationWriting _$ExplanationWritingFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('ExplanationWriting', json, ($checkedConvert) {
+      $checkKeys(json, allowedKeys: const ['writing']);
+      final val = ExplanationWriting(
+        $checkedConvert('writing', (v) => v as String),
+      );
+      return val;
+    });
+
+Map<String, dynamic> _$ExplanationWritingToJson(ExplanationWriting instance) =>
+    <String, dynamic>{'writing': instance.writing};
+
 ExplanationMakhraj _$ExplanationMakhrajFromJson(Map<String, dynamic> json) =>
     $checkedCreate('ExplanationMakhraj', json, ($checkedConvert) {
       $checkKeys(json, allowedKeys: const ['makhraj']);

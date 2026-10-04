@@ -136,6 +136,20 @@ class UITextStyles {
       _style(size: 13, family: fontJetBrainsMono, weight: FontWeight.w600);
   static TextStyle get monoSemibold14 =>
       _style(size: 14, family: fontJetBrainsMono, weight: FontWeight.w600);
+  
+  static TextStyle get monoBold11 => _style(
+    size: 11,
+    family: fontJetBrainsMono,
+    weight: FontWeight.bold,
+    letterSpacing: 1,
+  );
+  
+  static TextStyle get monoBold26 => _style(
+    size: 26,
+    family: fontJetBrainsMono,
+    weight: FontWeight.bold,
+    letterSpacing: 1,
+  );
 
   // STIX Two Text — текст с засечками.
   static TextStyle get serifRegular16 =>

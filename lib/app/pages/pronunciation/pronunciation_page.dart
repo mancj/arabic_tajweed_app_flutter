@@ -6,6 +6,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/data/rest/letter_check.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -42,6 +43,11 @@ class PronunciationPage extends GetView<PronunciationController> {
           level: checker.level,
           onRecordPressed: controller.startRecording,
           onStopPressed: controller.stopRecording,
+          microphonePermissionDenied:
+              checker.failure.value ==
+              PronunciationFailureKind.microphoneDenied,
+          microphoneSettingsRequired: checker.microphoneSettingsRequired.value,
+          onOpenSettings: checker.openMicrophoneSettings,
         );
       }),
       builder: (context, insets) => SingleChildScrollView(
@@ -112,6 +118,9 @@ class _Feedback extends GetView<PronunciationController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final checker = controller.checker;
+      if (checker.failure.value == PronunciationFailureKind.microphoneDenied) {
+        return const SizedBox.shrink();
+      }
       if (checker.error.value case final error?) {
         return RuleCard(badge: 'Не вышло', title: error);
       }

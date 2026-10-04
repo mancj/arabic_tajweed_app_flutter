@@ -3,6 +3,10 @@
 class UISVGAssets {
   static final search = _path("search");
   static final notes = _path("notes-svgrepo-com");
+  static final lockAlt = _path("lock-alt-svgrepo-com");
+  static final bookFilled = _path("book-filled-svgrepo-com");
+  static final bookOutline = _path("book-outline-svgrepo-com");
+  static final flag2 = _path("flag-2-svgrepo-com");
   static final solarRouteLinear = _path("solar--route-linear");
   static final reiconRouteSquareFilled = _path("reicon--route-square-filled");
   static final hugeiconsRoad01 = _path("hugeicons--road-01");

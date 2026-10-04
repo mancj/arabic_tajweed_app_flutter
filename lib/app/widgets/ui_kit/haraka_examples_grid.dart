@@ -48,7 +48,7 @@ class _HarakaExamplesOverviewState extends State<HarakaExamplesOverview> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _HarakaSection(
-            title: 'Фатха  َ',
+            title: 'Фатха  ◌َ',
             text: 'Ставится над буквой и даёт краткий звук «а».',
             examples: widget.fathaExamples,
             activeId: _activeId,
@@ -57,7 +57,7 @@ class _HarakaExamplesOverviewState extends State<HarakaExamplesOverview> {
           ),
           const Margin.vertical(24),
           _HarakaSection(
-            title: 'Касра  ِ',
+            title: 'Касра  ◌ِ',
             text: 'Ставится под буквой и даёт краткий звук «и».',
             examples: widget.kasraExamples,
             activeId: _activeId,
@@ -66,7 +66,7 @@ class _HarakaExamplesOverviewState extends State<HarakaExamplesOverview> {
           ),
           const Margin.vertical(24),
           _HarakaSection(
-            title: 'Дамма  ُ',
+            title: 'Дамма  ◌ُ',
             text: 'Ставится над буквой и даёт краткий звук «у».',
             examples: widget.dammaExamples,
             activeId: _activeId,
@@ -151,6 +151,7 @@ class HarakaExamplesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GridView.builder(
     shrinkWrap: true,
+    padding: EdgeInsets.zero,
     physics: const NeverScrollableScrollPhysics(),
     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 3,

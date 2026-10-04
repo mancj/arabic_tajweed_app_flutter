@@ -19,6 +19,7 @@ void main() {
     expect(content.document.blocks.map((block) => block.runtimeType), [
       ExplanationText,
       ExplanationLetter,
+      ExplanationWriting,
       ExplanationMakhraj,
       ExplanationSifat,
       ExplanationText,
@@ -28,15 +29,15 @@ void main() {
       ExplanationExamples,
       ExplanationSound,
     ]);
-    final forms = (content.document.blocks[5] as ExplanationForms).forms;
+    final forms = (content.document.blocks[6] as ExplanationForms).forms;
     expect(forms.map((form) => form.position), LetterForm.values);
     expect(forms[1].example?.text, 'بات');
     expect(forms[1].example?.highlight, 0);
-    final word = (content.document.blocks[6] as ExplanationWord).word;
+    final word = (content.document.blocks[7] as ExplanationWord).word;
     expect(word.text, 'بات');
     expect(word.form, LetterForm.initial);
     final examples =
-        (content.document.blocks[8] as ExplanationExamples).examples;
+        (content.document.blocks[9] as ExplanationExamples).examples;
     expect(examples.map((example) => example.glyph), ['بَ', 'بِ', 'بُ']);
     for (final audio in [
       (content.document.blocks[1] as ExplanationLetter).letter.audio!,
@@ -49,19 +50,54 @@ void main() {
     expect(text, contains('**одна точка снизу**'));
     expect(text, contains('\n\n'));
     expect(
-      (content.document.blocks[2] as ExplanationMakhraj).makhraj,
+      (content.document.blocks[3] as ExplanationMakhraj).makhraj,
       contains('Сомкните губы'),
     );
     expect(
-      (content.document.blocks[3] as ExplanationSifat).sifat,
+      (content.document.blocks[4] as ExplanationSifat).sifat,
       contains('с голосом'),
+    );
+    expect(
+      (content.document.blocks[2] as ExplanationWriting).writing,
+      contains('**ب** похожа на неглубокую чашу'),
     );
     final again = ExplanationDocument.fromJson(content.document.toJson());
     expect(again.toJson(), content.document.toJson());
   });
 
-  test('готовые описания букв отделяют махрадж и сыфат', () {
-    for (final name in ['alif', 'ba', 'ta', 'tha', 'jim', 'hha', 'kha']) {
+  // Правка отдельной карточки не должна потерять образец, звук или
+  // офлайн-иллюстрацию. Махрадж и сыфат есть только там, где нужны автору.
+  test('карточки всех букв сохраняют образец, разделы и ссылки на ассеты', () {
+    for (final name in [
+      'alif',
+      'ba',
+      'ta',
+      'tha',
+      'jim',
+      'hha',
+      'kha',
+      'dal',
+      'dhal',
+      'ra',
+      'zay',
+      'sin',
+      'shin',
+      'sod',
+      'dod',
+      'to',
+      'zho',
+      'ayn',
+      'ghayn',
+      'fa',
+      'qof',
+      'kaf',
+      'lam',
+      'mim',
+      'nun',
+      'ha',
+      'waw',
+      'ya',
+    ]) {
       final path = 'assets/explanations/ru/$name.isolated.yaml';
       final blocks = ExplanationLoader.parse(
         File(path).readAsStringSync(),
@@ -69,16 +105,58 @@ void main() {
       ).document.blocks;
       final types = blocks.map((block) => block.runtimeType).toList();
       expect(types.where((type) => type == ExplanationLetter), hasLength(1));
-      expect(types.where((type) => type == ExplanationMakhraj), hasLength(1));
-      expect(types.where((type) => type == ExplanationSifat), hasLength(1));
+      expect(types.first, ExplanationLetter, reason: path);
+      final letter = (blocks.first as ExplanationLetter).letter;
+      expect(File('assets/${letter.audio}').existsSync(), isTrue, reason: path);
+      final makhrajIndex = types.indexOf(ExplanationMakhraj);
+      final sifatIndex = types.indexOf(ExplanationSifat);
+      final writingIndex = types.indexOf(ExplanationWriting);
       expect(
-        types.indexOf(ExplanationLetter),
-        lessThan(types.indexOf(ExplanationMakhraj)),
+        types.where((type) => type == ExplanationWriting),
+        hasLength(1),
+        reason: path,
       );
       expect(
-        types.indexOf(ExplanationMakhraj),
-        lessThan(types.indexOf(ExplanationSifat)),
+        writingIndex,
+        greaterThan(types.indexOf(ExplanationText)),
+        reason: path,
       );
+      for (final type in [ExplanationMakhraj, ExplanationSifat]) {
+        expect(
+          types.where((value) => value == type).length,
+          lessThanOrEqualTo(1),
+        );
+      }
+      if (makhrajIndex >= 0 && sifatIndex >= 0) {
+        expect(makhrajIndex, lessThan(sifatIndex), reason: path);
+      }
+      for (final index in [
+        makhrajIndex,
+        sifatIndex,
+      ].where((value) => value >= 0)) {
+        expect(writingIndex, lessThan(index), reason: path);
+      }
+      for (final block in blocks) {
+        final markdown = switch (block) {
+          ExplanationText(:final text) => text,
+          ExplanationWriting(:final writing) => writing,
+          ExplanationMakhraj(:final makhraj) => makhraj,
+          ExplanationSifat(:final sifat) => sifat,
+          _ => '',
+        };
+        expect(markdown, isNot(contains('## Как пишется')), reason: path);
+        for (final image in RegExp(
+          r'!\[[^\]]*\]\(([^)]+)\)',
+        ).allMatches(markdown)) {
+          final target = image.group(1)!;
+          expect(target, startsWith('resource:assets/img/'), reason: path);
+          expect(
+            File(target.substring('resource:'.length)).existsSync(),
+            isTrue,
+            reason: '$path: $target',
+          );
+        }
+      }
     }
   });
 
@@ -87,6 +165,9 @@ void main() {
     'два типа сразу': 'text: текст, letter: ba.isolated',
     'нестроковый текст': 'text: 42',
     'пустой текст': 'text: " "',
+    'пустое написание': 'writing: " "',
+    'нестроковое написание': 'writing: 42',
+    'написание без текста': 'writing: null',
     'пустой махрадж': 'makhraj: " "',
     'пустой сыфат': 'sifat: " "',
     'нестроковый махрадж': 'makhraj: 42',

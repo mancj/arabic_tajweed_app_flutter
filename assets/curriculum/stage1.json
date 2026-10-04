@@ -4,8 +4,8 @@
       "atom": {
         "id": "concept.letter",
         "kind": "concept",
-        "display": "Ассаляму алейкум!",
-        "label": "Ассаляму алейкум!",
+        "display": "Вступление",
+        "label": "Вступление",
         "explanationAsset": "assets/explanations/ru/concept.letter.yaml"
       },
       "requirement": {

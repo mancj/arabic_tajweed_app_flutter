@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 import 'package:get/get.dart';
 
@@ -422,8 +423,13 @@ class _FinishReviewNote extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.menu_book_rounded, size: 24, color: UIColors.primary),
-        const Margin.horizontal(16),
+        SvgPicture.asset(
+          UISVGAssets.bookFilled,
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
+        ),
+        const Margin.horizontal(12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -541,7 +547,12 @@ class _LearnedTile extends StatelessWidget {
               borderRadius: 16,
             ),
             child: isConcept
-                ? Icon(Icons.auto_stories_rounded, color: UIColors.primary)
+                ? SvgPicture.asset(
+                    UISVGAssets.bookOutline,
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
+                  )
                 : Text(
                     atom.display,
                     style: UITextStyles.dgFasehRegular(

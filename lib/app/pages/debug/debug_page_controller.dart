@@ -16,11 +16,14 @@ import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.da
 import 'form_sequence_debug_page.dart';
 import 'glow_wave_debug_page.dart';
 import 'haraka_drawing_debug_page.dart';
+import 'haraka_match_debug_page.dart';
 import 'haraka_sequence_debug_page.dart';
 import 'orbital_rings_debug_page.dart';
 import 'pronunciation_exercise_debug_page.dart';
 import 'pronunciation_recorder_debug_page.dart';
 import 'starfield_debug_page.dart';
+import 'syllable_build_debug_page.dart';
+import 'syllable_pronunciation_debug_page.dart';
 
 class DebugController extends GetxController {
   final serverUrl = ''.obs;
@@ -104,6 +107,13 @@ class DebugController extends GetxController {
   void openFormSequence() => Get.toNamed(FormSequenceDebugPage.routeName);
 
   void openHarakaSequence() => Get.toNamed(HarakaSequenceDebugPage.routeName);
+
+  void openHarakaMatch() => Get.toNamed(HarakaMatchDebugPage.routeName);
+
+  void openSyllableBuild() => Get.toNamed(SyllableBuildDebugPage.routeName);
+
+  void openSyllablePronunciation() =>
+      Get.toNamed(SyllablePronunciationDebugPage.routeName);
 
   void openHarakaDrawing() => Get.toNamed(HarakaDrawingDebugPage.routeName);
 

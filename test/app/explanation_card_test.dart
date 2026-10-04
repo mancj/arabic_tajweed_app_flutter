@@ -14,6 +14,7 @@ import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/plugin_mocks.dart';
@@ -42,7 +43,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 500));
     expect(played, isEmpty);
-    expect(find.byType(RuleCard), findsNWidgets(4));
+    expect(find.byType(RuleCard), findsNWidgets(5));
     expect(find.byType(LetterWidgetCard), findsOneWidget);
     expect(
       find.ancestor(
@@ -54,11 +55,17 @@ void main() {
     expect(find.text('Буква Ба'), findsOneWidget);
     final makhraj = find.widgetWithText(RuleCard, 'Как произнести');
     final sifat = find.widgetWithText(RuleCard, 'Как звучит');
+    final writing = find.widgetWithText(RuleCard, 'Как пишется');
+    expect(writing, findsOneWidget);
     expect(makhraj, findsOneWidget);
     expect(sifat, findsOneWidget);
     expect(
-      tester.getTopLeft(makhraj).dy,
+      tester.getTopLeft(writing).dy,
       greaterThan(tester.getTopLeft(find.byType(LetterWidgetCard)).dy),
+    );
+    expect(
+      tester.getTopLeft(makhraj).dy,
+      greaterThan(tester.getTopLeft(writing).dy),
     );
     expect(
       tester.getTopLeft(sifat).dy,
@@ -92,8 +99,8 @@ void main() {
   });
 
   // Учебный образец с кнопкой звучания занимает собственную карточку;
-  // правило остаётся отдельным даже когда letter стоит первым в YAML.
-  testWidgets('буква курса стоит перед отдельной карточкой правила', (
+  // написание не должно вернуться внутрь разбора при изменении компоновки.
+  testWidgets('разбор, написание, махрадж и сыфат идут отдельными разделами', (
     tester,
   ) async {
     final content = ExplanationLoader.parse(
@@ -115,22 +122,53 @@ void main() {
     final letter = find.byType(LetterWidgetCard);
     final rule = find.byType(RuleCard);
     expect(letter, findsOneWidget);
-    expect(rule, findsNWidgets(3));
+    expect(rule, findsNWidgets(4));
+    final sections = tester.widgetList<RuleCard>(rule).toList();
+    expect(sections.map((section) => section.title), [
+      'Разбор',
+      'Как пишется',
+      'Как произнести',
+      'Как звучит',
+    ]);
+    expect(sections.map((section) => section.sectionNumber), [
+      '01',
+      '02',
+      '03',
+      '04',
+    ]);
+    for (var index = 1; index < sections.length; index++) {
+      expect(
+        tester.getTopLeft(rule.at(index)).dy,
+        greaterThan(tester.getTopLeft(rule.at(index - 1)).dy),
+      );
+    }
+    final writingText = find.textContaining('вертикальная черта без точек');
+    expect(
+      find.descendant(of: rule.at(1), matching: writingText),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: rule.first, matching: writingText),
+      findsNothing,
+    );
     expect(
       tester.getTopLeft(letter).dy,
       lessThan(tester.getTopLeft(rule.first).dy),
     );
     expect(find.ancestor(of: letter, matching: rule), findsNothing);
     expect(find.text('Алиф — ا'), findsOneWidget);
-    expect(find.textContaining('Алиф удлиняет звук'), findsOneWidget);
+    expect(find.textContaining('в начале слова «арбуз»'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
   // Иллюстрация из Markdown остаётся ассетом приложения и обрезается по
-  // скруглённым краям, даже когда находится внутри RuleCard.
-  testWidgets('изображение Markdown имеет скруглённые углы', (tester) async {
+  // скруглённым краям, даже когда находится внутри RuleCard. Ограничения
+  // Markdown не должны сжимать квадратную картинку или сужать её контейнер.
+  testWidgets('изображение Markdown сохраняет пропорции и скругление', (
+    tester,
+  ) async {
     final content = ExplanationLoader.parse(
-      File('assets/explanations/ru/ba.isolated.yaml').readAsStringSync(),
+      File('assets/explanations/ru/hha.isolated.yaml').readAsStringSync(),
     );
     final track = ValueNotifier(AudioTrack.silent);
     addTearDown(track.dispose);
@@ -148,9 +186,23 @@ void main() {
       (widget) =>
           widget is Image &&
           widget.image is AssetImage &&
-          (widget.image as AssetImage).assetName == 'assets/img/ba-makhraj.jpg',
+          (widget.image as AssetImage).assetName == 'assets/img/ha-makhraj.jpg',
     );
     expect(image, findsOneWidget);
+    await tester.runAsync(
+      () => precacheImage(
+        tester.widget<Image>(image).image,
+        tester.element(image),
+      ),
+    );
+    await tester.pump();
+    final imageSize = tester.getSize(image);
+    final markdown = find.ancestor(
+      of: image,
+      matching: find.byType(MarkdownBody),
+    );
+    expect(imageSize.width, tester.getSize(markdown).width);
+    expect(imageSize.height, closeTo(imageSize.width, 0.01));
     expect(
       find.descendant(
         of: find.widgetWithText(RuleCard, 'Как произнести'),

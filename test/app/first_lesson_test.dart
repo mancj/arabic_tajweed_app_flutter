@@ -84,7 +84,14 @@ void main() {
       'tha.isolated',
     ]);
 
-    expect(find.text('Ассаляму алейкум!'), findsOneWidget);
+    expect(controller.stage.value, LessonStage.intro);
+    expect(controller.introAtom?.id, 'concept.letter');
+    expect(
+      find.text(
+        controller.explanationFor(controller.introAtom!)!.document.title,
+      ),
+      findsOneWidget,
+    );
     expect(controller.current, isNull);
 
     await tester.tap(find.text('Понятно'));
@@ -107,7 +114,7 @@ void main() {
     ].indexed) {
       expect(controller.stage.value, LessonStage.intro);
       expect(controller.introAtom!.id, id);
-      if (id == 'ba.isolated') {
+      if (id == 'alif.isolated') {
         // Ссылка из Markdown должна загружать включённую в приложение
         // картинку офлайн, а не искать её как файл или сетевой ресурс.
         final image = find.byWidgetPredicate(
@@ -115,7 +122,7 @@ void main() {
               widget is Image &&
               widget.image is AssetImage &&
               (widget.image as AssetImage).assetName ==
-                  'assets/img/ba-makhraj.jpg',
+                  'assets/img/hamza-makhraj.jpg',
         );
         expect(image, findsOneWidget);
         expect(

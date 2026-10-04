@@ -1,21 +1,28 @@
 // Защищает включение звуковой сборки в курс: она не сокращает занятие,
 // появляется только после знакомства с тремя слогами и пишет отдельный
 // результат каждому слогу, включая частично верную раскладку.
+// Дополнительные слоги сначала показываются с аудио и не превращают
+// смешанное повторение в новый урок, сбрасывающий дневной допуск.
+// Обе сборки на разных буквах должны записывать результат своих слогов.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_controller.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_exercise_presentation.dart';
+import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/progress_repository.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
 import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/domain/exercise_generator.dart';
 import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/domain/topic_board.dart';
@@ -23,6 +30,8 @@ import 'package:collection/collection.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/text_asset_bundle.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -79,13 +88,14 @@ void main() {
       withSequences.where((e) => e.mode == ExerciseMode.harakaSequence),
       hasLength(2),
     );
+    expect(withSequences.where((e) => e.mode.isPronunciation), hasLength(5));
     for (final atom in group) {
       final modes = withSequences
           .where((e) => e.resultAtoms.contains(atom))
           .map((e) => e.mode)
           .toSet();
       expect(modes, contains(ExerciseMode.harakaSequence));
-      expect(modes, contains(ExerciseMode.letterToSound));
+      expect(modes, contains(ExerciseMode.drawHarakaForSound));
     }
   });
 
@@ -213,6 +223,164 @@ void main() {
     );
   });
 
+  test(
+    'новые сочетания в сборке не лишают повторение дневного зачёта',
+    () async {
+      final database = ProgressDatabase(NativeDatabase.memory());
+      addTearDown(database.close);
+      final now = DateTime(2026, 10, 3, 12);
+      final syllables = byId.values
+          .where((atom) => atom.id.startsWith('vowel.'))
+          .toList();
+      await database.appendAll([
+        AtomIntroduced(atomId: syllables.first.id, sessionId: 1, at: now),
+        for (final atom in byId.values)
+          if (atom.form == LetterForm.isolated || atom.kind == AtomKind.haraka)
+            KnowledgeConfirmed(atomId: atom.id, sessionId: 1, at: now),
+        for (final atom in syllables)
+          for (final mode in const [
+            ExerciseMode.soundToLetter,
+            ExerciseMode.letterToSound,
+            ExerciseMode.drawHarakaForSound,
+          ])
+            ProgressEvent(
+              atomId: atom.id,
+              sessionId: 1,
+              at: now,
+              mode: mode,
+              correct: true,
+              attempt: 1,
+              fastEnough: true,
+            ),
+      ]);
+      await database.finishSession(
+        sessionId: 1,
+        at: now,
+        purpose: LessonPurpose.standard,
+        exerciseCount: 20,
+        firstTryCorrect: 20,
+      );
+      final atoms = syllables.take(20).toList();
+      final controller = LessonController(
+        rules: const LearningRules(requirePronunciation: false),
+        database: database,
+        curriculum: curriculum,
+        explanationBundle: TextAssetBundle.forCurriculum(curriculum),
+        clock: AppClock(systemNow: () => now),
+        plan: LessonPlan(
+          template: LessonTemplate.review,
+          newAtoms: const [],
+          reviewAtoms: atoms.map((atom) => atom.id).toList(),
+          reviewCounts: {for (final atom in atoms) atom.id: 1},
+          purpose: LessonPurpose.mixedReview,
+          reason: 'смешанное повторение с дополнительными слогами',
+        ),
+        audio: _RecordingAudio(),
+      );
+      addTearDown(controller.onClose);
+      final ready = Completer<void>();
+      final subscription = controller.stage.listen((stage) {
+        if (stage != LessonStage.loading && !ready.isCompleted) {
+          ready.complete();
+        }
+      });
+      controller.onInit();
+      await ready.future.timeout(const Duration(seconds: 5));
+      await subscription.cancel();
+      expect(controller.loadError.value, isNull);
+      expect(controller.isReviewOnly, isTrue);
+      final introduced = <Atom>[];
+      final letters = <String>{};
+      var mixedSequences = 0;
+      var steps = 0;
+      while (controller.stage.value != LessonStage.finished) {
+        expect(++steps, lessThanOrEqualTo(20));
+        final exercise = controller.current!;
+        final alreadyShown = controller.lessonNotes
+            .map((note) => note.atom?.id)
+            .nonNulls
+            .toSet();
+        final newIds = exercise.introductionAtoms
+            .map((atom) => atom.id)
+            .where((id) => !alreadyShown.contains(id))
+            .toSet();
+        expect(
+          controller.lessonNotes.any((note) => newIds.contains(note.atom?.id)),
+          isFalse,
+        );
+        final shown = <String>{};
+        while (controller.card.value != null) {
+          final atom = controller.card.value!;
+          if (newIds.contains(atom.id)) {
+            expect(controller.explanationFor(atom), isNotNull);
+            expect(controller.hasVoice(atom), isTrue);
+            introduced.add(atom);
+          }
+          shown.add(atom.id);
+          await controller.dismissCard();
+        }
+        expect(shown, containsAll(newIds));
+        if (exercise.mode.isHarakaSequence) {
+          letters.add(exercise.atom.letterId!);
+          final mixed = exercise.mode == ExerciseMode.harakaForLetters;
+          if (mixed) {
+            mixedSequences++;
+            final presentation = LessonExercisePresentation.from(exercise);
+            expect(presentation.input, LessonInputKind.formSequence);
+            expect(presentation.question, LessonQuestionKind.harakaForLetters);
+            await controller.playSequenceSlot(exercise, 1);
+          }
+          await controller.submitFormSequence(
+            mixed
+                ? exercise.sequenceOrder
+                      .map(
+                        (atom) => exercise.options.firstWhere(
+                          (option) =>
+                              option.id == HarakaSyllables.markIdFor(atom),
+                        ),
+                      )
+                      .toList()
+                : exercise.sequenceOrder,
+          );
+          if (mixed) {
+            final events = (await database.readAll())
+                .whereType<ProgressEvent>()
+                .where((event) => event.mode == ExerciseMode.harakaForLetters)
+                .toList();
+            expect(events, hasLength(3 * mixedSequences));
+            expect(
+              events.skip(events.length - 3).map((e) => e.atomId).toSet(),
+              exercise.resultAtoms.map((a) => a.id).toSet(),
+            );
+            expect(events.every((e) => e.correct), isTrue);
+          }
+          await controller.submit();
+        } else {
+          await controller.answerCorrectly(advance: true);
+        }
+      }
+      expect(letters, hasLength(3));
+      expect(mixedSequences, 2);
+      expect(introduced, isNotEmpty);
+      final log = await database.readAll();
+      expect(
+        log.whereType<AtomIntroduced>().where((e) => e.sessionId == 2),
+        isEmpty,
+      );
+      expect(
+        log.whereType<ProgressEvent>().map((event) => event.atomId),
+        containsAll(introduced.map((atom) => atom.id)),
+      );
+      final repository = ProgressRepository(
+        database: database,
+        letterFormIds: curriculum.letterFormIds,
+        baseLetterIds: curriculum.baseLetterIds,
+        now: () => now,
+      );
+      expect((await repository.pacing()).successfulReviewsSinceLatestNew, 1);
+    },
+  );
+
   test('частично верная сборка пишет три независимых результата', () async {
     final database = ProgressDatabase(NativeDatabase.memory());
     final audio = _RecordingAudio();
@@ -220,6 +388,7 @@ void main() {
     final controller = LessonController(
       database: database,
       curriculum: curriculum,
+      explanationBundle: TextAssetBundle.forCurriculum(curriculum),
       plan: planFor(ba),
       audio: audio,
       shapeLoader: (_) async =>

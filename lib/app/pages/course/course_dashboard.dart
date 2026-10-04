@@ -9,7 +9,6 @@ import 'package:flutter_tilt/flutter_tilt.dart';
 import '../../../domain/atom.dart';
 import '../../resources/ui_resources.dart';
 import '../../widgets/margin.dart';
-import '../../widgets/ui_kit/animated_background_shapes.dart';
 import 'course_controller.dart';
 import 'course_path_page.dart';
 
@@ -57,7 +56,7 @@ class CourseLessonPreview extends StatelessWidget {
             UIColors.coursePreviewGradientStart,
             UIColors.coursePreviewGradientEnd,
           ],
-          stops: [0, .54615, 1],
+          stops: const [0, .54615, 1],
         ),
         child: Stack(
           children: [
@@ -277,10 +276,13 @@ class _CourseLessonTransformation extends StatelessWidget {
                             ],
                           ),
                           child: atom == null
-                              ? Icon(
-                                  Icons.auto_stories_outlined,
-                                  color: UIColors.highlightArea,
-                                  size: 42,
+                              ? SvgPicture.asset(
+                                  UISVGAssets.bookOutline,
+                                  width: 42,
+                                  colorFilter: ColorFilter.mode(
+                                    UIColors.white,
+                                    BlendMode.srcIn,
+                                  ),
                                 )
                               : FittedBox(
                                   fit: BoxFit.scaleDown,
@@ -436,9 +438,7 @@ class CourseOverview extends StatelessWidget {
     final nextAtom = upcoming == null
         ? null
         : controller.atomsFor(upcoming).firstOrNull;
-    final progress = controller.totalLetters == 0
-        ? 0.0
-        : controller.knownLetters / controller.totalLetters;
+    final progress = controller.pathProgress;
     final path = _OverviewTile(
       title: 'Мой путь',
       icon: SvgPicture.asset(
@@ -452,14 +452,14 @@ class CourseOverview extends StatelessWidget {
           const Margin.vertical(24),
           Semantics(
             label:
-                'Освоено букв: ${controller.knownLetters} из ${controller.totalLetters}',
+                '${CourseController.stageTitle(progress.stage)}. ${progress.summary}',
             child: ExcludeSemantics(
               child: Row(
                 children: [
                   SizedBox.square(
                     dimension: 34,
                     child: CircularProgressIndicator(
-                      value: progress,
+                      value: progress.fraction,
                       strokeWidth: 4,
                       strokeCap: StrokeCap.round,
                       color: UIColors.primary,
@@ -470,10 +470,10 @@ class CourseOverview extends StatelessWidget {
                   Flexible(
                     child: Text.rich(
                       TextSpan(
-                        text: '${controller.knownLetters}',
+                        text: '${progress.done}',
                         children: [
                           TextSpan(
-                            text: ' / ${controller.totalLetters}',
+                            text: ' / ${progress.total}',
                             style: UITextStyles.regular12.copyWith(
                               color: UIColors.secondary2,
                             ),
@@ -489,9 +489,9 @@ class CourseOverview extends StatelessWidget {
           ),
           const Margin.vertical(12),
           Text(
-            controller.hasStarted
-                ? 'букв освоено\nВсе темы и знания'
-                : 'Начните с первых букв\nВсе темы курса',
+            !controller.hasStarted && progress.stage == 1
+                ? 'Начните с первых букв\nВсе темы курса'
+                : '${progress.unit}\n${CourseController.stageTitle(progress.stage)}',
             style: UITextStyles.regular11Relaxed.copyWith(
               color: UIColors.secondary2,
             ),

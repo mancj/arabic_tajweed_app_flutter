@@ -62,10 +62,16 @@ abstract class RestClient {
     Object? data,
     Map<String, dynamic>? query,
     Options? options,
+    CancelToken? cancelToken,
   }) {
     return request(
-      (dio) =>
-          dio.post(path, data: data, queryParameters: query, options: options),
+      (dio) => dio.post(
+        path,
+        data: data,
+        queryParameters: query,
+        options: options,
+        cancelToken: cancelToken,
+      ),
       (json) => fromJson(json as Map<String, dynamic>),
     );
   }

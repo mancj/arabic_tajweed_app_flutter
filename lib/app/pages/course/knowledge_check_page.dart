@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../data/letter_audio.dart';
-import '../../../domain/atom.dart';
+import '../../../data/lesson_audio.dart';
 import '../../../domain/atom_state.dart';
 import '../../../domain/curriculum.dart';
 import '../../../domain/knowledge_check.dart';
@@ -12,23 +12,26 @@ import '../../../domain/progress_event.dart';
 import '../../resources/ui_resources.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
-import '../../widgets/ui_kit/answer_option.dart';
 import '../../widgets/ui_kit/explanation_asset_card.dart';
 import '../../widgets/ui_kit/mono_text_button.dart';
 import '../../widgets/ui_kit/next_button.dart';
-import '../../widgets/ui_kit/question_card.dart';
 import '../../widgets/ui_kit/rule_card.dart';
 import '../lesson/lesson_audio_source.dart';
+import '../lesson/lesson_exercise_presentation.dart';
+import '../lesson/exercise_choice_view.dart';
+import '../lesson/option_audio_sequence.dart';
 import 'course_controller.dart';
 
 class KnowledgeCheckPage extends StatefulWidget {
   const KnowledgeCheckPage({
     required this.controller,
     required this.topic,
+    this.audio,
     super.key,
   });
   final CourseController controller;
   final Topic topic;
+  final LessonAudio? audio;
   @override
   State<KnowledgeCheckPage> createState() => _KnowledgeCheckPageState();
 }
@@ -40,7 +43,10 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
     context: widget.controller.context,
   );
   final _scroll = ScrollController();
-  final _audio = LetterAudio();
+  late final LessonAudio _audio = widget.audio ?? LetterAudio();
+  late final OptionAudioSequence _optionAudio = OptionAudioSequence(
+    audio: _audio,
+  );
   final _audioSource = const LessonAudioSource();
   bool started = false;
   bool busy = false;
@@ -77,6 +83,8 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
         conceptIndex++;
       } else if (index < check.questions.length && selected != null) {
         final q = check.questions[index];
+        _optionAudio.cancel();
+        await _audio.stop();
         final count =
             (correct[q.atom.id] ?? 0) + (selected == q.answerIndex ? 1 : 0);
         if (count == 2 && !confirmed.contains(q.atom.id)) {
@@ -96,7 +104,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
       if (started &&
           conceptIndex == check.concepts.length &&
           index == check.questions.length) {
-        if (check.isCondensed &&
+        if (check.inferredAtoms.isNotEmpty &&
             check.checkedAtoms.every((atom) => correct[atom.id] == 2)) {
           for (final atom in check.inferredAtoms) {
             if (confirmed.contains(atom.id)) continue;
@@ -145,13 +153,33 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
         setState(() {
           busy = false;
         });
+        if (error == null) _startOptionAudioAfterFrame();
         if (error == null && _scroll.hasClients) _scroll.jumpTo(0);
       }
     }
   }
 
+  void _startOptionAudioAfterFrame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          !started ||
+          conceptIndex < check.concepts.length ||
+          index >= check.questions.length) {
+        return;
+      }
+      final question = check.questions[index];
+      if (question.mode != ExerciseMode.letterToSound) return;
+      unawaited(
+        _optionAudio.playAll(
+          question.options.map(_audioSource.forAtom).toList(growable: false),
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
+    _optionAudio.dispose();
     unawaited(_audio.dispose());
     _scroll.dispose();
     super.dispose();
@@ -166,9 +194,9 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
         ? check.questions[index]
         : null;
     final mode = question?.mode;
-    final soundToForm = mode == KnowledgeQuestionMode.soundToForm;
-    final formToSound = mode == KnowledgeQuestionMode.formToSound;
-    final nameToForm = mode == KnowledgeQuestionMode.nameToForm;
+    final presentation = question == null
+        ? null
+        : LessonExercisePresentation.from(question);
     final target = widget.controller.statuses.firstWhere(
       (s) => s.topic.id == widget.topic.id,
     );
@@ -216,7 +244,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
               title: passed ? 'Тема открыта' : 'Пока есть пробелы',
               text: passed
                   ? '«${widget.topic.title}» доступна. '
-                        '${check.isCondensed ? 'Остальной пропущенный материал отмечен для закрепления. ' : ''}'
+                        '${check.inferredAtoms.isNotEmpty ? 'Остальной пропущенный материал отмечен для закрепления. ' : ''}'
                         'Вы можете начать новую тему сейчас или позже.'
                   : 'Подтверждено ${confirmed.length} из ${check.checkedAtoms.length} проверенных элементов. '
                         'Тема пока закрыта. Подтверждённое сохранено; остальные знания можно закрепить в занятиях.',
@@ -236,7 +264,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
               title: 'Перед темой «${widget.topic.title}»',
               text:
                   'Проверим только недостающие знания: ${check.questions.length} заданий. '
-                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый элемент проверяется дважды. '}Задания используют знакомые форматы курса. Уже освоенное повторно сдавать не нужно. '
+                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый проверяемый элемент спрашивается дважды. '}Задания используют знакомые форматы курса. Формы хамзы отдельно не спрашиваются. Уже освоенное повторно сдавать не нужно. '
                   'Можно выйти: подтверждённые знания сохранятся.',
             )
           else if (concept != null)
@@ -254,64 +282,62 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
               ),
             ),
             const Margin.vertical(12),
-            QuestionCard(
-              badge: 'Проверка',
-              question: switch (mode) {
-                KnowledgeQuestionMode.soundToForm =>
-                  question.atom.kind == AtomKind.word
-                      ? 'Послушайте и выберите слово'
-                      : 'Послушайте и выберите написание',
-                KnowledgeQuestionMode.formToSound =>
-                  'Прочитайте и выберите звучание',
-                KnowledgeQuestionMode.nameToForm => 'Выберите написание',
-                KnowledgeQuestionMode.formToName => 'Выберите название',
-                null => '',
-              },
-              subject: soundToForm
-                  ? '♪'
-                  : nameToForm
-                  ? question.atom.label
-                  : question.atom.display,
-              subjectFont: soundToForm || nameToForm
-                  ? UITextStyles.fontOnest
-                  : UITextStyles.fontScheherazadeNew,
+            ExerciseChoiceQuestion(
+              exercise: question,
+              presentation: presentation!,
+              cardKey: ValueKey('check.$index'),
+              onPlay: mode == ExerciseMode.soundToLetter
+                  ? () => _audio.playAsset(_audioSource.forAtom(question.atom))
+                  : null,
+              onAutoPlay: mode == ExerciseMode.soundToLetter
+                  ? () => _audio.playAsset(_audioSource.forAtom(question.atom))
+                  : null,
+              autoPlay: mode == ExerciseMode.soundToLetter,
+              track: _audio.track,
             ),
-            if (soundToForm) ...[
-              MonoTextButton(
-                title: 'Прослушать',
-                onPressed: () =>
-                    _audio.playAsset(_audioSource.forAtom(question.atom)),
-                icon: Icons.volume_up_rounded,
-              ),
-            ],
             const Margin.vertical(16),
-            for (final (i, option) in question.options.indexed) ...[
-              if (formToSound)
-                AudioAnswerOption(
-                  label: 'Звучание ${i + 1}',
-                  selected: selected == i,
-                  isPlaying: false,
-                  onTap: () {
-                    if (!busy) setState(() => selected = i);
-                  },
-                  onPlay: () => _audio.playAsset(_audioSource.forAtom(option)),
-                )
-              else
-                AnswerOption(
-                  selected: selected == i,
-                  onTap: busy ? null : () => setState(() => selected = i),
-                  child: Text(
-                    soundToForm || nameToForm ? option.display : option.label,
-                    textDirection: soundToForm || nameToForm
-                        ? TextDirection.rtl
-                        : TextDirection.ltr,
-                    style: soundToForm || nameToForm
-                        ? UITextStyles.arabicRegular32
-                        : UITextStyles.regular17,
-                  ),
-                ),
-              const Margin.vertical(8),
-            ],
+            ValueListenableBuilder<OptionPlaybackState>(
+              valueListenable: _optionAudio.state,
+              builder: (context, playback, _) => Column(
+                children: [
+                  for (final (i, option) in question.options.indexed) ...[
+                    ExerciseChoiceOption(
+                      exercise: question,
+                      presentation: presentation,
+                      option: option,
+                      index: i,
+                      selected: selected == i,
+                      revealed: false,
+                      onTap: busy ? null : () => setState(() => selected = i),
+                      playbackProgress: playback.progressAt(i),
+                      isPlaying:
+                          playback.activeIndex == i &&
+                          _audio.track.value.isPlaying,
+                      onPlay: mode == ExerciseMode.letterToSound
+                          ? () => unawaited(
+                              _optionAudio.toggle(
+                                index: i,
+                                asset: _audioSource.forAtom(option),
+                              ),
+                            )
+                          : null,
+                    ),
+                    const Margin.vertical(8),
+                  ],
+                  if (mode == ExerciseMode.letterToSound)
+                    MonoTextButton(
+                      title: 'Прослушать ещё раз',
+                      onPressed: () => unawaited(
+                        _optionAudio.playAll(
+                          question.options
+                              .map(_audioSource.forAtom)
+                              .toList(growable: false),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ],
       ),

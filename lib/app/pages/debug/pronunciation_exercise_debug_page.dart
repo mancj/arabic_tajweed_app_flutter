@@ -8,6 +8,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/mono_text_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -53,6 +54,11 @@ class _PronunciationExerciseDebugPageState
                   controller.startRecording();
                 },
           onStopPressed: controller.stopRecording,
+          microphonePermissionDenied:
+              checker.failure.value ==
+              PronunciationFailureKind.microphoneDenied,
+          microphoneSettingsRequired: checker.microphoneSettingsRequired.value,
+          onOpenSettings: checker.openMicrophoneSettings,
         );
       }),
       builder: (context, insets) => SingleChildScrollView(
@@ -118,6 +124,10 @@ class _PronunciationExerciseDebugPageState
             const Margin.vertical(16),
             Obx(() {
               if (previewChecking || checker.isChecking.value) {
+                return const SizedBox.shrink();
+              }
+              if (checker.failure.value ==
+                  PronunciationFailureKind.microphoneDenied) {
                 return const SizedBox.shrink();
               }
               if (checker.error.value case final error?) {

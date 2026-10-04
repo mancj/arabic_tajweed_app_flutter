@@ -1,87 +1,44 @@
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Защищает границу запуска приложения: отключение и технические пропуски
-/// действуют в следующих занятиях, но не переживают перезапуск.
+/// Отключение общее для экранов, но не сохраняется между запусками.
+/// Исключение — подтверждённый системой постоянный запрет микрофона:
+/// проверка не запрашивает разрешение и учитывает его выдачу в настройках.
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late PronunciationPreference preference;
   late SharedPreferences storage;
   late SharedPreferenceManager manager;
+  var microphoneStatus = PermissionStatus.granted;
+  final permissionCalls = <String>[];
+  const permissionChannel = MethodChannel(
+    'flutter.baseflow.com/permissions/methods',
+  );
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     storage = await SharedPreferences.getInstance();
     manager = SharedPreferenceManager(storage);
     preference = PronunciationPreference(manager);
+    microphoneStatus = PermissionStatus.granted;
+    permissionCalls.clear();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(permissionChannel, (call) async {
+          permissionCalls.add(call.method);
+          expect(call.method, 'checkPermissionStatus');
+          expect(call.arguments, Permission.microphone.value);
+          return microphoneStatus.index;
+        });
   });
 
-  test('технический сбой отключает голос в двух разных сессиях', () async {
-    expect(
-      await preference.recordSkip(
-        sessionId: 3,
-        failure: PronunciationFailureKind.serviceUnavailable,
-      ),
-      isFalse,
-    );
-    expect(
-      await preference.recordSkip(
-        sessionId: 3,
-        failure: PronunciationFailureKind.recordingFailed,
-      ),
-      isFalse,
-    );
-    expect(
-      await preference.recordSkip(
-        sessionId: 4,
-        failure: PronunciationFailureKind.serviceUnavailable,
-      ),
-      isTrue,
-    );
-    expect(preference.isDisabled, isTrue);
-  });
-
-  test('голосовые занятия получают отдельные номера внутри запуска', () async {
-    expect(await preference.beginSession(), 1);
-    expect(await PronunciationPreference(manager).beginSession(), 2);
-  });
-
-  test('запрет микрофона отключает голос сразу', () async {
-    expect(
-      await preference.recordSkip(
-        sessionId: 1,
-        failure: PronunciationFailureKind.microphoneDenied,
-      ),
-      isTrue,
-    );
-    expect(preference.isDisabled, isTrue);
-  });
-
-  test('явный отказ отключает голос без технической ошибки', () async {
-    expect(
-      await preference.recordSkip(sessionId: 1, explicitOptOut: true),
-      isTrue,
-    );
-    expect(preference.isDisabled, isTrue);
-  });
-
-  test('повторное включение очищает историю сбоев', () async {
-    await preference.recordSkip(
-      sessionId: 1,
-      failure: PronunciationFailureKind.serviceUnavailable,
-    );
+  test('голос можно включить в том же запуске', () async {
     await preference.disable();
     await preference.enable();
-
     expect(preference.isDisabled, isFalse);
-    expect(
-      await preference.recordSkip(
-        sessionId: 2,
-        failure: PronunciationFailureKind.serviceUnavailable,
-      ),
-      isFalse,
-    );
   });
 
   test('отключение действует для всех экранов до перезапуска', () async {
@@ -89,29 +46,50 @@ void main() {
     expect(PronunciationPreference(manager).isDisabled, isTrue);
 
     final restarted = PronunciationPreference(SharedPreferenceManager(storage));
+    await restarted.checkMicrophoneAccess();
     expect(restarted.isDisabled, isFalse);
+    expect(storage.getBool('pronunciationDisabled'), isNull);
   });
 
-  test('новый запуск забывает прежние технические пропуски', () async {
-    expect(
-      await preference.recordSkip(
-        sessionId: 1,
-        failure: PronunciationFailureKind.recordingFailed,
-      ),
-      isFalse,
-    );
+  for (final status in [
+    PermissionStatus.granted,
+    PermissionStatus.denied,
+    PermissionStatus.restricted,
+    PermissionStatus.permanentlyDenied,
+  ]) {
+    test('при запуске учитывается статус микрофона $status', () async {
+      microphoneStatus = status;
+      await preference.checkMicrophoneAccess();
+      expect(preference.isDisabled, status.isPermanentlyDenied);
+      expect(permissionCalls, ['checkPermissionStatus']);
+    });
+  }
 
-    final restarted = PronunciationPreference(SharedPreferenceManager(storage));
-    expect(await restarted.beginSession(), 1);
-    expect(
-      await restarted.recordSkip(
-        sessionId: 1,
-        failure: PronunciationFailureKind.serviceUnavailable,
-      ),
-      isFalse,
+  test('выдача доступа в настройках возвращает голос при запуске', () async {
+    microphoneStatus = PermissionStatus.permanentlyDenied;
+    await preference.checkMicrophoneAccess();
+    expect(preference.isDisabled, isTrue);
+
+    final stillDenied = PronunciationPreference(
+      SharedPreferenceManager(storage),
     );
-    expect(restarted.isDisabled, isFalse);
+    await stillDenied.checkMicrophoneAccess();
+    expect(stillDenied.isDisabled, isTrue);
+
+    microphoneStatus = PermissionStatus.granted;
+    final allowed = PronunciationPreference(SharedPreferenceManager(storage));
+    await allowed.checkMicrophoneAccess();
+    expect(allowed.isDisabled, isFalse);
   });
+
+  test(
+    'проверка доступа в том же запуске не отменяет выбор пропуска',
+    () async {
+      await preference.disable();
+      await preference.checkMicrophoneAccess();
+      expect(preference.isDisabled, isTrue);
+    },
+  );
 
   test('старое сохранённое отключение больше не учитывается', () async {
     SharedPreferences.setMockInitialValues({
@@ -121,13 +99,7 @@ void main() {
     final restarted = PronunciationPreference(
       SharedPreferenceManager(await SharedPreferences.getInstance()),
     );
+    await restarted.checkMicrophoneAccess();
     expect(restarted.isDisabled, isFalse);
-    expect(
-      await restarted.recordSkip(
-        sessionId: 1,
-        failure: PronunciationFailureKind.recordingFailed,
-      ),
-      isFalse,
-    );
   });
 }

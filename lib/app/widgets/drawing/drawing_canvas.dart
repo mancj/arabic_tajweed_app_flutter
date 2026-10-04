@@ -122,6 +122,14 @@ class DrawingCanvas extends StatefulWidget {
   /// Правила, по которым ввод признаётся совпавшим с фигурой.
   final TracingMatcher matcher;
 
+  /// Проверять попадание в скрытый контур с допуском обычной обводки.
+  /// У даммы по памяти скрывается подсказка, но не меняется проверка.
+  final bool allowHiddenGuideMatch;
+
+  /// При закреплённой подсказке разрешать рисунок в любом месте холста.
+  /// Форма приводится к образцу сдвигом и масштабом перед проверкой.
+  final bool allowAnyPosition;
+
   /// Длительность анимации слияния штрихов с фигурой.
   final Duration mergeDuration;
 
@@ -210,6 +218,8 @@ class DrawingCanvas extends StatefulWidget {
     this.placeholderColor,
     this.placeholderPadding = 24,
     this.matcher = const TracingMatcher(),
+    this.allowHiddenGuideMatch = false,
+    this.allowAnyPosition = false,
     this.mergeDuration = const Duration(milliseconds: 250),
     this.showDemo = true,
     this.demoColor,
@@ -507,8 +517,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   /// Годных исходов два, и это не придирка к порогам, а разные вопросы.
   /// «Та же форма?» — сравнение сигнатур, единственное, что можно спросить
   /// у буквы, нарисованной в стороне. «Попал по контуру?» — покрытие,
-  /// точность и отклонение, и спросить это можно, только когда контур
-  /// виден. Обводка пальцем в форму укладывается еле-еле: у сигнатуры
+  /// точность и отклонение. Этот вариант доступен при видимой подсказке
+  /// и у даммы со скрытым контуром. Обводка пальцем в форму укладывается
+  /// еле-еле: у сигнатуры
   /// зазор между законным вариантом (0.063) и ближайшей неверной формой
   /// (0.087) в две сотых, и дрожание руки его съедает. Зато по контуру
   /// такая обводка проходит с запасом — и это честный ответ, а не
@@ -544,6 +555,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
     );
     final placed =
         !positionLocked ||
+        widget.allowAnyPosition ||
         widget.matcher.isPlacedNear(
           target: target,
           strokes: strokes,
@@ -559,7 +571,9 @@ class _DrawingCanvasState extends State<DrawingCanvas>
         ? alignment
         : const TracingAlignment.identity();
 
-    if (!result.isMatch && _showsGuide && placed) {
+    if (!result.isMatch &&
+        (_showsGuide || widget.allowHiddenGuideMatch) &&
+        placed) {
       // Тем же выравниванием, что и сравнение форм: вопрос не «где ты
       // это нарисовал», а «накрыл ли ты букву». Приведённое к месту
       // покрытие с точностью отвечают на него прямо, а отклонение не даёт
@@ -635,7 +649,7 @@ class _DrawingCanvasState extends State<DrawingCanvas>
   bool _isFragment(ResolvedTracingPart target, List<DrawingStroke> strokes) {
     if (target.paths.isEmpty) return true;
     if (widget.matcher.isLineFragment(target, strokes)) return true;
-    if (!_showsGuide) return false;
+    if (!_showsGuide && !widget.allowHiddenGuideMatch) return false;
     final last = strokes.last;
     final onGuide = widget.matcher.match(
       target: target,

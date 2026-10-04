@@ -1,5 +1,7 @@
 // Защищает порядок после алфавита: сначала огласовки на отдельных буквах,
 // затем связки нескольких букв и только после них короткие слова.
+// Ба вводится вместе со знаками; старые слоги ба не должны возвращать
+// отдельный новый урок или блокировать переход к следующим разделам.
 import 'dart:io';
 import 'dart:math';
 
@@ -43,11 +45,15 @@ void main() {
   test('связки открываются только после огласовок на отдельных буквах', () {
     final known = {
       for (final node in stages[0].nodes) node.atom.id,
-      for (final node in stages[2].nodes)
-        if (node.atom.kind != AtomKind.word) node.atom.id,
+      for (final topic in stages[2].topics.where((topic) => topic.stage == 2))
+        ...topic.counterOf,
     };
     final connections = stages[1].topics.first;
     expect(connections.requirement.isMet(contextWith(known)), isTrue);
+    expect(known, isNot(contains('vowel.ba.fatha')));
+    known.remove('haraka.fatha');
+    expect(connections.requirement.isMet(contextWith(known)), isFalse);
+    known.add('haraka.fatha');
     known.remove('vowel.nun.fatha');
     expect(connections.requirement.isMet(contextWith(known)), isFalse);
   });
@@ -67,8 +73,26 @@ void main() {
     );
   });
 
-  test('42 обязательных слога покрывают все буквы и особые случаи', () {
+  test('три знака и 39 обязательных слогов покрывают все буквы', () {
     final stage = stages[2];
+    final requiredIds = stage.topics
+        .where((topic) => topic.stage == 2)
+        .expand((topic) => topic.counterOf)
+        .toSet();
+    final requiredAtoms = stage.nodes
+        .map((node) => node.atom)
+        .where((atom) => requiredIds.contains(atom.id));
+    expect(
+      requiredAtoms.where((a) => a.kind == AtomKind.syllable),
+      hasLength(39),
+    );
+    expect(requiredAtoms.where((a) => a.kind == AtomKind.haraka), hasLength(3));
+    expect(
+      requiredAtoms.map((a) => a.letterId).whereType<String>().toSet(),
+      hasLength(28),
+    );
+    expect(stage.topics.any((topic) => topic.id == 'm.haraka.ba'), isFalse);
+    // Старые ID доступны для чтения истории и отладочных заданий.
     final syllables = stage.nodes
         .map((n) => n.atom)
         .where((a) => a.kind == AtomKind.syllable)
@@ -139,10 +163,46 @@ void main() {
       'haraka.damma',
     ]);
     expect(stage.topics[2].counterOf, [
-      'vowel.ba.fatha',
-      'vowel.ba.kasra',
-      'vowel.ba.damma',
+      'vowel.ta.fatha',
+      'vowel.kaf.fatha',
+      'vowel.dal.fatha',
+      'vowel.ra.fatha',
+      'vowel.ra.kasra',
     ]);
+  });
+
+  test('старый прогресс слогов ба не задерживает первый перенос знаков', () {
+    final firstGroup = stages[2].topics.firstWhere(
+      (topic) => topic.id == 'm.haraka.group1',
+    );
+    for (final oldBaState in AtomState.values) {
+      final progress = {
+        for (final topic in curriculum.topics.takeWhile(
+          (t) => t.id != firstGroup.id,
+        ))
+          for (final id in topic.counterOf)
+            id: const AtomProgress(state: AtomState.known, weak: true),
+        'vowel.ba.fatha': AtomProgress(state: oldBaState, totalErrors: 2),
+      };
+      final ctx = CurriculumContext(
+        progress: progress,
+        formsByLetter: curriculum.formsByLetter,
+      );
+      expect(firstGroup.requirement.isMet(ctx), isTrue);
+      final plan = LessonPlanner(
+        curriculum: curriculum,
+      ).plan(ctx: ctx, sessionId: 100, sessionsWithoutNew: 0);
+      expect(plan.topicId, firstGroup.id);
+      expect(plan.newAtoms.map((a) => a.letterId).toSet(), {
+        'ta',
+        'kaf',
+        'dal',
+        'ra',
+      });
+      expect(plan.reviewAtoms.any((id) => id.startsWith('vowel.ba.')), isFalse);
+      expect(progress['vowel.ba.fatha']!.state, oldBaState);
+      expect(progress['vowel.ba.fatha']!.totalErrors, 2);
+    }
   });
 
   test('слова открываются после обязательных слогов и связок', () {
@@ -152,10 +212,14 @@ void main() {
     );
     final known = {
       for (final node in stages.take(2).expand((s) => s.nodes)) node.atom.id,
-      for (final node in stage.nodes)
-        if (node.atom.kind == AtomKind.syllable) node.atom.id,
+      for (final topic in stage.topics.where((topic) => topic.stage == 2))
+        ...topic.counterOf,
     };
     expect(firstWords.requirement.isMet(contextWith(known)), isTrue);
+    expect(known, isNot(contains('vowel.ba.fatha')));
+    known.remove('haraka.kasra');
+    expect(firstWords.requirement.isMet(contextWith(known)), isFalse);
+    known.add('haraka.kasra');
     known.remove('syl.waw_ba');
     expect(firstWords.requirement.isMet(contextWith(known)), isFalse);
     known.add('syl.waw_ba');
@@ -206,6 +270,7 @@ void main() {
           modes.intersection({
             ExerciseMode.soundToLetter,
             ExerciseMode.harakaSequence,
+            ExerciseMode.harakaForLetters,
           }),
           isNotEmpty,
           reason: 'Сборка тоже проверяет направление от звука к написанию',
@@ -331,7 +396,7 @@ void main() {
       if (plan.topicId == 'm.join') {
         // Изолированный планировщик считает вводное понятие и три знака
         // двумя шагами; экран объединяет их в одно занятие.
-        expect(harakaLessons, lessThanOrEqualTo(11));
+        expect(harakaLessons, lessThanOrEqualTo(10));
       }
       if (plan.topicId == 'm.haraka.words1') reachedWords = true;
       final exercises = ExerciseGenerator(

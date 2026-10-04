@@ -3,6 +3,8 @@ import 'package:collection/collection.dart';
 
 import 'atom.dart';
 import 'curriculum.dart';
+import 'exercise.dart';
+import 'exercise_generator.dart';
 
 /// Проверяем недостающие зависимости выбранной темы. Для далёкой темы
 /// берём короткую выборку: безошибочный результат подтверждает и остальное
@@ -14,12 +16,17 @@ class KnowledgeCheck {
     required this.context,
     Random? random,
   }) : _random = random ?? Random() {
+    _generator = ExerciseGenerator(curriculum: curriculum, random: _random);
     _addPreviousTopics();
     _require(topic.requirement);
     final missing = atoms.where((a) => a.kind != AtomKind.concept).toList();
-    checkedAtoms = missing.length <= maxCheckedAtoms
-        ? missing
-        : _sample(missing);
+    // Формы хамзы здесь не спрашиваем: вопрос о названии её носителя
+    // не соответствует заданию, с которым человек работает в курсе.
+    final questionCandidates = missing.where(_canAskInCheck).toList();
+    isCondensed = questionCandidates.length > maxCheckedAtoms;
+    checkedAtoms = isCondensed
+        ? _sample(questionCandidates)
+        : questionCandidates;
     inferredAtoms = missing.where((a) => !checkedAtoms.contains(a)).toList();
     questions = [
       for (final atom in checkedAtoms)
@@ -35,17 +42,21 @@ class KnowledgeCheck {
   final Topic topic;
   final CurriculumContext context;
   final Random _random;
+  late final ExerciseGenerator _generator;
   final List<Atom> atoms = [];
   final Set<String> _visited = {};
   late final List<Atom> checkedAtoms;
   late final List<Atom> inferredAtoms;
-  late final List<KnowledgeQuestion> questions;
-  bool get isCondensed => inferredAtoms.isNotEmpty;
+  late final bool isCondensed;
+  late final List<Exercise> questions;
   List<Atom> get concepts =>
       atoms.where((a) => a.kind == AtomKind.concept).toList();
 
   List<Atom> get knowledgeAtoms =>
       atoms.where((a) => a.kind != AtomKind.concept).toList();
+
+  static bool _canAskInCheck(Atom atom) =>
+      atom.kind != AtomKind.sign || atom.letterId != 'hamza';
 
   /// Переход к выбранной теме закрывает весь путь до неё, а не только
   /// минимальные зависимости графа.
@@ -134,7 +145,7 @@ class KnowledgeCheck {
     return selected;
   }
 
-  KnowledgeQuestion _question(Atom atom, bool reverse) {
+  Exercise _question(Atom atom, bool reverse) {
     final eligibleIds = {
       for (final previous in curriculum.topics.take(
         curriculum.topics.indexWhere((t) => t.id == topic.id),
@@ -144,53 +155,19 @@ class KnowledgeCheck {
       for (final id in context.progress.keys)
         if (context.isKnown(id)) id,
     };
-    final others =
-        curriculum.nodes
-            .map((n) => n.atom)
-            .where(
-              (a) =>
-                  eligibleIds.contains(a.id) &&
-                  a.id != atom.id &&
-                  a.kind == atom.kind &&
-                  a.form == atom.form &&
-                  (atom.kind == AtomKind.word || a.label != atom.label) &&
-                  a.display != atom.display,
-            )
-            .toList()
-          ..shuffle(_random);
-    final choices = [atom, ...others.take(2)]..shuffle(_random);
-    if (choices.length < 2) {
+    final pool = curriculum.nodes
+        .map((n) => n.atom)
+        .where((a) => eligibleIds.contains(a.id))
+        .toList();
+    final modes = ExerciseGenerator.choiceModesFor(atom);
+    final exercise = _generator.choiceFor(
+      atom: atom,
+      mode: modes[reverse ? (modes.length - 1) : 0],
+      pool: pool,
+    );
+    if (exercise.options.length < 2) {
       throw StateError('Нет вариантов проверки для ${atom.id}');
     }
-    final hasAudio =
-        atom.audioAsset != null ||
-        (atom.kind == AtomKind.letterForm && atom.letterId != null);
-    return KnowledgeQuestion(
-      atom: atom,
-      options: choices,
-      mode: hasAudio
-          ? (reverse
-                ? KnowledgeQuestionMode.formToSound
-                : KnowledgeQuestionMode.soundToForm)
-          : (reverse
-                ? KnowledgeQuestionMode.formToName
-                : KnowledgeQuestionMode.nameToForm),
-      answerIndex: choices.indexOf(atom),
-    );
+    return exercise;
   }
-}
-
-enum KnowledgeQuestionMode { soundToForm, formToSound, nameToForm, formToName }
-
-class KnowledgeQuestion {
-  const KnowledgeQuestion({
-    required this.atom,
-    required this.options,
-    required this.mode,
-    required this.answerIndex,
-  });
-  final Atom atom;
-  final List<Atom> options;
-  final KnowledgeQuestionMode mode;
-  final int answerIndex;
 }

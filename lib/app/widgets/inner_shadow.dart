@@ -15,7 +15,7 @@ class InnerShadow {
   });
 }
 
-/// Накладывает inset-тени поверх [child], обрезая их по [borderRadius].
+/// Рисует inset-тени под [child], обрезая их по [borderRadius].
 class InnerShadows extends StatelessWidget {
   final BorderRadius borderRadius;
   final List<InnerShadow> shadows;
@@ -31,7 +31,7 @@ class InnerShadows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      foregroundPainter: _InnerShadowPainter(borderRadius, shadows),
+      painter: _InnerShadowPainter(borderRadius, shadows),
       child: child,
     );
   }
@@ -52,11 +52,10 @@ class _InnerShadowPainter extends CustomPainter {
       // Тень — это «дырка» формы кнопки в большом прямоугольнике: размытый
       // край дырки и есть внутренняя тень.
       final margin = shadow.blur * 3 + shadow.offset.distance + 1;
-      final hole = Path.combine(
-        PathOperation.difference,
-        Path()..addRect(rrect.outerRect.inflate(margin)),
-        Path()..addRRect(rrect),
-      );
+      final hole = Path()
+        ..fillType = PathFillType.evenOdd
+        ..addRect(rrect.outerRect.inflate(margin))
+        ..addRRect(rrect);
       final paint = Paint()..color = shadow.color;
       if (shadow.blur > 0) {
         // CSS-радиус размытия вдвое больше сигмы гауссианы.

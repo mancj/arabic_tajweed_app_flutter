@@ -8,6 +8,8 @@ blocks:
   - letter:
       glyph: ب
       audio: audio/alphabet/ba.wav
+  - writing: |
+      **ب** похожа на неглубокую чашу с одной точкой снизу.
   - makhraj: |
       Сомкните губы, затем разомкните их со звуком «б».
   - sifat: |

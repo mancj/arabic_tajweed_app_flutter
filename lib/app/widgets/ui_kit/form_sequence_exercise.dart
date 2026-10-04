@@ -12,6 +12,9 @@ import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/squircle_borders.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
+
+import 'exercise_tile.dart';
 
 /// Один слот раскладки: подпись не раскрывает ответ, а правильный атом
 /// задаётся отдельно. У звукового слота есть запись для подсказки.
@@ -22,12 +25,20 @@ class SequenceSlot {
     required this.title,
     required this.expectedAtomId,
     this.audioAsset,
+    this.baseGlyph,
   });
 
   final String id;
   final String title;
   final String expectedAtomId;
   final String? audioAsset;
+  final String? baseGlyph;
+
+  String? glyphFor(Atom? answer) => baseGlyph == null
+      ? answer?.display
+      : answer == null
+      ? baseGlyph
+      : HarakaSyllables.applyMark(baseGlyph!, answer);
 }
 
 /// Временная шкала перелёта. Границы этапов задаются долями от 0 до 1.
@@ -81,10 +92,10 @@ class FormSequenceMotion {
   Duration get interactionLockDuration => timeAt(interactionLockEnd);
 }
 
-/// Раскладывание четырёх форм одной буквы по позициям.
+/// Раскладывание двух или четырёх форм одной буквы по позициям.
 ///
 /// Слоты заполняются строго по очереди. Заполненный слот можно очистить
-/// тапом и вернуть его плитку. После четвёртого выбора порядок отправляется
+/// тапом и вернуть его плитку. После последнего выбора порядок отправляется
 /// наружу одним ответом — промежуточные тапы не проверяются.
 class FormSequenceExercise extends StatefulWidget {
   const FormSequenceExercise({
@@ -100,15 +111,15 @@ class FormSequenceExercise extends StatefulWidget {
     this.onPlaySlot,
     this.onActiveSlotChanged,
     this.playingSlotIndex,
+    this.reusableOptions = false,
     super.key,
   }) : assert(
          initialPlaced.length == 0 ||
-             initialPlaced.length ==
-                 (slots?.length ?? LetterForm.values.length),
+             initialPlaced.length == (slots?.length ?? options.length),
        ),
        assert(
          slotResults == null ||
-             slotResults.length == (slots?.length ?? LetterForm.values.length),
+             slotResults.length == (slots?.length ?? options.length),
        );
 
   final List<Atom> options;
@@ -123,6 +134,7 @@ class FormSequenceExercise extends StatefulWidget {
   final ValueChanged<int>? onPlaySlot;
   final ValueChanged<int>? onActiveSlotChanged;
   final int? playingSlotIndex;
+  final bool reusableOptions;
 
   @override
   State<FormSequenceExercise> createState() => _FormSequenceExerciseState();
@@ -153,7 +165,9 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
     _slots =
         widget.slots ??
         [
-          for (final form in _positions)
+          for (final form in _positions.where(
+            (form) => widget.options.any((atom) => atom.form == form),
+          ))
             SequenceSlot(
               id: form.name,
               title: form.title,
@@ -210,7 +224,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
     if (_completed ||
         _revealingAnswer ||
         _interactionLocked ||
-        _placed.contains(atom)) {
+        (!widget.reusableOptions && _placed.contains(atom))) {
       return;
     }
     final activeIndex = _placed.indexWhere((placed) => placed == null);
@@ -390,8 +404,9 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
     return (boundsOf(fromBox), boundsOf(toBox));
   }
 
-  Widget _flightTile(Atom atom, ui.Image? snapshot) =>
-      snapshot == null ? _FormTileSurface(atom: atom) : _flightImage(snapshot);
+  Widget _flightTile(Atom atom, ui.Image? snapshot) => snapshot == null
+      ? ExerciseTileSurface(glyph: atom.display)
+      : _flightImage(snapshot);
 
   Widget _flightImage(ui.Image image) => RawImage(
     image: image,
@@ -642,7 +657,7 @@ class _FormSequenceExerciseState extends State<FormSequenceExercise>
                     anchorKey: _tileAnchors.putIfAbsent(atom.id, GlobalKey.new),
                     atom: atom,
                     noun: widget.optionNoun,
-                    used: _placed.contains(atom),
+                    used: !widget.reusableOptions && _placed.contains(atom),
                     onTap: () => _place(atom),
                   ),
                 ),
@@ -729,8 +744,8 @@ class _FormSlot extends StatelessWidget {
         hint: placedAtom == null
             ? null
             : locked
-            ? 'Форма уже на правильном месте'
-            : 'Нажмите, чтобы убрать форму',
+            ? 'Ответ уже на правильном месте'
+            : 'Нажмите, чтобы убрать ответ',
         selected: active,
         button: placedAtom != null && onTap != null,
         child: placedAtom == null || onTap == null
@@ -807,7 +822,7 @@ class _FormSlotSurface extends StatelessWidget {
               ),
               Expanded(
                 child: Center(
-                  child: atom == null
+                  child: slot.glyphFor(atom) == null
                       ? Text(
                           '?',
                           style: UITextStyles.semibold22.copyWith(
@@ -816,7 +831,7 @@ class _FormSlotSurface extends StatelessWidget {
                                 : UIColors.backgroundShapes2,
                           ),
                         )
-                      : _Glyph(atom!.display),
+                      : _Glyph(slot.glyphFor(atom)!),
                 ),
               ),
               if (slot.audioAsset != null)
@@ -887,37 +902,11 @@ class _FormTile extends StatelessWidget {
             onTap: onTap,
             child: RepaintBoundary(
               key: anchorKey,
-              child: _FormTileSurface(atom: atom),
+              child: ExerciseTileSurface(glyph: atom.display),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _FormTileSurface extends StatelessWidget {
-  const _FormTileSurface({required this.atom});
-
-  final Atom atom;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      decoration: SquircleBorders.squircleBorder(
-        color: UIColors.cardBackground,
-        borderRadius: 18,
-        borderSide: BorderSide(color: UIColors.borders),
-        shadows: [
-          BoxShadow(
-            color: UIColors.shadows,
-            offset: const Offset(0, 2),
-            blurRadius: 2,
-          ),
-        ],
-      ),
-      child: Center(child: _Glyph(atom.display)),
     );
   }
 }

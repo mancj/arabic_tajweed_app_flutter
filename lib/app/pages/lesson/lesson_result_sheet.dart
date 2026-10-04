@@ -84,12 +84,17 @@ class _LessonResultSheetState extends State<LessonResultSheet>
     final check = controller.pronunciation.result.value;
 
     final title =
-        presentation?.feedbackTitle(correct: correct) ??
+        presentation?.feedbackTitle(
+          correct: correct,
+          syllableBuildEvaluation: controller.syllableBuildEvaluation.value,
+          syllableCheck: controller.pronunciation.syllableResult.value,
+        ) ??
         (correct ? 'Верно!' : 'Попробуйте ещё раз');
     final text = presentation?.feedbackText(
       correct: correct,
       answerLabel: label,
       heard: check?.heard,
+      syllableCheck: controller.pronunciation.syllableResult.value,
       formSequenceCorrectCount: controller.formSequenceCorrectCount,
       revealFormSequenceAnswer: controller.revealFormSequenceAnswer,
     );

@@ -17,6 +17,7 @@ import '../../../domain/planner.dart';
 import '../../../domain/topic_board.dart';
 import '../../shared_state/app_clock.dart';
 import '../lesson/lesson_binding.dart';
+import 'course_stage_progress.dart';
 
 /// Один следующий план для карточки на главном и запуска занятия.
 /// Темы показывают освоенность; число занятий заранее неизвестно.
@@ -136,6 +137,22 @@ class CourseController extends GetxController {
 
   int get knownLetters => context.knownLetterCount;
   int get totalLetters => curriculum.formsByLetter.length;
+
+  int? get currentStage =>
+      LessonPlanner(curriculum: curriculum, rules: rules).activeStage(context);
+
+  CourseStageProgress get pathProgress => progressForStage(currentStage ?? 1);
+
+  CourseStageProgress progressForStage(int stage) {
+    final topics = byStage[stage] ?? const <TopicStatus>[];
+    return CourseStageProgress(
+      stage: stage,
+      done: stage == 1
+          ? knownLetters
+          : topics.where((topic) => topic.isDone).length,
+      total: stage == 1 ? totalLetters : topics.length,
+    );
+  }
 
   List<Atom> atomsFor(TopicStatus topic) => curriculum.nodes
       .where((n) => topic.topic.counterOf.contains(n.atom.id))

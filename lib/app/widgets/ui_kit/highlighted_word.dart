@@ -27,22 +27,50 @@ HighlightedWordText stretchHighlightedLetter({
   }
 
   final tatweel = List.filled(tatweelCount, 'ـ').join();
+  var previousIndex = index - 1;
+  while (previousIndex >= 0 && _isVowelMark(word.codeUnitAt(previousIndex))) {
+    previousIndex--;
+  }
+  var nextIndex = index + 1;
+  while (nextIndex < word.length && _isVowelMark(word.codeUnitAt(nextIndex))) {
+    nextIndex++;
+  }
+  final joinsBefore =
+      previousIndex >= 0 &&
+      _canJoinNext(word[previousIndex]) &&
+      _canJoinPrevious(word[index]);
+  final joinsAfter =
+      nextIndex < word.length &&
+      _canJoinNext(word[index]) &&
+      _canJoinPrevious(word[nextIndex]);
   final before = switch (form) {
-    LetterForm.medial || LetterForm.finalForm => tatweel,
-    LetterForm.isolated || LetterForm.initial => '',
+    LetterForm.medial || LetterForm.finalForm when joinsBefore => tatweel,
+    _ => '',
   };
   final after = switch (form) {
-    LetterForm.initial || LetterForm.medial => tatweel,
-    LetterForm.isolated || LetterForm.finalForm => '',
+    LetterForm.initial || LetterForm.medial when joinsAfter => tatweel,
+    _ => '',
   };
+  final letter = word.substring(index, nextIndex);
   return (
     word:
-        '${word.substring(0, index)}$before${word[index]}$after'
-        '${word.substring(index + 1)}',
+        '${word.substring(0, index)}$before$letter$after'
+        '${word.substring(nextIndex)}',
     highlightStart: index,
-    highlightLength: before.length + 1 + after.length,
+    highlightLength: before.length + letter.length + after.length,
   );
 }
+
+// Положение в слове не гарантирует соединение: Даль в середине
+// по-прежнему не соединяется слева, а после Алиф соединения справа нет.
+bool _canJoinPrevious(String letter) =>
+    'ابتثجحخدذرزسشصضطظعغفقكلمنهويىأإآؤئٱةـ'.contains(letter);
+
+bool _canJoinNext(String letter) =>
+    _canJoinPrevious(letter) && !'اأإآٱدذرزوةؤ'.contains(letter);
+
+bool _isVowelMark(int code) =>
+    (code >= 0x064B && code <= 0x065F) || code == 0x0670;
 
 /// Арабское слово с одной подсвеченной буквой.
 ///

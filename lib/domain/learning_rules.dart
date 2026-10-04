@@ -31,6 +31,10 @@ class LearningRules {
     this.alphabetCheckpointLetters = const [7, 15, 21, 28],
     this.connectedFormCleanStreakForKnown = 2,
     this.tasksPerSession = 20,
+    this.syllablePronunciationMaxPercent = 25,
+    this.harakaSequencesPerSession = 3,
+    this.mixedHarakaSequencesPerSession = 2,
+    this.letterFormReviewsPerHarakaSession = 2,
     this.narrowLetterExercises = 4,
     this.tracingMissesBeforeReveal = 3,
     this.sayNameAttempts = 2,
@@ -112,29 +116,49 @@ class LearningRules {
   /// раньше, только когда знакомого старого материала для остатка нет.
   final int tasksPerSession;
 
+  /// Доля чтения слогов вслух в блоке огласовок. Новое и пропущенная
+  /// практика имеют приоритет. Произношение отдельных букв не ограничивает.
+  final int syllablePronunciationMaxPercent;
+
+  /// Сборки на разных буквах внутри занятия с огласовками. При нехватке
+  /// знакомых букв их меньше; короткий добор получает соразмерную долю.
+  final int harakaSequencesPerSession;
+
+  /// Из общего числа сборок столько используют разные буквы и повторяемые
+  /// знаки. В коротком доборе доля уменьшается вместе с числом заданий.
+  final int mixedHarakaSequencesPerSession;
+
+  /// Короткое повторение форм букв только в огласовках. Предел общий
+  /// для всех блоков занятия; старые уроки букв не возвращаются.
+  final int letterFormReviewsPerHarakaSession;
+
   /// Сколько встреч получает каждая буква в узком блоке из двух отдельных
   /// букв: два вида письма, произношение и одно узнавание. Если голос
   /// недоступен, его место может занять второе узнавание.
   final int narrowLetterExercises;
 
   /// Каждую форму темы спрашиваем; отдельную букву ещё пишем в двух
-  /// режимах и называем вслух. Понятия проходят только через объяснение.
+  /// режимах и называем вслух; слог читаем, пишем и произносим.
+  /// Понятия проходят только через объяснение.
   int minimumExercises(Atom atom) => switch (atom) {
     Atom(kind: AtomKind.concept) => 0,
     Atom(kind: AtomKind.haraka, tracing: String()) => 4,
+    Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => 3,
     Atom(letterId: String(), form: LetterForm.isolated) => 3,
     _ => 1,
   };
 
   /// Узнавание не заменяет письмо: до закрытия темы базовая буква проходит
-  /// голос и два вида письма, а каждый звучащий слог — дорисовывание знака.
+  /// голос и два вида письма, а каждый звучащий слог — дорисовывание и голос.
   Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
     Atom(kind: AtomKind.haraka, tracing: String()) => {
       ExerciseMode.trace,
       ExerciseMode.traceFromMemory,
+      if (requirePronunciation) ExerciseMode.saySyllable,
     },
     Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => {
       ExerciseMode.drawHarakaForSound,
+      if (requirePronunciation) ExerciseMode.saySyllable,
     },
     Atom(letterId: String(), form: LetterForm.isolated) => {
       if (atom.tracing != null) ...{
@@ -153,7 +177,7 @@ class LearningRules {
   /// угодно долго. См. SPEC.md §5.
   final int tracingMissesBeforeReveal;
 
-  /// Сколько записей даётся в задании «назови букву», прежде чем
+  /// Сколько записей даётся в произношении буквы или слога, прежде чем
   /// несовпадение засчитается ошибкой. Первый промах — подсказка: сервер
   /// показывает, что услышал, и человек пробует ещё раз. Плохая запись
   /// (тихо, шумно) попытку не тратит. См. SPEC.md §4.
@@ -197,6 +221,10 @@ class LearningRules {
     alphabetCheckpointLetters: alphabetCheckpointLetters,
     connectedFormCleanStreakForKnown: connectedFormCleanStreakForKnown,
     tasksPerSession: tasksPerSession,
+    syllablePronunciationMaxPercent: syllablePronunciationMaxPercent,
+    harakaSequencesPerSession: harakaSequencesPerSession,
+    mixedHarakaSequencesPerSession: mixedHarakaSequencesPerSession,
+    letterFormReviewsPerHarakaSession: letterFormReviewsPerHarakaSession,
     narrowLetterExercises: narrowLetterExercises,
     tracingMissesBeforeReveal: tracingMissesBeforeReveal,
     sayNameAttempts: sayNameAttempts,

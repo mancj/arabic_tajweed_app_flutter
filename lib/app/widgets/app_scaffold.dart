@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
+import 'measure_height.dart';
 
 /// Строит содержимое экрана [AppScaffold].
 ///
@@ -133,53 +132,62 @@ class _AppScaffoldState extends State<AppScaffold> {
 
     return Scaffold(
       backgroundColor: widget.backgroundColor ?? UIColors.pageBackground,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/img/background_grid_pattern.png',
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-          Positioned.fill(
-            child: GlassScrollEdgeEffect(
-              // Контент под шапкой плавно размывается, чтобы стеклянный хром
-              // оставался читаемым. Снизу блюра нет: панель не затемняет
-              // контент за собой.
-              style: GlassScrollEdgeStyle.blur,
-              maxSigma: widget.edgeBlurSigma,
-              topFadeHeight: headerZone + AppScaffold._topBlurFadeExtension,
-              bottomFadeHeight: 0,
-              child: Builder(
-                builder: (context) => widget.builder(context, contentInsets),
+      body: Center(
+        child: Container(
+          alignment: Alignment.topCenter,
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            fit: StackFit.expand,
+            children: [
+              // Positioned.fill(
+              //   child: Image.asset(
+              //     'assets/img/background_grid_pattern.png',
+              //     fit: BoxFit.cover,
+              //   ),
+              // ),
+              Positioned.fill(
+                child: GlassScrollEdgeEffect(
+                  // Контент под шапкой плавно размывается, чтобы стеклянный хром
+                  // оставался читаемым. Снизу блюра нет: панель не затемняет
+                  // контент за собой.
+                  style: GlassScrollEdgeStyle.blur,
+                  maxSigma: widget.edgeBlurSigma,
+                  topFadeHeight: headerZone + AppScaffold._topBlurFadeExtension,
+                  bottomFadeHeight: 0,
+                  child: Builder(
+                    builder: (context) =>
+                        widget.builder(context, contentInsets),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            top: insets.top + AppScaffold._headerTopGap,
-            left: 0,
-            right: 0,
-            child: _Header(
-              title: widget.title,
-              showBrand: widget.showBrand,
-              actions: widget.actions,
-              onBack: widget.showBackButton
-                  ? (widget.onBack ?? Get.back)
-                  : null,
-            ),
-          ),
-          if (widget.bottomBar != null)
-            Positioned(
-              left: widget.contentPadding.left,
-              right: widget.contentPadding.right,
-              bottom: insets.bottom + AppScaffold._bottomBarGap,
-              child: _MeasureHeight(
-                onChange: (height) => setState(() => _bottomBarHeight = height),
-                child: widget.bottomBar!,
+              Positioned(
+                top: insets.top + AppScaffold._headerTopGap,
+                left: 0,
+                right: 0,
+                child: _Header(
+                  title: widget.title,
+                  showBrand: widget.showBrand,
+                  actions: widget.actions,
+                  onBack: widget.showBackButton
+                      ? (widget.onBack ?? Get.back)
+                      : null,
+                ),
               ),
-            ),
-        ],
+              if (widget.bottomBar != null)
+                Positioned(
+                  left: widget.contentPadding.left,
+                  right: widget.contentPadding.right,
+                  bottom: insets.bottom + AppScaffold._bottomBarGap,
+                  child: MeasureHeight(
+                    onChange: (height) =>
+                        setState(() => _bottomBarHeight = height),
+                    child: widget.bottomBar!,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -280,12 +288,14 @@ class AppScaffoldActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     required this.semanticLabel,
+    this.settings,
     super.key,
   });
 
   final Widget icon;
   final VoidCallback onPressed;
   final String semanticLabel;
+  final LiquidGlassSettings? settings;
 
   /// Базовые параметры стекла для элементов шапки.
   static const defaultQuality = GlassQuality.premium;
@@ -293,9 +303,11 @@ class AppScaffoldActionButton extends StatelessWidget {
     thickness: 24,
     blur: 1,
     refractiveIndex: 1.45,
-    chromaticAberration: .04,
+    chromaticAberration: .2,
     lightIntensity: .8,
-    whitenStrength: .15,
+    ambientRim: .16,
+    whitenStrength: .0,
+    whitenGated: false,
   );
 
   /// Меню сохраняет оптику кнопки, но сильнее матирует фон под текстом.
@@ -308,49 +320,13 @@ class AppScaffoldActionButton extends StatelessWidget {
     size: AppScaffold._headerHeight,
     iconSize: 24,
     semanticLabel: semanticLabel,
-    // Линзу рисует только premium: standard — плоское матовое стекло без
-    // преломления. Вне общего слоя premium рендерит собственный слой.
+    // Пакет расширяет область собственного слоя только при scale > 1.
+    // Иначе при удержании деформированный край линзы срезается.
+    interactionScale: 1.01,
+    // Линзу рисует premium; собственный слой нужен вне GlassLayer.
     quality: defaultQuality,
     useOwnLayer: true,
-    settings: defaultSettings,
+    settings:
+        settings ?? defaultSettings.copyWith(glassColor: UIColors.white10),
   );
-}
-
-/// Сообщает высоту ребёнка после каждого layout, на котором она изменилась.
-class _MeasureHeight extends SingleChildRenderObjectWidget {
-  final ValueChanged<double> onChange;
-
-  const _MeasureHeight({required this.onChange, required Widget child})
-    : super(child: child);
-
-  @override
-  _RenderMeasureHeight createRenderObject(BuildContext context) =>
-      _RenderMeasureHeight(onChange);
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderMeasureHeight renderObject,
-  ) {
-    renderObject.onChange = onChange;
-  }
-}
-
-class _RenderMeasureHeight extends RenderProxyBox {
-  ValueChanged<double> onChange;
-  double? _reported;
-
-  _RenderMeasureHeight(this.onChange);
-
-  @override
-  void performLayout() {
-    super.performLayout();
-    if (_reported == size.height) return;
-    _reported = size.height;
-    // Колбэк меняет состояние родителя, поэтому вызывается после кадра:
-    // setState во время layout запрещён.
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (attached) onChange(size.height);
-    });
-  }
 }

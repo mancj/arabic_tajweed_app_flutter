@@ -22,6 +22,8 @@ class HarakaShapeLayout {
       base.center.dx - mark.center.dx,
       below ? base.bottom + gap - mark.top : base.top - gap - mark.bottom,
     );
-    return haraka.translated(offset);
+    // У части букв кадр 329×329, у огласовок — 329×323. Фон и знак
+    // должны вписываться в один кадр, иначе знак съезжает к краю холста.
+    return haraka.translated(offset, viewBox: letter.viewBox);
   }
 }

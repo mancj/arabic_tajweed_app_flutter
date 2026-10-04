@@ -1,6 +1,7 @@
 import 'package:arabic_tajweed_app/app/shared_state/auth_state.dart';
 import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/rest/api_client.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_rest_client.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
@@ -24,7 +25,9 @@ class AppBinding extends Bindings {
 
   Future<void> asyncDependencies() async {
     final preferences = await SharedPreferences.getInstance();
-    Get.put(SharedPreferenceManager(preferences), permanent: true);
+    final manager = SharedPreferenceManager(preferences);
+    await PronunciationPreference(manager).checkMicrophoneAccess();
+    Get.put(manager, permanent: true);
     Get.put(AppClock(preferences: preferences), permanent: true);
 
     // Одна база на всё приложение: лог событий append-only.

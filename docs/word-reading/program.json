@@ -1,0 +1,225 @@
+{
+  "version": 3,
+  "status": "proposal",
+  "blocks": [
+    {
+      "id": "two_fatha",
+      "lesson": 1,
+      "title": "Две буквы с фатхой",
+      "phase": "two_letters",
+      "placement": "Начало перехода ближе к концу второго этапа",
+      "allowedLengths": [
+        2
+      ],
+      "wordIds": [
+        "lam_a_kaf_a",
+        "mim_a_ayn_a"
+      ],
+      "reviewWordIds": []
+    },
+    {
+      "id": "two_kasra",
+      "lesson": 2,
+      "title": "Две буквы с касрой",
+      "phase": "two_letters",
+      "placement": "После урока 1 переходной программы",
+      "allowedLengths": [
+        2
+      ],
+      "wordIds": [
+        "ba_i_kaf_a",
+        "lam_a_kaf_i",
+        "ba_i_ha_i"
+      ],
+      "reviewWordIds": [
+        "lam_a_kaf_a",
+        "mim_a_ayn_a"
+      ]
+    },
+    {
+      "id": "two_pronouns",
+      "lesson": 3,
+      "title": "Две буквы: дамма и касра",
+      "phase": "two_letters",
+      "placement": "После урока 2 переходной программы",
+      "allowedLengths": [
+        2
+      ],
+      "wordIds": [
+        "ha_u_waw_a",
+        "ha_i_ya_a"
+      ],
+      "reviewWordIds": [
+        "lam_a_kaf_a",
+        "mim_a_ayn_a",
+        "ba_i_kaf_a",
+        "lam_a_kaf_i",
+        "ba_i_ha_i"
+      ]
+    },
+    {
+      "id": "three_fatha",
+      "lesson": 4,
+      "title": "Три буквы, преимущественно фатха",
+      "phase": "three_letters",
+      "placement": "После урока 3 переходной программы",
+      "allowedLengths": [
+        3
+      ],
+      "wordIds": [
+        "kaf_a_ta_a_ba_a",
+        "kaf_a_sin_a_ba_a",
+        "ta_a_ra_a_kaf_a",
+        "kha_a_lam_a_qof_a",
+        "dal_a_kha_a_lam_a",
+        "dhal_a_ha_a_ba_a"
+      ]
+    },
+    {
+      "id": "three_kasra",
+      "lesson": 5,
+      "title": "Три буквы с касрой внутри",
+      "phase": "three_letters",
+      "placement": "После урока 4 переходной программы",
+      "allowedLengths": [
+        3
+      ],
+      "wordIds": [
+        "sin_a_mim_i_ayn_a",
+        "shin_a_ra_i_ba_a",
+        "ayn_a_lam_i_mim_a",
+        "lam_a_ba_i_tha_a",
+        "ghayn_a_dod_i_ba_a",
+        "sin_a_kha_i_to_a"
+      ]
+    },
+    {
+      "id": "three_damma",
+      "lesson": 6,
+      "title": "Три буквы с даммой и касрой",
+      "phase": "three_letters",
+      "placement": "После урока 5 переходной программы",
+      "allowedLengths": [
+        3
+      ],
+      "wordIds": [
+        "kaf_u_ta_i_ba_a",
+        "jim_u_ayn_i_lam_a",
+        "dod_u_ra_i_ba_a",
+        "waw_u_dod_i_ayn_a",
+        "nun_u_fa_i_kha_a",
+        "zho_u_lam_i_mim_a"
+      ]
+    },
+    {
+      "id": "three_variety",
+      "lesson": 7,
+      "title": "Три буквы: разные знаки и повтор букв",
+      "phase": "three_letters",
+      "placement": "После урока 6 переходной программы",
+      "allowedLengths": [
+        3
+      ],
+      "wordIds": [
+        "ya_a_ha_a_ba_u",
+        "sod_u_hha_u_fa_i",
+        "kaf_a_tha_u_ra_a",
+        "ra_u_sin_u_lam_u",
+        "zay_u_ba_u_ra_i",
+        "sin_u_nun_a_nun_a"
+      ]
+    },
+    {
+      "id": "first_four",
+      "lesson": 8,
+      "title": "Первые четыре буквы среди коротких слов",
+      "phase": "occasional_four_letters",
+      "placement": "После урока 7 переходной программы",
+      "allowedLengths": [
+        3,
+        4
+      ],
+      "wordIds": [
+        "alif_a_dhal_i_nun_a",
+        "alif_u_dhal_i_nun_a",
+        "alif_i_ra_a_mim_a",
+        "hha_a_fa_i_zho_a",
+        "to_a_ba_a_ayn_a",
+        "kha_a_lam_a_qof_a_ha_u"
+      ]
+    },
+    {
+      "id": "more_four",
+      "lesson": 9,
+      "title": "Продолжаем три буквы и иногда четыре",
+      "phase": "occasional_four_letters",
+      "placement": "После урока 8 переходной программы",
+      "allowedLengths": [
+        3,
+        4
+      ],
+      "wordIds": [
+        "dhal_u_kaf_i_ra_a",
+        "sin_a_kaf_a_ta_a",
+        "nun_a_zho_a_ra_a",
+        "fa_a_to_a_ra_a",
+        "ba_u_ghayn_i_ya_a",
+        "waw_a_jim_a_ayn_a_lam_a"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "separated",
+      "wordIds": [
+        "jim_a_mim_a_ayn_a",
+        "hha_a_sin_a_dal_a",
+        "ra_a_jim_a_ayn_a",
+        "shin_a_kaf_a_ra_a",
+        "sod_a_ba_a_ra_a",
+        "ghayn_a_fa_a_ra_a"
+      ]
+    },
+    {
+      "id": "connected",
+      "wordIds": [
+        "sod_a_dal_a_qof_a",
+        "ba_a_ayn_a_tha_a",
+        "ra_a_fa_a_ayn_a",
+        "waw_a_ha_a_ba_a",
+        "hha_a_mim_a_lam_a",
+        "kaf_a_fa_a_ra_a"
+      ]
+    }
+  ],
+  "reservedWordIds": [
+    "ba_a_ayn_a_tha_a",
+    "jim_a_mim_a_ayn_a",
+    "hha_a_sin_a_dal_a",
+    "hha_a_mim_a_lam_a",
+    "ra_a_jim_a_ayn_a",
+    "ra_a_fa_a_ayn_a",
+    "shin_a_kaf_a_ra_a",
+    "sod_a_ba_a_ra_a",
+    "sod_a_dal_a_qof_a",
+    "ghayn_a_fa_a_ra_a",
+    "kaf_a_fa_a_ra_a",
+    "waw_a_ha_a_ba_a"
+  ],
+  "laterExercises": [
+    1,
+    3
+  ],
+  "selection": {
+    "coreWordCount": 43,
+    "practiceLimit": 0,
+    "exhaustiveCoverageRequired": false,
+    "requireMinimalPairsForEveryWord": false,
+    "fourLetterPolicy": "one_four_letter_word_among_five_three_letter_words",
+    "quranOnly": true
+  },
+  "prerequisites": {
+    "knowAllThreeShortVowels": true,
+    "introduceEachUsedSyllableBeforeReading": true
+  }
+}

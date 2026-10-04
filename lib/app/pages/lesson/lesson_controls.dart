@@ -7,6 +7,7 @@ import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 import 'lesson_controller.dart';
@@ -43,11 +44,16 @@ class LessonBottomBar extends GetView<LessonController> {
         final isTracing = controller.isTracingTask;
         final isSayName = input == LessonInputKind.pronunciation;
         final isFormSequence = input == LessonInputKind.formSequence;
+        final isSyllableBuild = input == LessonInputKind.syllableBuild;
 
         // У заглушки нет своей проверки — обе ветки задаёт человек.
         // TODO(stub): убрать вторую кнопку вместе с заглушками.
         final isStub =
-            exercise != null && !exercise.isChoice && !isTracing && !isSayName;
+            exercise != null &&
+            !exercise.isChoice &&
+            !isTracing &&
+            !isSayName &&
+            !isSyllableBuild;
 
         return Column(
           mainAxisSize: MainAxisSize.max,
@@ -56,7 +62,7 @@ class LessonBottomBar extends GetView<LessonController> {
               _TracingBar(mode: exercise!.mode)
             else if (isSayName)
               const _PronunciationRecorderBar()
-            else if (isFormSequence)
+            else if (isFormSequence || isSyllableBuild)
               const SizedBox.shrink()
             else if (isStub)
               Row(
@@ -194,8 +200,7 @@ class _TracingBar extends GetView<LessonController> {
   }
 }
 
-/// Нижняя панель задания «назови букву». Если сервера нет, под кнопкой
-/// выход из задания.
+/// Общая панель произношения букв и слогов с выходом без записи голоса.
 class _PronunciationRecorderBar extends GetView<LessonController> {
   const _PronunciationRecorderBar();
 
@@ -219,15 +224,18 @@ class _PronunciationRecorderBar extends GetView<LessonController> {
             level: checker.level,
             onRecordPressed: controller.startRecording,
             onStopPressed: controller.stopRecording,
+            microphonePermissionDenied:
+                checker.failure.value ==
+                PronunciationFailureKind.microphoneDenied,
+            microphoneSettingsRequired:
+                checker.microphoneSettingsRequired.value,
+            onOpenSettings: checker.openMicrophoneSettings,
           ),
-          Visibility(
-            visible: checker.error.value != null,
-            maintainState: true,
-            maintainAnimation: true,
-            maintainSize: true,
+          Semantics(
+            button: true,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: controller.skipExercise,
+              onTap: controller.optOutOfPronunciation,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(

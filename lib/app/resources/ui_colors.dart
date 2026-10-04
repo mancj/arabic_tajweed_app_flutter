@@ -88,8 +88,8 @@ class UIColors {
   /// сохраняют значения основной тёмной схемы.
   static const dark2 = UIColorPalette(
     pageBackground: Color(0xFF000000),
-    secondary1: Color(0xFF8990A0),
-    secondary2: Color(0xFF627182),
+    secondary1: Color.fromARGB(255, 139, 144, 149),
+    secondary2: Color.fromARGB(255, 115, 116, 116),
     primary: Color(0xFFEE7740),
     primary10: Color(0x33EE7740),
     primary20: Color(0x33EE7740),
@@ -102,7 +102,7 @@ class UIColors {
     primary90: Color(0xE6EE7740),
     backgroundShapes2: Color(0xFF2C2C2C),
     backgroundShapes1: Color(0xFF292929),
-    ornamentStroke: Color(0xFF43546A),
+    ornamentStroke: Color.fromARGB(255, 101, 103, 106),
     text: Color(0xFFFFFFFF),
     cardBackground: Color(0xFF131313),
     coursePreviewGradientStart: Color(0xFF131313),

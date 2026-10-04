@@ -6,7 +6,7 @@
 """
 import json, os
 
-from harakat_data import CORE_SYLLABLE_IDS
+from harakat_data import REQUIRED_HARAKA_IDS
 
 OUT = 'assets/curriculum'
 
@@ -141,7 +141,7 @@ def all_of(*requirements):
 def after_harakat(requirement):
     """Связки открываются после обязательных огласовок на всех буквах."""
     return all_of(
-        *[known(atom_id) for atom_id in CORE_SYLLABLE_IDS],
+        *[known(atom_id) for atom_id in REQUIRED_HARAKA_IDS],
         requirement,
     )
 

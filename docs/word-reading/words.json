@@ -1,0 +1,2587 @@
+{
+  "version": 3,
+  "status": "proposal",
+  "source": {
+    "name": "Tanzil Quran Text via Quran JSON",
+    "primaryUrl": "https://tanzil.net",
+    "downloadUrl": "https://quran-json.risanb.com/text/simple-min/quran.json",
+    "script": "simple-min",
+    "sha256": "78cb44e6e177d5defe72e88c89e29543886f4cffff24d3d08b5acd9637351f59",
+    "checkedOn": "2026-10-04",
+    "notice": "Tanzil Quran Text. Copyright (C) 2007-2021 Tanzil Project. License: Creative Commons Attribution 3.0. This copy of the Quran text is carefully produced, highly verified and continuously monitored by a group of specialists in Tanzil Project. TERMS OF USE: Permission is granted to copy and distribute verbatim copies of this text, but CHANGING IT IS NOT ALLOWED. This Quran text can be used in any website or application, provided that its source (Tanzil Project) is clearly indicated, and a link is made to tanzil.net to enable users to keep track of changes. This copyright notice shall be included in all verbatim copies of the text, and shall be reproduced appropriately in all files derived from or containing substantial portion of this text. Please check updates at: http://tanzil.net/updates/"
+  },
+  "recording": {
+    "readFinalShortVowel": true,
+    "joinSyllablesWithoutPauses": true,
+    "audioStatus": "not_recorded",
+    "reuseInConnectedStage": true
+  },
+  "words": [
+    {
+      "id": "lam_a_kaf_a",
+      "joined": "لَكَ",
+      "separated": "لَ كَ",
+      "syllables": [
+        "لَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/lam_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 30,
+        "wordIndex": 22,
+        "token": "لَكَ",
+        "url": "https://tanzil.net/#2:30"
+      }
+    },
+    {
+      "id": "mim_a_ayn_a",
+      "joined": "مَعَ",
+      "separated": "مَ عَ",
+      "syllables": [
+        "مَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/mim_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 43,
+        "wordIndex": 6,
+        "token": "مَعَ",
+        "url": "https://tanzil.net/#2:43"
+      }
+    },
+    {
+      "id": "ba_i_kaf_a",
+      "joined": "بِكَ",
+      "separated": "بِ كَ",
+      "syllables": [
+        "بِ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ba_i_kaf_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 36,
+        "wordIndex": 20,
+        "token": "بِكَ",
+        "url": "https://tanzil.net/#3:36"
+      }
+    },
+    {
+      "id": "lam_a_kaf_i",
+      "joined": "لَكِ",
+      "separated": "لَ كِ",
+      "syllables": [
+        "لَ",
+        "كِ"
+      ],
+      "audioFile": "audio/words/lam_a_kaf_i.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 37,
+        "wordIndex": 22,
+        "token": "لَكِ",
+        "url": "https://tanzil.net/#3:37"
+      }
+    },
+    {
+      "id": "ba_i_ha_i",
+      "joined": "بِهِ",
+      "separated": "بِ هِ",
+      "syllables": [
+        "بِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/ba_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 22,
+        "wordIndex": 13,
+        "token": "بِهِ",
+        "url": "https://tanzil.net/#2:22"
+      }
+    },
+    {
+      "id": "ha_u_waw_a",
+      "joined": "هُوَ",
+      "separated": "هُ وَ",
+      "syllables": [
+        "هُ",
+        "وَ"
+      ],
+      "audioFile": "audio/words/ha_u_waw_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 29,
+        "wordIndex": 1,
+        "token": "هُوَ",
+        "url": "https://tanzil.net/#2:29"
+      }
+    },
+    {
+      "id": "ha_i_ya_a",
+      "joined": "هِيَ",
+      "separated": "هِ يَ",
+      "syllables": [
+        "هِ",
+        "يَ"
+      ],
+      "audioFile": "audio/words/ha_i_ya_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 68,
+        "wordIndex": 8,
+        "token": "هِيَ",
+        "url": "https://tanzil.net/#2:68"
+      }
+    },
+    {
+      "id": "kaf_a_ta_a_ba_a",
+      "joined": "كَتَبَ",
+      "separated": "كَ تَ بَ",
+      "syllables": [
+        "كَ",
+        "تَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/kaf_a_ta_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 187,
+        "wordIndex": 28,
+        "token": "كَتَبَ",
+        "url": "https://tanzil.net/#2:187"
+      }
+    },
+    {
+      "id": "kaf_a_sin_a_ba_a",
+      "joined": "كَسَبَ",
+      "separated": "كَ سَ بَ",
+      "syllables": [
+        "كَ",
+        "سَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/kaf_a_sin_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 81,
+        "wordIndex": 3,
+        "token": "كَسَبَ",
+        "url": "https://tanzil.net/#2:81"
+      }
+    },
+    {
+      "id": "ta_a_ra_a_kaf_a",
+      "joined": "تَرَكَ",
+      "separated": "تَ رَ كَ",
+      "syllables": [
+        "تَ",
+        "رَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ta_a_ra_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 180,
+        "wordIndex": 8,
+        "token": "تَرَكَ",
+        "url": "https://tanzil.net/#2:180"
+      }
+    },
+    {
+      "id": "kha_a_lam_a_qof_a",
+      "joined": "خَلَقَ",
+      "separated": "خَ لَ قَ",
+      "syllables": [
+        "خَ",
+        "لَ",
+        "قَ"
+      ],
+      "audioFile": "audio/words/kha_a_lam_a_qof_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 29,
+        "wordIndex": 3,
+        "token": "خَلَقَ",
+        "url": "https://tanzil.net/#2:29"
+      }
+    },
+    {
+      "id": "dal_a_kha_a_lam_a",
+      "joined": "دَخَلَ",
+      "separated": "دَ خَ لَ",
+      "syllables": [
+        "دَ",
+        "خَ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/dal_a_kha_a_lam_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 37,
+        "wordIndex": 11,
+        "token": "دَخَلَ",
+        "url": "https://tanzil.net/#3:37"
+      }
+    },
+    {
+      "id": "dhal_a_ha_a_ba_a",
+      "joined": "ذَهَبَ",
+      "separated": "ذَ هَ بَ",
+      "syllables": [
+        "ذَ",
+        "هَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/dhal_a_ha_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 17,
+        "wordIndex": 10,
+        "token": "ذَهَبَ",
+        "url": "https://tanzil.net/#2:17"
+      }
+    },
+    {
+      "id": "sin_a_mim_i_ayn_a",
+      "joined": "سَمِعَ",
+      "separated": "سَ مِ عَ",
+      "syllables": [
+        "سَ",
+        "مِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/sin_a_mim_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 181,
+        "wordIndex": 2,
+        "token": "سَمِعَ",
+        "url": "https://tanzil.net/#3:181"
+      }
+    },
+    {
+      "id": "shin_a_ra_i_ba_a",
+      "joined": "شَرِبَ",
+      "separated": "شَ رِ بَ",
+      "syllables": [
+        "شَ",
+        "رِ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/shin_a_ra_i_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 249,
+        "wordIndex": 11,
+        "token": "شَرِبَ",
+        "url": "https://tanzil.net/#2:249"
+      }
+    },
+    {
+      "id": "ayn_a_lam_i_mim_a",
+      "joined": "عَلِمَ",
+      "separated": "عَ لِ مَ",
+      "syllables": [
+        "عَ",
+        "لِ",
+        "مَ"
+      ],
+      "audioFile": "audio/words/ayn_a_lam_i_mim_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 60,
+        "wordIndex": 15,
+        "token": "عَلِمَ",
+        "url": "https://tanzil.net/#2:60"
+      }
+    },
+    {
+      "id": "lam_a_ba_i_tha_a",
+      "joined": "لَبِثَ",
+      "separated": "لَ بِ ثَ",
+      "syllables": [
+        "لَ",
+        "بِ",
+        "ثَ"
+      ],
+      "audioFile": "audio/words/lam_a_ba_i_tha_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 11,
+        "ayah": 69,
+        "wordIndex": 11,
+        "token": "لَبِثَ",
+        "url": "https://tanzil.net/#11:69"
+      }
+    },
+    {
+      "id": "ghayn_a_dod_i_ba_a",
+      "joined": "غَضِبَ",
+      "separated": "غَ ضِ بَ",
+      "syllables": [
+        "غَ",
+        "ضِ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/ghayn_a_dod_i_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 58,
+        "ayah": 14,
+        "wordIndex": 7,
+        "token": "غَضِبَ",
+        "url": "https://tanzil.net/#58:14"
+      }
+    },
+    {
+      "id": "sin_a_kha_i_to_a",
+      "joined": "سَخِطَ",
+      "separated": "سَ خِ طَ",
+      "syllables": [
+        "سَ",
+        "خِ",
+        "طَ"
+      ],
+      "audioFile": "audio/words/sin_a_kha_i_to_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 80,
+        "wordIndex": 13,
+        "token": "سَخِطَ",
+        "url": "https://tanzil.net/#5:80"
+      }
+    },
+    {
+      "id": "kaf_u_ta_i_ba_a",
+      "joined": "كُتِبَ",
+      "separated": "كُ تِ بَ",
+      "syllables": [
+        "كُ",
+        "تِ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/kaf_u_ta_i_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 178,
+        "wordIndex": 5,
+        "token": "كُتِبَ",
+        "url": "https://tanzil.net/#2:178"
+      }
+    },
+    {
+      "id": "jim_u_ayn_i_lam_a",
+      "joined": "جُعِلَ",
+      "separated": "جُ عِ لَ",
+      "syllables": [
+        "جُ",
+        "عِ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/jim_u_ayn_i_lam_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 16,
+        "ayah": 124,
+        "wordIndex": 2,
+        "token": "جُعِلَ",
+        "url": "https://tanzil.net/#16:124"
+      }
+    },
+    {
+      "id": "dod_u_ra_i_ba_a",
+      "joined": "ضُرِبَ",
+      "separated": "ضُ رِ بَ",
+      "syllables": [
+        "ضُ",
+        "رِ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/dod_u_ra_i_ba_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 22,
+        "ayah": 73,
+        "wordIndex": 4,
+        "token": "ضُرِبَ",
+        "url": "https://tanzil.net/#22:73"
+      }
+    },
+    {
+      "id": "waw_u_dod_i_ayn_a",
+      "joined": "وُضِعَ",
+      "separated": "وُ ضِ عَ",
+      "syllables": [
+        "وُ",
+        "ضِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/waw_u_dod_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 96,
+        "wordIndex": 4,
+        "token": "وُضِعَ",
+        "url": "https://tanzil.net/#3:96"
+      }
+    },
+    {
+      "id": "nun_u_fa_i_kha_a",
+      "joined": "نُفِخَ",
+      "separated": "نُ فِ خَ",
+      "syllables": [
+        "نُ",
+        "فِ",
+        "خَ"
+      ],
+      "audioFile": "audio/words/nun_u_fa_i_kha_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 23,
+        "ayah": 101,
+        "wordIndex": 2,
+        "token": "نُفِخَ",
+        "url": "https://tanzil.net/#23:101"
+      }
+    },
+    {
+      "id": "zho_u_lam_i_mim_a",
+      "joined": "ظُلِمَ",
+      "separated": "ظُ لِ مَ",
+      "syllables": [
+        "ظُ",
+        "لِ",
+        "مَ"
+      ],
+      "audioFile": "audio/words/zho_u_lam_i_mim_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 148,
+        "wordIndex": 10,
+        "token": "ظُلِمَ",
+        "url": "https://tanzil.net/#4:148"
+      }
+    },
+    {
+      "id": "ya_a_ha_a_ba_u",
+      "joined": "يَهَبُ",
+      "separated": "يَ هَ بُ",
+      "syllables": [
+        "يَ",
+        "هَ",
+        "بُ"
+      ],
+      "audioFile": "audio/words/ya_a_ha_a_ba_u.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 42,
+        "ayah": 49,
+        "wordIndex": 8,
+        "token": "يَهَبُ",
+        "url": "https://tanzil.net/#42:49"
+      }
+    },
+    {
+      "id": "sod_u_hha_u_fa_i",
+      "joined": "صُحُفِ",
+      "separated": "صُ حُ فِ",
+      "syllables": [
+        "صُ",
+        "حُ",
+        "فِ"
+      ],
+      "audioFile": "audio/words/sod_u_hha_u_fa_i.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 53,
+        "ayah": 36,
+        "wordIndex": 6,
+        "token": "صُحُفِ",
+        "url": "https://tanzil.net/#53:36"
+      }
+    },
+    {
+      "id": "kaf_a_tha_u_ra_a",
+      "joined": "كَثُرَ",
+      "separated": "كَ ثُ رَ",
+      "syllables": [
+        "كَ",
+        "ثُ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/kaf_a_tha_u_ra_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 7,
+        "wordIndex": 17,
+        "token": "كَثُرَ",
+        "url": "https://tanzil.net/#4:7"
+      }
+    },
+    {
+      "id": "ra_u_sin_u_lam_u",
+      "joined": "رُسُلُ",
+      "separated": "رُ سُ لُ",
+      "syllables": [
+        "رُ",
+        "سُ",
+        "لُ"
+      ],
+      "audioFile": "audio/words/ra_u_sin_u_lam_u.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 124,
+        "wordIndex": 12,
+        "token": "رُسُلُ",
+        "url": "https://tanzil.net/#6:124"
+      }
+    },
+    {
+      "id": "zay_u_ba_u_ra_i",
+      "joined": "زُبُرِ",
+      "separated": "زُ بُ رِ",
+      "syllables": [
+        "زُ",
+        "بُ",
+        "رِ"
+      ],
+      "audioFile": "audio/words/zay_u_ba_u_ra_i.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 26,
+        "ayah": 196,
+        "wordIndex": 3,
+        "token": "زُبُرِ",
+        "url": "https://tanzil.net/#26:196"
+      }
+    },
+    {
+      "id": "sin_u_nun_a_nun_a",
+      "joined": "سُنَنَ",
+      "separated": "سُ نَ نَ",
+      "syllables": [
+        "سُ",
+        "نَ",
+        "نَ"
+      ],
+      "audioFile": "audio/words/sin_u_nun_a_nun_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 26,
+        "wordIndex": 6,
+        "token": "سُنَنَ",
+        "url": "https://tanzil.net/#4:26"
+      }
+    },
+    {
+      "id": "alif_a_dhal_i_nun_a",
+      "joined": "أَذِنَ",
+      "separated": "أَ ذِ نَ",
+      "syllables": [
+        "أَ",
+        "ذِ",
+        "نَ"
+      ],
+      "audioFile": "audio/words/alif_a_dhal_i_nun_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 10,
+        "ayah": 59,
+        "wordIndex": 15,
+        "token": "أَذِنَ",
+        "url": "https://tanzil.net/#10:59"
+      }
+    },
+    {
+      "id": "alif_u_dhal_i_nun_a",
+      "joined": "أُذِنَ",
+      "separated": "أُ ذِ نَ",
+      "syllables": [
+        "أُ",
+        "ذِ",
+        "نَ"
+      ],
+      "audioFile": "audio/words/alif_u_dhal_i_nun_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 22,
+        "ayah": 39,
+        "wordIndex": 1,
+        "token": "أُذِنَ",
+        "url": "https://tanzil.net/#22:39"
+      }
+    },
+    {
+      "id": "alif_i_ra_a_mim_a",
+      "joined": "إِرَمَ",
+      "separated": "إِ رَ مَ",
+      "syllables": [
+        "إِ",
+        "رَ",
+        "مَ"
+      ],
+      "audioFile": "audio/words/alif_i_ra_a_mim_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 89,
+        "ayah": 7,
+        "wordIndex": 1,
+        "token": "إِرَمَ",
+        "url": "https://tanzil.net/#89:7"
+      }
+    },
+    {
+      "id": "hha_a_fa_i_zho_a",
+      "joined": "حَفِظَ",
+      "separated": "حَ فِ ظَ",
+      "syllables": [
+        "حَ",
+        "فِ",
+        "ظَ"
+      ],
+      "audioFile": "audio/words/hha_a_fa_i_zho_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 34,
+        "wordIndex": 20,
+        "token": "حَفِظَ",
+        "url": "https://tanzil.net/#4:34"
+      }
+    },
+    {
+      "id": "to_a_ba_a_ayn_a",
+      "joined": "طَبَعَ",
+      "separated": "طَ بَ عَ",
+      "syllables": [
+        "طَ",
+        "بَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/to_a_ba_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 155,
+        "wordIndex": 15,
+        "token": "طَبَعَ",
+        "url": "https://tanzil.net/#4:155"
+      }
+    },
+    {
+      "id": "kha_a_lam_a_qof_a_ha_u",
+      "joined": "خَلَقَهُ",
+      "separated": "خَ لَ قَ هُ",
+      "syllables": [
+        "خَ",
+        "لَ",
+        "قَ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/kha_a_lam_a_qof_a_ha_u.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 59,
+        "wordIndex": 8,
+        "token": "خَلَقَهُ",
+        "url": "https://tanzil.net/#3:59"
+      }
+    },
+    {
+      "id": "dhal_u_kaf_i_ra_a",
+      "joined": "ذُكِرَ",
+      "separated": "ذُ كِ رَ",
+      "syllables": [
+        "ذُ",
+        "كِ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/dhal_u_kaf_i_ra_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 118,
+        "wordIndex": 3,
+        "token": "ذُكِرَ",
+        "url": "https://tanzil.net/#6:118"
+      }
+    },
+    {
+      "id": "sin_a_kaf_a_ta_a",
+      "joined": "سَكَتَ",
+      "separated": "سَ كَ تَ",
+      "syllables": [
+        "سَ",
+        "كَ",
+        "تَ"
+      ],
+      "audioFile": "audio/words/sin_a_kaf_a_ta_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 154,
+        "wordIndex": 2,
+        "token": "سَكَتَ",
+        "url": "https://tanzil.net/#7:154"
+      }
+    },
+    {
+      "id": "nun_a_zho_a_ra_a",
+      "joined": "نَظَرَ",
+      "separated": "نَ ظَ رَ",
+      "syllables": [
+        "نَ",
+        "ظَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/nun_a_zho_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 9,
+        "ayah": 127,
+        "wordIndex": 5,
+        "token": "نَظَرَ",
+        "url": "https://tanzil.net/#9:127"
+      }
+    },
+    {
+      "id": "fa_a_to_a_ra_a",
+      "joined": "فَطَرَ",
+      "separated": "فَ طَ رَ",
+      "syllables": [
+        "فَ",
+        "طَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/fa_a_to_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 79,
+        "wordIndex": 5,
+        "token": "فَطَرَ",
+        "url": "https://tanzil.net/#6:79"
+      }
+    },
+    {
+      "id": "ba_u_ghayn_i_ya_a",
+      "joined": "بُغِيَ",
+      "separated": "بُ غِ يَ",
+      "syllables": [
+        "بُ",
+        "غِ",
+        "يَ"
+      ],
+      "audioFile": "audio/words/ba_u_ghayn_i_ya_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 22,
+        "ayah": 60,
+        "wordIndex": 9,
+        "token": "بُغِيَ",
+        "url": "https://tanzil.net/#22:60"
+      }
+    },
+    {
+      "id": "waw_a_jim_a_ayn_a_lam_a",
+      "joined": "وَجَعَلَ",
+      "separated": "وَ جَ عَ لَ",
+      "syllables": [
+        "وَ",
+        "جَ",
+        "عَ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/waw_a_jim_a_ayn_a_lam_a.mp3",
+      "origin": "quran",
+      "role": "core",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 60,
+        "wordIndex": 15,
+        "token": "وَجَعَلَ",
+        "url": "https://tanzil.net/#5:60"
+      }
+    },
+    {
+      "id": "ba_a_ayn_a_tha_a",
+      "joined": "بَعَثَ",
+      "separated": "بَ عَ ثَ",
+      "syllables": [
+        "بَ",
+        "عَ",
+        "ثَ"
+      ],
+      "audioFile": "audio/words/ba_a_ayn_a_tha_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 247,
+        "wordIndex": 7,
+        "token": "بَعَثَ",
+        "url": "https://tanzil.net/#2:247"
+      }
+    },
+    {
+      "id": "jim_a_mim_a_ayn_a",
+      "joined": "جَمَعَ",
+      "separated": "جَ مَ عَ",
+      "syllables": [
+        "جَ",
+        "مَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/jim_a_mim_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 104,
+        "ayah": 2,
+        "wordIndex": 2,
+        "token": "جَمَعَ",
+        "url": "https://tanzil.net/#104:2"
+      }
+    },
+    {
+      "id": "hha_a_sin_a_dal_a",
+      "joined": "حَسَدَ",
+      "separated": "حَ سَ دَ",
+      "syllables": [
+        "حَ",
+        "سَ",
+        "دَ"
+      ],
+      "audioFile": "audio/words/hha_a_sin_a_dal_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 113,
+        "ayah": 5,
+        "wordIndex": 5,
+        "token": "حَسَدَ",
+        "url": "https://tanzil.net/#113:5"
+      }
+    },
+    {
+      "id": "hha_a_mim_a_lam_a",
+      "joined": "حَمَلَ",
+      "separated": "حَ مَ لَ",
+      "syllables": [
+        "حَ",
+        "مَ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/hha_a_mim_a_lam_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 20,
+        "ayah": 111,
+        "wordIndex": 8,
+        "token": "حَمَلَ",
+        "url": "https://tanzil.net/#20:111"
+      }
+    },
+    {
+      "id": "ra_a_jim_a_ayn_a",
+      "joined": "رَجَعَ",
+      "separated": "رَ جَ عَ",
+      "syllables": [
+        "رَ",
+        "جَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/ra_a_jim_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 150,
+        "wordIndex": 2,
+        "token": "رَجَعَ",
+        "url": "https://tanzil.net/#7:150"
+      }
+    },
+    {
+      "id": "ra_a_fa_a_ayn_a",
+      "joined": "رَفَعَ",
+      "separated": "رَ فَ عَ",
+      "syllables": [
+        "رَ",
+        "فَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/ra_a_fa_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 13,
+        "ayah": 2,
+        "wordIndex": 3,
+        "token": "رَفَعَ",
+        "url": "https://tanzil.net/#13:2"
+      }
+    },
+    {
+      "id": "shin_a_kaf_a_ra_a",
+      "joined": "شَكَرَ",
+      "separated": "شَ كَ رَ",
+      "syllables": [
+        "شَ",
+        "كَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/shin_a_kaf_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 27,
+        "ayah": 40,
+        "wordIndex": 29,
+        "token": "شَكَرَ",
+        "url": "https://tanzil.net/#27:40"
+      }
+    },
+    {
+      "id": "sod_a_ba_a_ra_a",
+      "joined": "صَبَرَ",
+      "separated": "صَ بَ رَ",
+      "syllables": [
+        "صَ",
+        "بَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/sod_a_ba_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 42,
+        "ayah": 43,
+        "wordIndex": 2,
+        "token": "صَبَرَ",
+        "url": "https://tanzil.net/#42:43"
+      }
+    },
+    {
+      "id": "sod_a_dal_a_qof_a",
+      "joined": "صَدَقَ",
+      "separated": "صَ دَ قَ",
+      "syllables": [
+        "صَ",
+        "دَ",
+        "قَ"
+      ],
+      "audioFile": "audio/words/sod_a_dal_a_qof_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 95,
+        "wordIndex": 2,
+        "token": "صَدَقَ",
+        "url": "https://tanzil.net/#3:95"
+      }
+    },
+    {
+      "id": "ghayn_a_fa_a_ra_a",
+      "joined": "غَفَرَ",
+      "separated": "غَ فَ رَ",
+      "syllables": [
+        "غَ",
+        "فَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/ghayn_a_fa_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 36,
+        "ayah": 27,
+        "wordIndex": 2,
+        "token": "غَفَرَ",
+        "url": "https://tanzil.net/#36:27"
+      }
+    },
+    {
+      "id": "kaf_a_fa_a_ra_a",
+      "joined": "كَفَرَ",
+      "separated": "كَ فَ رَ",
+      "syllables": [
+        "كَ",
+        "فَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/kaf_a_fa_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 102,
+        "wordIndex": 9,
+        "token": "كَفَرَ",
+        "url": "https://tanzil.net/#2:102"
+      }
+    },
+    {
+      "id": "waw_a_ha_a_ba_a",
+      "joined": "وَهَبَ",
+      "separated": "وَ هَ بَ",
+      "syllables": [
+        "وَ",
+        "هَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/waw_a_ha_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "check",
+      "quranReference": {
+        "surah": 14,
+        "ayah": 39,
+        "wordIndex": 4,
+        "token": "وَهَبَ",
+        "url": "https://tanzil.net/#14:39"
+      }
+    },
+    {
+      "id": "nun_a_kaf_u",
+      "joined": "نَكُ",
+      "separated": "نَ كُ",
+      "syllables": [
+        "نَ",
+        "كُ"
+      ],
+      "audioFile": "audio/words/nun_a_kaf_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 74,
+        "ayah": 43,
+        "wordIndex": 3,
+        "token": "نَكُ",
+        "url": "https://tanzil.net/#74:43"
+      }
+    },
+    {
+      "id": "waw_a_waw_a_jim_a_dal_a",
+      "joined": "وَوَجَدَ",
+      "separated": "وَ وَ جَ دَ",
+      "syllables": [
+        "وَ",
+        "وَ",
+        "جَ",
+        "دَ"
+      ],
+      "audioFile": "audio/words/waw_a_waw_a_jim_a_dal_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 18,
+        "ayah": 86,
+        "wordIndex": 11,
+        "token": "وَوَجَدَ",
+        "url": "https://tanzil.net/#18:86"
+      }
+    },
+    {
+      "id": "waw_a_waw_u_dod_i_ayn_a",
+      "joined": "وَوُضِعَ",
+      "separated": "وَ وُ ضِ عَ",
+      "syllables": [
+        "وَ",
+        "وُ",
+        "ضِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/waw_a_waw_u_dod_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 18,
+        "ayah": 49,
+        "wordIndex": 1,
+        "token": "وَوُضِعَ",
+        "url": "https://tanzil.net/#18:49"
+      }
+    },
+    {
+      "id": "ayn_u_nun_u_qof_i_ha_i",
+      "joined": "عُنُقِهِ",
+      "separated": "عُ نُ قِ هِ",
+      "syllables": [
+        "عُ",
+        "نُ",
+        "قِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/ayn_u_nun_u_qof_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 17,
+        "ayah": 13,
+        "wordIndex": 6,
+        "token": "عُنُقِهِ",
+        "url": "https://tanzil.net/#17:13"
+      }
+    },
+    {
+      "id": "shin_i_ya_a_ayn_i",
+      "joined": "شِيَعِ",
+      "separated": "شِ يَ عِ",
+      "syllables": [
+        "شِ",
+        "يَ",
+        "عِ"
+      ],
+      "audioFile": "audio/words/shin_i_ya_a_ayn_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 15,
+        "ayah": 10,
+        "wordIndex": 6,
+        "token": "شِيَعِ",
+        "url": "https://tanzil.net/#15:10"
+      }
+    },
+    {
+      "id": "dod_a_ayn_u_fa_a",
+      "joined": "ضَعُفَ",
+      "separated": "ضَ عُ فَ",
+      "syllables": [
+        "ضَ",
+        "عُ",
+        "فَ"
+      ],
+      "audioFile": "audio/words/dod_a_ayn_u_fa_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 22,
+        "ayah": 73,
+        "wordIndex": 27,
+        "token": "ضَعُفَ",
+        "url": "https://tanzil.net/#22:73"
+      }
+    },
+    {
+      "id": "fa_a_nun_a_sin_i_ya_a",
+      "joined": "فَنَسِيَ",
+      "separated": "فَ نَ سِ يَ",
+      "syllables": [
+        "فَ",
+        "نَ",
+        "سِ",
+        "يَ"
+      ],
+      "audioFile": "audio/words/fa_a_nun_a_sin_i_ya_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 20,
+        "ayah": 88,
+        "wordIndex": 12,
+        "token": "فَنَسِيَ",
+        "url": "https://tanzil.net/#20:88"
+      }
+    },
+    {
+      "id": "ta_a_jim_i_dal_u",
+      "joined": "تَجِدُ",
+      "separated": "تَ جِ دُ",
+      "syllables": [
+        "تَ",
+        "جِ",
+        "دُ"
+      ],
+      "audioFile": "audio/words/ta_a_jim_i_dal_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 30,
+        "wordIndex": 2,
+        "token": "تَجِدُ",
+        "url": "https://tanzil.net/#3:30"
+      }
+    },
+    {
+      "id": "ayn_i_waw_a_jim_a",
+      "joined": "عِوَجَ",
+      "separated": "عِ وَ جَ",
+      "syllables": [
+        "عِ",
+        "وَ",
+        "جَ"
+      ],
+      "audioFile": "audio/words/ayn_i_waw_a_jim_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 20,
+        "ayah": 108,
+        "wordIndex": 5,
+        "token": "عِوَجَ",
+        "url": "https://tanzil.net/#20:108"
+      }
+    },
+    {
+      "id": "qof_a_dal_a_ra_u_ha_u",
+      "joined": "قَدَرُهُ",
+      "separated": "قَ دَ رُ هُ",
+      "syllables": [
+        "قَ",
+        "دَ",
+        "رُ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/qof_a_dal_a_ra_u_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 236,
+        "wordIndex": 17,
+        "token": "قَدَرُهُ",
+        "url": "https://tanzil.net/#2:236"
+      }
+    },
+    {
+      "id": "lam_i_ya_a_dhal_a_ra_a",
+      "joined": "لِيَذَرَ",
+      "separated": "لِ يَ ذَ رَ",
+      "syllables": [
+        "لِ",
+        "يَ",
+        "ذَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/lam_i_ya_a_dhal_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 179,
+        "wordIndex": 4,
+        "token": "لِيَذَرَ",
+        "url": "https://tanzil.net/#3:179"
+      }
+    },
+    {
+      "id": "kha_u_mim_u_sin_a_ha_u",
+      "joined": "خُمُسَهُ",
+      "separated": "خُ مُ سَ هُ",
+      "syllables": [
+        "خُ",
+        "مُ",
+        "سَ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/kha_u_mim_u_sin_a_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 8,
+        "ayah": 41,
+        "wordIndex": 8,
+        "token": "خُمُسَهُ",
+        "url": "https://tanzil.net/#8:41"
+      }
+    },
+    {
+      "id": "waw_a_ta_a_sod_i_fa_u",
+      "joined": "وَتَصِفُ",
+      "separated": "وَ تَ صِ فُ",
+      "syllables": [
+        "وَ",
+        "تَ",
+        "صِ",
+        "فُ"
+      ],
+      "audioFile": "audio/words/waw_a_ta_a_sod_i_fa_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 16,
+        "ayah": 62,
+        "wordIndex": 5,
+        "token": "وَتَصِفُ",
+        "url": "https://tanzil.net/#16:62"
+      }
+    },
+    {
+      "id": "ba_i_ayn_i_sod_a_mim_i",
+      "joined": "بِعِصَمِ",
+      "separated": "بِ عِ صَ مِ",
+      "syllables": [
+        "بِ",
+        "عِ",
+        "صَ",
+        "مِ"
+      ],
+      "audioFile": "audio/words/ba_i_ayn_i_sod_a_mim_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 60,
+        "ayah": 10,
+        "wordIndex": 41,
+        "token": "بِعِصَمِ",
+        "url": "https://tanzil.net/#60:10"
+      }
+    },
+    {
+      "id": "dhal_u_ba_i_hha_a",
+      "joined": "ذُبِحَ",
+      "separated": "ذُ بِ حَ",
+      "syllables": [
+        "ذُ",
+        "بِ",
+        "حَ"
+      ],
+      "audioFile": "audio/words/dhal_u_ba_i_hha_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 3,
+        "wordIndex": 23,
+        "token": "ذُبِحَ",
+        "url": "https://tanzil.net/#5:3"
+      }
+    },
+    {
+      "id": "ta_a_zay_i_ra_u",
+      "joined": "تَزِرُ",
+      "separated": "تَ زِ رُ",
+      "syllables": [
+        "تَ",
+        "زِ",
+        "رُ"
+      ],
+      "audioFile": "audio/words/ta_a_zay_i_ra_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 164,
+        "wordIndex": 17,
+        "token": "تَزِرُ",
+        "url": "https://tanzil.net/#6:164"
+      }
+    },
+    {
+      "id": "alif_u_dhal_u_nun_u",
+      "joined": "أُذُنُ",
+      "separated": "أُ ذُ نُ",
+      "syllables": [
+        "أُ",
+        "ذُ",
+        "نُ"
+      ],
+      "audioFile": "audio/words/alif_u_dhal_u_nun_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 9,
+        "ayah": 61,
+        "wordIndex": 9,
+        "token": "أُذُنُ",
+        "url": "https://tanzil.net/#9:61"
+      }
+    },
+    {
+      "id": "mim_u_nun_i_ayn_a",
+      "joined": "مُنِعَ",
+      "separated": "مُ نِ عَ",
+      "syllables": [
+        "مُ",
+        "نِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/mim_u_nun_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 12,
+        "ayah": 63,
+        "wordIndex": 8,
+        "token": "مُنِعَ",
+        "url": "https://tanzil.net/#12:63"
+      }
+    },
+    {
+      "id": "nun_a_zay_a_ghayn_a",
+      "joined": "نَزَغَ",
+      "separated": "نَ زَ غَ",
+      "syllables": [
+        "نَ",
+        "زَ",
+        "غَ"
+      ],
+      "audioFile": "audio/words/nun_a_zay_a_ghayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 12,
+        "ayah": 100,
+        "wordIndex": 34,
+        "token": "نَزَغَ",
+        "url": "https://tanzil.net/#12:100"
+      }
+    },
+    {
+      "id": "ta_a_dod_a_ayn_u",
+      "joined": "تَضَعُ",
+      "separated": "تَ ضَ عُ",
+      "syllables": [
+        "تَ",
+        "ضَ",
+        "عُ"
+      ],
+      "audioFile": "audio/words/ta_a_dod_a_ayn_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 35,
+        "ayah": 11,
+        "wordIndex": 16,
+        "token": "تَضَعُ",
+        "url": "https://tanzil.net/#35:11"
+      }
+    },
+    {
+      "id": "hha_u_shin_i_ra_a",
+      "joined": "حُشِرَ",
+      "separated": "حُ شِ رَ",
+      "syllables": [
+        "حُ",
+        "شِ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/hha_u_shin_i_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 46,
+        "ayah": 6,
+        "wordIndex": 2,
+        "token": "حُشِرَ",
+        "url": "https://tanzil.net/#46:6"
+      }
+    },
+    {
+      "id": "qof_u_dal_i_ra_a",
+      "joined": "قُدِرَ",
+      "separated": "قُ دِ رَ",
+      "syllables": [
+        "قُ",
+        "دِ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/qof_u_dal_i_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 54,
+        "ayah": 12,
+        "wordIndex": 9,
+        "token": "قُدِرَ",
+        "url": "https://tanzil.net/#54:12"
+      }
+    },
+    {
+      "id": "kaf_a_mim_a_tha_a_lam_i",
+      "joined": "كَمَثَلِ",
+      "separated": "كَ مَ ثَ لِ",
+      "syllables": [
+        "كَ",
+        "مَ",
+        "ثَ",
+        "لِ"
+      ],
+      "audioFile": "audio/words/kaf_a_mim_a_tha_a_lam_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 17,
+        "wordIndex": 2,
+        "token": "كَمَثَلِ",
+        "url": "https://tanzil.net/#2:17"
+      }
+    },
+    {
+      "id": "waw_a_hha_a_sin_u_nun_a",
+      "joined": "وَحَسُنَ",
+      "separated": "وَ حَ سُ نَ",
+      "syllables": [
+        "وَ",
+        "حَ",
+        "سُ",
+        "نَ"
+      ],
+      "audioFile": "audio/words/waw_a_hha_a_sin_u_nun_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 69,
+        "wordIndex": 16,
+        "token": "وَحَسُنَ",
+        "url": "https://tanzil.net/#4:69"
+      }
+    },
+    {
+      "id": "ra_a_hha_i_mim_a_ha_u",
+      "joined": "رَحِمَهُ",
+      "separated": "رَ حِ مَ هُ",
+      "syllables": [
+        "رَ",
+        "حِ",
+        "مَ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/ra_a_hha_i_mim_a_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 16,
+        "wordIndex": 6,
+        "token": "رَحِمَهُ",
+        "url": "https://tanzil.net/#6:16"
+      }
+    },
+    {
+      "id": "fa_a_qof_u_to_i_ayn_a",
+      "joined": "فَقُطِعَ",
+      "separated": "فَ قُ طِ عَ",
+      "syllables": [
+        "فَ",
+        "قُ",
+        "طِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/fa_a_qof_u_to_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 45,
+        "wordIndex": 1,
+        "token": "فَقُطِعَ",
+        "url": "https://tanzil.net/#6:45"
+      }
+    },
+    {
+      "id": "tha_a_mim_a_ra_i_ha_i",
+      "joined": "ثَمَرِهِ",
+      "separated": "ثَ مَ رِ هِ",
+      "syllables": [
+        "ثَ",
+        "مَ",
+        "رِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/tha_a_mim_a_ra_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 99,
+        "wordIndex": 35,
+        "token": "ثَمَرِهِ",
+        "url": "https://tanzil.net/#6:99"
+      }
+    },
+    {
+      "id": "alif_u_kaf_u_lam_u_ha_u",
+      "joined": "أُكُلُهُ",
+      "separated": "أُ كُ لُ هُ",
+      "syllables": [
+        "أُ",
+        "كُ",
+        "لُ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/alif_u_kaf_u_lam_u_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 141,
+        "wordIndex": 11,
+        "token": "أُكُلُهُ",
+        "url": "https://tanzil.net/#6:141"
+      }
+    },
+    {
+      "id": "alif_a_ayn_i_zho_u_kaf_a",
+      "joined": "أَعِظُكَ",
+      "separated": "أَ عِ ظُ كَ",
+      "syllables": [
+        "أَ",
+        "عِ",
+        "ظُ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/alif_a_ayn_i_zho_u_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 11,
+        "ayah": 46,
+        "wordIndex": 20,
+        "token": "أَعِظُكَ",
+        "url": "https://tanzil.net/#11:46"
+      }
+    },
+    {
+      "id": "ayn_a_dod_u_dal_a_kaf_a",
+      "joined": "عَضُدَكَ",
+      "separated": "عَ ضُ دَ كَ",
+      "syllables": [
+        "عَ",
+        "ضُ",
+        "دَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ayn_a_dod_u_dal_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 28,
+        "ayah": 35,
+        "wordIndex": 3,
+        "token": "عَضُدَكَ",
+        "url": "https://tanzil.net/#28:35"
+      }
+    },
+    {
+      "id": "nun_i_ayn_a_mim_a_ha_u",
+      "joined": "نِعَمَهُ",
+      "separated": "نِ عَ مَ هُ",
+      "syllables": [
+        "نِ",
+        "عَ",
+        "مَ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/nun_i_ayn_a_mim_a_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 31,
+        "ayah": 20,
+        "wordIndex": 15,
+        "token": "نِعَمَهُ",
+        "url": "https://tanzil.net/#31:20"
+      }
+    },
+    {
+      "id": "qof_i_ba_a_lam_i_ha_i",
+      "joined": "قِبَلِهِ",
+      "separated": "قِ بَ لِ هِ",
+      "syllables": [
+        "قِ",
+        "بَ",
+        "لِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/qof_i_ba_a_lam_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 57,
+        "ayah": 13,
+        "wordIndex": 26,
+        "token": "قِبَلِهِ",
+        "url": "https://tanzil.net/#57:13"
+      }
+    },
+    {
+      "id": "waw_a_ha_u_waw_a",
+      "joined": "وَهُوَ",
+      "separated": "وَ هُ وَ",
+      "syllables": [
+        "وَ",
+        "هُ",
+        "وَ"
+      ],
+      "audioFile": "audio/words/waw_a_ha_u_waw_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 29,
+        "wordIndex": 16,
+        "token": "وَهُوَ",
+        "url": "https://tanzil.net/#2:29"
+      }
+    },
+    {
+      "id": "nun_a_ba_a_dhal_a",
+      "joined": "نَبَذَ",
+      "separated": "نَ بَ ذَ",
+      "syllables": [
+        "نَ",
+        "بَ",
+        "ذَ"
+      ],
+      "audioFile": "audio/words/nun_a_ba_a_dhal_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 101,
+        "wordIndex": 10,
+        "token": "نَبَذَ",
+        "url": "https://tanzil.net/#2:101"
+      }
+    },
+    {
+      "id": "sin_a_fa_i_ha_a",
+      "joined": "سَفِهَ",
+      "separated": "سَ فِ هَ",
+      "syllables": [
+        "سَ",
+        "فِ",
+        "هَ"
+      ],
+      "audioFile": "audio/words/sin_a_fa_i_ha_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 130,
+        "wordIndex": 8,
+        "token": "سَفِهَ",
+        "url": "https://tanzil.net/#2:130"
+      }
+    },
+    {
+      "id": "fa_a_ra_a_dod_a",
+      "joined": "فَرَضَ",
+      "separated": "فَ رَ ضَ",
+      "syllables": [
+        "فَ",
+        "رَ",
+        "ضَ"
+      ],
+      "audioFile": "audio/words/fa_a_ra_a_dod_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 197,
+        "wordIndex": 5,
+        "token": "فَرَضَ",
+        "url": "https://tanzil.net/#2:197"
+      }
+    },
+    {
+      "id": "zho_a_lam_a_mim_a",
+      "joined": "ظَلَمَ",
+      "separated": "ظَ لَ مَ",
+      "syllables": [
+        "ظَ",
+        "لَ",
+        "مَ"
+      ],
+      "audioFile": "audio/words/zho_a_lam_a_mim_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 2,
+        "ayah": 231,
+        "wordIndex": 19,
+        "token": "ظَلَمَ",
+        "url": "https://tanzil.net/#2:231"
+      }
+    },
+    {
+      "id": "ba_i_ya_a_dal_i",
+      "joined": "بِيَدِ",
+      "separated": "بِ يَ دِ",
+      "syllables": [
+        "بِ",
+        "يَ",
+        "دِ"
+      ],
+      "audioFile": "audio/words/ba_i_ya_a_dal_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 73,
+        "wordIndex": 25,
+        "token": "بِيَدِ",
+        "url": "https://tanzil.net/#3:73"
+      }
+    },
+    {
+      "id": "ha_a_lam_a_kaf_a",
+      "joined": "هَلَكَ",
+      "separated": "هَ لَ كَ",
+      "syllables": [
+        "هَ",
+        "لَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ha_a_lam_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 176,
+        "wordIndex": 9,
+        "token": "هَلَكَ",
+        "url": "https://tanzil.net/#4:176"
+      }
+    },
+    {
+      "id": "ayn_a_shin_a_ra_a",
+      "joined": "عَشَرَ",
+      "separated": "عَ شَ رَ",
+      "syllables": [
+        "عَ",
+        "شَ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/ayn_a_shin_a_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 12,
+        "wordIndex": 10,
+        "token": "عَشَرَ",
+        "url": "https://tanzil.net/#5:12"
+      }
+    },
+    {
+      "id": "sin_u_ba_u_lam_a",
+      "joined": "سُبُلَ",
+      "separated": "سُ بُ لَ",
+      "syllables": [
+        "سُ",
+        "بُ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/sin_u_ba_u_lam_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 16,
+        "wordIndex": 7,
+        "token": "سُبُلَ",
+        "url": "https://tanzil.net/#5:16"
+      }
+    },
+    {
+      "id": "lam_u_ayn_i_nun_a",
+      "joined": "لُعِنَ",
+      "separated": "لُ عِ نَ",
+      "syllables": [
+        "لُ",
+        "عِ",
+        "نَ"
+      ],
+      "audioFile": "audio/words/lam_u_ayn_i_nun_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 78,
+        "wordIndex": 1,
+        "token": "لُعِنَ",
+        "url": "https://tanzil.net/#5:78"
+      }
+    },
+    {
+      "id": "ayn_u_tha_i_ra_a",
+      "joined": "عُثِرَ",
+      "separated": "عُ ثِ رَ",
+      "syllables": [
+        "عُ",
+        "ثِ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/ayn_u_tha_i_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 5,
+        "ayah": 107,
+        "wordIndex": 2,
+        "token": "عُثِرَ",
+        "url": "https://tanzil.net/#5:107"
+      }
+    },
+    {
+      "id": "waw_a_ra_a_qof_i",
+      "joined": "وَرَقِ",
+      "separated": "وَ رَ قِ",
+      "syllables": [
+        "وَ",
+        "رَ",
+        "قِ"
+      ],
+      "audioFile": "audio/words/waw_a_ra_a_qof_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 22,
+        "wordIndex": 13,
+        "token": "وَرَقِ",
+        "url": "https://tanzil.net/#7:22"
+      }
+    },
+    {
+      "id": "waw_a_ba_i_ha_i",
+      "joined": "وَبِهِ",
+      "separated": "وَ بِ هِ",
+      "syllables": [
+        "وَ",
+        "بِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/waw_a_ba_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 159,
+        "wordIndex": 7,
+        "token": "وَبِهِ",
+        "url": "https://tanzil.net/#7:159"
+      }
+    },
+    {
+      "id": "nun_a_kaf_a_sod_a",
+      "joined": "نَكَصَ",
+      "separated": "نَ كَ صَ",
+      "syllables": [
+        "نَ",
+        "كَ",
+        "صَ"
+      ],
+      "audioFile": "audio/words/nun_a_kaf_a_sod_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 8,
+        "ayah": 48,
+        "wordIndex": 19,
+        "token": "نَكَصَ",
+        "url": "https://tanzil.net/#8:48"
+      }
+    },
+    {
+      "id": "nun_a_ra_i_tha_u",
+      "joined": "نَرِثُ",
+      "separated": "نَ رِ ثُ",
+      "syllables": [
+        "نَ",
+        "رِ",
+        "ثُ"
+      ],
+      "audioFile": "audio/words/nun_a_ra_i_tha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 19,
+        "ayah": 40,
+        "wordIndex": 3,
+        "token": "نَرِثُ",
+        "url": "https://tanzil.net/#19:40"
+      }
+    },
+    {
+      "id": "kha_u_lam_u_qof_u",
+      "joined": "خُلُقُ",
+      "separated": "خُ لُ قُ",
+      "syllables": [
+        "خُ",
+        "لُ",
+        "قُ"
+      ],
+      "audioFile": "audio/words/kha_u_lam_u_qof_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 26,
+        "ayah": 137,
+        "wordIndex": 4,
+        "token": "خُلُقُ",
+        "url": "https://tanzil.net/#26:137"
+      }
+    },
+    {
+      "id": "ya_a_lam_i_jim_u",
+      "joined": "يَلِجُ",
+      "separated": "يَ لِ جُ",
+      "syllables": [
+        "يَ",
+        "لِ",
+        "جُ"
+      ],
+      "audioFile": "audio/words/ya_a_lam_i_jim_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 34,
+        "ayah": 2,
+        "wordIndex": 3,
+        "token": "يَلِجُ",
+        "url": "https://tanzil.net/#34:2"
+      }
+    },
+    {
+      "id": "fa_u_ayn_i_lam_a",
+      "joined": "فُعِلَ",
+      "separated": "فُ عِ لَ",
+      "syllables": [
+        "فُ",
+        "عِ",
+        "لَ"
+      ],
+      "audioFile": "audio/words/fa_u_ayn_i_lam_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 34,
+        "ayah": 54,
+        "wordIndex": 7,
+        "token": "فُعِلَ",
+        "url": "https://tanzil.net/#34:54"
+      }
+    },
+    {
+      "id": "dal_u_ayn_i_ya_a",
+      "joined": "دُعِيَ",
+      "separated": "دُ عِ يَ",
+      "syllables": [
+        "دُ",
+        "عِ",
+        "يَ"
+      ],
+      "audioFile": "audio/words/dal_u_ayn_i_ya_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 40,
+        "ayah": 12,
+        "wordIndex": 4,
+        "token": "دُعِيَ",
+        "url": "https://tanzil.net/#40:12"
+      }
+    },
+    {
+      "id": "zay_a_ayn_a_mim_a",
+      "joined": "زَعَمَ",
+      "separated": "زَ عَ مَ",
+      "syllables": [
+        "زَ",
+        "عَ",
+        "مَ"
+      ],
+      "audioFile": "audio/words/zay_a_ayn_a_mim_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 64,
+        "ayah": 7,
+        "wordIndex": 1,
+        "token": "زَعَمَ",
+        "url": "https://tanzil.net/#64:7"
+      }
+    },
+    {
+      "id": "ayn_a_ba_a_sin_a",
+      "joined": "عَبَسَ",
+      "separated": "عَ بَ سَ",
+      "syllables": [
+        "عَ",
+        "بَ",
+        "سَ"
+      ],
+      "audioFile": "audio/words/ayn_a_ba_a_sin_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 74,
+        "ayah": 22,
+        "wordIndex": 2,
+        "token": "عَبَسَ",
+        "url": "https://tanzil.net/#74:22"
+      }
+    },
+    {
+      "id": "ba_i_ya_a_dal_i_kaf_a",
+      "joined": "بِيَدِكَ",
+      "separated": "بِ يَ دِ كَ",
+      "syllables": [
+        "بِ",
+        "يَ",
+        "دِ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ba_i_ya_a_dal_i_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 26,
+        "wordIndex": 19,
+        "token": "بِيَدِكَ",
+        "url": "https://tanzil.net/#3:26"
+      }
+    },
+    {
+      "id": "lam_a_ba_a_ra_a_zay_a",
+      "joined": "لَبَرَزَ",
+      "separated": "لَ بَ رَ زَ",
+      "syllables": [
+        "لَ",
+        "بَ",
+        "رَ",
+        "زَ"
+      ],
+      "audioFile": "audio/words/lam_a_ba_a_ra_a_zay_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 154,
+        "wordIndex": 56,
+        "token": "لَبَرَزَ",
+        "url": "https://tanzil.net/#3:154"
+      }
+    },
+    {
+      "id": "ra_u_sin_u_lam_i_kaf_a",
+      "joined": "رُسُلِكَ",
+      "separated": "رُ سُ لِ كَ",
+      "syllables": [
+        "رُ",
+        "سُ",
+        "لِ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ra_u_sin_u_lam_i_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 3,
+        "ayah": 194,
+        "wordIndex": 6,
+        "token": "رُسُلِكَ",
+        "url": "https://tanzil.net/#3:194"
+      }
+    },
+    {
+      "id": "waw_a_kha_u_lam_i_qof_a",
+      "joined": "وَخُلِقَ",
+      "separated": "وَ خُ لِ قَ",
+      "syllables": [
+        "وَ",
+        "خُ",
+        "لِ",
+        "قَ"
+      ],
+      "audioFile": "audio/words/waw_a_kha_u_lam_i_qof_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 28,
+        "wordIndex": 6,
+        "token": "وَخُلِقَ",
+        "url": "https://tanzil.net/#4:28"
+      }
+    },
+    {
+      "id": "waw_a_ghayn_a_dod_i_ba_a",
+      "joined": "وَغَضِبَ",
+      "separated": "وَ غَ ضِ بَ",
+      "syllables": [
+        "وَ",
+        "غَ",
+        "ضِ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/waw_a_ghayn_a_dod_i_ba_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 93,
+        "wordIndex": 9,
+        "token": "وَغَضِبَ",
+        "url": "https://tanzil.net/#4:93"
+      }
+    },
+    {
+      "id": "kaf_a_lam_i_mim_a_ta_u",
+      "joined": "كَلِمَتُ",
+      "separated": "كَ لِ مَ تُ",
+      "syllables": [
+        "كَ",
+        "لِ",
+        "مَ",
+        "تُ"
+      ],
+      "audioFile": "audio/words/kaf_a_lam_i_mim_a_ta_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 6,
+        "ayah": 115,
+        "wordIndex": 2,
+        "token": "كَلِمَتُ",
+        "url": "https://tanzil.net/#6:115"
+      }
+    },
+    {
+      "id": "ta_a_ba_i_ayn_a_kaf_a",
+      "joined": "تَبِعَكَ",
+      "separated": "تَ بِ عَ كَ",
+      "syllables": [
+        "تَ",
+        "بِ",
+        "عَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/ta_a_ba_i_ayn_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 18,
+        "wordIndex": 7,
+        "token": "تَبِعَكَ",
+        "url": "https://tanzil.net/#7:18"
+      }
+    },
+    {
+      "id": "waw_a_to_u_ba_i_ayn_a",
+      "joined": "وَطُبِعَ",
+      "separated": "وَ طُ بِ عَ",
+      "syllables": [
+        "وَ",
+        "طُ",
+        "بِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/waw_a_to_u_ba_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 9,
+        "ayah": 87,
+        "wordIndex": 6,
+        "token": "وَطُبِعَ",
+        "url": "https://tanzil.net/#9:87"
+      }
+    },
+    {
+      "id": "nun_u_ra_i_ya_a_kaf_a",
+      "joined": "نُرِيَكَ",
+      "separated": "نُ رِ يَ كَ",
+      "syllables": [
+        "نُ",
+        "رِ",
+        "يَ",
+        "كَ"
+      ],
+      "audioFile": "audio/words/nun_u_ra_i_ya_a_kaf_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 23,
+        "ayah": 95,
+        "wordIndex": 4,
+        "token": "نُرِيَكَ",
+        "url": "https://tanzil.net/#23:95"
+      }
+    },
+    {
+      "id": "fa_a_jim_u_mim_i_ayn_a",
+      "joined": "فَجُمِعَ",
+      "separated": "فَ جُ مِ عَ",
+      "syllables": [
+        "فَ",
+        "جُ",
+        "مِ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/fa_a_jim_u_mim_i_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 26,
+        "ayah": 38,
+        "wordIndex": 1,
+        "token": "فَجُمِعَ",
+        "url": "https://tanzil.net/#26:38"
+      }
+    },
+    {
+      "id": "ya_a_ayn_i_zho_u_ha_u",
+      "joined": "يَعِظُهُ",
+      "separated": "يَ عِ ظُ هُ",
+      "syllables": [
+        "يَ",
+        "عِ",
+        "ظُ",
+        "هُ"
+      ],
+      "audioFile": "audio/words/ya_a_ayn_i_zho_u_ha_u.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 31,
+        "ayah": 13,
+        "wordIndex": 6,
+        "token": "يَعِظُهُ",
+        "url": "https://tanzil.net/#31:13"
+      }
+    },
+    {
+      "id": "ayn_a_qof_i_ba_i_ha_i",
+      "joined": "عَقِبِهِ",
+      "separated": "عَ قِ بِ هِ",
+      "syllables": [
+        "عَ",
+        "قِ",
+        "بِ",
+        "هِ"
+      ],
+      "audioFile": "audio/words/ayn_a_qof_i_ba_i_ha_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 43,
+        "ayah": 28,
+        "wordIndex": 5,
+        "token": "عَقِبِهِ",
+        "url": "https://tanzil.net/#43:28"
+      }
+    },
+    {
+      "id": "waw_a_nun_u_dhal_u_ra_i",
+      "joined": "وَنُذُرِ",
+      "separated": "وَ نُ ذُ رِ",
+      "syllables": [
+        "وَ",
+        "نُ",
+        "ذُ",
+        "رِ"
+      ],
+      "audioFile": "audio/words/waw_a_nun_u_dhal_u_ra_i.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 54,
+        "ayah": 16,
+        "wordIndex": 4,
+        "token": "وَنُذُرِ",
+        "url": "https://tanzil.net/#54:16"
+      }
+    },
+    {
+      "id": "kaf_a_dhal_a_ba_a",
+      "joined": "كَذَبَ",
+      "separated": "كَ ذَ بَ",
+      "syllables": [
+        "كَ",
+        "ذَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/kaf_a_dhal_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 39,
+        "ayah": 32,
+        "wordIndex": 4,
+        "token": "كَذَبَ",
+        "url": "https://tanzil.net/#39:32"
+      }
+    },
+    {
+      "id": "ghayn_a_dod_a_ba_a",
+      "joined": "غَضَبَ",
+      "separated": "غَ ضَ بَ",
+      "syllables": [
+        "غَ",
+        "ضَ",
+        "بَ"
+      ],
+      "audioFile": "audio/words/ghayn_a_dod_a_ba_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 24,
+        "ayah": 9,
+        "wordIndex": 3,
+        "token": "غَضَبَ",
+        "url": "https://tanzil.net/#24:9"
+      }
+    },
+    {
+      "id": "ta_a_jim_i_dal_a",
+      "joined": "تَجِدَ",
+      "separated": "تَ جِ دَ",
+      "syllables": [
+        "تَ",
+        "جِ",
+        "دَ"
+      ],
+      "audioFile": "audio/words/ta_a_jim_i_dal_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 4,
+        "ayah": 52,
+        "wordIndex": 9,
+        "token": "تَجِدَ",
+        "url": "https://tanzil.net/#4:52"
+      }
+    },
+    {
+      "id": "ta_a_dod_a_ayn_a",
+      "joined": "تَضَعَ",
+      "separated": "تَ ضَ عَ",
+      "syllables": [
+        "تَ",
+        "ضَ",
+        "عَ"
+      ],
+      "audioFile": "audio/words/ta_a_dod_a_ayn_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 47,
+        "ayah": 4,
+        "wordIndex": 18,
+        "token": "تَضَعَ",
+        "url": "https://tanzil.net/#47:4"
+      }
+    },
+    {
+      "id": "ya_a_lam_i_jim_a",
+      "joined": "يَلِجَ",
+      "separated": "يَ لِ جَ",
+      "syllables": [
+        "يَ",
+        "لِ",
+        "جَ"
+      ],
+      "audioFile": "audio/words/ya_a_lam_i_jim_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 7,
+        "ayah": 40,
+        "wordIndex": 16,
+        "token": "يَلِجَ",
+        "url": "https://tanzil.net/#7:40"
+      }
+    },
+    {
+      "id": "kaf_u_fa_i_ra_a",
+      "joined": "كُفِرَ",
+      "separated": "كُ فِ رَ",
+      "syllables": [
+        "كُ",
+        "فِ",
+        "رَ"
+      ],
+      "audioFile": "audio/words/kaf_u_fa_i_ra_a.mp3",
+      "origin": "quran",
+      "role": "review",
+      "quranReference": {
+        "surah": 54,
+        "ayah": 14,
+        "wordIndex": 6,
+        "token": "كُفِرَ",
+        "url": "https://tanzil.net/#54:14"
+      }
+    }
+  ]
+}

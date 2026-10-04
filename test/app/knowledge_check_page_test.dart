@@ -1,12 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'dart:io';
-import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
+import 'package:arabic_tajweed_app/app/pages/course/course_controller.dart';
 import 'package:arabic_tajweed_app/app/pages/course/knowledge_check_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/knowledge_check.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
+import 'package:arabic_tajweed_app/app/pages/lesson/lesson_audio_source.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -15,6 +18,7 @@ import '../helpers/plugin_mocks.dart';
 /// Ошибка в проверке не даёт зачёт, а подтверждённые элементы сохраняются
 /// даже при неполном успехе. Далёкую тему можно открыть короткой проверкой:
 /// старый вариант требовал до 186 ответов за один подход.
+/// Звук должен запускаться сам для букв, как в обычном уроке.
 void main() {
   final curriculum = CurriculumLoader.parse(
     File('assets/curriculum/stage1.json').readAsStringSync(),
@@ -37,16 +41,76 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
+  testWidgets('буква дважды проверяется на слух с автозвуком', (tester) async {
+    final audio = _RecordingAudio();
+    final c = Get.put(CourseController(database: db, curriculum: curriculum));
+    await tester.runAsync(() async {
+      while (c.loading.value) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: KnowledgeCheckPage(
+          controller: c,
+          topic: curriculum.topics[1],
+          audio: audio,
+        ),
+      ),
+    );
+    await settle(tester);
+    await tester.tap(find.text('Начать проверку'));
+    await settle(tester);
+    while (find.text('Понятно').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+    }
+    final check =
+        (tester.state(find.byType(KnowledgeCheckPage)) as dynamic).check
+            as KnowledgeCheck;
+    const source = LessonAudioSource();
+    expect(check.questions.first.mode, ExerciseMode.soundToLetter);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(audio.played, contains(source.forAtom(check.questions.first.atom)));
+
+    await tester.tap(
+      find.byType(AnswerOption).at(check.questions.first.answerIndex),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Ответить'));
+    await settle(tester);
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pump();
+    expect(
+      find.text('Не удалось сохранить ответ. Попробуйте ещё раз.'),
+      findsNothing,
+    );
+    expect((tester.state(find.byType(KnowledgeCheckPage)) as dynamic).index, 1);
+    expect(check.questions[1].mode, ExerciseMode.soundToLetter);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(audio.played.last, source.forAtom(check.questions[1].atom));
+    expect(find.text('Прослушать ещё раз'), findsNothing);
+  });
+
   for (final missOne in [false, true]) {
     testWidgets('проверка сохраняет результат: ошибка=$missOne', (
       tester,
     ) async {
       final c = Get.put(CourseController(database: db, curriculum: curriculum));
-      await tester.pumpWidget(const GetMaterialApp(home: CoursePage()));
-      await settle(tester);
+      await tester.runAsync(() async {
+        while (c.loading.value) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpWidget(
         GetMaterialApp(
-          home: KnowledgeCheckPage(controller: c, topic: curriculum.topics[1]),
+          home: KnowledgeCheckPage(
+            controller: c,
+            topic: curriculum.topics[1],
+            audio: _RecordingAudio(),
+          ),
         ),
       );
       await settle(tester);
@@ -114,11 +178,18 @@ void main() {
         (t) => t.id == 'm.haraka.intro',
       );
       final c = Get.put(CourseController(database: db, curriculum: fullCourse));
-      await tester.pumpWidget(const GetMaterialApp(home: CoursePage()));
-      await settle(tester);
+      await tester.runAsync(() async {
+        while (c.loading.value) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpWidget(
         GetMaterialApp(
-          home: KnowledgeCheckPage(controller: c, topic: topic),
+          home: KnowledgeCheckPage(
+            controller: c,
+            topic: topic,
+            audio: _RecordingAudio(),
+          ),
         ),
       );
       await settle(tester);
@@ -176,4 +247,26 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+}
+
+class _RecordingAudio implements LessonAudio {
+  @override
+  final ValueNotifier<AudioTrack> track = ValueNotifier(AudioTrack.silent);
+  final played = <String>[];
+
+  @override
+  Future<void> playAsset(String? asset) async {
+    if (asset == null) return;
+    played.add(asset);
+    track.value = const AudioTrack(isPlaying: true);
+  }
+
+  @override
+  Future<void> toggleAsset(String? asset) => playAsset(asset);
+
+  @override
+  Future<void> stop() async => track.value = AudioTrack.silent;
+
+  @override
+  Future<void> dispose() async => track.dispose();
 }

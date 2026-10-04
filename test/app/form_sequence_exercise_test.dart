@@ -1,5 +1,6 @@
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,11 +11,47 @@ import 'package:flutter_test/flutter_test.dart';
 // летящей плитки. Звуковые слоты также обязаны включать активную запись и
 // оставлять отдельную кнопку повтора доступной после размещения плитки, не
 // перекрывая ею арабскую букву.
+// Повторяемые знаки не исчезают после выбора, а слоты показывают собственную
+// букву со знаком, в том числе при подсказке с двумя одинаковыми ответами.
+// Двухформенная версия должна показывать только отдельную и конечную
+// позиции и отправлять ответ после второго выбора.
 void main() {
   final isolated = _form('isolated', 'ب', LetterForm.isolated);
   final initial = _form('initial', 'بـ', LetterForm.initial);
   final medial = _form('medial', 'ـبـ', LetterForm.medial);
   final finalForm = _form('final', 'ـب', LetterForm.finalForm);
+
+  testWidgets('двухформенная буква собирается в двух позициях', (tester) async {
+    final alone = _form('alif.isolated', 'ا', LetterForm.isolated);
+    final end = _form('alif.finalForm', 'ـا', LetterForm.finalForm);
+    List<Atom>? answer;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: FormSequenceExercise(
+              options: [end, alone],
+              motion: const FormSequenceMotion(
+                duration: Duration(milliseconds: 100),
+              ),
+              onCompleted: (placed) => answer = placed,
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Отдельно'), findsOneWidget);
+    expect(find.text('В конце'), findsOneWidget);
+    expect(find.text('В начале'), findsNothing);
+    expect(find.text('В середине'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('form-tile-alif.isolated')));
+    await tester.pumpAndSettle();
+    expect(answer, isNull);
+    await tester.tap(find.byKey(const ValueKey('form-tile-alif.finalForm')));
+    await tester.pumpAndSettle();
+    expect(answer, [alone, end]);
+  });
 
   test('время этапов считается от общей длительности', () {
     const motion = FormSequenceMotion(
@@ -116,6 +153,82 @@ void main() {
       'ba.kasra',
       'ba.damma',
     ]);
+  });
+
+  testWidgets('один знак заполняет разные буквы и остаётся доступным', (
+    tester,
+  ) async {
+    final slots = [
+      for (final (index, glyph) in ['ب', 'ت', 'م'].indexed)
+        SequenceSlot(
+          id: 'mixed-$index',
+          title: 'Звук ${index + 1}',
+          expectedAtomId: index == 2 ? 'haraka.kasra' : 'haraka.fatha',
+          baseGlyph: glyph,
+          audioAsset: 'audio/$index.mp3',
+        ),
+    ];
+    final activated = <int>[];
+    List<Atom>? answer;
+    Widget exercise({bool reveal = false}) => MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 288,
+          child: FormSequenceExercise(
+            key: ValueKey(reveal),
+            slots: slots,
+            options: HarakaSyllables.marks,
+            reusableOptions: true,
+            revealCorrectOrder: reveal,
+            optionNoun: 'Огласовка',
+            motion: const FormSequenceMotion(
+              duration: Duration(milliseconds: 100),
+            ),
+            onActiveSlotChanged: activated.add,
+            onCompleted: (placed) => answer = placed,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(exercise());
+    for (final glyph in ['ب', 'ت', 'م']) {
+      expect(find.text(glyph), findsOneWidget);
+    }
+    final fatha = find.byKey(const ValueKey('form-tile-haraka.fatha'));
+    await tester.tap(fatha);
+    await tester.pumpAndSettle();
+    expect(find.text('بَ'), findsOneWidget);
+    await tester.tap(fatha);
+    await tester.pumpAndSettle();
+    expect(find.text('تَ'), findsOneWidget);
+    expect(find.text('◌َ'), findsOneWidget);
+    expect(answer, isNull);
+    await tester.tap(find.byKey(const ValueKey('form-slot-mixed-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('ب'), findsOneWidget);
+    expect(find.text('تَ'), findsOneWidget);
+    await tester.tap(fatha);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('form-tile-haraka.kasra')));
+    await tester.pumpAndSettle();
+    expect(answer?.map((a) => a.id), [
+      'haraka.fatha',
+      'haraka.fatha',
+      'haraka.kasra',
+    ]);
+    expect(find.text('مِ'), findsOneWidget);
+    expect(activated, [0, 1, 2, 0, 2]);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(exercise(reveal: true));
+    for (final glyph in ['بَ', 'تَ', 'مِ']) {
+      expect(find.text(glyph), findsOneWidget);
+    }
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    for (final glyph in ['ب', 'ت', 'م']) {
+      expect(find.text(glyph), findsOneWidget);
+    }
   });
 
   testWidgets('позиции форм идут справа налево', (tester) async {

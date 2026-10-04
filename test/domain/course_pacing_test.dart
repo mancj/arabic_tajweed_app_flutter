@@ -162,7 +162,7 @@ void main() {
   });
 
   for (final (topicId, previousAtomId) in const [
-    ('m.haraka.group1', 'vowel.ba.fatha'),
+    ('m.haraka.group1', 'haraka.fatha'),
     ('m.break', 'syl.ba_ta'),
     ('m.haraka.words2', 'word.kataba'),
   ]) {

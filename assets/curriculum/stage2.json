@@ -13,15 +13,15 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.fatha"
+            "atomId": "haraka.fatha"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.kasra"
+            "atomId": "haraka.kasra"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.damma"
+            "atomId": "haraka.damma"
           },
           {
             "type": "atomKnown",
@@ -220,15 +220,15 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.fatha"
+            "atomId": "haraka.fatha"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.kasra"
+            "atomId": "haraka.kasra"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.damma"
+            "atomId": "haraka.damma"
           },
           {
             "type": "atomKnown",
@@ -423,15 +423,15 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.fatha"
+            "atomId": "haraka.fatha"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.kasra"
+            "atomId": "haraka.kasra"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.damma"
+            "atomId": "haraka.damma"
           },
           {
             "type": "atomKnown",
@@ -782,15 +782,15 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.fatha"
+            "atomId": "haraka.fatha"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.kasra"
+            "atomId": "haraka.kasra"
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ba.damma"
+            "atomId": "haraka.damma"
           },
           {
             "type": "atomKnown",
@@ -1138,15 +1138,15 @@
             "parts": [
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.fatha"
+                "atomId": "haraka.fatha"
               },
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.kasra"
+                "atomId": "haraka.kasra"
               },
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.damma"
+                "atomId": "haraka.damma"
               },
               {
                 "type": "atomKnown",
@@ -1351,15 +1351,15 @@
             "parts": [
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.fatha"
+                "atomId": "haraka.fatha"
               },
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.kasra"
+                "atomId": "haraka.kasra"
               },
               {
                 "type": "atomKnown",
-                "atomId": "vowel.ba.damma"
+                "atomId": "haraka.damma"
               },
               {
                 "type": "atomKnown",

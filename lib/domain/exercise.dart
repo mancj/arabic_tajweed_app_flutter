@@ -1,5 +1,6 @@
 import 'atom.dart';
 import 'progress_event.dart';
+import 'syllable_build_question.dart';
 
 /// Уровень сложности дистракторов. Растёт по мере освоения атома:
 /// минимальная пара — это экзамен, а не стартовый режим. Показать её
@@ -28,10 +29,13 @@ class Exercise {
     this.answerIndex = -1,
     this.isReview = false,
     this.isRequired = false,
+    this.isFormMaintenance = false,
     this.prompt,
     this.audioAsset,
     this.question,
     this.sequenceOrder = const [],
+    this.introductionAtoms = const [],
+    this.syllableBuildQuestion,
   });
 
   /// Задание без выбора: обводка, сборка, аудио. Ответ не выбирается
@@ -47,12 +51,15 @@ class Exercise {
     this.level = DistractorLevel.distant,
     this.isReview = false,
     this.isRequired = false,
+    this.isFormMaintenance = false,
     this.audioAsset,
     this.question,
   }) : options = const [],
        answerIndex = directAnswer,
        prompt = null,
-       sequenceOrder = const [];
+       sequenceOrder = const [],
+       introductionAtoms = const [],
+       syllableBuildQuestion = null;
 
   /// Индекс, которым отмечается верный исход задания без выбора.
   static const directAnswer = 0;
@@ -80,6 +87,10 @@ class Exercise {
   /// добавочное задание: обязательный режим или форму выкидывать нельзя.
   final bool isRequired;
 
+  /// Одна из двух сборок старых форм в огласовках. Исправление происходит
+  /// в том же задании, без дополнительного повтора сверх этой квоты.
+  final bool isFormMaintenance;
+
   /// Что показано в карточке вопроса, если не сам [atom]. В раскладке форм
   /// это отдельная форма той же буквы: она остаётся образцом и при этом
   /// также участвует в упражнении.
@@ -95,6 +106,14 @@ class Exercise {
   /// Правильный порядок звуковых слотов; пусто у обычных заданий.
   final List<Atom> sequenceOrder;
 
+  /// Дополнительные слоги, с которыми знакомим до первой сборки.
+  /// Они не становятся обязательным новым блоком программы.
+  final List<Atom> introductionAtoms;
+
+  /// Два выбора для одного слога. Весь ответ оценивается по [atom],
+  /// буквы в палитре не получают событий прогресса.
+  final SyllableBuildQuestion? syllableBuildQuestion;
+
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;
 
@@ -102,8 +121,10 @@ class Exercise {
 
   /// Какие элементы действительно проверяет задание. Сборка раскладывает
   /// всю семью форм или слогов, а не только [atom].
-  List<Atom> get resultAtoms =>
-      mode == ExerciseMode.positionToForm || mode == ExerciseMode.harakaSequence
+  List<Atom> get resultAtoms => mode == ExerciseMode.harakaForLetters
+      ? List.unmodifiable(sequenceOrder)
+      : mode == ExerciseMode.positionToForm ||
+            mode == ExerciseMode.harakaSequence
       ? List.unmodifiable(options)
       : [atom];
 }

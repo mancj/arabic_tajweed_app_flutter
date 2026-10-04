@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart' hide GetNumUtils;
 
@@ -13,20 +12,23 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_forms_overview.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_audio_waveform.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/answer_option.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/mono_text_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/form_sequence_exercise.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/question_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/explanation_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/tracing_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_drawing_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_examples_grid.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_build_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_pronunciation_exercise.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/exercise.dart';
+import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
+import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 
+import 'exercise_choice_view.dart';
 import 'lesson_controller.dart';
 import 'lesson_exercise_presentation.dart';
 import 'option_audio_sequence.dart';
@@ -424,6 +426,52 @@ class LessonExerciseBlock extends GetView<LessonController> {
       if (exercise == null) return const _Centered(child: _Loader());
       final presentation = LessonExercisePresentation.from(exercise);
 
+      if (exercise.mode == ExerciseMode.saySyllable) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _LessonProgress(),
+            const Margin.vertical(16),
+            SyllablePronunciationExercise(
+              key: ObjectKey(exercise),
+              glyph: exercise.atom.display,
+              result: controller.pronunciation.syllableResult.value,
+              error:
+                  controller.pronunciation.failure.value ==
+                      PronunciationFailureKind.microphoneDenied
+                  ? null
+                  : controller.pronunciation.error.value,
+              showFeedback:
+                  !controller.wasWrong.value && !controller.wasCorrect.value,
+            ),
+          ],
+        );
+      }
+
+      if (exercise.syllableBuildQuestion case final question?) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _LessonProgress(),
+            const Margin.vertical(16),
+            SyllableBuildExercise(
+              key: ObjectKey(exercise),
+              question: question,
+              selectedLetterId: controller.syllableBuildLetter.value,
+              selectedMarkId: controller.syllableBuildMark.value,
+              evaluation: controller.syllableBuildEvaluation.value,
+              onLetterSelected: controller.selectSyllableBuildLetter,
+              onMarkSelected: controller.selectSyllableBuildMark,
+              onPlay: () => controller.playExerciseVoice(exercise),
+              onAutoPlay: () => controller.startExerciseVoice(exercise),
+              autoPlay: _canAutoPlay(controller),
+              showFeedback: false,
+              track: controller.voiceTrack,
+            ),
+          ],
+        );
+      }
+
       // У обводки карточка одна: вопрос стоит внутри неё, над сеткой.
       // Отдельная карточка сверху дублировала бы букву, которую и так
       // видно на холсте, и выталкивала холст за экран.
@@ -453,6 +501,14 @@ class LessonExerciseBlock extends GetView<LessonController> {
                 color: UIColors.secondary2,
               ),
             ),
+            const Margin.vertical(4),
+            Text(
+              'Специально обученная нейросеть оценит ваше произношение.',
+              textAlign: TextAlign.center,
+              style: UITextStyles.monoRegular12.copyWith(
+                color: UIColors.secondary2,
+              ),
+            ),
           ],
           const Margin.vertical(16),
           if (presentation.input == LessonInputKind.pronunciation)
@@ -464,31 +520,41 @@ class LessonExerciseBlock extends GetView<LessonController> {
                 '${controller.formSequenceAttempt.value}',
               ),
               options: exercise.options,
-              slots: exercise.mode == ExerciseMode.harakaSequence
+              slots: exercise.mode.isHarakaSequence
                   ? [
                       for (final (index, atom)
                           in exercise.sequenceOrder.indexed)
                         SequenceSlot(
                           id: 'sound-$index',
                           title: 'Звук ${index + 1}',
-                          expectedAtomId: atom.id,
+                          expectedAtomId:
+                              exercise.mode == ExerciseMode.harakaForLetters
+                              ? HarakaSyllables.markIdFor(atom)
+                              : atom.id,
                           audioAsset: atom.audioAsset,
+                          baseGlyph:
+                              exercise.mode == ExerciseMode.harakaForLetters
+                              ? HarakaSyllables.bareGlyphFor(atom)
+                              : null,
                         ),
                     ]
                   : null,
-              instruction: exercise.mode == ExerciseMode.harakaSequence
+              reusableOptions: exercise.mode == ExerciseMode.harakaForLetters,
+              instruction: exercise.mode == ExerciseMode.harakaForLetters
+                  ? 'Послушайте слот и выберите знак. Его можно использовать снова'
+                  : exercise.mode.isHarakaSequence
                   ? 'Послушайте выделенный слот и выберите огласовку'
                   : 'Выберите форму для выделенного слота',
-              optionNoun: exercise.mode == ExerciseMode.harakaSequence
+              optionNoun: exercise.mode.isHarakaSequence
                   ? 'Огласовка'
                   : 'Форма',
-              playingSlotIndex: exercise.mode == ExerciseMode.harakaSequence
+              playingSlotIndex: exercise.mode.isHarakaSequence
                   ? controller.sequencePlayingSlot.value
                   : null,
-              onPlaySlot: exercise.mode == ExerciseMode.harakaSequence
+              onPlaySlot: exercise.mode.isHarakaSequence
                   ? (index) => controller.playSequenceSlot(exercise, index)
                   : null,
-              onActiveSlotChanged: exercise.mode == ExerciseMode.harakaSequence
+              onActiveSlotChanged: exercise.mode.isHarakaSequence
                   ? (index) => controller.startSequenceSlot(exercise, index)
                   : null,
               initialPlaced: controller.formSequenceInitialPlaced,
@@ -558,49 +624,21 @@ class _QuestionFor extends GetView<LessonController> {
     final hasVoice = controller.hasExerciseVoice(exercise);
 
     return switch (presentation.question) {
-      LessonQuestionKind.audio => Obx(() {
-        final named = controller.nameRevealed.value || !hasVoice;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Ключ по номеру задания: у всех заданий на слух в карточке один
-            // знак вопроса, а одна буква спрашивается несколько раз подряд.
-            // Без ключа карточка не пересоздаётся между заданиями, а звук
-            // запускается сам только у новой карточки.
-            LetterWidgetCard(
-              key: ValueKey('sound.${_visibleExerciseIndex(controller)}'),
-              letter: '?',
-              glyph: SvgPicture.asset(
-                UISVGAssets.questionMark,
-                height: 48,
-                colorFilter: ColorFilter.mode(
-                  UIColors.primary,
-                  BlendMode.srcIn,
-                ),
-              ),
-              isArabic: false,
-              labelText: 'Вопрос',
-              question: presentation.prompt,
-              subtitle: named
-                  ? atom.kind == AtomKind.word
-                        ? atom.display
-                        : atom.label
-                  : null,
-              onPlay: hasVoice
-                  ? () => controller.playExerciseVoice(exercise)
-                  : null,
-              onAutoPlay: () => controller.startExerciseVoice(exercise),
-              autoPlay: _canAutoPlay(controller),
-              track: controller.voiceTrack,
-            ),
-            if (!named)
-              MonoTextButton(
-                title: presentation.audioHintAction,
-                onPressed: controller.revealName,
-              ),
-          ],
-        );
-      }),
+      LessonQuestionKind.audio => Obx(
+        () => ExerciseChoiceQuestion(
+          exercise: exercise,
+          presentation: presentation,
+          cardKey: ValueKey('sound.${_visibleExerciseIndex(controller)}'),
+          nameRevealed: controller.nameRevealed.value || !hasVoice,
+          onRevealName: controller.revealName,
+          onPlay: hasVoice
+              ? () => controller.playExerciseVoice(exercise)
+              : null,
+          onAutoPlay: () => controller.startExerciseVoice(exercise),
+          autoPlay: _canAutoPlay(controller),
+          track: controller.voiceTrack,
+        ),
+      ),
       LessonQuestionKind.formSequence => LetterWidgetCard(
         key: ValueKey('position.${_visibleExerciseIndex(controller)}'),
         letter: (exercise.prompt ?? atom).display,
@@ -620,22 +658,14 @@ class _QuestionFor extends GetView<LessonController> {
         question: presentation.prompt,
         showPlay: false,
       ),
-      // Старые режимы с именем буквы: в уроках не строятся, см. ExerciseMode.
-      LessonQuestionKind.label => QuestionCard(
-        badge: 'Вопрос',
-        question: presentation.prompt,
-        subject: atom.label,
-        subjectFont: UITextStyles.fontOnest,
+      LessonQuestionKind.harakaForLetters => RuleCard(
+        title: presentation.prompt,
       ),
-      // Без кнопки звучания: в задании «назови букву» озвучка и была бы
-      // ответом.
-      LessonQuestionKind.glyph => LetterWidgetCard(
-        key: ValueKey('${exercise.mode.name}.${controller.exerciseIndex}'),
-        letter: atom.display,
-        labelText: 'Вопрос',
-        question: presentation.prompt,
-        showPlay: false,
-        isArabic: true,
+      LessonQuestionKind.label ||
+      LessonQuestionKind.glyph => ExerciseChoiceQuestion(
+        exercise: exercise,
+        presentation: presentation,
+        cardKey: ValueKey('${exercise.mode.name}.${controller.exerciseIndex}'),
       ),
     };
   }
@@ -671,37 +701,17 @@ class _OptionTile extends GetView<LessonController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final selected = controller.selected.value == index;
-      final revealed = controller.wasWrong.value || controller.wasCorrect.value;
-      final isAnswer = index == exercise.answerIndex;
-
-      // После ошибки верный ответ подсвечивается всегда, а выбранный
-      // неверный — красным: человек должен увидеть, что именно перепутал.
-      final color = switch ((revealed, isAnswer, selected)) {
-        (true, true, _) => UIColors.primary,
-        (true, false, true) => UIColors.secondary1,
-        _ => UIColors.primary,
-      };
-
-      if (exercise.mode == ExerciseMode.letterToSound) {
-        return AudioAnswerOption(
-          label: 'Звучание ${index + 1}',
-          selected: selected || (revealed && isAnswer),
-          accent: color,
-          playbackProgress: playbackProgress,
-          isPlaying: isPlaying,
-          onTap: () => controller.select(index),
-          onPlay: onPlay ?? () => controller.playVoice(option),
-        );
-      }
-      return AnswerOption(
-        selected: selected || (revealed && isAnswer),
-        accent: color,
+      return ExerciseChoiceOption(
+        exercise: exercise,
+        presentation: presentation,
+        option: option,
+        index: index,
+        selected: controller.selected.value == index,
+        revealed: controller.wasWrong.value || controller.wasCorrect.value,
         playbackProgress: playbackProgress,
+        isPlaying: isPlaying,
         onTap: () => controller.select(index),
-        child: presentation.optionsAreGlyphs
-            ? _Glyph(atom: option, size: 28)
-            : Text(option.label, style: UITextStyles.regular17),
+        onPlay: onPlay ?? () => controller.playVoice(option),
       );
     });
   }

@@ -11,10 +11,16 @@ import 'explanation_card.dart';
 
 /// Показывает карточку курса вне урока, где нет LessonController.
 class ExplanationAssetCard extends StatefulWidget {
-  const ExplanationAssetCard({required this.asset, this.badge, super.key});
+  const ExplanationAssetCard({
+    required this.asset,
+    this.badge,
+    this.active = true,
+    super.key,
+  });
 
   final String asset;
   final String? badge;
+  final bool active;
 
   @override
   State<ExplanationAssetCard> createState() => _ExplanationAssetCardState();
@@ -29,6 +35,7 @@ class _ExplanationAssetCardState extends State<ExplanationAssetCard> {
   void didUpdateWidget(covariant ExplanationAssetCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) _content = _loader.load(widget.asset);
+    if (oldWidget.active && !widget.active) unawaited(_audio.stop());
   }
 
   @override

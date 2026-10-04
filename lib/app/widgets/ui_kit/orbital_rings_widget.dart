@@ -12,7 +12,7 @@ import '../../resources/ui_resources.dart';
 class OrbitalRingsWidget extends StatefulWidget {
   const OrbitalRingsWidget({
     this.color = const Color(0xFFFFFFFF),
-    this.thickness = 1,
+    this.thickness = 1.1,
     this.ringThickness,
     this.dashThickness,
     this.playing = true,

@@ -1,4 +1,4 @@
-"""Общие данные обязательных сочетаний блока кратких огласовок."""
+"""Общие данные знаков и сочетаний блока кратких огласовок."""
 
 HARAKAT_LETTERS = [
     ("ba", "ب", "ба"),
@@ -57,5 +57,11 @@ def core_vowels(letter_id):
 CORE_SYLLABLE_IDS = [
     f"vowel.{letter_id}.{vowel}"
     for letter_id in HARAKAT_LETTER_IDS
+    if letter_id != "ba"
     for vowel in core_vowels(letter_id)
 ]
+
+# Ба уже освоена вместе с самими знаками: второй обязательный набор
+# vowel.ba.* дублировал первый урок, поэтому в переходах используются знаки.
+HARAKA_SIGN_IDS = [f"haraka.{name}" for name in HARAKAT_NAMES]
+REQUIRED_HARAKA_IDS = [*HARAKA_SIGN_IDS, *CORE_SYLLABLE_IDS]

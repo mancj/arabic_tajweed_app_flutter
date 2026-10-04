@@ -7,6 +7,7 @@ import 'package:arabic_tajweed_app/data/letter_audio.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
@@ -16,6 +17,7 @@ import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_notes_page.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
@@ -73,6 +75,7 @@ void main() {
     LessonAudio? audio,
     Curriculum? content,
     AssetBundle? explanationBundle,
+    LessonPlan? plan,
   }) async {
     final lessonContent = content ?? curriculum;
     final paths = {
@@ -105,11 +108,61 @@ void main() {
         continuePlanning: continuePlanning,
         shapeLoader: shapeFromDisk,
         audio: audio ?? LetterAudio(player: AudioPlayer(playerId: 'test')),
+        plan: plan,
       ),
     );
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
     await settle(tester);
   }
+
+  // При замене содержимого статьи Flutter сохраняет прежнюю прокрутку.
+  // Новая карточка должна начинаться сверху, а обновление той же — нет.
+  testWidgets('следующая статья открывается с начала после «Понятно»', (
+    tester,
+  ) async {
+    final bundle = TextAssetBundle.forCurriculum(curriculum);
+    for (final id in ['concept.letter', 'concept.makhraj', 'alif.isolated']) {
+      final asset = curriculum.nodes
+          .firstWhere((node) => node.atom.id == id)
+          .atom
+          .explanationAsset!;
+      bundle.sources[asset] =
+          '''
+title: $id
+blocks:
+  - text: |
+${List.generate(40, (index) => '      Абзац $index для длинной статьи.\n').join('\n')}
+''';
+    }
+    await pumpLesson(tester, topicId: 'm.first', explanationBundle: bundle);
+    final controller = Get.find<LessonController>();
+    final scrollable = find
+        .descendant(
+          of: find.byType(LessonPage),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+
+    for (final id in ['concept.letter', 'concept.makhraj']) {
+      expect(controller.introAtom?.id, id);
+      await tester.drag(scrollable, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      final position = tester.state<ScrollableState>(scrollable).position;
+      expect(position.pixels, greaterThan(0));
+
+      controller.introAtoms.refresh();
+      await tester.pump();
+      expect(
+        tester.state<ScrollableState>(scrollable).position,
+        same(position),
+      );
+
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+      expect(tester.state<ScrollableState>(scrollable).position.pixels, 0);
+    }
+    expect(controller.introAtom?.id, 'alif.isolated');
+  });
 
   testWidgets('первый урок начинается с блока «новое»', (tester) async {
     await pumpLesson(tester);
@@ -120,11 +173,16 @@ void main() {
     expect(controller.stage.value, LessonStage.intro);
     expect(controller.introAtom?.id, 'concept.letter');
     expect(find.text('Понятно'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    await tester.tap(find.bySemanticsLabel('Конспект занятия'));
     await settle(tester);
     expect(Get.currentRoute, LessonNotesPage.routeName);
-    expect(find.text('Здесь появятся объяснения'), findsOneWidget);
-    await tester.tap(find.text('Вернуться к уроку'));
+    expect(find.text('Здесь появятся конспекты'), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(LessonNotesPage),
+        matching: find.byType(AppScaffoldActionButton),
+      ),
+    );
     await settle(tester);
     expect(controller.introAtom?.id, 'concept.letter');
   });
@@ -136,29 +194,121 @@ void main() {
   ) async {
     await pumpLesson(tester);
     final controller = Get.find<LessonController>();
-    expect(controller.shownNotes, isEmpty);
+    expect(controller.lessonNotes, isEmpty);
 
     await tester.tap(find.text('Понятно'));
     await settle(tester);
     final nextAtom = controller.introAtom;
     final eventsBefore = await tester.runAsync(db.readAll);
-    expect(controller.shownNotes.map((note) => note.id), ['concept.letter']);
+    expect(controller.lessonNotes.map((note) => note.id), ['concept.letter']);
+    expect(controller.unreadLessonNotes.value, 1);
+    expect(find.bySemanticsLabel('Новых конспектов: 1'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    await tester.tap(find.bySemanticsLabel('Конспект занятия'));
     await settle(tester);
+    expect(controller.unreadLessonNotes.value, 0);
     expect(Get.currentRoute, LessonNotesPage.routeName);
     expect(find.text('Конспект занятия'), findsOneWidget);
-    expect(find.text('Вернуться к уроку'), findsOneWidget);
+    expect(find.text('Вернуться к уроку'), findsNothing);
     expect(
       find.byKey(const ValueKey('lesson-note-concept.letter')),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Вернуться к уроку'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(LessonNotesPage),
+        matching: find.byType(AppScaffoldActionButton),
+      ),
+    );
     await settle(tester);
     expect(controller.introAtom, same(nextAtom));
-    expect(controller.shownNotes, hasLength(1));
+    expect(controller.lessonNotes, hasLength(1));
     expect(await tester.runAsync(db.readAll), hasLength(eventsBefore!.length));
+  });
+
+  // Переключение карточек жестом и вкладкой должно оставаться согласованным:
+  // иначе после свайпа вкладка открывает не ту карточку.
+  testWidgets('карточки конспекта листаются свайпом и вкладками', (
+    tester,
+  ) async {
+    final bundle = TextAssetBundle.forCurriculum(curriculum);
+    bundle.sources['assets/explanations/ru/alif.isolated.yaml'] = '''
+title: Алиф — ا
+blocks:
+  - text: Буква алиф.
+''';
+    await pumpLesson(tester, explanationBundle: bundle);
+    final controller = Get.find<LessonController>();
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.text('Понятно'));
+      await settle(tester);
+    }
+    expect(controller.lessonNotes.map((note) => note.id), [
+      'concept.letter',
+      'concept.makhraj',
+    ]);
+    expect(controller.unreadLessonNotes.value, 2);
+    expect(find.bySemanticsLabel('Новых конспектов: 2'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Конспект занятия'));
+    await settle(tester);
+    expect(controller.unreadLessonNotes.value, 0);
+    final pageView = find.byType(PageView);
+    expect(tester.widget<PageView>(pageView).controller!.page, 1);
+    expect(find.text('2 из 2'), findsOneWidget);
+
+    await tester.drag(pageView, const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<PageView>(pageView).controller!.page, 0);
+    expect(find.text('1 из 2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('lesson-note-concept.makhraj')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<PageView>(pageView).controller!.page, 1);
+    expect(find.text('2 из 2'), findsOneWidget);
+  });
+
+  // Урок повторения не показывает вступительные карточки. Конспект всё равно
+  // должен дать объяснение именно для задания, которое попало в этот урок.
+  testWidgets('конспект содержит объяснение задания на повторение', (
+    tester,
+  ) async {
+    const plan = LessonPlan(
+      template: LessonTemplate.review,
+      newAtoms: [],
+      reviewAtoms: ['alif.isolated'],
+      reviewCounts: {'alif.isolated': 1},
+      reason: 'повторение алифа',
+    );
+    final bundle = TextAssetBundle.forCurriculum(curriculum);
+    bundle.sources['assets/explanations/ru/alif.isolated.yaml'] = '''
+title: Алиф — ا
+blocks:
+  - text: Повторение буквы алиф.
+''';
+    await pumpLesson(tester, plan: plan, explanationBundle: bundle);
+    final controller = Get.find<LessonController>();
+    expect(controller.stage.value, LessonStage.exercise);
+    expect(controller.introAtoms, isEmpty);
+    expect(controller.lessonNotes.map((note) => note.id), ['alif.isolated']);
+    expect(controller.unreadLessonNotes.value, 0);
+    expect(await tester.runAsync(db.readAll), isEmpty);
+
+    await tester.tap(find.bySemanticsLabel('Конспект занятия'));
+    await settle(tester);
+    expect(Get.currentRoute, LessonNotesPage.routeName);
+    expect(find.text('Алиф — ا'), findsOneWidget);
+    expect(find.text('Вернуться к заданию'), findsNothing);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(LessonNotesPage),
+        matching: find.byType(AppScaffoldActionButton),
+      ),
+    );
+    await settle(tester);
+    expect(controller.current?.atom.id, 'alif.isolated');
+    expect(await tester.runAsync(db.readAll), isEmpty);
   });
 
   // После переноса буквы в YAML её карточка должна по-прежнему произносить
@@ -341,7 +491,7 @@ blocks:
       'ta.isolated',
       'tha.isolated',
     ]);
-    expect(find.text('Ассаляму алейкум!'), findsOneWidget);
+    expect(find.byType(ExplanationCard), findsOneWidget);
   });
 
   // Обзор должен озвучивать букву сам; кнопка лежит поверх нижней волны,
@@ -418,11 +568,11 @@ blocks:
     expect(controller.card.value, same(detail));
     expect(find.text(detail.label), findsOneWidget);
 
-    expect(controller.shownNotes.last.forms, forms);
-    await tester.tap(find.byIcon(Icons.menu_book_outlined));
+    expect(controller.lessonNotes.last.forms, forms);
+    await tester.tap(find.bySemanticsLabel('Конспект занятия'));
     await settle(tester);
     final firstNote = find.byKey(
-      ValueKey('lesson-note-${controller.shownNotes.first.id}'),
+      ValueKey('lesson-note-${controller.lessonNotes.first.id}'),
     );
     await tester.ensureVisible(firstNote);
     await tester.tap(firstNote);

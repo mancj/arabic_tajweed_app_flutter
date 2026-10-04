@@ -19,39 +19,50 @@ class FormSequenceEvaluation {
     required List<Atom> options,
     required List<Atom> placed,
     List<String>? expectedAtomIds,
+    List<String>? resultAtomIds,
   }) {
     final expected = expectedAtomIds;
-    final slotCount = expected?.length ?? LetterForm.values.length;
-    final atomResults = {
-      for (final option in options)
-        option.id: switch (placed.indexWhere(
-          (placed) => placed.id == option.id,
-        )) {
-          final index when index >= 0 && index < slotCount =>
-            expected == null
-                ? option.form == LetterForm.values[index]
-                : option.id == expected[index],
-          _ => false,
-        },
-    };
-    final correct =
-        atomResults.length == slotCount &&
-        atomResults.values.every((value) => value);
+    final positions = LetterForm.values
+        .where((form) => options.any((option) => option.form == form))
+        .toList();
+    final slotCount = expected?.length ?? positions.length;
     final slotResults = [
       for (var index = 0; index < slotCount; index++)
         index < placed.length &&
+            options.any((option) => option.id == placed[index].id) &&
             (expected == null
-                ? placed[index].form == LetterForm.values[index]
+                ? placed[index].form == positions[index]
                 : placed[index].id == expected[index]),
     ];
+    final atomResults = {
+      if (resultAtomIds != null)
+        for (final (index, id) in resultAtomIds.indexed) id: slotResults[index]
+      else
+        for (final option in options)
+          option.id: switch (placed.indexWhere(
+            (placed) => placed.id == option.id,
+          )) {
+            final index when index >= 0 && index < slotCount =>
+              expected == null
+                  ? option.form == positions[index]
+                  : option.id == expected[index],
+            _ => false,
+          },
+    };
+    final correct =
+        slotCount > 0 &&
+        placed.length == slotCount &&
+        atomResults.length == slotCount &&
+        slotResults.every((value) => value) &&
+        atomResults.values.every((value) => value);
     return FormSequenceEvaluation(
       atomResults: Map.unmodifiable(atomResults),
       slotResults: List.unmodifiable(slotResults),
       initialPlaced: correct
           ? const []
           : List.unmodifiable([
-              for (final (index, atom) in placed.indexed)
-                slotResults[index] ? atom : null,
+              for (var index = 0; index < slotCount; index++)
+                slotResults[index] ? placed[index] : null,
             ]),
       correct: correct,
     );

@@ -105,26 +105,30 @@ class TracingShape {
   Rect get frame => viewBox ?? bounds;
 
   /// Копия фигуры, перенесённая внутри исходного SVG-кадра.
-  TracingShape translated(Offset offset) {
+  TracingShape translated(Offset offset, {Rect? viewBox}) =>
+      transformed(1, offset, viewBox: viewBox);
+
+  /// Масштабирует линии и точки внутри прежнего SVG-кадра.
+  TracingShape transformed(double scale, Offset offset, {Rect? viewBox}) {
     final storage = Float64List.fromList([
-      1, 0, 0, 0, //
-      0, 1, 0, 0, //
+      scale, 0, 0, 0, //
+      0, scale, 0, 0, //
       0, 0, 1, 0, //
       offset.dx, offset.dy, 0, 1, //
     ]);
     return TracingShape(
       id: id,
       label: label,
-      strokeWidth: strokeWidth,
-      dotRadius: dotRadius,
-      viewBox: viewBox,
+      strokeWidth: strokeWidth * scale,
+      dotRadius: dotRadius * scale,
+      viewBox: viewBox ?? this.viewBox,
       parts: [
         for (final part in parts)
           TracingShapePart(
             id: part.id,
             label: part.label,
             paths: [for (final path in part.paths) path.transform(storage)],
-            dots: [for (final dot in part.dots) dot + offset],
+            dots: [for (final dot in part.dots) dot * scale + offset],
           ),
       ],
     );

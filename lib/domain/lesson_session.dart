@@ -55,12 +55,19 @@ class LessonSession {
   /// Уже пройденные задания и общее число заданий не меняются.
   void prioritizePronunciation(String atomId) {
     final at = _queue.indexWhere(
-      (e) => e.atom.id == atomId && e.mode == ExerciseMode.sayName,
+      (e) => e.atom.id == atomId && e.mode.isPronunciation,
       _index,
     );
     if (at < 0) throw StateError('Нет произношения для $atomId');
     _queue.insert(_index, _queue.removeAt(at));
   }
+
+  bool hasPendingPronunciation(String atomId) => _queue
+      .skip(_index)
+      .any(
+        (exercise) =>
+            exercise.atom.id == atomId && exercise.mode.isPronunciation,
+      );
 
   AnswerOutcome answer(
     Exercise exercise,
@@ -114,8 +121,8 @@ class LessonSession {
     _index++;
   }
 
-  /// Убирает ещё не показанные задания режима, который технически
-  /// недоступен до конца сессии. Уже пройденные позиции не трогаем,
+  /// Убирает ещё не показанные задания отключённого режима до конца
+  /// сессии. Уже пройденные позиции не трогаем,
   /// чтобы общий счётчик не откатывался назад.
   int discardPendingMode(ExerciseMode mode) {
     var removed = 0;
@@ -131,6 +138,7 @@ class LessonSession {
   /// конец, а через несколько шагов: так оно попадётся, пока разбор ещё
   /// свежий, и не соберётся в хвост из одинаковых вопросов.
   void _requeue(Exercise exercise) {
+    if (exercise.isFormMaintenance) return;
     if (!_requeuedOnce.add(exercise)) return;
 
     // Если такая же проверка этой буквы уже встретится ещё раз, она и будет

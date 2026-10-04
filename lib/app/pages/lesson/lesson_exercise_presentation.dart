@@ -1,6 +1,8 @@
 import '../../../domain/atom.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/progress_event.dart';
+import '../../../domain/syllable_build_question.dart';
+import '../../../data/rest/syllable_check.dart';
 
 /// Способ взаимодействия с вопросом. Экран выбирает виджет по нему, а не по
 /// тому, буква перед ним, огласовка или слово.
@@ -8,11 +10,19 @@ enum LessonInputKind {
   choices,
   tracing,
   formSequence,
+  syllableBuild,
   pronunciation,
   placeholder,
 }
 
-enum LessonQuestionKind { audio, formSequence, harakaSequence, label, glyph }
+enum LessonQuestionKind {
+  audio,
+  formSequence,
+  harakaSequence,
+  harakaForLetters,
+  label,
+  glyph,
+}
 
 /// Общий способ показать атом на экране урока. Понятие состоит из текста;
 /// остальные виды материала имеют знак или сочетание для показа.
@@ -33,6 +43,8 @@ class LessonExercisePresentation {
     required this.audioHintAction,
     required this.isHarakaDrawing,
     this.placeholderHint,
+    this.isSyllablePronunciation = false,
+    this.sequenceLength = 4,
   });
 
   final LessonInputKind input;
@@ -42,21 +54,28 @@ class LessonExercisePresentation {
   final String audioHintAction;
   final bool isHarakaDrawing;
   final String? placeholderHint;
+  final bool isSyllablePronunciation;
+  final int sequenceLength;
 
   factory LessonExercisePresentation.from(Exercise exercise) {
     final mode = exercise.mode;
     final input = switch (mode) {
       ExerciseMode.positionToForm ||
-      ExerciseMode.harakaSequence => LessonInputKind.formSequence,
-      ExerciseMode.sayName => LessonInputKind.pronunciation,
+      ExerciseMode.harakaSequence ||
+      ExerciseMode.harakaForLetters => LessonInputKind.formSequence,
+      ExerciseMode.syllableBuild => LessonInputKind.syllableBuild,
+      ExerciseMode.sayName ||
+      ExerciseMode.saySyllable => LessonInputKind.pronunciation,
       _ when mode.isTracing => LessonInputKind.tracing,
       _ when exercise.isChoice => LessonInputKind.choices,
       _ => LessonInputKind.placeholder,
     };
     final question = switch (mode) {
-      ExerciseMode.soundToLetter => LessonQuestionKind.audio,
+      ExerciseMode.soundToLetter ||
+      ExerciseMode.syllableBuild => LessonQuestionKind.audio,
       ExerciseMode.positionToForm => LessonQuestionKind.formSequence,
       ExerciseMode.harakaSequence => LessonQuestionKind.harakaSequence,
+      ExerciseMode.harakaForLetters => LessonQuestionKind.harakaForLetters,
       ExerciseMode.nameToForm => LessonQuestionKind.label,
       _ => LessonQuestionKind.glyph,
     };
@@ -68,6 +87,7 @@ class LessonExercisePresentation {
         ExerciseMode.soundToLetter ||
         ExerciseMode.positionToForm ||
         ExerciseMode.harakaSequence ||
+        ExerciseMode.harakaForLetters ||
         ExerciseMode.nameToForm => true,
         _ => false,
       },
@@ -78,12 +98,16 @@ class LessonExercisePresentation {
           mode == ExerciseMode.drawHarakaForSound ||
           (mode.isTracing && exercise.atom.kind == AtomKind.haraka),
       placeholderHint: _stubHintOf(mode),
+      isSyllablePronunciation: mode == ExerciseMode.saySyllable,
+      sequenceLength: exercise.resultAtoms.length,
     );
   }
 
   static String _promptFor(Exercise exercise) => switch (exercise.mode) {
     ExerciseMode.positionToForm => 'Расставьте формы буквы по местам',
     ExerciseMode.harakaSequence => 'Расставьте огласовки по звукам',
+    ExerciseMode.harakaForLetters => 'Послушайте и добавьте огласовки',
+    ExerciseMode.syllableBuild => 'Соберите слог по звуку',
     ExerciseMode.formToName =>
       exercise.atom.kind == AtomKind.syllable
           ? 'Какие буквы здесь соединены?'
@@ -103,6 +127,7 @@ class LessonExercisePresentation {
     ExerciseMode.drawHarakaForSound => 'Послушайте и дорисуйте огласовку',
     ExerciseMode.assemble => 'Соберите слог справа налево',
     ExerciseMode.sayName => 'Назовите эту букву вслух',
+    ExerciseMode.saySyllable => 'Прочитайте этот слог вслух',
   };
 
   static String _stubHintOf(ExerciseMode mode) => switch (mode) {
@@ -120,19 +145,42 @@ class LessonExercisePresentation {
     _ => 'Заглушка: этот режим ещё не собран.',
   };
 
-  String feedbackTitle({required bool correct}) => correct
-      ? input == LessonInputKind.pronunciation
-            ? 'Правильно произнесено'
-            : 'Верно!'
-      : 'Попробуйте ещё раз';
+  String feedbackTitle({
+    required bool correct,
+    SyllableBuildEvaluation? syllableBuildEvaluation,
+    SyllableCheck? syllableCheck,
+  }) {
+    if (syllableCheck != null && syllableCheck.matched == correct) {
+      return syllableCheck.feedbackTitle;
+    }
+    final result = syllableBuildEvaluation;
+    if (input == LessonInputKind.syllableBuild && result != null) {
+      return switch ((result.letterCorrect, result.harakaCorrect)) {
+        (true, true) => 'Слог собран правильно',
+        (true, false) => 'Буква верная, огласовка отличается',
+        (false, true) => 'Огласовка верная, буква отличается',
+        (false, false) => 'Буква и огласовка отличаются',
+      };
+    }
+    if (correct && isSyllablePronunciation) return 'Слог прочитан правильно';
+    return correct
+        ? input == LessonInputKind.pronunciation
+              ? 'Правильно произнесено'
+              : 'Верно!'
+        : 'Попробуйте ещё раз';
+  }
 
   String? feedbackText({
     required bool correct,
     required String answerLabel,
     String? heard,
+    SyllableCheck? syllableCheck,
     int formSequenceCorrectCount = 0,
     bool revealFormSequenceAnswer = false,
   }) {
+    if (syllableCheck != null && syllableCheck.matched == correct) {
+      return syllableCheck.hint;
+    }
     if (correct) {
       return switch (input) {
         LessonInputKind.pronunciation =>
@@ -145,6 +193,7 @@ class LessonExercisePresentation {
           isHarakaDrawing
               ? 'Огласовка нарисована правильно.'
               : 'Буква $answerLabel написана правильно.',
+        LessonInputKind.syllableBuild => 'Буква и огласовка выбраны верно.',
         _ => null,
       };
     }
@@ -153,17 +202,22 @@ class LessonExercisePresentation {
         'Услышано: $heard. Это буква $answerLabel.',
       LessonInputKind.formSequence =>
         revealFormSequenceAnswer
-            ? 'Правильно $formSequenceCorrectCount из ${isHarakaSequence ? 3 : 4}. '
+            ? 'Правильно $formSequenceCorrectCount из $sequenceLength. '
                   'Сейчас покажем весь порядок, затем соберите его сами.'
-            : 'Правильно $formSequenceCorrectCount из ${isHarakaSequence ? 3 : 4}. '
+            : 'Правильно $formSequenceCorrectCount из $sequenceLength. '
                   'Верные ${isHarakaSequence ? 'огласовки' : 'формы'} останутся на своих местах.',
       LessonInputKind.tracing =>
         isHarakaDrawing
             ? 'Попробуйте нарисовать огласовку ещё раз.'
             : 'Попробуйте написать букву $answerLabel ещё раз.',
+      LessonInputKind.syllableBuild =>
+        'Посмотрите на правильный слог. Верная часть останется выбранной '
+            'для следующей попытки.',
       _ => null,
     };
   }
 
-  bool get isHarakaSequence => question == LessonQuestionKind.harakaSequence;
+  bool get isHarakaSequence =>
+      question == LessonQuestionKind.harakaSequence ||
+      question == LessonQuestionKind.harakaForLetters;
 }

@@ -4,12 +4,14 @@ import 'dart:math' as math;
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../resources/ui_resources.dart';
 import '../margin.dart';
 import 'glow_wave_widget.dart';
+import 'mono_text_button.dart';
 
 enum PronunciationRecorderState { idle, recording, checking }
 
@@ -22,6 +24,9 @@ class PronunciationRecorderWidget extends StatefulWidget {
     this.level,
     this.onRecordPressed,
     this.onStopPressed,
+    this.microphonePermissionDenied = false,
+    this.microphoneSettingsRequired = false,
+    this.onOpenSettings,
     super.key,
   });
 
@@ -29,6 +34,9 @@ class PronunciationRecorderWidget extends StatefulWidget {
   final ValueListenable<double>? level;
   final VoidCallback? onRecordPressed;
   final VoidCallback? onStopPressed;
+  final bool microphonePermissionDenied;
+  final bool microphoneSettingsRequired;
+  final VoidCallback? onOpenSettings;
 
   @override
   State<PronunciationRecorderWidget> createState() =>
@@ -178,6 +186,9 @@ class _PronunciationRecorderWidgetState
               ],
               Expanded(
                 child: switch (widget.state) {
+                  PronunciationRecorderState.idle
+                      when widget.microphonePermissionDenied =>
+                    const _MicrophoneDeniedRecorderView(),
                   PronunciationRecorderState.idle => const _IdleRecorderView(),
                   PronunciationRecorderState.recording =>
                     _RecordingRecorderView(time: _time),
@@ -196,6 +207,27 @@ class _PronunciationRecorderWidgetState
               ],
             ],
           ),
+          if (widget.microphonePermissionDenied) ...[
+            const Margin.vertical(12),
+            Text(
+              widget.microphoneSettingsRequired
+                  ? 'Доступ к микрофону выключен. Включите его в настройках приложения.'
+                  : 'Разрешите доступ к микрофону при следующем нажатии.',
+              style: UITextStyles.monoRegular12.copyWith(
+                color: UIColors.secondary1,
+              ),
+            ),
+            if (widget.microphoneSettingsRequired &&
+                widget.onOpenSettings != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: MonoTextButton(
+                  title: 'Открыть настройки',
+                  icon: Icons.settings_outlined,
+                  onPressed: widget.onOpenSettings,
+                ),
+              ),
+          ],
         ],
       ),
     );
@@ -219,6 +251,25 @@ class _IdleRecorderView extends StatelessWidget {
       ),
     ],
   ).animate().fadeIn();
+}
+
+class _MicrophoneDeniedRecorderView extends StatelessWidget {
+  const _MicrophoneDeniedRecorderView();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text('Нет доступа к микрофону', style: UITextStyles.monoSemibold14),
+      const Margin.vertical(4),
+      Text(
+        'Запись недоступна',
+        key: const ValueKey('recorder-status'),
+        style: UITextStyles.monoRegular12.copyWith(color: UIColors.secondary1),
+      ),
+    ],
+  );
 }
 
 class _RecordingRecorderView extends StatelessWidget {
@@ -374,13 +425,14 @@ class _RecorderActionButton extends StatefulWidget {
 }
 
 class _RecorderActionButtonState extends State<_RecorderActionButton> {
-  static const _holdThreshold = Duration(milliseconds: 250);
+  // Короткий тап на телефоне нередко длится больше 250 мс. Используем
+  // системную границу длинного нажатия, чтобы отпускание не завершало запись.
+  static const _holdThreshold = kLongPressTimeout;
 
   Timer? _holdTimer;
   int? _activePointer;
   bool _startedOnDown = false;
   bool _stopOnRelease = false;
-  bool _skipTap = false;
   bool _activePressCanAct = false;
 
   void _pointerDown(PointerDownEvent event) {
@@ -393,11 +445,12 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
     _activePressCanAct = canAct;
     if (canAct) AppHaptics.heavy();
     _startedOnDown = !widget.recording;
-    _skipTap = _startedOnDown;
     _stopOnRelease = false;
     _holdTimer?.cancel();
-    _holdTimer = Timer(_holdThreshold, () => _stopOnRelease = true);
-    if (_startedOnDown) widget.onRecordPressed?.call();
+    if (_startedOnDown) {
+      _holdTimer = Timer(_holdThreshold, () => _stopOnRelease = true);
+      widget.onRecordPressed?.call();
+    }
   }
 
   void _pointerUp(PointerUpEvent event) {
@@ -406,8 +459,7 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
     _holdTimer?.cancel();
     if (_activePressCanAct) AppHaptics.medium();
     _activePressCanAct = false;
-    if (_stopOnRelease) {
-      _skipTap = true;
+    if (!_startedOnDown || _stopOnRelease) {
       widget.onStopPressed?.call();
     }
   }
@@ -416,21 +468,23 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
     if (_activePointer != event.pointer) return;
     _activePointer = null;
     _holdTimer?.cancel();
+    if (_activePressCanAct) AppHaptics.medium();
     _activePressCanAct = false;
-    _skipTap = false;
-    if (_startedOnDown) widget.onStopPressed?.call();
+    // Системный запрос доступа может отменить жест первого тапа. Он не должен
+    // немедленно останавливать запись после того, как доступ будет выдан.
+    if (_startedOnDown && _stopOnRelease && widget.recording) {
+      widget.onStopPressed?.call();
+    }
   }
 
-  void _tap() {
-    if (_skipTap) {
-      _skipTap = false;
-      return;
-    }
+  void _semanticTap() {
+    AppHaptics.heavy();
     if (widget.recording) {
       widget.onStopPressed?.call();
     } else {
       widget.onRecordPressed?.call();
     }
+    AppHaptics.medium();
   }
 
   @override
@@ -448,12 +502,12 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
     return Semantics(
       button: true,
       label: label,
+      onTap: _semanticTap,
       child: Listener(
         onPointerDown: _pointerDown,
         onPointerUp: _pointerUp,
         onPointerCancel: _pointerCancel,
         child: CircleButton(
-          onTap: _tap,
           hapticOnTap: false,
           borderColor: Colors.red[400]!,
           gradient: LinearGradient(
@@ -463,7 +517,7 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.red[500]!.withOpacity(0.2),
+              color: Colors.red[500]!.withValues(alpha: 0.2),
               spreadRadius: 1,
               blurRadius: 8,
               offset: const Offset(0, 4),

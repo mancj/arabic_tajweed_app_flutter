@@ -15,7 +15,10 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Первая тема огласовок содержит только объяснение. После окончания букв
-/// она должна перейти к первым знакам в том же занятии без старых заданий.
+/// она должна перейти к первым знакам в том же занятии. Из алфавита
+/// возвращаются только две сборки форм, без обычных заданий букв.
+/// На следующий день новые задания должны переносить знаки на другие буквы,
+/// иначе отдельный блок слогов ба снова продублирует первый урок.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
@@ -25,58 +28,53 @@ void main() {
       ),
   ]);
 
-  test(
-    'объяснение огласовок сразу переходит к практике нового раздела',
-    () async {
-      final database = ProgressDatabase(NativeDatabase.memory());
-      addTearDown(database.close);
-      final today = DateTime(2026, 9, 26, 12);
-      final oldDay = DateTime(2026, 9, 25, 12);
-      final clock = AppClock(systemNow: () => today);
-      final repository = ProgressRepository(
-        database: database,
-        letterFormIds: curriculum.letterFormIds,
-        baseLetterIds: curriculum.baseLetterIds,
-        now: () => today,
-      );
-      final ids = curriculum.topics
-          .where((topic) => topic.stage == 1)
-          .expand((topic) => topic.counterOf)
-          .toSet();
-      await repository.recordAll([
-        for (final node in curriculum.nodes)
-          if (ids.contains(node.atom.id))
-            if (node.atom.kind == AtomKind.concept)
-              AtomIntroduced(atomId: node.atom.id, sessionId: 1, at: oldDay)
-            else
-              KnowledgeConfirmed(
-                atomId: node.atom.id,
-                sessionId: 1,
-                at: oldDay,
-              ),
-      ]);
-      await repository.finishSession(
-        sessionId: 2,
-        purpose: LessonPurpose.alphabetCheckpoint,
-        exerciseCount: 20,
-        firstTryCorrect: 20,
-        checkpointLetters: 28,
-        at: oldDay,
-      );
-      final context = CurriculumContext(
-        progress: await repository.progress(),
-        formsByLetter: curriculum.formsByLetter,
-      );
-      final plan = LessonPlanner(curriculum: curriculum).plan(
-        ctx: context,
-        sessionId: await repository.nextSessionId(),
-        sessionsWithoutNew: await repository.sessionsWithoutNew(),
-        pacing: await repository.pacing(),
-      );
-      expect(plan.topicId, 'm.haraka.intro');
-      expect(plan.reviewAtoms, isEmpty);
-      expect(plan.spacedReview, isEmpty);
+  test('первый урок объясняет знаки, следующий вводит другие буквы', () async {
+    final database = ProgressDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    var today = DateTime(2026, 9, 26, 12);
+    final oldDay = DateTime(2026, 9, 25, 12);
+    final clock = AppClock(systemNow: () => today);
+    final repository = ProgressRepository(
+      database: database,
+      letterFormIds: curriculum.letterFormIds,
+      baseLetterIds: curriculum.baseLetterIds,
+      now: () => today,
+    );
+    final ids = curriculum.topics
+        .where((topic) => topic.stage == 1)
+        .expand((topic) => topic.counterOf)
+        .toSet();
+    await repository.recordAll([
+      for (final node in curriculum.nodes)
+        if (ids.contains(node.atom.id))
+          if (node.atom.kind == AtomKind.concept)
+            AtomIntroduced(atomId: node.atom.id, sessionId: 1, at: oldDay)
+          else
+            KnowledgeConfirmed(atomId: node.atom.id, sessionId: 1, at: oldDay),
+    ]);
+    await repository.finishSession(
+      sessionId: 2,
+      purpose: LessonPurpose.alphabetCheckpoint,
+      exerciseCount: 20,
+      firstTryCorrect: 20,
+      checkpointLetters: 28,
+      at: oldDay,
+    );
+    final context = CurriculumContext(
+      progress: await repository.progress(),
+      formsByLetter: curriculum.formsByLetter,
+    );
+    final plan = LessonPlanner(curriculum: curriculum).plan(
+      ctx: context,
+      sessionId: await repository.nextSessionId(),
+      sessionsWithoutNew: await repository.sessionsWithoutNew(),
+      pacing: await repository.pacing(),
+    );
+    expect(plan.topicId, 'm.haraka.intro');
+    expect(plan.reviewAtoms, isEmpty);
+    expect(plan.spacedReview, isEmpty);
 
+    Future<LessonController> start(LessonPlan plan) async {
       final controller = LessonController(
         database: database,
         curriculum: curriculum,
@@ -97,12 +95,10 @@ void main() {
       await ready.future.timeout(const Duration(seconds: 5));
       await subscription.cancel();
       expect(controller.loadError.value, isNull);
-      expect(controller.introAtom?.id, 'concept.haraka');
+      return controller;
+    }
 
-      await controller.nextIntro();
-      expect(controller.stage.value, LessonStage.intro);
-      expect(controller.introAtom?.id, 'haraka.fatha');
-
+    Future<void> finish(LessonController controller) async {
       var steps = 0;
       while (controller.stage.value != LessonStage.finished) {
         expect(++steps, lessThan(80));
@@ -115,24 +111,65 @@ void main() {
         }
         await controller.answerCorrectly(advance: true);
       }
-      final results = (await database.readAll())
-          .whereType<ProgressEvent>()
-          .where((entry) => entry.sessionId == 3)
-          .toList();
-      final stage2Ids = curriculum.topics
-          .where((topic) => topic.stage == 2)
-          .expand((topic) => topic.counterOf)
-          .toSet();
-      expect(results.length, greaterThanOrEqualTo(8));
-      expect(
-        results.every((entry) => stage2Ids.contains(entry.atomId)),
-        isTrue,
-      );
-      final summaries = await database.readSessionSummaries();
-      expect(
-        summaries.where((summary) => summary.sessionId == 3),
-        hasLength(1),
-      );
-    },
-  );
+    }
+
+    final controller = await start(plan);
+    expect(controller.introAtom?.id, 'concept.haraka');
+    await controller.nextIntro();
+    expect(controller.stage.value, LessonStage.intro);
+    expect(controller.introAtom?.id, 'haraka.fatha');
+    await finish(controller);
+    final results = (await database.readAll())
+        .whereType<ProgressEvent>()
+        .where((entry) => entry.sessionId == 3)
+        .toList();
+    final stage2Ids = curriculum.topics
+        .where((topic) => topic.stage == 2)
+        .expand((topic) => topic.counterOf)
+        .toSet();
+    expect(results.length, greaterThanOrEqualTo(8));
+    final oldResults = results
+        .where((entry) => !stage2Ids.contains(entry.atomId))
+        .toList();
+    expect(oldResults, isNotEmpty);
+    expect(oldResults.map((entry) => entry.mode).toSet(), {
+      ExerciseMode.positionToForm,
+    });
+    final atomsById = {
+      for (final node in curriculum.nodes) node.atom.id: node.atom,
+    };
+    expect(
+      oldResults.map((entry) => atomsById[entry.atomId]!.letterId).toSet(),
+      hasLength(2),
+    );
+    final summaries = await database.readSessionSummaries();
+    expect(summaries.where((summary) => summary.sessionId == 3), hasLength(1));
+
+    today = today.add(const Duration(days: 1));
+    await repository.recompute();
+    final nextPlan = LessonPlanner(curriculum: curriculum).plan(
+      ctx: CurriculumContext(
+        progress: await repository.progress(),
+        formsByLetter: curriculum.formsByLetter,
+      ),
+      sessionId: await repository.nextSessionId(),
+      sessionsWithoutNew: await repository.sessionsWithoutNew(),
+      pacing: await repository.pacing(),
+    );
+    expect(nextPlan.topicId, 'm.haraka.group1');
+    expect(nextPlan.newAtoms.map((atom) => atom.letterId).toSet(), {
+      'ta',
+      'kaf',
+      'dal',
+      'ra',
+    });
+    await finish(await start(nextPlan));
+    final introduced = (await database.readAll())
+        .whereType<AtomIntroduced>()
+        .where((entry) => entry.sessionId == 4)
+        .map((entry) => entry.atomId)
+        .toSet();
+    expect(introduced, containsAll(nextPlan.newAtoms.map((atom) => atom.id)));
+    expect(introduced.any((id) => id.startsWith('vowel.ba.')), isFalse);
+  });
 }

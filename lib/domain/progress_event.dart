@@ -23,6 +23,13 @@ enum ExerciseMode {
   /// Три звучащих слога одной буквы — расставить огласовки по звуковым слотам.
   harakaSequence,
 
+  /// Три разные буквы со звуками — выбрать огласовку для каждой.
+  /// Знаки можно использовать повторно.
+  harakaForLetters,
+
+  /// Звучит слог — выбрать его букву и огласовку отдельными плитками.
+  syllableBuild,
+
   /// Обводка по контуру: буква видна бледной подсказкой.
   trace,
 
@@ -38,16 +45,24 @@ enum ExerciseMode {
   /// букву услышал. Имя буквы одно на все формы, поэтому спрашивается
   /// только у отдельной. См. SPEC.md §4, режим 10.
   sayName,
+
+  /// Прочитать букву с краткой огласовкой; запись проверяется через /syllable.
+  saySyllable,
 }
 
 extension ExerciseModeX on ExerciseMode {
+  bool get isPronunciation =>
+      this == ExerciseMode.sayName || this == ExerciseMode.saySyllable;
+
+  bool get isHarakaSequence =>
+      this == ExerciseMode.harakaSequence ||
+      this == ExerciseMode.harakaForLetters;
+
   /// Активная механика — воспроизведение, а не узнавание. Атом не может
   /// дойти до mastered на одних тапах по вариантам. Назвать букву вслух —
   /// тоже воспроизведение: имя вспоминается, а не выбирается.
   bool get isActive =>
-      isTracing ||
-      this == ExerciseMode.assemble ||
-      this == ExerciseMode.sayName;
+      isTracing || this == ExerciseMode.assemble || isPronunciation;
 
   /// Все задания письма используют один холст; конкретный сценарий решает,
   /// виден ли контур и закреплено ли положение относительно буквы.

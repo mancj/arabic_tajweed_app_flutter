@@ -18,6 +18,4 @@ class SharedPreferenceManager {
   // Создаётся один раз при запуске приложения. Сбой голоса и выбор пропуска
   // действуют до завершения этого запуска, а не сохраняются на устройстве.
   bool pronunciationDisabledForRun = false;
-  final pronunciationTechnicalSkipSessionsForRun = <int>{};
-  int pronunciationSessionCounterForRun = 0;
 }

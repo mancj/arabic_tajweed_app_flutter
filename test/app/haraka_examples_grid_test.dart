@@ -39,11 +39,11 @@ void main() {
       ),
     );
 
-    expect(find.text('Фатха  َ'), findsOneWidget);
+    expect(find.text('Фатха  ◌َ'), findsOneWidget);
     expect(find.textContaining('краткий звук «а»'), findsOneWidget);
-    expect(find.text('Касра  ِ'), findsOneWidget);
+    expect(find.text('Касра  ◌ِ'), findsOneWidget);
     expect(find.textContaining('краткий звук «и»'), findsOneWidget);
-    expect(find.text('Дамма  ُ'), findsOneWidget);
+    expect(find.text('Дамма  ◌ُ'), findsOneWidget);
     expect(find.textContaining('краткий звук «у»'), findsOneWidget);
     expect(find.text('Все вместе'), findsOneWidget);
 

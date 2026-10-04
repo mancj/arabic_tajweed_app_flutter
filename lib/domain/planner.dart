@@ -182,6 +182,11 @@ class LessonPlanner {
   /// Выше этого числа активных атомов новые не вводятся.
   final int loadThreshold;
 
+  /// Текущий раздел общий для планирования и показа прогресса, включая
+  /// смешанное повторение, у которого нет отдельной темы.
+  int? activeStage(CurriculumContext ctx, {Set<String>? topicIds}) =>
+      curriculum.topics.isEmpty ? null : _activeStage(ctx, topicIds);
+
   LessonPlan plan({
     required CurriculumContext ctx,
     required int sessionId,
@@ -190,9 +195,7 @@ class LessonPlanner {
     Map<String, int> previousCounts = const {},
     PacingSnapshot pacing = const PacingSnapshot(),
   }) {
-    final stage = curriculum.topics.isEmpty
-        ? null
-        : _activeStage(ctx, topicIds);
+    final stage = activeStage(ctx, topicIds: topicIds);
     final stageAtomIds = stage == null ? null : _atomIdsForStage(stage);
     final deferred = _deferred(ctx, sessionId, atomIds: stageAtomIds);
     final review = _reviewQueue(
