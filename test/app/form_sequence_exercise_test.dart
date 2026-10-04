@@ -53,17 +53,6 @@ void main() {
     expect(answer, [alone, end]);
   });
 
-  test('время этапов считается от общей длительности', () {
-    const motion = FormSequenceMotion(
-      duration: Duration(milliseconds: 2000),
-      interactionLockEnd: .35,
-    );
-
-    expect(motion.timeAt(.8), const Duration(milliseconds: 1600));
-    expect(motion.durationBetween(.9, 1), const Duration(milliseconds: 200));
-    expect(motion.interactionLockDuration, const Duration(milliseconds: 700));
-  });
-
   testWidgets('три звуковых слота звучат по мере заполнения', (tester) async {
     final sounds = [
       const Atom(

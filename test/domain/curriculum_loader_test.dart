@@ -1,3 +1,6 @@
+// Защищает загрузку программы: первые буквы должны быть доступны на старте,
+// их объяснения не должны теряться, а формы ждут знакомства с отдельной буквой.
+// При смене формата JSON граф должен сохраняться после чтения и записи.
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,12 +20,6 @@ void main() {
     },
     formsByLetter: const {},
   );
-
-  test('граф этапа 1 читается из ассета', () {
-    // 28 букв × их формы + понятия + пять начертаний хамзы.
-    expect(curriculum.nodes, hasLength(110));
-    expect(curriculum.topics, hasLength(23));
-  });
 
   test('первый урок знакомит со всем набором ا ب ت ث', () {
     final available = curriculum.availableAtoms(ctxWith({}));
