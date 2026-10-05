@@ -917,11 +917,14 @@ class _TopicOverview extends StatelessWidget {
           Row(
             children: [
               BadgeLabel(
-                leading: Icon(
-                  icon,
-                  color: UIColors.primary,
-                  size: 16,
-                ).marginOnly(right: 4),
+                leading: SvgPicture.asset(
+                  UISVGAssets.bookFilled,
+                  height: 16,
+                  colorFilter: ColorFilter.mode(
+                    UIColors.primary,
+                    BlendMode.srcIn,
+                  ),
+                ).marginOnly(right: 0),
                 text: label,
                 color: UIColors.primary10,
                 textColor: UIColors.primary,

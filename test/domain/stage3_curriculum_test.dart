@@ -1,5 +1,7 @@
 // Защищает порядок после алфавита: сначала огласовки на отдельных буквах,
 // затем связки нескольких букв и только после них короткие слова.
+// Выборочные огласовки сбалансированы, особые буквы покрыты полностью.
+// Группы остаются темами, а их части не обходят практику или предел занятия.
 // Ба вводится вместе со знаками; старые слоги ба не должны возвращать
 // отдельный новый урок или блокировать переход к следующим разделам.
 import 'dart:io';
@@ -12,6 +14,7 @@ import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:arabic_tajweed_app/domain/exercise_generator.dart';
 import 'package:arabic_tajweed_app/domain/lesson_explanation_queue.dart';
 import 'package:arabic_tajweed_app/domain/lesson_session.dart';
+import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/domain/topic_board.dart';
@@ -54,8 +57,15 @@ void main() {
     known.remove('haraka.fatha');
     expect(connections.requirement.isMet(contextWith(known)), isFalse);
     known.add('haraka.fatha');
-    known.remove('vowel.nun.fatha');
-    expect(connections.requirement.isMet(contextWith(known)), isFalse);
+    for (final id in known.where((id) => id.startsWith('vowel.')).toList()) {
+      known.remove(id);
+      expect(
+        connections.requirement.isMet(contextWith(known)),
+        isFalse,
+        reason: 'Связки не должны обходить $id',
+      );
+      known.add(id);
+    }
   });
 
   test('темы идут: огласовки, связки, короткие слова', () {
@@ -73,7 +83,7 @@ void main() {
     );
   });
 
-  test('три знака и 39 обязательных слогов покрывают все буквы', () {
+  test('огласовки сбалансированы, группы сохранены, особые буквы покрыты', () {
     final stage = stages[2];
     final requiredIds = stage.topics
         .where((topic) => topic.stage == 2)
@@ -82,10 +92,12 @@ void main() {
     final requiredAtoms = stage.nodes
         .map((node) => node.atom)
         .where((atom) => requiredIds.contains(atom.id));
-    expect(
-      requiredAtoms.where((a) => a.kind == AtomKind.syllable),
-      hasLength(39),
-    );
+    final counts = [
+      for (final mark in ['fatha', 'kasra', 'damma'])
+        requiredAtoms.where((atom) => atom.tracing == 'harakat/$mark').length,
+    ];
+    expect(counts.toSet(), hasLength(1));
+    expect(counts.first, greaterThan(0));
     expect(requiredAtoms.where((a) => a.kind == AtomKind.haraka), hasLength(3));
     expect(
       requiredAtoms.map((a) => a.letterId).whereType<String>().toSet(),
@@ -97,7 +109,6 @@ void main() {
         .map((n) => n.atom)
         .where((a) => a.kind == AtomKind.syllable)
         .toList();
-    expect(syllables, hasLength(42));
     expect(syllables.map((a) => a.letterId).toSet(), hasLength(28));
     expect(syllables.take(3).map((a) => a.display), ['بَ', 'بِ', 'بُ']);
     final byId = {for (final atom in syllables) atom.id: atom};
@@ -105,29 +116,68 @@ void main() {
     expect(byId['vowel.alif.kasra']?.display, 'إِ');
     expect(byId['vowel.alif.damma']?.display, 'أُ');
     for (final letter in [
-      'kha',
+      'ba',
+      'alif',
+      'ra',
       'sod',
       'dod',
       'to',
       'zho',
       'ghayn',
       'qof',
-      'ra',
     ]) {
-      expect(byId, contains('vowel.$letter.fatha'));
-      expect(byId, contains('vowel.$letter.kasra'));
+      for (final vowel in ['fatha', 'kasra', 'damma']) {
+        final id = letter == 'ba' ? 'haraka.$vowel' : 'vowel.$letter.$vowel';
+        expect(requiredIds, contains(id), reason: id);
+      }
     }
-    expect(byId, isNot(contains('vowel.ra.damma')));
-    expect(byId, contains('vowel.mim.kasra'));
-    expect(byId, contains('vowel.ayn.kasra'));
-    final groups = stage.topics.where(
-      (topic) => topic.id.startsWith('m.haraka.group'),
-    );
-    expect(groups, hasLength(8));
-    expect(groups.every((topic) => topic.counterOf.length <= 5), isTrue);
+    expect(requiredIds.where((id) => id.startsWith('vowel.kha.')), [
+      'vowel.kha.fatha',
+    ]);
+    for (final atom in requiredAtoms) {
+      expect(atom.explanationAsset, isNotNull, reason: atom.id);
+      expect(
+        File(atom.explanationAsset!).existsSync(),
+        isTrue,
+        reason: atom.id,
+      );
+    }
+    final groups = stage.topics
+        .where((topic) => topic.id.startsWith('m.haraka.group'))
+        .toList();
+    const lettersByGroup = [
+      ['ta', 'kaf', 'dal', 'ra'],
+      ['sin', 'mim', 'lam', 'shin'],
+      ['ayn', 'jim', 'hha', 'fa'],
+      ['nun', 'alif', 'tha'],
+      ['kha', 'dhal', 'zay'],
+      ['sod', 'dod', 'ha'],
+      ['to', 'zho', 'waw'],
+      ['ghayn', 'qof', 'ya'],
+    ];
+    expect(groups.length, lettersByGroup.length);
+    for (var index = 0; index < groups.length; index++) {
+      final group = groups[index];
+      expect(group.id, 'm.haraka.group${index + 1}');
+      expect(
+        group.counterOf.map((id) => byId[id]!.letterId).toSet(),
+        lettersByGroup[index].toSet(),
+      );
+      final blocks = group.lessonBlocks.isEmpty
+          ? [group.counterOf]
+          : group.lessonBlocks;
+      expect(blocks.expand((block) => block), group.counterOf);
+      expect(blocks.every((block) => block.length <= 5), isTrue);
+      final again = Topic.fromJson(group.toJson());
+      expect(again.lessonBlocks, group.lessonBlocks);
+    }
     expect(
       groups.expand((topic) => topic.counterOf),
-      unorderedEquals(syllables.skip(3).map((atom) => atom.id)),
+      unorderedEquals(
+        requiredAtoms
+            .where((atom) => atom.kind == AtomKind.syllable)
+            .map((atom) => atom.id),
+      ),
     );
     for (final variant in ['above', 'below']) {
       expect(
@@ -163,11 +213,12 @@ void main() {
       'haraka.damma',
     ]);
     expect(stage.topics[2].counterOf, [
-      'vowel.ta.fatha',
+      'vowel.ta.kasra',
       'vowel.kaf.fatha',
-      'vowel.dal.fatha',
+      'vowel.dal.damma',
       'vowel.ra.fatha',
       'vowel.ra.kasra',
+      'vowel.ra.damma',
     ]);
   });
 
@@ -197,12 +248,105 @@ void main() {
         'ta',
         'kaf',
         'dal',
-        'ra',
       });
       expect(plan.reviewAtoms.any((id) => id.startsWith('vowel.ba.')), isFalse);
       expect(progress['vowel.ba.fatha']!.state, oldBaState);
       expect(progress['vowel.ba.fatha']!.totalErrors, 2);
     }
+  });
+
+  test('старый прогресс сохраняется, а новая дамма требует изучения', () {
+    final topic = curriculum.topics.firstWhere(
+      (topic) => topic.id == 'm.haraka.group1',
+    );
+    final progress = {
+      for (final previous in curriculum.topics.takeWhile(
+        (candidate) => candidate.id != topic.id,
+      ))
+        for (final id in previous.counterOf)
+          id: const AtomProgress(state: AtomState.known, weak: true),
+      for (final id in ['vowel.ta.fatha', 'vowel.kaf.fatha', 'vowel.dal.fatha'])
+        id: const AtomProgress(state: AtomState.known, weak: true),
+    };
+    final ctx = CurriculumContext(
+      progress: progress,
+      formsByLetter: curriculum.formsByLetter,
+    );
+    final status = TopicBoard(curriculum)
+        .statuses(ctx, completed: {topic.id: false})
+        .firstWhere((status) => status.topic.id == topic.id);
+    expect(status.isDone, isFalse);
+    expect(status.done, 1);
+    expect(ctx.stateOf('vowel.dal.damma'), AtomState.fresh);
+    final plan = LessonPlanner(
+      curriculum: curriculum,
+    ).plan(ctx: ctx, sessionId: 100, sessionsWithoutNew: 0);
+    expect(plan.topicId, topic.id);
+    expect(plan.newAtoms.map((atom) => atom.id), [
+      'vowel.ta.kasra',
+      'vowel.dal.damma',
+    ]);
+    expect(progress['vowel.ta.fatha']!.state, AtomState.known);
+    expect(progress['vowel.dal.fatha']!.state, AtomState.known);
+  });
+
+  test('части группы ждут практику и учитывают отключение произношения', () {
+    final topic = curriculum.topics.firstWhere(
+      (topic) => topic.id == 'm.haraka.group6',
+    );
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    final progress = {
+      for (final previous in curriculum.topics.takeWhile(
+        (previous) => previous.id != topic.id,
+      ))
+        for (final id in previous.counterOf)
+          id: const AtomProgress(state: AtomState.known, weak: true),
+      for (final id in topic.lessonBlocks.first)
+        id: const AtomProgress(
+          state: AtomState.known,
+          successfulModes: {ExerciseMode.drawHarakaForSound},
+        ),
+    };
+    CurriculumContext context() => CurriculumContext(
+      progress: progress,
+      formsByLetter: curriculum.formsByLetter,
+    );
+    final board = TopicBoard(curriculum);
+    expect(board.lessonAtomIds(topic, context()), topic.lessonBlocks.first);
+    expect(board.planFor(topic, context()).newAtoms, isEmpty);
+    const withoutVoice = LearningRules(requirePronunciation: false);
+    final nextPart = board.planFor(topic, context(), rules: withoutVoice);
+    expect(nextPart.newAtoms.map((atom) => atom.id), topic.lessonBlocks.last);
+    expect(
+      TopicBoard(curriculum, rules: withoutVoice)
+          .statuses(context())
+          .firstWhere((status) => status.topic.id == topic.id)
+          .isDone,
+      isFalse,
+    );
+    for (final id in topic.lessonBlocks.first) {
+      progress[id] = AtomProgress(
+        state: AtomState.known,
+        successfulModes: const LearningRules().requiredPracticeModes(byId[id]!),
+      );
+    }
+    expect(board.lessonAtomIds(topic, context()), topic.lessonBlocks.last);
+    for (final id in topic.lessonBlocks.last) {
+      progress[id] = const AtomProgress(state: AtomState.known, weak: true);
+    }
+    final review = board.planFor(topic, context());
+    expect(review.newAtoms, isEmpty);
+    expect(review.reviewAtoms, topic.counterOf);
+    final exercises = ExerciseGenerator(
+      curriculum: curriculum,
+    ).build(plan: review, ctx: context(), sessionId: 20);
+    expect(exercises.length, lessThanOrEqualTo(20));
+    expect(
+      exercises
+          .expand((exercise) => exercise.resultAtoms)
+          .map((atom) => atom.id),
+      containsAll(topic.counterOf),
+    );
   });
 
   test('слова открываются после обязательных слогов и связок', () {
@@ -331,7 +475,7 @@ void main() {
     final expected = curriculum.topics
         .where((topic) => topic.stage > 1)
         .toList();
-    for (var session = 1; session <= expected.length; session++) {
+    for (var session = 1; session <= expected.length * 2; session++) {
       final ctx = CurriculumContext(
         progress: progress,
         formsByLetter: curriculum.formsByLetter,
@@ -341,7 +485,13 @@ void main() {
         sessionId: session,
         sessionsWithoutNew: 0,
       );
-      expect(plan.topicId, expected[session - 1].id);
+      final next = TopicBoard(curriculum)
+          .statuses(ctx)
+          .where((status) => status.topic.stage > 1)
+          .where((status) => !status.isDone)
+          .firstOrNull;
+      if (next == null) break;
+      expect(plan.topicId, next.topic.id);
       final exercises = ExerciseGenerator(
         curriculum: curriculum,
         random: Random(session),
@@ -396,7 +546,12 @@ void main() {
       if (plan.topicId == 'm.join') {
         // Изолированный планировщик считает вводное понятие и три знака
         // двумя шагами; экран объединяет их в одно занятие.
-        expect(harakaLessons, lessThanOrEqualTo(10));
+        expect(
+          harakaLessons,
+          lessThanOrEqualTo(
+            stages[2].topics.where((topic) => topic.stage == 2).length * 2,
+          ),
+        );
       }
       if (plan.topicId == 'm.haraka.words1') reachedWords = true;
       final exercises = ExerciseGenerator(

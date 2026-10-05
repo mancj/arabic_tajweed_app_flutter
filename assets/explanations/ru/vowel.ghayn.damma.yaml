@@ -1,0 +1,7 @@
+title: "Гойн с даммой"
+blocks:
+  - letter:
+      glyph: "غُ"
+      audio: "audio/harakat/ghayn_damma.mp3"
+  - text: |
+      Послушайте и прочитайте: **غُ**. Звук «у» краткий.

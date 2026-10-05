@@ -37,6 +37,7 @@ class UIColors {
     primaryButtonBottom: Color(0xFFE36024),
     primaryButtonHighlight: Color(0xFFE66E37),
     primaryButtonShadow: Color(0xFFA04823),
+    glassButtonTint: Color.fromARGB(25, 0, 0, 0),
     circleButtonBottom: Color(0xFFF19D77),
     success: Color(0xFF2E9D61),
     error: Color(0xFFD94F4F),
@@ -74,6 +75,7 @@ class UIColors {
     primaryButtonBottom: Color(0xFFE36024),
     primaryButtonHighlight: Color(0xFFE66E37),
     primaryButtonShadow: Color(0xFFA04823),
+    glassButtonTint: Color.fromARGB(18, 250, 250, 250),
     circleButtonBottom: Color(0xFFF19D77),
     success: Color(0xFF54C887),
     error: Color(0xFFFF7777),
@@ -113,6 +115,7 @@ class UIColors {
     primaryButtonBottom: Color(0xFFE36024),
     primaryButtonHighlight: Color(0xFFE66E37),
     primaryButtonShadow: Color(0xFFA04823),
+    glassButtonTint: Color.fromARGB(18, 250, 250, 250),
     circleButtonBottom: Color(0xFFF19D77),
     success: Color(0xFF54C887),
     error: Color(0xFFFF7777),
@@ -164,6 +167,7 @@ class UIColors {
   static Color get primaryButtonBottom => _active.primaryButtonBottom;
   static Color get primaryButtonHighlight => _active.primaryButtonHighlight;
   static Color get primaryButtonShadow => _active.primaryButtonShadow;
+  static Color get glassButtonTint => _active.glassButtonTint;
   static Color get circleButtonBottom => _active.circleButtonBottom;
   static Color get success => _active.success;
   static Color get error => _active.error;
@@ -215,6 +219,7 @@ class UIColorPalette {
   final Color primaryButtonBottom;
   final Color primaryButtonHighlight;
   final Color primaryButtonShadow;
+  final Color glassButtonTint;
   final Color circleButtonBottom;
   final Color success;
   final Color error;
@@ -262,6 +267,7 @@ class UIColorPalette {
     required this.primaryButtonBottom,
     required this.primaryButtonHighlight,
     required this.primaryButtonShadow,
+    required this.glassButtonTint,
     required this.circleButtonBottom,
     required this.success,
     required this.error,

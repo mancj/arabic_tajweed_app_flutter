@@ -16,6 +16,11 @@ Topic _$TopicFromJson(Map<String, dynamic> json) => Topic(
   counterOf:
       (json['counterOf'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
+  lessonBlocks:
+      (json['lessonBlocks'] as List<dynamic>?)
+          ?.map((e) => (e as List<dynamic>).map((e) => e as String).toList())
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$TopicToJson(Topic instance) => <String, dynamic>{
@@ -24,6 +29,7 @@ Map<String, dynamic> _$TopicToJson(Topic instance) => <String, dynamic>{
   'title': instance.title,
   'requirement': _reqToJson(instance.requirement),
   'counterOf': instance.counterOf,
+  'lessonBlocks': instance.lessonBlocks,
 };
 
 CurriculumNode _$CurriculumNodeFromJson(Map<String, dynamic> json) =>

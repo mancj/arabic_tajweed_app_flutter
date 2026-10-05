@@ -1,5 +1,5 @@
 // Защищает от возвращения редких сборок только на ба и алифе: реальные
-// уроки получают три разные буквы, а новые слоги сначала объясняются.
+// уроки получают до трёх разных букв, а новые слоги сначала объясняются.
 // Обязательное чтение и письмо, длина урока и предел всей сессии сохраняются.
 // Две сборки смешивают буквы и повторяют знаки, чтобы ответ нельзя было
 // угадать исключением. Пересчёт плана учитывает число выполненных сборок,
@@ -73,7 +73,7 @@ void main() {
     formsByLetter: curriculum.formsByLetter,
   );
 
-  test('восемь новых групп получают по три сборки на разных буквах', () {
+  test('темы получают сборки только на текущих и уже изученных буквах', () {
     for (final topic in curriculum.topics.where(
       (topic) => topic.id.startsWith('m.haraka.group'),
     )) {
@@ -89,11 +89,42 @@ void main() {
             .toList();
         expect(exercises, hasLength(20), reason: topic.id);
         expectBalanced(exercises);
-        expect(sequences, hasLength(3), reason: '${topic.id}, seed $seed');
-        expect(sequences.map((e) => e.atom.letterId).toSet(), hasLength(3));
+        final families = byId.values
+            .where(
+              (atom) =>
+                  atom.kind == AtomKind.syllable &&
+                  atom.tracing != null &&
+                  (ctx.isKnown(atom.id) || plan.newAtoms.contains(atom)),
+            )
+            .groupListsBy((atom) => atom.letterId);
+        final completeFamilies = families.values.where(
+          (family) => family.length == 3,
+        );
+        expect(
+          sequences.length,
+          lessThanOrEqualTo(min(3, completeFamilies.length)),
+        );
+        if (completeFamilies.any(
+          (family) => family.every(plan.newAtoms.contains),
+        )) {
+          expect(sequences, isNotEmpty, reason: '${topic.id}, seed $seed');
+        }
+        expect(
+          sequences.map((e) => e.atom.letterId).toSet(),
+          hasLength(sequences.length),
+        );
+        expect(
+          sequences
+              .expand((e) => e.resultAtoms)
+              .every(
+                (atom) => ctx.isKnown(atom.id) || plan.newAtoms.contains(atom),
+              ),
+          isTrue,
+          reason: 'Будущие темы не вводятся случайной сборкой',
+        );
         expect(
           sequences.where((e) => e.mode == ExerciseMode.harakaForLetters),
-          hasLength(2),
+          hasLength(sequences.length >= 3 ? 2 : 0),
         );
         for (final atom in plan.newAtoms) {
           final modes = exercises
@@ -182,7 +213,20 @@ void main() {
       curriculum.topics.firstWhere((topic) => topic.id == 'm.join'),
     );
     final atoms = byId.values
-        .where((atom) => atom.id.startsWith('vowel.') && ctx.isKnown(atom.id))
+        .where(
+          (atom) =>
+              const {
+                'ra',
+                'sod',
+                'dod',
+                'to',
+                'zho',
+                'ghayn',
+                'qof',
+              }.contains(atom.letterId) &&
+              atom.kind == AtomKind.syllable &&
+              ctx.isKnown(atom.id),
+        )
         .take(20)
         .toList();
     final plan = LessonPlan(
@@ -313,16 +357,16 @@ void main() {
     }
   });
 
-  test('дополнительные слоги объясняются до сборки и остаются в журнале', () {
+  test('слоги текущей темы объясняются до сборки и остаются в журнале', () {
     final topic = curriculum.topics.firstWhere(
-      (t) => t.id == 'm.haraka.group1',
+      (t) => t.id == 'm.haraka.group6',
     );
     final ctx = before(topic);
     final plan = TopicBoard(curriculum).planFor(topic, ctx, sessionId: 100);
     final exercise =
         ExerciseGenerator(curriculum: curriculum, random: Random(1))
             .build(plan: plan, ctx: ctx, sessionId: 100)
-            .firstWhere((e) => e.introductionAtoms.isNotEmpty);
+            .firstWhere((e) => e.mode.isHarakaSequence);
     final explanations = LessonExplanationQueue(curriculum)..activate(plan);
     explanations.prepareFor(exercise);
     final shown = <String>{};
@@ -331,7 +375,12 @@ void main() {
       shown.add(atom.id);
       explanations.dismissCard();
     }
-    expect(shown, containsAll(exercise.introductionAtoms.map((a) => a.id)));
+    expect(exercise.introductionAtoms, isEmpty);
+    final newAtoms = exercise.resultAtoms
+        .where(plan.newAtoms.contains)
+        .toList();
+    expect(newAtoms, isNotEmpty);
+    expect(shown, containsAll(newAtoms.map((a) => a.id)));
     final fold = ProgressFold(letterFormIds: curriculum.letterFormIds);
     final progress = fold.fold([
       for (final atom in exercise.resultAtoms)
@@ -340,12 +389,12 @@ void main() {
           sessionId: 100,
           at: DateTime(2026, 10, 3),
           mode: exercise.mode,
-          correct: atom != exercise.introductionAtoms.first,
+          correct: atom != newAtoms.first,
           attempt: 1,
           fastEnough: true,
         ),
     ]);
     expect(progress.keys, containsAll(exercise.resultAtoms.map((a) => a.id)));
-    expect(progress[exercise.introductionAtoms.first.id]!.totalErrors, 1);
+    expect(progress[newAtoms.first.id]!.totalErrors, 1);
   });
 }

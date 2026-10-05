@@ -18,6 +18,8 @@ class LessonAudioWaveform extends StatelessWidget {
     height: height,
     layers: 3,
     track: track,
+    animate: !MediaQuery.disableAnimationsOf(context),
+    animateWhenIdle: !kIsWeb,
     restHeight: .4,
     minBumps: 3,
     maxBumps: 4,

@@ -34,19 +34,22 @@ HARAKAT_LETTERS = [
 HARAKAT_LETTER_IDS = [letter_id for letter_id, _, _ in HARAKAT_LETTERS]
 HARAKAT_NAMES = ["fatha", "kasra", "damma"]
 
-# Все три знака объясняются на ба. Для твёрдых букв и ро нужна отдельная
-# проверка касры; первые короткие слова требуют также касру на мим и айн.
-# Остальные буквы получают один обязательный слог, а не все три.
+# Все три знака вводятся на ба. Объёмные буквы и ро получают полный
+# набор, чтобы объяснить особенности при разных гласных. У хо отдельно
+# разбирается фатха. Касра на мим и айн нужна для первых коротких слов.
+# На обычных буквах выбираем разные знаки, включая дамму, без тройного
+# повторения каждого сочетания.
 CORE_VOWELS = {
     "ba": ("fatha", "kasra", "damma"),
-    "ra": ("fatha", "kasra"),
+    "alif": ("fatha", "kasra", "damma"),
+    **{letter_id: ("fatha", "kasra", "damma") for letter_id in
+       ("ra", "sod", "dod", "to", "zho", "ghayn", "qof")},
+    "kha": ("fatha",),
     "mim": ("fatha", "kasra"),
     "ayn": ("fatha", "kasra"),
-    "alif": ("fatha", "kasra", "damma"),
-    **{letter_id: ("fatha", "kasra") for letter_id in
-       ("kha", "sod", "dod", "to", "zho", "ghayn", "qof")},
-    **{letter_id: ("damma",) for letter_id in ("tha", "dhal", "ha", "ya")},
-    **{letter_id: ("kasra",) for letter_id in ("zay", "waw")},
+    **{letter_id: ("damma",) for letter_id in
+       ("dal", "lam", "fa", "tha", "dhal", "ha", "ya")},
+    **{letter_id: ("kasra",) for letter_id in ("ta", "sin", "jim", "zay", "waw")},
 }
 
 
@@ -59,6 +62,14 @@ CORE_SYLLABLE_IDS = [
     for letter_id in HARAKAT_LETTER_IDS
     if letter_id != "ba"
     for vowel in core_vowels(letter_id)
+]
+
+# Сохраняем прежние атомы, заменённые при выравнивании огласовок, для
+# чтения накопленного прогресса. В обязательные темы они больше не входят.
+LEGACY_SYLLABLE_IDS = [
+    "vowel.ta.fatha", "vowel.dal.fatha", "vowel.sin.fatha",
+    "vowel.lam.fatha", "vowel.jim.fatha", "vowel.fa.fatha",
+    "vowel.kha.kasra",
 ]
 
 # Ба уже освоена вместе с самими знаками: второй обязательный набор

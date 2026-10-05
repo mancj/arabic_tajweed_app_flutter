@@ -1,12 +1,15 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/inner_shadow.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 
-/// Кнопка перехода к следующему шагу. Стиль один в один с макетом: градиент
-/// сверху вниз, мягкая многослойная тень под кнопкой и две внутренние тени —
-/// светлая подсветка и тёмная фаска по нижнему краю.
+/// Кнопка перехода к следующему шагу: Liquid Glass на iOS,
+/// градиент с тенями из макета на остальных платформах.
 ///
 /// [subtitle] опционален — без него заголовок центрируется по кнопке.
 class NextButton extends StatelessWidget {
@@ -41,6 +44,37 @@ class NextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final useLiquidGlass =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    if (useLiquidGlass) {
+      final glassSettings = LiquidGlassSettings(
+        glassColor: UIColors.glassButtonTint,
+        fresnelStrength: 1,
+        refractiveIndex: 0,
+        blur: 8,
+        frost: 8,
+        chromaticAberration: .6,
+        lightIntensity: .2,
+        rimLight: 2,
+      );
+      // GlassButton сам анимирует линзу и свет при нажатии; дополнительный
+      // AppGestureDetector конкурировал бы с его обработкой жестов.
+      return GlassButton.custom(
+        height: 56,
+        // Половина высоты даёт круглые торцы и прямые верх и низ.
+        shape: const LiquidRoundedRectangle(borderRadius: 52),
+        quality: GlassQuality.premium,
+        useOwnLayer: true,
+        settings: glassSettings,
+        enabled: enabled && onTap != null,
+        onTap: () {
+          AppHaptics.tick();
+          onTap?.call();
+        },
+        child: _buildContent(glass: true),
+      );
+    }
+
     return AppGestureDetector(
       onTap: enabled ? onTap : null,
       child: Opacity(
@@ -53,7 +87,7 @@ class NextButton extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [UIColors.primary, UIColors.primaryButtonBottom],
-              stops: [0.234, 1],
+              stops: const [0.234, 1],
             ),
             boxShadow: [
               for (final (alpha, dy, blur) in _shadows)
@@ -74,43 +108,51 @@ class NextButton extends StatelessWidget {
               ),
               InnerShadow(
                 color: UIColors.primaryButtonHighlight,
-                offset: Offset(0, -3),
+                offset: const Offset(0, -3),
                 blur: 2,
               ),
             ],
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, size: 20, color: UIColors.primaryButtonText),
-                      const Margin.horizontal(8),
-                    ],
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: UITextStyles.semibold16Compact.copyWith(
-                          color: UIColors.primaryButtonText,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: UITextStyles.semibold13.copyWith(
-                      color: UIColors.highlightArea.withValues(alpha: .5),
-                    ),
-                  ),
-              ],
-            ),
+            child: _buildContent(),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildContent({bool glass = false}) => Column(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 20,
+              color: glass ? UIColors.text : UIColors.primaryButtonText,
+            ),
+            const Margin.horizontal(8),
+          ],
+          Flexible(
+            child: Text(
+              title,
+              style: UITextStyles.semibold16Compact.copyWith(
+                color: glass ? UIColors.text : UIColors.primaryButtonText,
+              ),
+            ),
+          ),
+        ],
+      ),
+      if (subtitle != null)
+        Text(
+          subtitle!,
+          style: UITextStyles.semibold13.copyWith(
+            color: glass
+                ? UIColors.secondary1
+                : UIColors.highlightArea.withValues(alpha: .5),
+          ),
+        ),
+    ],
+  );
 }

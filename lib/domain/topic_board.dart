@@ -153,7 +153,12 @@ class TopicBoard {
     int sessionId = 1,
     LearningRules rules = const LearningRules(),
   }) {
-    final nodes = topic.counterOf
+    final board = TopicBoard(curriculum, rules: rules);
+    final ids = board.lessonAtomIds(topic, ctx);
+    final wholeTopicReview =
+        topic.lessonBlocks.isNotEmpty &&
+        topic.counterOf.every((id) => board.isDone(id, ctx));
+    final nodes = ids
         .map(
           (id) =>
               _node(id) ??
@@ -161,8 +166,8 @@ class TopicBoard {
         )
         .toList();
 
-    // Вся тема обязательна. Если часть материала пока недоступна,
-    // нужно исправить зависимости или разделить тему, а не урезать урок.
+    // Вся выбранная авторская часть обязательна. Следующие части темы
+    // остаются в её счётчике и ждут освоения текущей.
     final fresh = nodes
         .where((n) => ctx.stateOf(n.atom.id) == AtomState.fresh)
         .map((n) => n.atom)
@@ -180,7 +185,7 @@ class TopicBoard {
       );
     }
 
-    final known = topic.counterOf
+    final known = ids
         .where((id) => ctx.stateOf(id) != AtomState.fresh)
         .toList();
 
@@ -208,6 +213,9 @@ class TopicBoard {
           : LessonTemplate.newLetter,
       newAtoms: fresh,
       reviewAtoms: known,
+      reviewCounts: wholeTopicReview
+          ? {for (final id in known) id: 2}
+          : const {},
       spacedReview: spaced,
       reason: fresh.isEmpty
           ? 'повторение темы «${topic.title}»'
@@ -215,6 +223,27 @@ class TopicBoard {
     );
     plan.validate(curriculum, rules);
     return plan;
+  }
+
+  /// Первая незавершённая авторская часть; после освоения — вся тема
+  /// для повторения. И ввод нового, и добор используют один и тот же набор.
+  List<String> lessonAtomIds(Topic topic, CurriculumContext ctx) {
+    final blocks = topic.lessonBlocks;
+    if (blocks.isNotEmpty &&
+        (blocks.any((block) => block.isEmpty) ||
+            !const SetEquality<String>().equals(
+              blocks.expand((block) => block).toSet(),
+              topic.counterOf.toSet(),
+            ) ||
+            blocks.expand((block) => block).length != topic.counterOf.length)) {
+      throw StateError(
+        'Части темы ${topic.id} должны покрывать весь её материал',
+      );
+    }
+    final activeBlock = blocks.firstWhereOrNull(
+      (block) => block.any((id) => !isDone(id, ctx)),
+    );
+    return activeBlock ?? topic.counterOf;
   }
 
   /// Атомы тем, стоящих в списке после [topic]. Тема, которой нет

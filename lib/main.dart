@@ -13,6 +13,7 @@ import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_pag
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/connection_build_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/glow_wave_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_drawing_debug_page.dart';
@@ -161,6 +162,10 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: SyllableBuildDebugPage.routeName,
           page: () => const SyllableBuildDebugPage(),
+        ),
+        GetPage(
+          name: ConnectionBuildDebugPage.routeName,
+          page: () => const ConnectionBuildDebugPage(),
         ),
         GetPage(
           name: StarfieldDebugPage.routeName,

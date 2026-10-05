@@ -1,0 +1,7 @@
+title: "Лям с даммой"
+blocks:
+  - letter:
+      glyph: "لُ"
+      audio: "audio/harakat/lam_damma.mp3"
+  - text: |
+      Послушайте и прочитайте: **لُ**. Звук «у» краткий.

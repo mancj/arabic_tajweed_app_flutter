@@ -6,17 +6,76 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Волна не должна ломаться на дорожке без пиков: на вебе и десктопе
 /// нативного разбора нет, и звучание там выражается только раскачкой.
+/// В браузере волна должна прекращать запросы кадров в тишине, снова оживать
+/// на play и отписываться от старой дорожки: иначе экран постоянно рисуется
+/// на телефоне или перестаёт реагировать на звук после смены упражнения.
 void main() {
   final levels = List.generate(60, (i) => (i % 7) / 6);
 
   Future<void> pumpWave(
     WidgetTester tester,
-    ValueListenable<AudioTrack> track,
-  ) => tester.pumpWidget(
+    ValueListenable<AudioTrack> track, {
+    bool animateWhenIdle = true,
+  }) => tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(body: WaveformWidget(height: 50, track: track)),
+      home: Scaffold(
+        body: WaveformWidget(
+          height: 50,
+          track: track,
+          animateWhenIdle: animateWhenIdle,
+        ),
+      ),
     ),
   );
+
+  testWidgets('в тишине нет кадров, звук запускает волну снова', (
+    tester,
+  ) async {
+    final track = ValueNotifier<AudioTrack>(AudioTrack.silent);
+    addTearDown(track.dispose);
+    await pumpWave(tester, track, animateWhenIdle: false);
+    await tester.pumpAndSettle();
+    expect(tester.binding.hasScheduledFrame, isFalse);
+
+    track.value = const AudioTrack(isPlaying: true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.binding.hasScheduledFrame, isTrue);
+
+    track.value = AudioTrack.silent;
+    await tester.pumpAndSettle();
+    expect(tester.binding.hasScheduledFrame, isFalse);
+
+    track.value = const AudioTrack(isPlaying: true);
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('после смены дорожки слушает только новую', (tester) async {
+    final oldTrack = ValueNotifier<AudioTrack>(AudioTrack.silent);
+    final newTrack = ValueNotifier<AudioTrack>(AudioTrack.silent);
+    addTearDown(oldTrack.dispose);
+    addTearDown(newTrack.dispose);
+    await pumpWave(tester, oldTrack, animateWhenIdle: false);
+    await pumpWave(tester, newTrack, animateWhenIdle: false);
+    await tester.pumpAndSettle();
+
+    oldTrack.value = const AudioTrack(isPlaying: true);
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    newTrack.value = const AudioTrack(isPlaying: true);
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isTrue);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(
+      () => newTrack.value = const AudioTrack(isPlaying: true, progress: .5),
+      returnsNormally,
+    );
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isFalse);
+  });
 
   testWidgets('дорожка с пиками не роняет отрисовку', (tester) async {
     final track = ValueNotifier<AudioTrack>(AudioTrack.silent);

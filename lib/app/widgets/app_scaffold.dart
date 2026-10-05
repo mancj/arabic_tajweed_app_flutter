@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -109,6 +110,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     // makes the whole screen rebuild when the device theme changes.
     MediaQuery.platformBrightnessOf(context);
     final insets = MediaQuery.paddingOf(context);
+    final background = widget.backgroundColor ?? UIColors.pageBackground;
 
     final headerZone =
         insets.top +
@@ -130,8 +132,12 @@ class _AppScaffoldState extends State<AppScaffold> {
           widget.contentPadding.bottom + bottomZone + AppScaffold._contentGap,
     );
 
+    final content = Builder(
+      builder: (context) => widget.builder(context, contentInsets),
+    );
+
     return Scaffold(
-      backgroundColor: widget.backgroundColor ?? UIColors.pageBackground,
+      backgroundColor: background,
       body: Center(
         child: Container(
           alignment: Alignment.topCenter,
@@ -147,20 +153,41 @@ class _AppScaffoldState extends State<AppScaffold> {
               //   ),
               // ),
               Positioned.fill(
-                child: GlassScrollEdgeEffect(
-                  // Контент под шапкой плавно размывается, чтобы стеклянный хром
-                  // оставался читаемым. Снизу блюра нет: панель не затемняет
-                  // контент за собой.
-                  style: GlassScrollEdgeStyle.blur,
-                  maxSigma: widget.edgeBlurSigma,
-                  topFadeHeight: headerZone + AppScaffold._topBlurFadeExtension,
-                  bottomFadeHeight: 0,
-                  child: Builder(
-                    builder: (context) =>
-                        widget.builder(context, contentInsets),
+                child: kIsWeb
+                    ? content
+                    : GlassScrollEdgeEffect(
+                        // Контент под шапкой плавно размывается, чтобы стеклянный хром
+                        // оставался читаемым. Снизу блюра нет: панель не затемняет
+                        // контент за собой.
+                        style: GlassScrollEdgeStyle.blur,
+                        maxSigma: widget.edgeBlurSigma,
+                        topFadeHeight:
+                            headerZone + AppScaffold._topBlurFadeExtension,
+                        bottomFadeHeight: 0,
+                        child: content,
+                      ),
+              ),
+              if (kIsWeb)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: headerZone + AppScaffold._topBlurFadeExtension,
+                  child: IgnorePointer(
+                    // Простая заливка сохраняет читаемость шапки без
+                    // повторного размытия всего содержимого на каждом кадре.
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [background, background.withValues(alpha: 0)],
+                          stops: const [.65, 1],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
               Positioned(
                 top: insets.top + AppScaffold._headerTopGap,
                 left: 0,
@@ -324,8 +351,8 @@ class AppScaffoldActionButton extends StatelessWidget {
     // Иначе при удержании деформированный край линзы срезается.
     interactionScale: 1.01,
     // Линзу рисует premium; собственный слой нужен вне GlassLayer.
-    quality: defaultQuality,
-    useOwnLayer: true,
+    quality: kIsWeb ? GlassQuality.minimal : defaultQuality,
+    useOwnLayer: !kIsWeb,
     settings:
         settings ?? defaultSettings.copyWith(glassColor: UIColors.white10),
   );

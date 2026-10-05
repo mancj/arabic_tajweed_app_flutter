@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from harakat_data import (
-    HARAKA_SIGN_IDS, HARAKAT_LETTERS, REQUIRED_HARAKA_IDS, core_vowels,
+    HARAKA_SIGN_IDS, HARAKAT_LETTERS, LEGACY_SYLLABLE_IDS, REQUIRED_HARAKA_IDS, core_vowels,
 )
 
 
@@ -17,8 +17,8 @@ VOWELS = [
     ("kasra", "ِ", "касрой"),
     ("damma", "ُ", "даммой"),
 ]
-# В каждом блоке не больше пяти новых слогов: остаётся место для повторения
-# и обязательного рисунка огласовки, не растягивая этап на 16+ уроков.
+# Прежние группы букв остаются темами. Большие группы имеют авторские
+# части по целым буквам: не больше пяти новых слогов за занятие.
 GROUP_LETTER_IDS = (
     ("ta", "kaf", "dal", "ra"),
     ("sin", "mim", "lam", "shin"),
@@ -63,14 +63,17 @@ def all_of(requirements):
     return {"type": "allOf", "parts": list(requirements)}
 
 
-def topic(topic_id, title, requirement, ids, stage=2):
-    return {
+def topic(topic_id, title, requirement, ids, stage=2, lesson_blocks=None):
+    result = {
         "id": topic_id,
         "stage": stage,
         "title": title,
         "requirement": requirement,
         "counterOf": ids,
     }
+    if lesson_blocks is not None:
+        result["lessonBlocks"] = lesson_blocks
+    return result
 
 
 def node(atom, requirement):
@@ -159,7 +162,16 @@ def build():
         ids = syllable_ids(group)
         requirement = all_of(map(completed, previous))
         titles = " и ".join(glyph for _, glyph, _ in group)
-        topics.append(topic(f"m.haraka.group{index}", f"Огласовки на {titles}", requirement, ids))
+        blocks = []
+        for letter in group:
+            letter_ids = syllable_ids([letter])
+            if not blocks or len(blocks[-1]) + len(letter_ids) > 5:
+                blocks.append([])
+            blocks[-1].extend(letter_ids)
+        topics.append(topic(
+            f"m.haraka.group{index}", f"Огласовки на {titles}", requirement, ids,
+            lesson_blocks=blocks if len(blocks) > 1 else None,
+        ))
         for letter_id, glyph, letter_name in group:
             for name, mark, title in VOWELS:
                 if name not in core_vowels(letter_id):
@@ -175,6 +187,18 @@ def build():
                     f"harakat/{name}",
                 ), requirement))
         previous = ids
+
+    # Исторические слоги сохраняют ID, запись и карточку, но не требуют
+    # отдельного урока и не участвуют в условиях перехода.
+    for atom_id in LEGACY_SYLLABLE_IDS:
+        _, letter_id, vowel = atom_id.split(".")
+        glyph, letter_name = LETTER_BY_ID[letter_id]
+        _, mark, title = next(value for value in VOWELS if value[0] == vowel)
+        nodes.append(node(spoken_atom(
+            atom_id, "syllable", f"{glyph}{mark}",
+            f"{letter_name.capitalize()} с {title}", letter_id,
+            harakat_asset(letter_id, vowel), f"harakat/{vowel}",
+        ), all_of(map(known, signs))))
 
     stage2 = json.loads((ROOT / "assets/curriculum/stage2.json").read_text())
     connection_ids = [

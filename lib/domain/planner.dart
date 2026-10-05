@@ -388,9 +388,9 @@ class LessonPlanner {
           stageAtomIds,
         );
       }
-      if (unfinished.topic.counterOf.every(
-        (id) => ctx.stateOf(id) != AtomState.fresh,
-      )) {
+      if (board
+          .lessonAtomIds(unfinished.topic, ctx)
+          .every((id) => ctx.stateOf(id) != AtomState.fresh)) {
         final focused = _focusOnGaps(
           unfinished.topic,
           board,
@@ -688,7 +688,8 @@ class LessonPlanner {
   ) {
     final counts = <String, int>{};
     var remaining = min(rules.focusedReviewTasks, rules.tasksPerSession);
-    final gaps = topic.counterOf
+    final gaps = board
+        .lessonAtomIds(topic, ctx)
         .where((id) => !board.isDone(id, ctx))
         .sortedBy<num>((id) => ctx.progress[id]?.lastSeenSession ?? 0);
     for (final id in gaps) {

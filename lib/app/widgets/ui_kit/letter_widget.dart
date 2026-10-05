@@ -137,120 +137,127 @@ class LetterWidgetCard extends StatelessWidget {
         track: track,
       );
     }
-    return Tilt(
-      tiltConfig: _tiltConfig,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 200),
-        decoration: BoxDecoration(
-          color: UIColors.cardBackground,
-          borderRadius: _shape,
-          border: Border.all(color: UIColors.borders),
-          boxShadow: [
-            BoxShadow(
-              color: UIColors.shadows,
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        // Высоту карточки задаёт контент. Узор на неё не влияет: он живёт
-        // в боксе буквы и вылезает за него через [OverflowBox], а по краям
-        // карточки его подрезает [ClipRRect].
-        // Узор занимает квадрат в ширину экрана: карточка растянута на всю
-        // страницу, а лишнее всё равно подрезается. Ширину самой карточки
-        // дал бы [LayoutBuilder], но он тут вреден: перестройки внутри него,
-        // включая тики анимаций узора, выполняются в его layout, тот всплывает
-        // до вьюпорта, а [SingleChildScrollView] на каждом layout загоняет
-        // позицию в границы — и пружина у края пропадает.
-        child: Builder(
-          builder: (context) {
-            final decorSide = MediaQuery.sizeOf(context).width;
+    final still = kIsWeb || MediaQuery.disableAnimationsOf(context);
+    final card = Container(
+      constraints: const BoxConstraints(minHeight: 200),
+      decoration: BoxDecoration(
+        color: UIColors.cardBackground,
+        borderRadius: _shape,
+        border: Border.all(color: UIColors.borders),
+        boxShadow: [
+          BoxShadow(
+            color: UIColors.shadows,
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      // Высоту карточки задаёт контент. Узор на неё не влияет: он живёт
+      // в боксе буквы и вылезает за него через [OverflowBox], а по краям
+      // карточки его подрезает [ClipRRect].
+      // Узор занимает квадрат в ширину экрана: карточка растянута на всю
+      // страницу, а лишнее всё равно подрезается. Ширину самой карточки
+      // дал бы [LayoutBuilder], но он тут вреден: перестройки внутри него,
+      // включая тики анимаций узора, выполняются в его layout, тот всплывает
+      // до вьюпорта, а [SingleChildScrollView] на каждом layout загоняет
+      // позицию в границы — и пружина у края пропадает.
+      child: Builder(
+        builder: (context) {
+          final decorSide = MediaQuery.sizeOf(context).width;
 
-            return ClipRRect(
-              borderRadius: _shape,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Декоративный фон — самый нижний слой карточки: он не
-                  // должен перекрывать ни заголовок, ни аудиоволну.
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Transform.translate(
-                        offset: const Offset(0, -_decorRise),
-                        child: OverflowBox(
-                          alignment: Alignment.center,
-                          maxWidth: decorSide,
-                          maxHeight: decorSide,
-                          child: SizedBox.square(
-                            dimension: decorSide,
-                            child: const AnimatedBackgroundShapes(),
+          return ClipRRect(
+            borderRadius: _shape,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Декоративный фон — самый нижний слой карточки: он не
+                // должен перекрывать ни заголовок, ни аудиоволну.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Transform.translate(
+                      offset: const Offset(0, -_decorRise),
+                      child: OverflowBox(
+                        alignment: Alignment.center,
+                        maxWidth: decorSide,
+                        maxHeight: decorSide,
+                        child: SizedBox.square(
+                          dimension: decorSide,
+                          child: const RepaintBoundary(
+                            child: AnimatedBackgroundShapes(),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  if (_playable)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: LessonAudioWaveform(track: track),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        if (labelText != null || question != null)
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (labelText != null)
-                                  BadgeLabel(
-                                    text: labelText!,
-                                    color: UIColors.primary,
-                                    textColor: UIColors.badgeText1,
-                                  ),
-                                if (question != null) ...[
-                                  const Margin.vertical(8),
-                                  Text.rich(
-                                    _questionSpan(),
-                                    style: UITextStyles.semibold22Compact,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        const Margin.vertical(12),
-                        _glyph(),
-                        if (_playable) ...[
-                          const Margin.vertical(32),
-                          PlayControl(
-                            letter: letter,
-                            onTap: onPlay!,
-                            onAutoPlay: onAutoPlay,
-                            track: track,
-                            autoPlay: autoPlay,
-                          ),
-                        ] else
-                          const Margin.vertical(32),
-                      ],
-                    ),
+                ),
+                if (_playable)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: LessonAudioWaveform(track: track),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      if (labelText != null || question != null)
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (labelText != null)
+                                BadgeLabel(
+                                  text: labelText!,
+                                  color: UIColors.primary,
+                                  textColor: UIColors.badgeText1,
+                                ),
+                              if (question != null) ...[
+                                const Margin.vertical(8),
+                                Text.rich(
+                                  _questionSpan(),
+                                  style: UITextStyles.semibold22Compact,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      const Margin.vertical(12),
+                      _glyph(context),
+                      if (_playable) ...[
+                        const Margin.vertical(32),
+                        PlayControl(
+                          letter: letter,
+                          onTap: onPlay!,
+                          onAutoPlay: onAutoPlay,
+                          track: track,
+                          autoPlay: autoPlay,
+                        ),
+                      ] else
+                        const Margin.vertical(32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
+    // В браузере не подписываем карточку на датчики и движение указателя.
+    return still ? card : Tilt(tiltConfig: _tiltConfig, child: card);
   }
 
   /// Буква вместе с узором. Фон вынесен в общий нижний слой карточки,
   /// поэтому здесь остаётся только глиф и его анимация.
-  Widget _glyph() => SizedBox(
+  Widget _parallax(BuildContext context, Widget child) =>
+      kIsWeb || MediaQuery.disableAnimationsOf(context)
+      ? child
+      : TiltParallax(offset: const Offset(8, 8), child: child);
+
+  Widget _glyph(BuildContext context) => SizedBox(
     height: 80,
     child: Stack(
       alignment: Alignment.center,
@@ -258,13 +265,15 @@ class LetterWidgetCard extends StatelessWidget {
       children: [
         // Глиф уезжает за наклоном сильнее фона — так буква
         // отделяется от подложки и кажется ближе к зрителю.
-        TiltParallax(
-          offset: const Offset(8, 8),
+        _parallax(
+          context,
           // Смена буквы — своя анимация, а не только появление карточки:
           // в уроке карточка остаётся на месте и меняется лишь глиф,
           // и без этого он просто подменялся.
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
+          AnimatedSwitcher(
+            duration: Duration(
+              milliseconds: MediaQuery.disableAnimationsOf(context) ? 0 : 400,
+            ),
             switchInCurve: Curves.easeOutBack,
             switchOutCurve: Curves.easeIn,
             transitionBuilder: (child, animation) => FadeTransition(
@@ -305,9 +314,9 @@ class LetterWidgetCard extends StatelessWidget {
         if (subtitle != null)
           Positioned(
             bottom: -12,
-            child: TiltParallax(
-              offset: const Offset(8, 8),
-              child: Container(
+            child: _parallax(
+              context,
+              Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                 decoration: BoxDecoration(
                   color: UIColors.cardBackground,

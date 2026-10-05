@@ -1,0 +1,7 @@
+title: "Фа с даммой"
+blocks:
+  - letter:
+      glyph: "فُ"
+      audio: "audio/harakat/fa_damma.mp3"
+  - text: |
+      Послушайте и прочитайте: **فُ**. Звук «у» краткий.

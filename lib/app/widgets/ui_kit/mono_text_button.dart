@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../resources/ui_resources.dart';
 import '../app_gesture_detector.dart';
+import '../margin.dart';
 
 /// Небольшое текстовое действие с моноширинной подписью.
 class MonoTextButton extends StatelessWidget {
@@ -35,20 +36,23 @@ class MonoTextButton extends StatelessWidget {
           child: AppGestureDetector(
             onTap: onPressed,
             pressedOpacity: .96,
-            child: SizedBox(
-              height: 48,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 18, color: foreground),
-                    const SizedBox(width: 8),
+                    const Margin.horizontal(8),
                   ],
-                  Text(
-                    title,
-                    style: UITextStyles.monoRegular14.copyWith(
-                      color: foreground,
+                  Flexible(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: UITextStyles.monoRegular14.copyWith(
+                        color: foreground,
+                      ),
                     ),
                   ),
                 ],

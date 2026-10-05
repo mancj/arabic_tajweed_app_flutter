@@ -121,6 +121,7 @@ class Topic {
     required this.title,
     required this.requirement,
     this.counterOf = const [],
+    this.lessonBlocks = const [],
   });
 
   factory Topic.fromJson(Map<String, dynamic> json) => _$TopicFromJson(json);
@@ -135,6 +136,11 @@ class Topic {
   /// Атомы, по которым считается прогресс темы («Хамза 2 из 5»).
   /// Пустой список — тема без счётчика.
   final List<String> counterOf;
+
+  /// Части большой темы для отдельных занятий. Вместе покрывают counterOf;
+  /// следующая часть вводится после освоения и практики предыдущей.
+  /// Пустой список означает, что тема вводится целиком.
+  final List<List<String>> lessonBlocks;
 
   Map<String, dynamic> toJson() => _$TopicToJson(this);
 }

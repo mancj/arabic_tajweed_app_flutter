@@ -41,7 +41,7 @@ void main() {
     formsByLetter: curriculum.formsByLetter,
   );
 
-  test('знаки на ба и восемь групп получают голос по одному разу', () {
+  test('знаки на ба и все темы огласовок получают голос по одному разу', () {
     for (final topic in curriculum.topics.where(
       (t) => t.id == 'm.haraka.signs' || t.id.startsWith('m.haraka.group'),
     )) {

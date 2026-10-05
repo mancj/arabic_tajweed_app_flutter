@@ -1,0 +1,7 @@
+title: "Даль с даммой"
+blocks:
+  - letter:
+      glyph: "دُ"
+      audio: "audio/harakat/dal_damma.mp3"
+  - text: |
+      Послушайте и прочитайте: **دُ**. Звук «у» краткий.

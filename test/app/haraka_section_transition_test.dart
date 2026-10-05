@@ -161,7 +161,6 @@ void main() {
       'ta',
       'kaf',
       'dal',
-      'ra',
     });
     await finish(await start(nextPlan));
     final introduced = (await database.readAll())

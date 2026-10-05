@@ -493,11 +493,24 @@
         ]
       },
       "counterOf": [
-        "vowel.ta.fatha",
+        "vowel.ta.kasra",
         "vowel.kaf.fatha",
-        "vowel.dal.fatha",
+        "vowel.dal.damma",
         "vowel.ra.fatha",
-        "vowel.ra.kasra"
+        "vowel.ra.kasra",
+        "vowel.ra.damma"
+      ],
+      "lessonBlocks": [
+        [
+          "vowel.ta.kasra",
+          "vowel.kaf.fatha",
+          "vowel.dal.damma"
+        ],
+        [
+          "vowel.ra.fatha",
+          "vowel.ra.kasra",
+          "vowel.ra.damma"
+        ]
       ]
     },
     {
@@ -509,7 +522,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -517,7 +530,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -526,14 +539,18 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       },
       "counterOf": [
-        "vowel.sin.fatha",
+        "vowel.sin.kasra",
         "vowel.mim.fatha",
         "vowel.mim.kasra",
-        "vowel.lam.fatha",
+        "vowel.lam.damma",
         "vowel.shin.fatha"
       ]
     },
@@ -546,7 +563,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -558,7 +575,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -569,9 +586,9 @@
       "counterOf": [
         "vowel.ayn.fatha",
         "vowel.ayn.kasra",
-        "vowel.jim.fatha",
+        "vowel.jim.kasra",
         "vowel.hha.fatha",
-        "vowel.fa.fatha"
+        "vowel.fa.damma"
       ]
     },
     {
@@ -591,7 +608,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -599,7 +616,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       },
@@ -642,7 +659,6 @@
       },
       "counterOf": [
         "vowel.kha.fatha",
-        "vowel.kha.kasra",
         "vowel.dhal.damma",
         "vowel.zay.kasra"
       ]
@@ -660,10 +676,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -675,9 +687,24 @@
       "counterOf": [
         "vowel.sod.fatha",
         "vowel.sod.kasra",
+        "vowel.sod.damma",
         "vowel.dod.fatha",
         "vowel.dod.kasra",
+        "vowel.dod.damma",
         "vowel.ha.damma"
+      ],
+      "lessonBlocks": [
+        [
+          "vowel.sod.fatha",
+          "vowel.sod.kasra",
+          "vowel.sod.damma"
+        ],
+        [
+          "vowel.dod.fatha",
+          "vowel.dod.kasra",
+          "vowel.dod.damma",
+          "vowel.ha.damma"
+        ]
       ]
     },
     {
@@ -697,11 +724,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -712,9 +747,24 @@
       "counterOf": [
         "vowel.to.fatha",
         "vowel.to.kasra",
+        "vowel.to.damma",
         "vowel.zho.fatha",
         "vowel.zho.kasra",
+        "vowel.zho.damma",
         "vowel.waw.kasra"
+      ],
+      "lessonBlocks": [
+        [
+          "vowel.to.fatha",
+          "vowel.to.kasra",
+          "vowel.to.damma"
+        ],
+        [
+          "vowel.zho.fatha",
+          "vowel.zho.kasra",
+          "vowel.zho.damma",
+          "vowel.waw.kasra"
+        ]
       ]
     },
     {
@@ -734,11 +784,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -749,9 +807,24 @@
       "counterOf": [
         "vowel.ghayn.fatha",
         "vowel.ghayn.kasra",
+        "vowel.ghayn.damma",
         "vowel.qof.fatha",
         "vowel.qof.kasra",
+        "vowel.qof.damma",
         "vowel.ya.damma"
+      ],
+      "lessonBlocks": [
+        [
+          "vowel.ghayn.fatha",
+          "vowel.ghayn.kasra",
+          "vowel.ghayn.damma"
+        ],
+        [
+          "vowel.qof.fatha",
+          "vowel.qof.kasra",
+          "vowel.qof.damma",
+          "vowel.ya.damma"
+        ]
       ]
     },
     {
@@ -775,7 +848,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -783,7 +856,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -795,7 +868,11 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -807,7 +884,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -823,7 +900,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -831,7 +908,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           },
           {
             "type": "atomKnown",
@@ -859,10 +936,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -879,11 +952,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -895,11 +976,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -911,11 +1000,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.qof.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
           },
           {
             "type": "atomKnown",
@@ -1636,14 +1733,14 @@
     },
     {
       "atom": {
-        "id": "vowel.ta.fatha",
+        "id": "vowel.ta.kasra",
         "kind": "syllable",
-        "display": "تَ",
-        "label": "Та с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.ta.fatha.yaml",
-        "audioAsset": "audio/harakat/ta_fatha.mp3",
+        "display": "تِ",
+        "label": "Та с касрой",
+        "explanationAsset": "assets/explanations/ru/vowel.ta.kasra.yaml",
+        "audioAsset": "audio/harakat/ta_kasra.mp3",
         "letterId": "ta",
-        "tracing": "harakat/fatha"
+        "tracing": "harakat/kasra"
       },
       "requirement": {
         "type": "allOf",
@@ -1694,14 +1791,14 @@
     },
     {
       "atom": {
-        "id": "vowel.dal.fatha",
+        "id": "vowel.dal.damma",
         "kind": "syllable",
-        "display": "دَ",
-        "label": "Даль с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.dal.fatha.yaml",
-        "audioAsset": "audio/harakat/dal_fatha.mp3",
+        "display": "دُ",
+        "label": "Даль с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.dal.damma.yaml",
+        "audioAsset": "audio/harakat/dal_damma.mp3",
         "letterId": "dal",
-        "tracing": "harakat/fatha"
+        "tracing": "harakat/damma"
       },
       "requirement": {
         "type": "allOf",
@@ -1781,21 +1878,50 @@
     },
     {
       "atom": {
-        "id": "vowel.sin.fatha",
+        "id": "vowel.ra.damma",
         "kind": "syllable",
-        "display": "سَ",
-        "label": "Син с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.sin.fatha.yaml",
-        "audioAsset": "audio/harakat/sin_fatha.mp3",
-        "letterId": "sin",
-        "tracing": "harakat/fatha"
+        "display": "رُ",
+        "label": "Ро с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.ra.damma.yaml",
+        "audioAsset": "audio/harakat/ra_damma.mp3",
+        "letterId": "ra",
+        "tracing": "harakat/damma"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.sin.kasra",
+        "kind": "syllable",
+        "display": "سِ",
+        "label": "Син с касрой",
+        "explanationAsset": "assets/explanations/ru/vowel.sin.kasra.yaml",
+        "audioAsset": "audio/harakat/sin_kasra.mp3",
+        "letterId": "sin",
+        "tracing": "harakat/kasra"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -1803,7 +1929,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -1812,6 +1938,10 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       }
@@ -1832,7 +1962,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -1840,7 +1970,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -1849,6 +1979,10 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       }
@@ -1869,7 +2003,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -1877,7 +2011,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -1886,27 +2020,31 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       }
     },
     {
       "atom": {
-        "id": "vowel.lam.fatha",
+        "id": "vowel.lam.damma",
         "kind": "syllable",
-        "display": "لَ",
-        "label": "Лям с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.lam.fatha.yaml",
-        "audioAsset": "audio/harakat/lam_fatha.mp3",
+        "display": "لُ",
+        "label": "Лям с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.lam.damma.yaml",
+        "audioAsset": "audio/harakat/lam_damma.mp3",
         "letterId": "lam",
-        "tracing": "harakat/fatha"
+        "tracing": "harakat/damma"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -1914,7 +2052,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -1923,6 +2061,10 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       }
@@ -1943,7 +2085,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -1951,7 +2093,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -1960,6 +2102,10 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
           }
         ]
       }
@@ -1980,7 +2126,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -1992,7 +2138,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -2017,7 +2163,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -2029,7 +2175,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -2040,21 +2186,21 @@
     },
     {
       "atom": {
-        "id": "vowel.jim.fatha",
+        "id": "vowel.jim.kasra",
         "kind": "syllable",
-        "display": "جَ",
-        "label": "Джим с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.jim.fatha.yaml",
-        "audioAsset": "audio/harakat/jim_fatha.mp3",
+        "display": "جِ",
+        "label": "Джим с касрой",
+        "explanationAsset": "assets/explanations/ru/vowel.jim.kasra.yaml",
+        "audioAsset": "audio/harakat/jim_kasra.mp3",
         "letterId": "jim",
-        "tracing": "harakat/fatha"
+        "tracing": "harakat/kasra"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -2066,7 +2212,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -2091,7 +2237,7 @@
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -2103,7 +2249,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -2114,21 +2260,21 @@
     },
     {
       "atom": {
-        "id": "vowel.fa.fatha",
+        "id": "vowel.fa.damma",
         "kind": "syllable",
-        "display": "فَ",
-        "label": "Фа с фатхой",
-        "explanationAsset": "assets/explanations/ru/vowel.fa.fatha.yaml",
-        "audioAsset": "audio/harakat/fa_fatha.mp3",
+        "display": "فُ",
+        "label": "Фа с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.fa.damma.yaml",
+        "audioAsset": "audio/harakat/fa_damma.mp3",
         "letterId": "fa",
-        "tracing": "harakat/fatha"
+        "tracing": "harakat/damma"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -2140,7 +2286,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -2173,7 +2319,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -2181,7 +2327,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       }
@@ -2210,7 +2356,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -2218,7 +2364,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       }
@@ -2247,7 +2393,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -2255,7 +2401,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       }
@@ -2284,7 +2430,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -2292,7 +2438,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       }
@@ -2321,7 +2467,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -2329,7 +2475,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           }
         ]
       }
@@ -2344,43 +2490,6 @@
         "audioAsset": "audio/harakat/kha_fatha.mp3",
         "letterId": "kha",
         "tracing": "harakat/fatha"
-      },
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.nun.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.tha.damma"
-          }
-        ]
-      }
-    },
-    {
-      "atom": {
-        "id": "vowel.kha.kasra",
-        "kind": "syllable",
-        "display": "خِ",
-        "label": "Хо с касрой",
-        "explanationAsset": "assets/explanations/ru/vowel.kha.kasra.yaml",
-        "audioAsset": "audio/harakat/kha_kasra.mp3",
-        "letterId": "kha",
-        "tracing": "harakat/kasra"
       },
       "requirement": {
         "type": "allOf",
@@ -2502,10 +2611,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -2535,7 +2640,32 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
+            "atomId": "vowel.dhal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zay.kasra"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.sod.damma",
+        "kind": "syllable",
+        "display": "صُ",
+        "label": "Сод с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.sod.damma.yaml",
+        "audioAsset": "audio/harakat/sod_damma.mp3",
+        "letterId": "sod",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kha.fatha"
           },
           {
             "type": "atomKnown",
@@ -2568,10 +2698,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -2601,7 +2727,32 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
+            "atomId": "vowel.dhal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zay.kasra"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.dod.damma",
+        "kind": "syllable",
+        "display": "ضُ",
+        "label": "Дод с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.dod.damma.yaml",
+        "audioAsset": "audio/harakat/dod_damma.mp3",
+        "letterId": "dod",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kha.fatha"
           },
           {
             "type": "atomKnown",
@@ -2631,10 +2782,6 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.kha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
           },
           {
             "type": "atomKnown",
@@ -2671,11 +2818,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -2708,11 +2863,64 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ha.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.to.damma",
+        "kind": "syllable",
+        "display": "طُ",
+        "label": "То с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.to.damma.yaml",
+        "audioAsset": "audio/harakat/to_damma.mp3",
+        "letterId": "to",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -2745,11 +2953,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -2782,11 +2998,64 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ha.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.zho.damma",
+        "kind": "syllable",
+        "display": "ظُ",
+        "label": "Зо с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.zho.damma.yaml",
+        "audioAsset": "audio/harakat/zho_damma.mp3",
+        "letterId": "zho",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -2819,11 +3088,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -2856,11 +3133,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -2893,11 +3178,64 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.waw.kasra"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.ghayn.damma",
+        "kind": "syllable",
+        "display": "غُ",
+        "label": "Гойн с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.ghayn.damma.yaml",
+        "audioAsset": "audio/harakat/ghayn_damma.mp3",
+        "letterId": "ghayn",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -2930,11 +3268,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -2967,11 +3313,64 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.waw.kasra"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.qof.damma",
+        "kind": "syllable",
+        "display": "قُ",
+        "label": "Коф с даммой",
+        "explanationAsset": "assets/explanations/ru/vowel.qof.damma.yaml",
+        "audioAsset": "audio/harakat/qof_damma.mp3",
+        "letterId": "qof",
+        "tracing": "harakat/damma"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -3004,6 +3403,10 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
@@ -3012,7 +3415,214 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.waw.kasra"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.ta.fatha",
+        "kind": "syllable",
+        "display": "تَ",
+        "label": "Та с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.ta.fatha.yaml",
+        "audioAsset": "audio/harakat/ta_fatha.mp3",
+        "letterId": "ta",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.dal.fatha",
+        "kind": "syllable",
+        "display": "دَ",
+        "label": "Даль с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.dal.fatha.yaml",
+        "audioAsset": "audio/harakat/dal_fatha.mp3",
+        "letterId": "dal",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.sin.fatha",
+        "kind": "syllable",
+        "display": "سَ",
+        "label": "Син с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.sin.fatha.yaml",
+        "audioAsset": "audio/harakat/sin_fatha.mp3",
+        "letterId": "sin",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.lam.fatha",
+        "kind": "syllable",
+        "display": "لَ",
+        "label": "Лям с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.lam.fatha.yaml",
+        "audioAsset": "audio/harakat/lam_fatha.mp3",
+        "letterId": "lam",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.jim.fatha",
+        "kind": "syllable",
+        "display": "جَ",
+        "label": "Джим с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.jim.fatha.yaml",
+        "audioAsset": "audio/harakat/jim_fatha.mp3",
+        "letterId": "jim",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.fa.fatha",
+        "kind": "syllable",
+        "display": "فَ",
+        "label": "Фа с фатхой",
+        "explanationAsset": "assets/explanations/ru/vowel.fa.fatha.yaml",
+        "audioAsset": "audio/harakat/fa_fatha.mp3",
+        "letterId": "fa",
+        "tracing": "harakat/fatha"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "vowel.kha.kasra",
+        "kind": "syllable",
+        "display": "خِ",
+        "label": "Хо с касрой",
+        "explanationAsset": "assets/explanations/ru/vowel.kha.kasra.yaml",
+        "audioAsset": "audio/harakat/kha_kasra.mp3",
+        "letterId": "kha",
+        "tracing": "harakat/kasra"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
           }
         ]
       }
@@ -3043,7 +3653,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -3051,7 +3661,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -3063,7 +3673,11 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -3075,7 +3689,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -3091,7 +3705,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -3099,7 +3713,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           },
           {
             "type": "atomKnown",
@@ -3127,10 +3741,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -3147,11 +3757,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -3163,11 +3781,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -3179,11 +3805,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.qof.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
           },
           {
             "type": "atomKnown",
@@ -3274,7 +3908,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -3282,7 +3916,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -3294,7 +3928,11 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -3306,7 +3944,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -3322,7 +3960,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -3330,7 +3968,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           },
           {
             "type": "atomKnown",
@@ -3358,10 +3996,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -3378,11 +4012,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -3394,11 +4036,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -3410,11 +4060,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.qof.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
           },
           {
             "type": "atomKnown",
@@ -3505,7 +4163,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.ta.fatha"
+            "atomId": "vowel.ta.kasra"
           },
           {
             "type": "atomKnown",
@@ -3513,7 +4171,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.dal.fatha"
+            "atomId": "vowel.dal.damma"
           },
           {
             "type": "atomKnown",
@@ -3525,7 +4183,11 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.sin.fatha"
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
           },
           {
             "type": "atomKnown",
@@ -3537,7 +4199,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.lam.fatha"
+            "atomId": "vowel.lam.damma"
           },
           {
             "type": "atomKnown",
@@ -3553,7 +4215,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.jim.fatha"
+            "atomId": "vowel.jim.kasra"
           },
           {
             "type": "atomKnown",
@@ -3561,7 +4223,7 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.fa.fatha"
+            "atomId": "vowel.fa.damma"
           },
           {
             "type": "atomKnown",
@@ -3589,10 +4251,6 @@
           },
           {
             "type": "atomKnown",
-            "atomId": "vowel.kha.kasra"
-          },
-          {
-            "type": "atomKnown",
             "atomId": "vowel.dhal.damma"
           },
           {
@@ -3609,11 +4267,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.dod.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
           },
           {
             "type": "atomKnown",
@@ -3625,11 +4291,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.zho.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
           },
           {
             "type": "atomKnown",
@@ -3641,11 +4315,19 @@
           },
           {
             "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
             "atomId": "vowel.qof.fatha"
           },
           {
             "type": "atomKnown",
             "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
           },
           {
             "type": "atomKnown",

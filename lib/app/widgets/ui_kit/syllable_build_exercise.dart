@@ -1,13 +1,12 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
-import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
 import 'package:arabic_tajweed_app/domain/syllable_build_question.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'exercise_tile.dart';
+import 'exercise_choice_row.dart';
 import 'letter_widget.dart';
 import 'rule_card.dart';
 
@@ -68,7 +67,7 @@ class SyllableBuildExercise extends StatelessWidget {
         const Margin.vertical(24),
         Text('1. Выберите букву', style: UITextStyles.semibold17),
         const Margin.vertical(12),
-        _ChoiceRow(
+        ExerciseChoiceRow(
           options: question.letterOptions,
           idFor: (atom) => atom.letterId!,
           glyphFor: HarakaSyllables.bareGlyphFor,
@@ -83,7 +82,7 @@ class SyllableBuildExercise extends StatelessWidget {
           const Margin.vertical(24),
           Text('2. Добавьте огласовку', style: UITextStyles.semibold17),
           const Margin.vertical(12),
-          _ChoiceRow(
+          ExerciseChoiceRow(
             options: HarakaSyllables.marks,
             idFor: (atom) => atom.id,
             glyphFor: (atom) => atom.display,
@@ -119,62 +118,4 @@ class SyllableBuildExercise extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Один и тот же выбор используется для буквы и знака, с отдельной оценкой.
-class _ChoiceRow extends StatelessWidget {
-  const _ChoiceRow({
-    required this.options,
-    required this.idFor,
-    required this.glyphFor,
-    required this.labelFor,
-    required this.keyPrefix,
-    required this.selectedId,
-    required this.expectedId,
-    required this.checked,
-    required this.onSelected,
-  });
-
-  final List<Atom> options;
-  final String Function(Atom) idFor;
-  final String Function(Atom) glyphFor;
-  final String Function(Atom) labelFor;
-  final String keyPrefix;
-  final String? selectedId;
-  final String expectedId;
-  final bool checked;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      for (final (index, atom) in options.indexed) ...[
-        if (index > 0) const Margin.horizontal(12),
-        Expanded(
-          child: Semantics(
-            key: ValueKey('$keyPrefix-${idFor(atom)}'),
-            label: labelFor(atom),
-            selected: idFor(atom) == selectedId,
-            inMutuallyExclusiveGroup: true,
-            button: true,
-            enabled: !checked,
-            onTap: checked ? null : () => onSelected(idFor(atom)),
-            child: ExcludeSemantics(
-              child: ExerciseChoiceTile(
-                glyph: glyphFor(atom),
-                index: index,
-                selected: idFor(atom) == selectedId,
-                accent: checked && idFor(atom) == expectedId
-                    ? UIColors.success
-                    : checked && idFor(atom) == selectedId
-                    ? UIColors.error
-                    : null,
-                onTap: checked ? null : () => onSelected(idFor(atom)),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ],
-  );
 }

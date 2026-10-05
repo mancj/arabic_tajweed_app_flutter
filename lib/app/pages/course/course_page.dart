@@ -24,7 +24,7 @@ class CoursePage extends GetView<CourseController> {
     bottomBar: Obx(
       () => NextButton(
         title: 'Начать занятие',
-        icon: Icons.play_arrow_rounded,
+        icon: Icons.flash_on_outlined,
         enabled: controller.canStart,
         onTap: controller.continueCourse,
       ),

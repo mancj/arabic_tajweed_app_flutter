@@ -111,6 +111,10 @@ class WaveformWidget extends StatefulWidget {
 
   final bool animate;
 
+  /// Декоративное движение в тишине. В браузере выключено: после затухания
+  /// звука волна перестаёт запрашивать кадры и не нагружает весь экран.
+  final bool animateWhenIdle;
+
   /// Настройка поднимающихся точек над волной.
   final WaveformParticles particles;
 
@@ -136,6 +140,7 @@ class WaveformWidget extends StatefulWidget {
     this.maxBumpHeight = 0.7,
     this.track,
     this.animate = true,
+    this.animateWhenIdle = true,
     this.particles = const WaveformParticles(),
     this.seed = 7,
   }) : assert(restHeight <= loudHeight, 'В тишине волна не выше, чем на пике'),
@@ -185,7 +190,8 @@ class _WaveformWidgetState extends State<WaveformWidget>
   @override
   void initState() {
     super.initState();
-    if (widget.animate) _ticker.start();
+    widget.track?.addListener(_onTrackChanged);
+    _syncTicker();
   }
 
   @override
@@ -207,8 +213,27 @@ class _WaveformWidgetState extends State<WaveformWidget>
         widget.particles.maxRadius != oldWidget.particles.maxRadius) {
       _particleSeeds = _buildParticleSeeds();
     }
-    if (widget.animate != oldWidget.animate) {
-      widget.animate ? _ticker.start() : _ticker.stop();
+    if (widget.track != oldWidget.track) {
+      oldWidget.track?.removeListener(_onTrackChanged);
+      widget.track?.addListener(_onTrackChanged);
+    }
+    _syncTicker();
+  }
+
+  void _onTrackChanged() => _syncTicker();
+
+  void _syncTicker() {
+    final shouldRun =
+        widget.animate &&
+        (widget.animateWhenIdle ||
+            widget.track?.value.isPlaying == true ||
+            _pulse.value.level > .001 ||
+            _pulse.value.particleLevel > .001);
+    if (shouldRun && !_ticker.isActive) {
+      _lastTick = Duration.zero;
+      _ticker.start();
+    } else if (!shouldRun && _ticker.isActive) {
+      _ticker.stop();
     }
   }
 
@@ -245,10 +270,22 @@ class _WaveformWidgetState extends State<WaveformWidget>
       level: level,
       particleLevel: particleLevel,
     );
+    if (!widget.animateWhenIdle &&
+        !track.isPlaying &&
+        level <= .001 &&
+        particleLevel <= .001) {
+      _pulse.value = _Pulse(
+        clock: _pulse.value.clock,
+        level: 0,
+        particleLevel: 0,
+      );
+      _ticker.stop();
+    }
   }
 
   @override
   void dispose() {
+    widget.track?.removeListener(_onTrackChanged);
     _ticker.dispose();
     _pulse.dispose();
     super.dispose();
@@ -323,21 +360,23 @@ class _WaveformWidgetState extends State<WaveformWidget>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.height,
-      width: double.infinity,
-      child: CustomPaint(
-        painter: _WaveformPainter(
-          layers: _layers,
-          particleSeeds: _particleSeeds,
-          pulse: _pulse,
-          strokeColor: widget.strokeColor ?? UIColors.primary60,
-          fillColor: widget.fillColor ?? UIColors.primary20,
-          particles: widget.particles,
-          strokeWidth: widget.strokeWidth,
-          amplitude: widget.amplitude,
-          restHeight: widget.restHeight,
-          loudHeight: widget.loudHeight,
+    return RepaintBoundary(
+      child: SizedBox(
+        height: widget.height,
+        width: double.infinity,
+        child: CustomPaint(
+          painter: _WaveformPainter(
+            layers: _layers,
+            particleSeeds: _particleSeeds,
+            pulse: _pulse,
+            strokeColor: widget.strokeColor ?? UIColors.primary60,
+            fillColor: widget.fillColor ?? UIColors.primary20,
+            particles: widget.particles,
+            strokeWidth: widget.strokeWidth,
+            amplitude: widget.amplitude,
+            restHeight: widget.restHeight,
+            loudHeight: widget.loudHeight,
+          ),
         ),
       ),
     );
@@ -389,11 +428,6 @@ class _Bump {
 
   double centerAt(double t) =>
       center + drift * math.sin(2 * math.pi * speed * 0.37 * t + phase * 1.7);
-
-  double valueAt(double x, double t) {
-    final d = (x - centerAt(t)) / width;
-    return amplitudeAt(t) * math.exp(-d * d);
-  }
 }
 
 /// Одна точка не хранит изменяемого состояния: её фаза вычисляется из часов
@@ -543,12 +577,23 @@ class _WaveformPainter extends CustomPainter {
     double loudness,
   ) {
     final path = Path()..moveTo(0, baseline);
+    // Центр и высота бугра одинаковы для всех точек одного кадра.
+    // Не считаем их синусы заново на каждом втором пикселе.
+    final frameBumps = [
+      for (final bump in bumps)
+        (
+          bump.centerAt(t),
+          bump.width,
+          bump.amplitudeAt(t) * (1 + _shimmer * loudness * bump.response),
+        ),
+    ];
 
     for (var x = 0.0; x <= size.width; x += _step) {
       final u = x / size.width;
       var value = 0.0;
-      for (final bump in bumps) {
-        value += bump.valueAt(u, t) * (1 + _shimmer * loudness * bump.response);
+      for (final (center, width, height) in frameBumps) {
+        final d = (u - center) / width;
+        value += height * math.exp(-d * d);
       }
       // Мягкое насыщение вместо clamp: сумма нескольких бугров легко
       // переваливает за единицу, и жёсткая обрезка давала плоские срезы

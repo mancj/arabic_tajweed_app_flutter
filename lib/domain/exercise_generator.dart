@@ -554,19 +554,9 @@ class ExerciseGenerator {
     for (final entry in families.entries) {
       final prompt = prompts[entry.key];
       if (prompt == null || previousSequences.contains(entry.key)) continue;
-      if (entry.value.length != 3) {
-        if (!signsIntroduced ||
-            ctx.stateOf(prompt.id).index < AtomState.known.index) {
-          continue;
-        }
-        // Обязательный слог из другой темы нельзя ввести через сборку
-        // раньше его урока. Дополняем только отсутствующие в графе слоги.
-        final mandatory = curriculum.nodes
-            .map((node) => node.atom)
-            .where(_isVocalizedSyllable)
-            .where((atom) => atom.letterId == entry.key);
-        if (mandatory.any((atom) => !pool.contains(atom))) continue;
-      }
+      // Выборочные темы не дополняются незнакомыми слогами: ученик
+      // проходит именно тот материал, который указан в «Моём пути».
+      if (entry.value.length != 3) continue;
       final family = HarakaSyllables.completeFamily(prompt, entry.value);
       if (family.any(
         (atom) =>

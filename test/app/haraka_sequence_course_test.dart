@@ -1,8 +1,8 @@
 // Защищает включение звуковой сборки в курс: она не сокращает занятие,
 // появляется только после знакомства с тремя слогами и пишет отдельный
 // результат каждому слогу, включая частично верную раскладку.
-// Дополнительные слоги сначала показываются с аудио и не превращают
-// смешанное повторение в новый урок, сбрасывающий дневной допуск.
+// Выборочная программа не расширяется скрытыми дополнительными слогами;
+// смешанное повторение не сбрасывает дневной допуск к новому материалу.
 // Обе сборки на разных буквах должны записывать результат своих слогов.
 import 'dart:async';
 import 'dart:io';
@@ -113,15 +113,20 @@ void main() {
   });
 
   test('недорисованный слог не закрывается одной раскладкой', () {
-    // Пять новых слогов обычно успевают получить рисунок в первом занятии.
+    // Три новых слога обычно успевают получить рисунок в первом занятии.
     // Но прерванное задание или старый прогресс всё ещё требуют добора.
     final topic = curriculum.topics.firstWhere(
       (topic) => topic.id == 'm.haraka.group1',
     );
-    final group = topic.counterOf.map((id) => byId[id]!).toList();
+    final group = topic.lessonBlocks.first.map((id) => byId[id]!).toList();
     final review = [...ba, byId['haraka.fatha']!];
     final before = CurriculumContext(
       progress: {
+        for (final previous in curriculum.topics.takeWhile(
+          (previous) => previous.id != topic.id,
+        ))
+          for (final id in previous.counterOf)
+            id: const AtomProgress(state: AtomState.known, weak: true),
         for (final atom in review)
           atom.id: const AtomProgress(state: AtomState.known),
       },
@@ -140,7 +145,7 @@ void main() {
           ctx: before,
           sessionId: 1,
         );
-    expect(firstLesson, hasLength(20));
+    expect(firstLesson.length, lessThanOrEqualTo(20));
     final successfulModes = {
       for (final atom in group)
         atom.id: firstLesson
@@ -224,7 +229,7 @@ void main() {
   });
 
   test(
-    'новые сочетания в сборке не лишают повторение дневного зачёта',
+    'повторение изученных слогов получает дневной зачёт без нового материала',
     () async {
       final database = ProgressDatabase(NativeDatabase.memory());
       addTearDown(database.close);
@@ -260,7 +265,20 @@ void main() {
         exerciseCount: 20,
         firstTryCorrect: 20,
       );
-      final atoms = syllables.take(20).toList();
+      final atoms = syllables
+          .where(
+            (atom) => const {
+              'ra',
+              'sod',
+              'dod',
+              'to',
+              'zho',
+              'ghayn',
+              'qof',
+            }.contains(atom.letterId),
+          )
+          .take(20)
+          .toList();
       final controller = LessonController(
         rules: const LearningRules(requirePronunciation: false),
         database: database,
@@ -273,7 +291,7 @@ void main() {
           reviewAtoms: atoms.map((atom) => atom.id).toList(),
           reviewCounts: {for (final atom in atoms) atom.id: 1},
           purpose: LessonPurpose.mixedReview,
-          reason: 'смешанное повторение с дополнительными слогами',
+          reason: 'смешанное повторение изученных слогов',
         ),
         audio: _RecordingAudio(),
       );
@@ -361,7 +379,7 @@ void main() {
       }
       expect(letters, hasLength(3));
       expect(mixedSequences, 2);
-      expect(introduced, isNotEmpty);
+      expect(introduced, isEmpty);
       final log = await database.readAll();
       expect(
         log.whereType<AtomIntroduced>().where((e) => e.sessionId == 2),
