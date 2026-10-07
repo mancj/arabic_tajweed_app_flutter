@@ -175,6 +175,8 @@ void main() {
     await tester.tap(find.text('Буквы и их формы'));
     await settle(tester);
     final topic = c.curriculum.topics.firstWhere((t) => t.id == 'm.forms');
+    await tester.ensureVisible(find.text(topic.title));
+    await settle(tester);
     await tester.tap(find.text(topic.title));
     await settle(tester);
 

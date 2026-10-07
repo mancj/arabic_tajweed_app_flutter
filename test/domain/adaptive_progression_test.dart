@@ -117,10 +117,17 @@ void main() {
           random: Random(1),
         ).build(plan: continued, ctx: context(partial), sessionId: 2);
         expect(
-          exercises.map((e) => e.atom.id).toSet(),
+          exercises
+              .where((exercise) => !exercise.isFormMaintenance)
+              .map((e) => e.atom.id)
+              .toSet(),
           continued.reviewAtoms.toSet(),
         );
-        expect(exercises.length, lessThanOrEqualTo(rules.focusedReviewTasks));
+        expect(
+          exercises.where((exercise) => !exercise.isFormMaintenance).length,
+          lessThanOrEqualTo(rules.focusedReviewTasks),
+        );
+        expect(exercises.length, lessThanOrEqualTo(rules.tasksPerSession));
         progress = {
           ...progress,
           ...confirmed([topic]),
@@ -250,15 +257,75 @@ void main() {
   });
 
   test('начатая будущая тема не обгоняет текущий этап курса', () {
-    final progress = fold.foldOnto(confirmed(course.topics.take(2)), [
+    for (final future in ['concept.haraka', 'haraka.fatha', 'concept.join']) {
+      final progress = fold.foldOnto(confirmed(course.topics.take(2)), [
+        introduce(future),
+      ]);
+      expect(plan(progress).topicId, 'm.jim', reason: future);
+      expect(plan(progress).newAtoms.map((a) => a.id), [
+        'jim.isolated',
+        'hha.isolated',
+        'kha.isolated',
+      ]);
+    }
+  });
+
+  test('просмотр соединений не пропускает незавершённые огласовки', () {
+    final alphabet = course.topics.where((topic) => topic.stage == 1);
+    final progress = fold.foldOnto(confirmed(alphabet), [
       introduce('concept.join'),
     ]);
-    expect(plan(progress).topicId, 'm.jim');
-    expect(plan(progress).newAtoms.map((a) => a.id), [
-      'jim.isolated',
-      'hha.isolated',
-      'kha.isolated',
-    ]);
+    expect(plan(progress).topicId, 'm.haraka.intro');
+    expect(planner.activeStage(context(progress)), 2);
+  });
+
+  test('ошибка в старом разделе не отменяет настоящий переход', () {
+    for (final nextStage in [2, 3]) {
+      final previous = course.topics.where((topic) => topic.stage < nextStage);
+      final first = course.topics.firstWhere(
+        (topic) => topic.stage == nextStage,
+      );
+      final progress = fold.foldOnto(confirmed(previous), [
+        for (final id in first.counterOf) introduce(id),
+        answer('ba.isolated', ExerciseMode.trace, correct: false),
+      ]);
+      expect(planner.activeStage(context(progress)), nextStage);
+      final next = plan(progress);
+      expect(
+        course.topics.firstWhere((topic) => topic.id == next.topicId).stage,
+        nextStage,
+      );
+    }
+  });
+
+  test('возврат голоса не отменяет выполненный переход к соединениям', () {
+    final silentRules = rules.copyWith(requirePronunciation: false);
+    final progress = confirmed(
+      course.topics.where((topic) => topic.stage == 1),
+    );
+    for (final topic in course.topics.where((topic) => topic.stage == 2)) {
+      for (final id in topic.counterOf) {
+        final atom = course.nodes.firstWhere((node) => node.atom.id == id).atom;
+        progress[id] = AtomProgress(
+          state: atom.kind == AtomKind.concept
+              ? AtomState.introduced
+              : AtomState.known,
+          knownAt: atom.kind == AtomKind.concept ? null : at,
+          successfulModes: silentRules.requiredPracticeModes(atom),
+        );
+      }
+    }
+    final preview = fold.foldOnto(progress, [introduce('concept.join')]);
+    // Голосовая практика ещё не выполнена: одна карточка не обходит её.
+    expect(planner.activeStage(context(preview)), 2);
+    for (final correct in [true, false]) {
+      final practiced = fold.foldOnto(preview, [
+        introduce('syl.ba_ta'),
+        answer('syl.ba_ta', ExerciseMode.nameToForm, correct: correct),
+      ]);
+      expect(planner.activeStage(context(practiced)), 3);
+      expect(plan(practiced).topicId, 'm.join');
+    }
   });
 
   test('каждая следующая новая тема следует порядку реального курса', () {

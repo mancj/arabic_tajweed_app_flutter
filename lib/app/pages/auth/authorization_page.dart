@@ -155,7 +155,7 @@ class _WelcomeHeading extends StatelessWidget {
             children: [
               TextSpan(
                 text: 'ваш путь.',
-                style: style.copyWith(color: UIColors.studyAccent),
+                style: style.copyWith(color: UIColors.studyAccent, height: 1.1),
               ),
             ],
           ),
@@ -182,7 +182,7 @@ class _AlternativeDivider extends StatelessWidget {
       const Margin.horizontal(16),
       Text(
         'или',
-        style: UITextStyles.regular12.copyWith(
+        style: UITextStyles.monoRegular12.copyWith(
           color: UIColors.text.withValues(alpha: .55),
         ),
       ),

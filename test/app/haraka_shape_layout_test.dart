@@ -16,8 +16,11 @@ void main() {
 
     final placed = HarakaShapeLayout.place(haraka: haraka, letter: letter);
 
-    expect(placed.bounds.bottom, letter.bounds.top - HarakaShapeLayout.gap);
-    expect(placed.bounds.center.dx, letter.bounds.center.dx);
+    expect(
+      placed.bounds.bottom,
+      closeTo(letter.bounds.top - HarakaShapeLayout.gap, 0.001),
+    );
+    expect(placed.bounds.center.dx, closeTo(letter.bounds.center.dx, 0.001));
   });
 
   test('касра располагается ниже всей буквы', () {
@@ -29,8 +32,11 @@ void main() {
 
     final placed = HarakaShapeLayout.place(haraka: kasra, letter: letter);
 
-    expect(placed.bounds.top, letter.bounds.bottom + HarakaShapeLayout.gap);
-    expect(placed.bounds.center.dx, letter.bounds.center.dx);
+    expect(
+      placed.bounds.top,
+      closeTo(letter.bounds.bottom + HarakaShapeLayout.gap, 0.001),
+    );
+    expect(placed.bounds.center.dx, closeTo(letter.bounds.center.dx, 0.001));
   });
 }
 

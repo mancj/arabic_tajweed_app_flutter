@@ -540,7 +540,6 @@ void main() {
     final planner = LessonPlanner(curriculum: curriculum);
     final fold = ProgressFold(letterFormIds: curriculum.letterFormIds);
     var reachedWords = false;
-    var harakaLessons = 0;
     for (var number = 1; number <= 70; number++) {
       final ctx = CurriculumContext(
         progress: progress,
@@ -551,18 +550,17 @@ void main() {
         sessionId: number,
         sessionsWithoutNew: 0,
       );
-      if (plan.topicId?.startsWith('m.haraka.') ?? false) {
-        harakaLessons++;
-      }
       if (plan.topicId == 'm.join') {
-        // Изолированный планировщик считает вводное понятие и три знака
-        // двумя шагами; экран объединяет их в одно занятие.
-        expect(
-          harakaLessons,
-          lessThanOrEqualTo(
-            stages[2].topics.where((topic) => topic.stage == 2).length * 2,
-          ),
-        );
+        // Части темы и голос с ограниченной частотой могут потребовать
+        // добора. Переход проверяется по всем умениям, а не числу занятий.
+        final board = TopicBoard(curriculum);
+        for (final topic in curriculum.topics.where((t) => t.stage == 2)) {
+          expect(
+            topic.counterOf.every((id) => board.isDone(id, ctx)),
+            isTrue,
+            reason: topic.id,
+          );
+        }
       }
       if (plan.topicId == 'm.haraka.words1') reachedWords = true;
       final exercises = ExerciseGenerator(

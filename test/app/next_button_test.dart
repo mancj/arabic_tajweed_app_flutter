@@ -1,8 +1,7 @@
 // Защищает платформенное оформление и запрет перехода отключённой кнопкой:
 // правки общего NextButton не должны менять Android или включать переход на iOS.
-import 'package:arabic_tajweed_app/app/widgets/inner_shadow.dart';
+import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -38,7 +37,7 @@ void main() {
           platform == TargetPlatform.iOS ? findsOneWidget : findsNothing,
         );
         expect(
-          find.byType(InnerShadows),
+          find.byType(AppGestureDetector),
           platform == TargetPlatform.android ? findsOneWidget : findsNothing,
         );
         expect(tester.getSize(find.byType(NextButton)), const Size(320, 56));

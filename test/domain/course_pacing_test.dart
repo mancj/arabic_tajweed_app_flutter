@@ -31,6 +31,7 @@ void main() {
               ? AtomState.introduced
               : AtomState.known,
           weak: atom.kind != AtomKind.concept,
+          knownAt: atom.kind == AtomKind.concept ? null : DateTime(2026, 9, 1),
           introducedSession: topicIndex + 1,
           lastSeenSession: topicIndex + 1,
         );

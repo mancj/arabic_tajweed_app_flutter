@@ -607,7 +607,9 @@ class LessonController extends GetxController {
       // задание. Иначе темы без intro успевали показать вопрос без карточки.
       await _buildSession(taskLimit: taskLimit);
       if (stage.value != LessonStage.finished) {
-        stage.value = LessonStage.exercise;
+        // Новый блок начинает новое задание: выбранные части и результат
+        // прошлой сборки не должны блокировать его проверку.
+        _showExercise();
       }
     } else {
       stage.value = LessonStage.intro;

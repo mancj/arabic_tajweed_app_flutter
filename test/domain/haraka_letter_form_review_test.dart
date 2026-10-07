@@ -84,7 +84,23 @@ void main() {
         );
         expect(
           tasks.where((task) => task.mode.isPronunciation).length,
-          lessThanOrEqualTo(max(1, tasks.length ~/ 4)),
+          lessThanOrEqualTo(max(1, tasks.length * 15 ~/ 100)),
+        );
+        final withoutFormReviews = ExerciseGenerator(
+          curriculum: curriculum,
+          rules: const LearningRules(letterFormReviewsPerHarakaSession: 0),
+          random: Random(seed),
+        ).build(plan: plan, ctx: ctx, sessionId: 100);
+        expect(
+          tasks
+              .where((task) => task.mode.isPronunciation)
+              .map((task) => task.atom.id)
+              .toSet(),
+          withoutFormReviews
+              .where((task) => task.mode.isPronunciation)
+              .map((task) => task.atom.id)
+              .toSet(),
+          reason: 'Сборки не вытесняют выбранный по бюджету голос',
         );
         for (final atom in plan.newAtoms.where(
           (a) => a.kind != AtomKind.concept,
@@ -95,7 +111,11 @@ void main() {
               .toSet();
           expect(
             modes,
-            containsAll(const LearningRules().requiredPracticeModes(atom)),
+            containsAll(
+              const LearningRules()
+                  .requiredPracticeModes(atom)
+                  .where((mode) => !mode.isPronunciation),
+            ),
             reason: atom.id,
           );
         }
@@ -248,7 +268,11 @@ void main() {
     for (final atom in plan.newAtoms) {
       expect(
         tasks.where((task) => task.atom == atom).map((task) => task.mode),
-        containsAll(const LearningRules().requiredPracticeModes(atom)),
+        containsAll(
+          const LearningRules()
+              .requiredPracticeModes(atom)
+              .where((mode) => !mode.isPronunciation),
+        ),
       );
     }
   });

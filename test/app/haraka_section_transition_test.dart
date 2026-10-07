@@ -17,8 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// Первая тема огласовок содержит только объяснение. После окончания букв
 /// она должна перейти к первым знакам в том же занятии. Из алфавита
 /// возвращаются только две сборки форм, без обычных заданий букв.
-/// На следующий день новые задания должны переносить знаки на другие буквы,
-/// иначе отдельный блок слогов ба снова продублирует первый урок.
+/// При лимите голоса непроверенный знак остаётся в доборе. После него новые
+/// задания переносят знаки на другие буквы, без отдельного блока слогов ба.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
@@ -154,19 +154,19 @@ void main() {
       sessionsWithoutNew: await repository.sessionsWithoutNew(),
       pacing: await repository.pacing(),
     );
-    expect(nextPlan.topicId, 'm.haraka.group1');
-    expect(nextPlan.newAtoms.map((atom) => atom.letterId).toSet(), {
-      'ta',
-      'kaf',
-      'dal',
-    });
+    expect(nextPlan.topicId, 'm.haraka.signs');
+    expect(nextPlan.newAtoms, isEmpty);
+    final nextSessionId = await repository.nextSessionId();
     await finish(await start(nextPlan));
     final introduced = (await database.readAll())
         .whereType<AtomIntroduced>()
-        .where((entry) => entry.sessionId == 4)
+        .where((entry) => entry.sessionId == nextSessionId)
         .map((entry) => entry.atomId)
         .toSet();
-    expect(introduced, containsAll(nextPlan.newAtoms.map((atom) => atom.id)));
+    final group = curriculum.topics.firstWhere(
+      (t) => t.id == 'm.haraka.group1',
+    );
+    expect(introduced, containsAll(group.lessonBlocks.first));
     expect(introduced.any((id) => id.startsWith('vowel.ba.')), isFalse);
   });
 }

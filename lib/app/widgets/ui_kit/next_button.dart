@@ -69,15 +69,15 @@ class NextButton extends StatelessWidget {
         height: height,
         // Половина высоты даёт круглые торцы и прямые верх и низ.
         shape: const LiquidRoundedRectangle(borderRadius: 52),
-        quality: GlassQuality.premium,
+        // Standard сохраняет насыщенность Primary на светлом и тёмном фоне.
+        quality: glassProminent ? GlassQuality.standard : GlassQuality.premium,
         useOwnLayer: true,
-        style: glassProminent
-            ? GlassButtonStyle.prominent
-            : GlassButtonStyle.filled,
+        // prominent ограничивает альфа-канал оттенка до .9; filled его сохраняет.
+        style: GlassButtonStyle.filled,
         settings: glassProminent
             ? glassSettings.copyWith(
                 glassColor: UIColors.primary,
-                // Точное смешивание оттенка; blur и frost сохраняют матовое стекло.
+                // Прямое смешивание Primary; блики и анимация стекла сохраняются.
                 bodyMode: GlassBodyMode.clear,
                 saturation: 1,
                 thickness: 12,
@@ -141,46 +141,47 @@ class NextButton extends StatelessWidget {
     );
   }
 
-  Widget _buildContent({bool glass = false}) => Padding(
-    padding: EdgeInsets.symmetric(horizontal: leading == null ? 0 : 16),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (leading != null) ...[
-              leading!,
-              const Margin.horizontal(8),
-            ] else if (icon != null) ...[
-              Icon(
-                icon,
-                size: 20,
-                color: glass ? UIColors.text : UIColors.primaryButtonText,
-              ),
-              const Margin.horizontal(8),
-            ],
-            Flexible(
-              child: Text(
-                title,
-                style: UITextStyles.semibold16Compact.copyWith(
-                  color: glass ? UIColors.text : UIColors.primaryButtonText,
+  Widget _buildContent({bool glass = false}) {
+    final foreground = glass && !glassProminent
+        ? UIColors.text
+        : UIColors.primaryButtonText;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: leading == null ? 0 : 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (leading != null) ...[
+                leading!,
+                const Margin.horizontal(8),
+              ] else if (icon != null) ...[
+                Icon(icon, size: 20, color: foreground),
+                const Margin.horizontal(8),
+              ],
+              Flexible(
+                child: Text(
+                  title,
+                  style: UITextStyles.semibold16Compact.copyWith(
+                    color: foreground,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        if (subtitle != null)
-          Text(
-            subtitle!,
-            style: UITextStyles.semibold13.copyWith(
-              color: glass
-                  ? UIColors.secondary1
-                  : UIColors.highlightArea.withValues(alpha: .5),
-            ),
+            ],
           ),
-      ],
-    ),
-  );
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: UITextStyles.semibold13.copyWith(
+                color: glass
+                    ? UIColors.secondary1
+                    : UIColors.highlightArea.withValues(alpha: .5),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

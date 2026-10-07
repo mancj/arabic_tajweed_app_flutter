@@ -817,7 +817,8 @@ class LessonPlanner {
   /// Перейдя в новый раздел, автоматический путь не возвращается к старому
   /// из-за поздней ошибки при ручном повторении его темы.
   int _activeStage(CurriculumContext ctx, Set<String>? topicIds) {
-    final statuses = TopicBoard(curriculum, rules: rules)
+    final board = TopicBoard(curriculum, rules: rules);
+    final statuses = board
         .statuses(ctx)
         .where(
           (status) => topicIds == null || topicIds.contains(status.topic.id),
@@ -825,9 +826,37 @@ class LessonPlanner {
         .toList();
     if (statuses.isEmpty) return curriculum.topics.first.stage;
     final firstStage = statuses.first.topic.stage;
+    final access = ctx.accessContext;
+    final withoutVoice = TopicBoard(
+      curriculum,
+      rules: rules.copyWith(requirePronunciation: false),
+    );
+    final reached = <int, bool>{};
+    bool hasReached(int stage) => reached.putIfAbsent(stage, () {
+      final previousIds = curriculum.topics
+          .where((topic) => topic.stage < stage)
+          .expand((topic) => topic.counterOf)
+          .toList();
+      if (previousIds.every((id) => board.isDone(id, access))) return true;
+      // Голос может вернуться после перезапуска. Уже выполненная практика
+      // нового раздела сохраняет переход после временного отказа от голоса;
+      // одного просмотра будущей карточки для этого недостаточно.
+      final hasPractice = curriculum.topics
+          .where((topic) => topic.stage == stage)
+          .expand((topic) => topic.counterOf)
+          .any((id) {
+            final progress = ctx.progress[id];
+            return progress != null &&
+                (progress.successfulModes.isNotEmpty ||
+                    progress.failedSessions.isNotEmpty ||
+                    progress.deferCount > 0);
+          });
+      return hasPractice &&
+          previousIds.every((id) => withoutVoice.isDone(id, access));
+    });
     final startedStage =
         statuses
-            .where((status) => status.started)
+            .where((status) => status.started && hasReached(status.topic.stage))
             .map((status) => status.topic.stage)
             .maxOrNull ??
         firstStage;
