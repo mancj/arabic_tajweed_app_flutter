@@ -17,10 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// знаниям без отметки о завершении или сохранённой очереди заданий.
 void main() {
   final course = CurriculumLoader.merge([
-    for (final stage in ['stage1', 'stage2', 'stage3'])
-      CurriculumLoader.parse(
-        File('assets/curriculum/$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final fold = ProgressFold(
     letterFormIds: course.letterFormIds,

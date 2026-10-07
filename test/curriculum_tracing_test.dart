@@ -13,7 +13,7 @@ void main() {
 
   test('у каждой формы буквы есть свой SVG, и наоборот', () {
     final atoms = [
-      for (final asset in CurriculumLoader.defaultStageAssets)
+      for (final asset in CurriculumLoader.defaultAssets)
         ...CurriculumLoader.parse(
           File(asset).readAsStringSync(),
         ).nodes.map((node) => node.atom),

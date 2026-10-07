@@ -3631,10 +3631,9 @@
       "atom": {
         "id": "word.kataba",
         "kind": "word",
-        "display": "كَتَبَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.kataba.yaml",
-        "audioAsset": "tts:كَتَبَ"
+        "wordId": "kaf_a_ta_a_ba_a"
       },
       "requirement": {
         "type": "allOf",
@@ -3886,10 +3885,9 @@
       "atom": {
         "id": "word.darasa",
         "kind": "word",
-        "display": "دَرَسَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.darasa.yaml",
-        "audioAsset": "tts:دَرَسَ"
+        "wordId": "dal_a_ra_a_sin_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4141,10 +4139,9 @@
       "atom": {
         "id": "word.rasama",
         "kind": "word",
-        "display": "رَسَمَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.rasama.yaml",
-        "audioAsset": "tts:رَسَمَ"
+        "wordId": "ra_a_sin_a_mim_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4396,10 +4393,9 @@
       "atom": {
         "id": "word.shariba",
         "kind": "word",
-        "display": "شَرِبَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.shariba.yaml",
-        "audioAsset": "tts:شَرِبَ"
+        "wordId": "shin_a_ra_i_ba_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4423,10 +4419,9 @@
       "atom": {
         "id": "word.samia",
         "kind": "word",
-        "display": "سَمِعَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.samia.yaml",
-        "audioAsset": "tts:سَمِعَ"
+        "wordId": "sin_a_mim_i_ayn_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4450,10 +4445,9 @@
       "atom": {
         "id": "word.amila",
         "kind": "word",
-        "display": "عَمِلَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.amila.yaml",
-        "audioAsset": "tts:عَمِلَ"
+        "wordId": "ayn_a_mim_i_lam_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4477,10 +4471,9 @@
       "atom": {
         "id": "word.fariha",
         "kind": "word",
-        "display": "فَرِحَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.fariha.yaml",
-        "audioAsset": "tts:فَرِحَ"
+        "wordId": "fa_a_ra_i_hha_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4504,10 +4497,9 @@
       "atom": {
         "id": "word.laiba",
         "kind": "word",
-        "display": "لَعِبَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.laiba.yaml",
-        "audioAsset": "tts:لَعِبَ"
+        "wordId": "lam_a_ayn_i_ba_a"
       },
       "requirement": {
         "type": "allOf",
@@ -4531,10 +4523,9 @@
       "atom": {
         "id": "word.najaha",
         "kind": "word",
-        "display": "نَجَحَ",
         "label": "Короткое слово",
         "explanationAsset": "assets/explanations/ru/word.najaha.yaml",
-        "audioAsset": "tts:نَجَحَ"
+        "wordId": "nun_a_jim_a_hha_a"
       },
       "requirement": {
         "type": "allOf",

@@ -8,12 +8,14 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:rive/rive.dart' as rive;
 import 'package:arabic_tajweed_app/app/app_binding.dart';
 import 'package:arabic_tajweed_app/app/diagnostics/app_diagnostics.dart';
+import 'package:arabic_tajweed_app/app/diagnostics/web_performance_probe.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/connection_build_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/word_build_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/glow_wave_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_drawing_debug_page.dart';
@@ -24,6 +26,9 @@ import 'package:arabic_tajweed_app/app/pages/debug/starfield_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/syllable_build_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/syllable_pronunciation_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
+import 'package:arabic_tajweed_app/app/pages/profile/profile_page.dart';
+import 'package:arabic_tajweed_app/app/pages/auth/authorization_page.dart';
+import 'package:arabic_tajweed_app/app/pages/auth/email_authorization_page.dart';
 import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
@@ -76,6 +81,9 @@ class MyApp extends StatelessWidget {
         ? UIColors.dark2
         : UIColors.dark;
     return GetMaterialApp(
+      builder: kIsWeb && const bool.fromEnvironment('WEB_PERF_PROBE')
+          ? (context, child) => WebPerformanceProbe(child: child!)
+          : null,
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -124,6 +132,15 @@ class MyApp extends StatelessWidget {
           page: () => const CoursePage(),
           binding: CourseBinding(),
         ),
+        GetPage(name: ProfilePage.routeName, page: () => const ProfilePage()),
+        GetPage(
+          name: AuthorizationPage.routeName,
+          page: () => const AuthorizationPage(),
+        ),
+        GetPage(
+          name: EmailAuthorizationPage.routeName,
+          page: () => const EmailAuthorizationPage(),
+        ),
         GetPage(
           name: LessonPage.routeName,
           page: () => const LessonPage(),
@@ -166,6 +183,10 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: ConnectionBuildDebugPage.routeName,
           page: () => const ConnectionBuildDebugPage(),
+        ),
+        GetPage(
+          name: WordBuildDebugPage.routeName,
+          page: () => const WordBuildDebugPage(),
         ),
         GetPage(
           name: StarfieldDebugPage.routeName,

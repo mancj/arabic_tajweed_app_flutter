@@ -45,6 +45,7 @@ class LessonBottomBar extends GetView<LessonController> {
         final isSayName = input == LessonInputKind.pronunciation;
         final isFormSequence = input == LessonInputKind.formSequence;
         final isSyllableBuild = input == LessonInputKind.syllableBuild;
+        final isConnectedBuild = input == LessonInputKind.connectedBuild;
 
         // У заглушки нет своей проверки — обе ветки задаёт человек.
         // TODO(stub): убрать вторую кнопку вместе с заглушками.
@@ -53,7 +54,8 @@ class LessonBottomBar extends GetView<LessonController> {
             !exercise.isChoice &&
             !isTracing &&
             !isSayName &&
-            !isSyllableBuild;
+            !isSyllableBuild &&
+            !isConnectedBuild;
 
         return Column(
           mainAxisSize: MainAxisSize.max,
@@ -62,7 +64,7 @@ class LessonBottomBar extends GetView<LessonController> {
               _TracingBar(mode: exercise!.mode)
             else if (isSayName)
               const _PronunciationRecorderBar()
-            else if (isFormSequence || isSyllableBuild)
+            else if (isFormSequence || isSyllableBuild || isConnectedBuild)
               const SizedBox.shrink()
             else if (isStub)
               Row(

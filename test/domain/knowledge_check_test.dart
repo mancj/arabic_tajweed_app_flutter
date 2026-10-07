@@ -16,10 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('только недостающие формы хамзы не создают чужие упражнения', () {
     final curriculum = CurriculumLoader.merge([
-      for (final stage in [1, 2, 3])
-        CurriculumLoader.parse(
-          File('assets/curriculum/stage$stage.json').readAsStringSync(),
-        ),
+      for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
     ]);
     final context = CurriculumContext(
       progress: {
@@ -42,10 +40,8 @@ void main() {
 
   test('каждый перескок использует доступные варианты знакомых заданий', () {
     final curriculum = CurriculumLoader.merge([
-      for (final stage in [1, 2, 3])
-        CurriculumLoader.parse(
-          File('assets/curriculum/stage$stage.json').readAsStringSync(),
-        ),
+      for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
     ]);
     final context = CurriculumContext(
       progress: const {},

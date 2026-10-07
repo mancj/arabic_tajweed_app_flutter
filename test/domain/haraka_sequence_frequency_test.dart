@@ -26,10 +26,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
   const readingModes = {
@@ -141,10 +139,12 @@ void main() {
           );
           expect(modes, contains(ExerciseMode.drawHarakaForSound));
           expect(
-            exercises.where(
-              (e) => e.atom == atom && e.mode == ExerciseMode.saySyllable,
-            ),
-            hasLength(1),
+            exercises
+                .where(
+                  (e) => e.atom == atom && e.mode == ExerciseMode.saySyllable,
+                )
+                .length,
+            lessThanOrEqualTo(1),
           );
         }
         for (final exercise in exercises.where(

@@ -1,5 +1,5 @@
 // Голос не должен исчезнуть за письмом, повториться при доборе одной сессии
-// или заполнить повторение почти целиком. Предел огласовок — четверть занятия,
+// или заполнить повторение почти целиком. Предел огласовок — 15% занятия,
 // включая добор: новые слоги и голосовые пробелы важнее уже освоенных.
 // На отдельные буквы предел не переносится и их голосовой бюджет не расходуется.
 // После отключения голоса письмо остаётся и тема завершается без сервера.
@@ -20,10 +20,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
   CurriculumContext before(Topic target) => CurriculumContext(
@@ -41,7 +39,7 @@ void main() {
     formsByLetter: curriculum.formsByLetter,
   );
 
-  test('знаки на ба и все темы огласовок получают голос по одному разу', () {
+  test('новые знаки и слоги получают приоритет в голосовом бюджете', () {
     for (final topic in curriculum.topics.where(
       (t) => t.id == 'm.haraka.signs' || t.id.startsWith('m.haraka.group'),
     )) {
@@ -55,9 +53,15 @@ void main() {
         expect(tasks.length, lessThanOrEqualTo(20), reason: topic.id);
         expect(
           tasks.where((task) => task.mode.isPronunciation).length,
-          lessThanOrEqualTo(max(1, tasks.length ~/ 4)),
+          lessThanOrEqualTo(max(1, tasks.length * 15 ~/ 100)),
           reason: '${topic.id}, seed $seed',
         );
+        final voiceAtoms = tasks
+            .where((task) => task.mode.isPronunciation)
+            .map((task) => task.atom)
+            .toSet();
+        expect(voiceAtoms, isNotEmpty, reason: '${topic.id}, seed $seed');
+        expect(voiceAtoms.every(plan.newAtoms.contains), isTrue);
         for (final atom in plan.newAtoms.where(
           (a) => a.kind != AtomKind.concept,
         )) {
@@ -65,10 +69,16 @@ void main() {
           final voice = own.where(
             (task) => task.mode == ExerciseMode.saySyllable,
           );
-          expect(voice, hasLength(1), reason: '${atom.id}, seed $seed');
-          expect(voice.single.isRequired, isTrue);
-          expect(voice.single.resultAtoms, [atom]);
-          expect(voice.single.mode.isActive, isTrue);
+          expect(
+            voice.length,
+            lessThanOrEqualTo(1),
+            reason: '${atom.id}, seed $seed',
+          );
+          for (final exercise in voice) {
+            expect(exercise.isRequired, isTrue);
+            expect(exercise.resultAtoms, [atom]);
+            expect(exercise.mode.isActive, isTrue);
+          }
           final modes = own.map((task) => task.mode).toSet();
           if (atom.kind == AtomKind.haraka) {
             expect(
@@ -83,7 +93,7 @@ void main() {
     }
   });
 
-  test('повторение двадцати слогов оставляет голосу только пять мест', () {
+  test('повторение двадцати слогов оставляет голосу только три места', () {
     final ctx = before(curriculum.topics.firstWhere((t) => t.id == 'm.join'));
     final atoms = byId.values
         .where((a) => a.id.startsWith('vowel.') && ctx.isKnown(a.id))
@@ -104,7 +114,7 @@ void main() {
       ).build(plan: plan, ctx: ctx, sessionId: 100);
       expect(tasks, hasLength(20));
       final voice = tasks.where((task) => task.mode.isPronunciation);
-      expect(voice, hasLength(5));
+      expect(voice, hasLength(3));
       voicedIds.addAll(voice.map((task) => task.atom.id));
       final counts = {
         for (final mode in [
@@ -118,8 +128,8 @@ void main() {
       final sortedCounts = counts.values.sortedBy((count) => count);
       expect(sortedCounts.last - sortedCounts.first, lessThanOrEqualTo(1));
     }
-    // Выбор не должен навсегда закрепить голос за первыми пятью в списке.
-    expect(voicedIds.length, greaterThan(5));
+    // Выбор не должен навсегда закрепить голос за первыми тремя в списке.
+    expect(voicedIds.length, greaterThan(3));
     final continued = ExerciseGenerator(curriculum: curriculum).build(
       plan: plan,
       ctx: ctx,
@@ -129,7 +139,7 @@ void main() {
     expect(continued.where((task) => task.mode.isPronunciation), isEmpty);
   });
 
-  test('два блока одной сессии делят пять голосовых мест', () {
+  test('два блока одной сессии делят три голосовых места', () {
     final ctx = before(curriculum.topics.firstWhere((t) => t.id == 'm.join'));
     final atoms = byId.values
         .where((a) => a.id.startsWith('vowel.') && ctx.isKnown(a.id))
@@ -149,7 +159,7 @@ void main() {
       taskLimit: 8,
     );
     final firstVoice = first.where((task) => task.mode.isPronunciation);
-    expect(firstVoice, hasLength(2));
+    expect(firstVoice, hasLength(1));
     final next = ExerciseGenerator(curriculum: curriculum).build(
       plan: review(atoms.skip(8).toList()),
       ctx: ctx,
@@ -162,7 +172,7 @@ void main() {
           .toSet(),
       previousPronunciations: firstVoice.map((task) => task.atom.id).toSet(),
     );
-    expect(next.where((task) => task.mode.isPronunciation), hasLength(3));
+    expect(next.where((task) => task.mode.isPronunciation), hasLength(2));
     expect(first.length + next.length, 20);
   });
 
@@ -197,7 +207,7 @@ void main() {
       sessionId: 100,
     );
     expect(tasks.where((task) => !task.isFormMaintenance), hasLength(8));
-    expect(tasks.where((task) => task.mode.isPronunciation), hasLength(2));
+    expect(tasks.where((task) => task.mode.isPronunciation), hasLength(1));
   });
 
   test('голосовой пробел выбирается раньше уже пройденного произношения', () {
@@ -236,7 +246,7 @@ void main() {
             sessionId: 100,
           );
       final voice = tasks.where((task) => task.mode.isPronunciation);
-      expect(voice, hasLength(5));
+      expect(voice, hasLength(3));
       expect(
         voice.map((task) => task.atom.id).toSet(),
         containsAll(missingIds),
@@ -317,7 +327,7 @@ void main() {
     expect(tasks, hasLength(16));
     expect(
       tasks.where((task) => task.mode == ExerciseMode.saySyllable),
-      hasLength(5),
+      hasLength(3),
     );
   });
 

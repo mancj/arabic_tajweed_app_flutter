@@ -36,10 +36,8 @@ import '../helpers/text_asset_bundle.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
   final ba = [
@@ -88,7 +86,7 @@ void main() {
       withSequences.where((e) => e.mode == ExerciseMode.harakaSequence),
       hasLength(2),
     );
-    expect(withSequences.where((e) => e.mode.isPronunciation), hasLength(5));
+    expect(withSequences.where((e) => e.mode.isPronunciation), hasLength(3));
     for (final atom in group) {
       final modes = withSequences
           .where((e) => e.resultAtoms.contains(atom))
@@ -113,8 +111,9 @@ void main() {
   });
 
   test('недорисованный слог не закрывается одной раскладкой', () {
-    // Три новых слога обычно успевают получить рисунок в первом занятии.
-    // Но прерванное задание или старый прогресс всё ещё требуют добора.
+    // Все слоги получают письмо, но голосовой предел оставляет часть
+    // произношения на потом. Ни этот пробел, ни пропущенное письмо
+    // не должны закрываться успешной раскладкой огласовок.
     final topic = curriculum.topics.firstWhere(
       (topic) => topic.id == 'm.haraka.group1',
     );
@@ -169,6 +168,10 @@ void main() {
         )
         .toList();
     expect(withoutDrawing, isNotEmpty);
+    final withoutVoice = group.where(
+      (atom) => !successfulModes[atom.id]!.contains(ExerciseMode.saySyllable),
+    );
+    expect(withoutVoice, isNotEmpty);
 
     final after = CurriculumContext(
       progress: {
@@ -195,6 +198,7 @@ void main() {
     expect(followUp.isFocusedReview, isTrue);
     expect(followUp.reviewAtoms.toSet(), {
       for (final atom in withoutDrawing) atom.id,
+      for (final atom in withoutVoice) atom.id,
     });
     final exercises = ExerciseGenerator(
       curriculum: curriculum,
@@ -204,7 +208,14 @@ void main() {
           .where((e) => e.mode == ExerciseMode.drawHarakaForSound)
           .map((e) => e.atom.id)
           .toSet(),
-      followUp.reviewAtoms.toSet(),
+      withoutDrawing.map((atom) => atom.id).toSet(),
+    );
+    expect(
+      exercises
+          .where((e) => e.mode == ExerciseMode.saySyllable)
+          .map((e) => e.atom.id)
+          .toSet(),
+      withoutVoice.map((atom) => atom.id).toSet(),
     );
 
     // В тот же день темп сначала даёт смешанный повтор. Он тоже не теряет

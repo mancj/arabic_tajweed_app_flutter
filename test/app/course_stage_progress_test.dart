@@ -20,10 +20,8 @@ import 'package:get/get.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final today = DateTime(2026, 10, 3, 12);
   final yesterday = today.subtract(const Duration(days: 1));

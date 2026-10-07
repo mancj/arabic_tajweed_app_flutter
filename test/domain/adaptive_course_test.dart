@@ -19,10 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// открытое после ошибки или выдать знания по незавершённой диагностике.
 void main() {
   final course = CurriculumLoader.merge([
-    for (final s in ['stage1', 'stage2', 'stage3'])
-      CurriculumLoader.parse(
-        File('assets/curriculum/$s.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final fold = ProgressFold(
     letterFormIds: course.letterFormIds,
@@ -197,7 +195,7 @@ void main() {
         expect({
           ...plan.newAtoms.map((a) => a.id),
           ...plan.reviewAtoms,
-        }, unit.counterOf.toSet());
+        }, TopicBoard(course).lessonAtomIds(unit, ctx(p)).toSet());
       }
       final intro = [
         for (final a in plan.newAtoms)
@@ -212,11 +210,22 @@ void main() {
         curriculum: course,
         random: Random(session),
       ).build(plan: plan, ctx: ctx(p), sessionId: session);
-      expect(exercises, isNotEmpty, reason: 'пустое занятие $session');
+      // Вступление только объясняет понятие; экран курса сразу продолжает
+      // его первым блоком практики. Пустой проверяемый материал — ошибка.
+      if (plan.newAtoms.isNotEmpty &&
+          plan.newAtoms.every((atom) => atom.kind == AtomKind.concept) &&
+          plan.reviewAtoms.isEmpty) {
+        expect(exercises, isEmpty);
+      } else {
+        expect(exercises, isNotEmpty, reason: 'пустое занятие $session');
+      }
       expect(exercises.length, lessThanOrEqualTo(20));
       expect(
         exercises
-            .where((e) => e.atom.kind == AtomKind.syllable)
+            .where(
+              (e) =>
+                  e.atom.kind == AtomKind.syllable && e.atom.audioAsset == null,
+            )
             .every((e) => e.isChoice),
         isTrue,
       );

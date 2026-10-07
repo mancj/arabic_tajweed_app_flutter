@@ -27,6 +27,12 @@ void main() {
         File('assets/curriculum/stage$stage.json').readAsStringSync(),
       ),
   ];
+  stages[2] = CurriculumLoader.merge([
+    stages[2],
+    CurriculumLoader.parse(
+      File(CurriculumLoader.wordBankAsset).readAsStringSync(),
+    ),
+  ]);
   final curriculum = CurriculumLoader.merge(stages);
 
   CurriculumContext contextWith(Iterable<String> known) => CurriculumContext(
@@ -380,7 +386,12 @@ void main() {
         .where((a) => a.kind == AtomKind.word)
         .toList();
     expect(words, hasLength(9));
-    expect(words.every((a) => a.audioAsset == 'tts:${a.display}'), isTrue);
+    for (final atom in words) {
+      final word = curriculum.words.singleWhere(
+        (word) => word.id == atom.wordId,
+      );
+      expect(atom.audioAsset, word.audioFile);
+    }
     expect(
       words.every((a) => !a.display.contains(RegExp('[ًٌٍّْاوي]'))),
       isTrue,

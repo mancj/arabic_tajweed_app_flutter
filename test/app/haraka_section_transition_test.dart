@@ -22,10 +22,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
 
   test('первый урок объясняет знаки, следующий вводит другие буквы', () async {

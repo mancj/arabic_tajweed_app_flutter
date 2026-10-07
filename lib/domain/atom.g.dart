@@ -9,7 +9,7 @@ part of 'atom.dart';
 Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
   id: json['id'] as String,
   kind: $enumDecode(_$AtomKindEnumMap, json['kind']),
-  display: json['display'] as String,
+  display: json['display'] as String? ?? '',
   label: json['label'] as String? ?? '',
   note: json['note'] as String? ?? '',
   explanationAsset: json['explanationAsset'] as String?,
@@ -26,6 +26,7 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
       ? null
       : WordExample.fromJson(json['example'] as Map<String, dynamic>),
   audioAsset: json['audioAsset'] as String?,
+  wordId: json['wordId'] as String?,
 );
 
 Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
@@ -42,6 +43,7 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'tracing': instance.tracing,
   'example': instance.example,
   'audioAsset': instance.audioAsset,
+  'wordId': ?instance.wordId,
 };
 
 const _$AtomKindEnumMap = {

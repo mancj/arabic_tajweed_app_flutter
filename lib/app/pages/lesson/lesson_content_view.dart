@@ -21,6 +21,8 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_drawing_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_examples_grid.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_build_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/connection_build_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/word_build_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_pronunciation_exercise.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/exercise.dart';
@@ -425,6 +427,72 @@ class LessonExerciseBlock extends GetView<LessonController> {
       final exercise = controller.current;
       if (exercise == null) return const _Centered(child: _Loader());
       final presentation = LessonExercisePresentation.from(exercise);
+
+      if (exercise.mode.isWordPreparation) {
+        final answer = controller.connectedBuildAnswer!;
+        final revision = answer.revision;
+        final index = answer.activeIndex;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _LessonProgress(),
+            const Margin.vertical(16),
+            if (exercise.connectionBuildQuestion case final question?)
+              ConnectionBuildExercise(
+                key: ObjectKey(exercise),
+                question: question,
+                selectedFormId: answer.formIds.single,
+                selectedMarkId: answer.markIds.single,
+                evaluation: answer.connectionEvaluation,
+                onFormSelected: (id) => controller.selectConnectedForm(
+                  exercise,
+                  revision,
+                  index,
+                  id,
+                ),
+                onMarkSelected: (id) => controller.selectConnectedMark(
+                  exercise,
+                  revision,
+                  index,
+                  id,
+                ),
+                onPlay: () => controller.playExerciseVoice(exercise),
+                onAutoPlay: () => controller.startExerciseVoice(exercise),
+                autoPlay: _canAutoPlay(controller),
+                showFeedback: false,
+                track: controller.voiceTrack,
+              )
+            else
+              WordBuildExercise(
+                key: ObjectKey(exercise),
+                question: exercise.wordBuildQuestion!,
+                phase: answer.phase,
+                activeIndex: index,
+                formIds: List.unmodifiable(answer.formIds),
+                markIds: List.unmodifiable(answer.markIds),
+                evaluation: answer.wordEvaluation,
+                animatedIndex: answer.changedIndex,
+                onFormSelected: (id) => controller.selectConnectedForm(
+                  exercise,
+                  revision,
+                  index,
+                  id,
+                ),
+                onMarkSelected: (id) => controller.selectConnectedMark(
+                  exercise,
+                  revision,
+                  index,
+                  id,
+                ),
+                onPlay: () => controller.playExerciseVoice(exercise),
+                onAutoPlay: () => controller.startExerciseVoice(exercise),
+                autoPlay: _canAutoPlay(controller),
+                showFeedback: false,
+                track: controller.voiceTrack,
+              ),
+          ],
+        );
+      }
 
       if (exercise.mode == ExerciseMode.saySyllable) {
         return Column(

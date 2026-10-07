@@ -25,10 +25,8 @@ import '../helpers/plugin_mocks.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.merge([
-    for (final file in ['stage1', 'stage2', 'stage3'])
-      CurriculumLoader.parse(
-        File('assets/curriculum/$file.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   late ProgressDatabase db;
   setUp(() {

@@ -79,7 +79,7 @@ void main() {
     expect(find.byType(ExerciseChoiceTile), findsNWidgets(3));
     expect(find.byKey(const ValueKey('connection-build-gap')), findsOneWidget);
     expect(find.text('Проверить'), findsNothing);
-    final prompt = tester.widget<Text>(
+    final prompt = tester.widget<Row>(
       find.byKey(const ValueKey('connection-build-preview')),
     );
     expect(prompt.textDirection, TextDirection.rtl);
@@ -95,11 +95,13 @@ void main() {
         .id;
     await choose(tester, form(other));
     expect(audio.played, hasLength(2));
-    final shown = tester
-        .widget<Text>(find.byKey(const ValueKey('connection-build-preview')))
-        .textSpan!
-        .toPlainText();
-    expect(shown, question.preview(other, null).join('\u200c'));
+    final shown = [
+      for (var i = 0; i < question.parts.length; i++)
+        tester
+            .widget<Text>(find.byKey(ValueKey('connected-word-glyph-$i')))
+            .data!,
+    ];
+    expect(shown, question.preview(other, null));
     await choose(tester, form(question.expectedFormId));
     await choose(tester, mark(question.expectedMarkId));
     expect(state(tester).evaluation!.correct, isTrue);

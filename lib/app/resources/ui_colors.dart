@@ -184,6 +184,7 @@ class UIColors {
   static Color get white80 => _active.white80;
   static Color get white90 => _active.white90;
   static Color get white => _active.white;
+  static Color get black => _active.black;
 
   /// Служебная прозрачность: это не цветовой токен интерфейса.
   static const transparent = Color(0x00000000);
@@ -236,6 +237,7 @@ class UIColorPalette {
   final Color white80 = const Color(0xCCFFFFFF);
   final Color white90 = const Color(0xE6FFFFFF);
   final Color white = const Color(0xFFFFFFFF);
+  final Color black = const Color(0xFF000000);
 
   const UIColorPalette({
     required this.studyAccent,

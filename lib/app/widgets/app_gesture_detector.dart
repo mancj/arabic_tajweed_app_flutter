@@ -1,7 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'app_haptics.dart';
 
 class AppGestureDetector extends StatefulWidget {
+  /// Временное сравнение веб-производительности: меняется только рисунок
+  /// нажатия, обработчики касания и удержания остаются прежними.
+  static bool animatePress = true;
+
   final GestureTapCallback? onTap;
 
   /// Палец лёг и палец поднялся — для кнопок «удерживайте»: запись голоса
@@ -36,21 +41,31 @@ class _AppGestureDetectorState extends State<AppGestureDetector> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (widget.hapticOnTap) AppHaptics.tick();
-        widget.onTap?.call();
+    // Listener даёт мгновенный отклик, не перехватывая прокрутку, как onPanDown.
+    return Listener(
+      onPointerDown: (event) {
+        if (event.buttons == kPrimaryButton) _tapDownState();
       },
-      onPanDown: (d) => _tapDownState(),
-      onTapDown: (d) => _tapDownState(),
-      onTapUp: (d) => _tapUpState(),
-      onTapCancel: () => _tapUpState(),
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 200),
-        scale: !_isPressed ? 1.0 : widget.pressedOpacity,
-        curve: Curves.easeInOut,
-        child: widget.child,
+      // При быстром начале прокрутки onTapCancel может ещё не прийти.
+      onPointerUp: (_) => _tapUpState(),
+      onPointerCancel: (_) => _tapUpState(),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (widget.hapticOnTap) AppHaptics.tick();
+          widget.onTap?.call();
+        },
+        onTapDown: (d) => _tapDownState(),
+        onTapUp: (d) => _tapUpState(),
+        onTapCancel: () => _tapUpState(),
+        child: !AppGestureDetector.animatePress
+            ? widget.child
+            : AnimatedScale(
+                duration: const Duration(milliseconds: 200),
+                scale: !_isPressed ? 1.0 : widget.pressedOpacity,
+                curve: Curves.easeInOut,
+                child: widget.child,
+              ),
       ),
     );
   }

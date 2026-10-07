@@ -3,6 +3,7 @@ import 'package:collection/collection.dart';
 
 import 'atom.dart';
 import 'atom_state.dart';
+import 'reading_word.dart';
 
 part 'curriculum.g.dart';
 
@@ -163,13 +164,27 @@ class CurriculumNode {
 
 @JsonSerializable()
 class Curriculum {
-  const Curriculum({required this.nodes, required this.topics});
+  const Curriculum({
+    this.nodes = const [],
+    this.topics = const [],
+    this.words = const [],
+    this.wordSets = const {},
+  });
 
   factory Curriculum.fromJson(Map<String, dynamic> json) =>
       _$CurriculumFromJson(json);
 
   final List<CurriculumNode> nodes;
   final List<Topic> topics;
+  final List<ReadingWord> words;
+  final Map<String, List<String>> wordSets;
+
+  List<ReadingWord> wordsForSet(String id) {
+    final byId = {for (final word in words) word.id: word};
+    return [
+      for (final wordId in wordSets[id] ?? const <String>[]) byId[wordId]!,
+    ];
+  }
 
   Map<String, dynamic> toJson() => _$CurriculumToJson(this);
 

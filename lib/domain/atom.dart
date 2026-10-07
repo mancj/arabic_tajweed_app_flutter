@@ -54,7 +54,7 @@ class Atom {
   const Atom({
     required this.id,
     required this.kind,
-    required this.display,
+    this.display = '',
     this.label = '',
     this.note = '',
     this.explanationAsset,
@@ -65,6 +65,7 @@ class Atom {
     this.tracing,
     this.example,
     this.audioAsset,
+    this.wordId,
   });
 
   factory Atom.fromJson(Map<String, dynamic> json) => _$AtomFromJson(json);
@@ -111,6 +112,27 @@ class Atom {
   /// Запись для этого материала, путь внутри assets/. У букв без этого поля
   /// пока используется прежняя запись имени по letterId.
   final String? audioAsset;
+
+  /// Ссылка на общий банк: написание и аудио подставляются при загрузке.
+  @JsonKey(includeIfNull: false)
+  final String? wordId;
+
+  Atom copyWith({String? display, String? audioAsset}) => Atom(
+    id: id,
+    kind: kind,
+    display: display ?? this.display,
+    label: label,
+    note: note,
+    explanationAsset: explanationAsset,
+    formsOverviewAsset: formsOverviewAsset,
+    letterId: letterId,
+    form: form,
+    confusableWith: confusableWith,
+    tracing: tracing,
+    example: example,
+    audioAsset: audioAsset ?? this.audioAsset,
+    wordId: wordId,
+  );
 
   Map<String, dynamic> toJson() => _$AtomToJson(this);
 

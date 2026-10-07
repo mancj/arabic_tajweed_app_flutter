@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'exercise_choice_row.dart';
+import 'connected_word_preview.dart';
 import 'letter_widget.dart';
 import 'rule_card.dart';
 
@@ -21,6 +22,8 @@ class ConnectionBuildExercise extends StatelessWidget {
     required this.onPlay,
     required this.onAutoPlay,
     required this.track,
+    this.autoPlay = true,
+    this.showFeedback = true,
     super.key,
   });
 
@@ -33,6 +36,8 @@ class ConnectionBuildExercise extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback onAutoPlay;
   final ValueListenable<AudioTrack> track;
+  final bool autoPlay;
+  final bool showFeedback;
 
   @override
   Widget build(BuildContext context) {
@@ -46,16 +51,21 @@ class ConnectionBuildExercise extends StatelessWidget {
               ? 'Короткая связка'
               : 'Короткое слово',
           question: 'Достройте соединение',
-          glyph: _ConnectionPreview(
-            question: question,
-            selectedFormId: selectedFormId,
-            selectedMarkId: selectedMarkId,
-            evaluation: result,
+          glyph: ConnectedWordPreview(
+            glyphs: question.preview(selectedFormId, selectedMarkId),
+            activeIndex: question.missingIndex,
+            accent: result == null
+                ? UIColors.primary
+                : result.correct
+                ? UIColors.success
+                : UIColors.error,
+            gapLabel: 'Недостающая буква ${question.position}',
+            textKey: const ValueKey('connection-build-preview'),
           ),
           isArabic: true,
           onPlay: onPlay,
           onAutoPlay: onAutoPlay,
-          autoPlay: true,
+          autoPlay: autoPlay,
           track: track,
         ),
         const Margin.vertical(24),
@@ -94,7 +104,7 @@ class ConnectionBuildExercise extends StatelessWidget {
             onSelected: onMarkSelected,
           ),
         ],
-        if (result != null) ...[
+        if (result != null && showFeedback) ...[
           const Margin.vertical(24),
           RuleCard(
             badge: result.correct ? 'Верно' : 'Попробуйте ещё раз',
@@ -116,80 +126,6 @@ class ConnectionBuildExercise extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Части стоят на одной строке справа налево, без отдельных карточек.
-/// ZWJ задаёт выбранную форму, ZWNJ между частями запрещает её автозамену.
-class _ConnectionPreview extends StatelessWidget {
-  const _ConnectionPreview({
-    required this.question,
-    required this.selectedFormId,
-    required this.selectedMarkId,
-    required this.evaluation,
-  });
-
-  final ConnectionBuildQuestion question;
-  final String? selectedFormId;
-  final String? selectedMarkId;
-  final ConnectionBuildEvaluation? evaluation;
-
-  @override
-  Widget build(BuildContext context) {
-    final glyphs = question.preview(selectedFormId, selectedMarkId);
-    final color = evaluation == null
-        ? UIColors.primary
-        : evaluation!.correct
-        ? UIColors.success
-        : UIColors.error;
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text.rich(
-        key: const ValueKey('connection-build-preview'),
-        TextSpan(
-          children: [
-            for (final (index, glyph) in glyphs.indexed) ...[
-              if (index > 0) const TextSpan(text: '\u200c'),
-              if (glyph != null)
-                TextSpan(
-                  text: glyph,
-                  style: index == question.missingIndex
-                      ? UITextStyles.arabicRegular64Compact.copyWith(
-                          color: color,
-                        )
-                      : null,
-                )
-              else
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Semantics(
-                    label: 'Недостающая буква ${question.position}',
-                    child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 2),
-                      key: const ValueKey('connection-build-gap'),
-                      width: 56,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: UIColors.primary10,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: UIColors.primary, width: 1.5),
-                      ),
-                      child: Icon(
-                        Icons.question_mark_rounded,
-                        color: UIColors.primary,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ],
-        ),
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.center,
-        style: UITextStyles.arabicRegular64Compact,
-      ),
     );
   }
 }

@@ -1,6 +1,8 @@
 // Защищает загрузку программы: первые буквы должны быть доступны на старте,
 // их объяснения не должны теряться, а формы ждут знакомства с отдельной буквой.
 // При смене формата JSON граф должен сохраняться после чтения и записи.
+// Слова берутся из общего ассета: правка записи должна одновременно менять
+// курс и сборки; неизвестная ссылка не должна превращаться в пустое задание.
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,6 +12,7 @@ import 'package:arabic_tajweed_app/domain/curriculum.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final curriculum = CurriculumLoader.parse(
     File('assets/curriculum/stage1.json').readAsStringSync(),
   );
@@ -79,5 +82,71 @@ void main() {
       again.nodes.map((n) => n.atom.id),
       curriculum.nodes.map((n) => n.atom.id),
     );
+  });
+
+  test('загрузчик подключает банк и разрешает ссылки слов курса', () async {
+    final loaded = await const CurriculumLoader().load();
+    final words = loaded.wordsForSet('wordReading');
+    expect(words, isNotEmpty);
+    for (final word in words) {
+      final atom = loaded.nodes
+          .singleWhere((node) => node.atom.id == word.atomId)
+          .atom;
+      expect(atom.wordId, word.id);
+      expect(atom.display, word.display);
+      expect(atom.audioAsset, word.audioAsset);
+    }
+  });
+
+  test('правка записи в JSON обновляет курс и общую подборку', () {
+    final bank =
+        jsonDecode(File(CurriculumLoader.wordBankAsset).readAsStringSync())
+            as Map<String, dynamic>;
+    final wordId = (bank['wordSets']['wordReading'] as List).first;
+    final words = bank['words'] as List;
+    final edited =
+        words.singleWhere((word) => word['id'] == wordId)
+            as Map<String, dynamic>;
+    edited['recorded'] = false;
+    bank['wordSets']['harakaIntroduction'] = [wordId];
+    final loaded = CurriculumLoader.merge([
+      for (final asset in CurriculumLoader.defaultAssets.where(
+        (asset) => asset != CurriculumLoader.wordBankAsset,
+      ))
+        CurriculumLoader.parse(File(asset).readAsStringSync()),
+      CurriculumLoader.parse(jsonEncode(bank)),
+    ]);
+    final selected = loaded.wordsForSet('harakaIntroduction').single;
+    expect(selected.id, wordId);
+    expect(selected.audioAsset, 'tts:${selected.display}');
+    expect(
+      loaded.nodes
+          .singleWhere((node) => node.atom.wordId == wordId)
+          .atom
+          .audioAsset,
+      selected.audioAsset,
+    );
+  });
+
+  test('неизвестные слова в подборке и графе отвергаются при загрузке', () {
+    final bank = CurriculumLoader.parse(
+      File(CurriculumLoader.wordBankAsset).readAsStringSync(),
+    );
+    expect(
+      () => CurriculumLoader.merge([
+        bank,
+        const Curriculum(
+          wordSets: {
+            'missing': ['unknown'],
+          },
+        ),
+      ]),
+      throwsStateError,
+    );
+    final wordStage = CurriculumLoader.parse(
+      File('assets/curriculum/stage3.json').readAsStringSync(),
+    );
+    expect(() => CurriculumLoader.merge([wordStage]), throwsStateError);
+    expect(() => CurriculumLoader.merge([bank, bank]), throwsStateError);
   });
 }

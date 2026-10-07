@@ -14,6 +14,7 @@ import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 
 import 'connection_build_debug_page.dart';
+import 'word_build_debug_page.dart';
 import 'form_sequence_debug_page.dart';
 import 'glow_wave_debug_page.dart';
 import 'haraka_drawing_debug_page.dart';
@@ -114,6 +115,8 @@ class DebugController extends GetxController {
   void openSyllableBuild() => Get.toNamed(SyllableBuildDebugPage.routeName);
 
   void openConnectionBuild() => Get.toNamed(ConnectionBuildDebugPage.routeName);
+
+  void openWordBuild() => Get.toNamed(WordBuildDebugPage.routeName);
 
   void openSyllablePronunciation() =>
       Get.toNamed(SyllablePronunciationDebugPage.routeName);

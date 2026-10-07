@@ -12,13 +12,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// оставаться в YAML, а все ссылки из JSON должны вести к валидным карточкам.
 void main() {
   final stages = [
-    for (final asset in CurriculumLoader.defaultStageAssets)
+    for (final asset in CurriculumLoader.defaultAssets)
       jsonDecode(File(asset).readAsStringSync()) as Map<String, dynamic>,
   ];
-  final atoms = [
-    for (final stage in stages)
-      ...CurriculumLoader.parse(jsonEncode(stage)).nodes.map((n) => n.atom),
-  ];
+  final atoms = CurriculumLoader.merge([
+    for (final stage in stages) CurriculumLoader.parse(jsonEncode(stage)),
+  ]).nodes.map((node) => node.atom).toList();
   final byId = {for (final atom in atoms) atom.id: atom};
 
   ExplanationContent load(String path) =>
@@ -26,7 +25,7 @@ void main() {
 
   test('каждый атом курса имеет отдельную валидную YAML-карточку', () {
     for (final stage in stages) {
-      for (final node in stage['nodes'] as List<dynamic>) {
+      for (final node in stage['nodes'] as List<dynamic>? ?? const []) {
         final raw =
             (node as Map<String, dynamic>)['atom'] as Map<String, dynamic>;
         expect(raw, isNot(contains('note')), reason: raw['id'] as String);

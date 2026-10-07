@@ -16,6 +16,7 @@ import '../../../data/rest/pronunciation_rest_client.dart';
 import '../../../data/shared_preference_manager.dart';
 import '../../../data/voice_recorder.dart';
 import '../../../domain/atom.dart';
+import '../../../domain/connected_build_answer.dart';
 import '../../../domain/atom_state.dart';
 import '../../../domain/audio_track.dart';
 import '../../../domain/curriculum.dart';
@@ -34,6 +35,7 @@ import '../../../domain/planner.dart';
 import '../../../domain/pronunciation_attempts.dart';
 import '../../../domain/progress_event.dart';
 import '../../../domain/syllable_build_question.dart';
+import '../../../domain/word_build_question.dart';
 import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
 import 'lesson_audio_source.dart';
@@ -177,6 +179,23 @@ class LessonController extends GetxController {
   final syllableBuildLetter = RxnString();
   final syllableBuildMark = RxnString();
   final syllableBuildEvaluation = Rxn<SyllableBuildEvaluation>();
+  ConnectedBuildAnswer? _connectedBuildAnswer;
+  Exercise? _connectedBuildExercise;
+  bool _connectedBuildSubmitted = false;
+
+  ConnectedBuildAnswer? get connectedBuildAnswer {
+    _refresh.value;
+    final exercise = current;
+    if (exercise == null || !exercise.mode.isWordPreparation) return null;
+    if (_connectedBuildExercise != exercise) {
+      _connectedBuildExercise = exercise;
+      _connectedBuildSubmitted = false;
+      _connectedBuildAnswer = exercise.connectionBuildQuestion != null
+          ? ConnectedBuildAnswer.connection(exercise.connectionBuildQuestion!)
+          : ConnectedBuildAnswer.word(exercise.wordBuildQuestion!);
+    }
+    return _connectedBuildAnswer;
+  }
 
   /// Номер ошибки в задании с четырьмя формами. После разбора виджет получает
   /// новый ключ и начинает следующую попытку с сохранёнными подсказками.
@@ -393,6 +412,7 @@ class LessonController extends GetxController {
   final _syllableChoices = <ExerciseMode, int>{};
   final _countedSyllableChoices = Set<Exercise>.identity();
   final _pronouncedAtoms = <String>{};
+  final _wordPreparationModes = <ExerciseMode>{};
   final _sessionIntroduced = <String, Atom>{};
   final _planReasons = <String>[];
   final _firstAttemptResults = <bool>[];
@@ -675,6 +695,7 @@ class LessonController extends GetxController {
 
   void _showExercise() {
     _formSequence.reset();
+    _connectedBuildExercise = null;
     syllableBuildLetter.value = null;
     syllableBuildMark.value = null;
     syllableBuildEvaluation.value = null;
@@ -799,6 +820,7 @@ class LessonController extends GetxController {
           previousMixedHarakaSequences: _mixedHarakaSequences.length,
           previousSyllableChoices: _syllableChoices,
           previousPronunciations: _pronouncedAtoms,
+          previousWordPreparations: _wordPreparationModes,
           previousTaskCount: _completedExercises,
           unavailableModes: {
             if (!_pronunciationAvailable) ExerciseMode.sayName,
@@ -970,6 +992,9 @@ class LessonController extends GetxController {
     final exercise = current;
     if (exercise == null) return false;
     if (wasCorrect.value) return true;
+    if (exercise.mode.isWordPreparation) {
+      return wasWrong.value || connectedBuildAnswer?.isComplete == true;
+    }
     if (exercise.mode == ExerciseMode.syllableBuild) {
       return wasWrong.value ||
           (syllableBuildLetter.value != null &&
@@ -1018,6 +1043,46 @@ class LessonController extends GetxController {
     unawaited(submit());
   }
 
+  bool _canSelectConnected(Exercise exercise, int revision, int index) =>
+      stage.value == LessonStage.exercise &&
+      card.value == null &&
+      !wasCorrect.value &&
+      !wasWrong.value &&
+      _session?.current == exercise &&
+      connectedBuildAnswer?.revision == revision &&
+      connectedBuildAnswer?.activeIndex == index;
+
+  void selectConnectedForm(
+    Exercise exercise,
+    int revision,
+    int index,
+    String id,
+  ) {
+    if (!_canSelectConnected(exercise, revision, index)) return;
+    final answer = connectedBuildAnswer!;
+    final previousPhase = answer.phase;
+    if (!answer.selectForm(index, id)) return;
+    _refresh.value++;
+    if (answer.isComplete) {
+      unawaited(submit());
+    } else if (previousPhase == WordBuildPhase.forms &&
+        answer.phase == WordBuildPhase.marks) {
+      unawaited(_audio.playAsset(exercise.audioAsset));
+    }
+  }
+
+  void selectConnectedMark(
+    Exercise exercise,
+    int revision,
+    int index,
+    String id,
+  ) {
+    if (!_canSelectConnected(exercise, revision, index)) return;
+    if (!connectedBuildAnswer!.selectMark(index, id)) return;
+    _refresh.value++;
+    if (connectedBuildAnswer!.isComplete) unawaited(submit());
+  }
+
   /// Слоты проверяются только вместе, после заполнения последнего.
   Future<void> submitFormSequence(List<Atom> placed) async {
     final exercise = _session?.current;
@@ -1062,6 +1127,7 @@ class LessonController extends GetxController {
       syllableBuildLetter.value = question.prompt.letterId;
       syllableBuildMark.value = question.expectedMarkId;
     }
+    connectedBuildAnswer?.answerCorrectly();
     await submit(directOutcome: true);
     if (advance && wasCorrect.value) await submit();
   }
@@ -1130,6 +1196,7 @@ class LessonController extends GetxController {
         _mixedHarakaSequences.add(exercise);
       }
       _firstAttemptResults.add(false);
+      if (mode.isWordPreparation) _wordPreparationModes.add(mode);
       _countSyllableChoice(exercise);
       _countAsked(exercise.resultAtoms);
       await _afterExercise();
@@ -1214,10 +1281,23 @@ class LessonController extends GetxController {
         if (result?.harakaCorrect != true) syllableBuildMark.value = null;
         syllableBuildEvaluation.value = null;
       }
+      if (exercise.mode.isWordPreparation) {
+        connectedBuildAnswer!.retry();
+        _connectedBuildSubmitted = false;
+        unawaited(_audio.playAsset(exercise.audioAsset));
+      }
       return;
     }
 
     var outcomeCorrect = directOutcome;
+    if (exercise.mode.isWordPreparation) {
+      final answer = connectedBuildAnswer!;
+      if (!answer.isComplete || _connectedBuildSubmitted) return;
+      _connectedBuildSubmitted = true;
+      outcomeCorrect = answer.correct;
+      atomResults = answer.atomResults;
+      _wordPreparationModes.add(exercise.mode);
+    }
     if (exercise.syllableBuildQuestion case final question?) {
       if (syllableBuildEvaluation.value != null) return;
       final letter = syllableBuildLetter.value;

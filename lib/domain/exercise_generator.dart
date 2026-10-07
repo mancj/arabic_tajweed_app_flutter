@@ -11,6 +11,7 @@ import 'learning_rules.dart';
 import 'planner.dart';
 import 'progress_event.dart';
 import 'syllable_build_question.dart';
+import 'connected_word_content.dart';
 
 /// Превращает план урока в конкретные задания. Отдельный слой, потому что
 /// «какие атомы показать» и «каким заданием их спросить» — разные решения:
@@ -109,6 +110,7 @@ class ExerciseGenerator {
     int previousMixedHarakaSequences = 0,
     Map<ExerciseMode, int> previousSyllableChoices = const {},
     Set<String> previousPronunciations = const {},
+    Set<ExerciseMode> previousWordPreparations = const {},
     int previousTaskCount = 0,
     Set<ExerciseMode> unavailableModes = const {},
   }) {
@@ -227,12 +229,172 @@ class ExerciseGenerator {
       previousFormSequences,
       previousCounts,
     );
-    return _includeSyllableBuilds(
+    final withWordPreparations = _includeWordPreparations(
       withFormReviews,
+      pool,
+      plan,
+      ctx,
+      sessionId,
+      previousTaskCount,
+      previousWordPreparations,
+    );
+    return _includeSyllableBuilds(
+      withWordPreparations,
       pool,
       ctx,
       previousSyllableChoices,
     );
+  }
+
+  /// С третьей темы огласовок два добавочных теста заменяются вводными
+  /// сборками. Письмо, голос и семейные раскладки сохраняются. Короткий
+  /// блок получает долю общего бюджета, добор учитывает прежние сборки.
+  List<Exercise> _includeWordPreparations(
+    List<Exercise> exercises,
+    Set<Atom> pool,
+    LessonPlan plan,
+    CurriculumContext ctx,
+    int sessionId,
+    int previousTaskCount,
+    Set<ExerciseMode> previousModes,
+  ) {
+    final topics = curriculum.topics
+        .where((topic) => topic.stage == 2)
+        .toList();
+    final eligible = topics.skip(rules.wordPreparationFromHarakaLesson - 1);
+    final topic = topics.firstWhereOrNull((topic) => topic.id == plan.topicId);
+    final planIds = {
+      ...plan.newAtoms.map((atom) => atom.id),
+      ...plan.reviewAtoms,
+    };
+    final ids = topics.expand((topic) => topic.counterOf).toSet();
+    final isHarakaPlan =
+        topic != null ||
+        (plan.topicId == null &&
+            planIds.isNotEmpty &&
+            planIds.every(ids.contains));
+    final hasStarted = eligible.any(
+      (topic) => topic.counterOf.any(
+        (id) => ctx.stateOf(id) != AtomState.fresh || planIds.contains(id),
+      ),
+    );
+    if (!isHarakaPlan ||
+        !hasStarted ||
+        (topic != null && !eligible.contains(topic)) ||
+        !HarakaSyllables.marks.every(
+          (mark) => ctx.stateOf(mark.id) != AtomState.fresh,
+        )) {
+      return exercises;
+    }
+    final budget =
+        min(rules.tasksPerSession, previousTaskCount + exercises.length) *
+        rules.wordPreparationPerHarakaSession ~/
+        rules.tasksPerSession;
+    final remaining = budget - previousModes.length;
+    if (remaining <= 0) return exercises;
+
+    final ba = pool.firstWhereOrNull((atom) => atom.id == 'ba.isolated');
+    final content = ConnectedWordContent(
+      [
+        ...pool,
+        if (ba != null) ...HarakaSyllables.completeFamily(ba, pool.toList()),
+      ],
+      words: curriculum.wordsForSet('harakaIntroduction'),
+      random: _random,
+    );
+    final connection = content.randomConnection;
+    final words = content.availableWords..shuffle(_random);
+    final word = words.firstOrNull;
+    final candidates = exercises.indexed
+        .where(
+          (entry) =>
+              _canReplaceHarakaReview(entry.$2, plan, ctx) &&
+              (entry.$2.mode == ExerciseMode.soundToLetter ||
+                  entry.$2.mode == ExerciseMode.letterToSound),
+        )
+        .toList();
+    // Сборки идут после первых встреч слогов, ближе к середине и концу.
+    final result = [...exercises];
+    final modes = sessionId.isOdd
+        ? [ExerciseMode.connectionBuild, ExerciseMode.wordBuild]
+        : [ExerciseMode.wordBuild, ExerciseMode.connectionBuild];
+    var added = 0;
+    for (final mode in modes.whereNot(previousModes.contains)) {
+      if (added >= remaining || candidates.isEmpty) break;
+      if ((mode == ExerciseMode.connectionBuild && connection == null) ||
+          (mode == ExerciseMode.wordBuild && word == null)) {
+        continue;
+      }
+      final parts = mode == ExerciseMode.connectionBuild
+          ? connection!.parts
+          : word!.steps.map((step) => step.part).toList();
+      final readyAt = parts
+          .map(
+            (part) => ctx.stateOf(part.harakaAtom.id) != AtomState.fresh
+                ? -1
+                : exercises.indexWhere(
+                    (exercise) => exercise.resultAtoms.any(
+                      (atom) => atom.id == part.harakaAtom.id,
+                    ),
+                  ),
+          )
+          .max;
+      final available = candidates
+          .where((entry) => entry.$1 > readyAt)
+          .toList();
+      if (available.isEmpty) continue;
+      final preferredAt = result.length * (added + 1) ~/ (remaining + 1);
+      final chosen = available
+          .sortedBy((entry) => (entry.$1 - preferredAt).abs())
+          .first;
+      candidates.remove(chosen);
+      final target = mode == ExerciseMode.connectionBuild
+          ? connection!.missingPart.harakaAtom
+          : word!.steps.first.part.harakaAtom;
+      result[chosen.$1] = Exercise(
+        atom: target,
+        mode: mode,
+        level: chosen.$2.level,
+        answerIndex: Exercise.directAnswer,
+        isReview: chosen.$2.isReview,
+        isRequired: true,
+        audioAsset: mode == ExerciseMode.connectionBuild
+            ? connection!.audioAsset
+            : word!.audioAsset,
+        sequenceOrder: parts.map((part) => part.syllable).toList(),
+        connectionBuildQuestion: mode == ExerciseMode.connectionBuild
+            ? connection
+            : null,
+        wordBuildQuestion: mode == ExerciseMode.wordBuild ? word : null,
+      );
+      added++;
+    }
+    return result;
+  }
+
+  bool _canReplaceHarakaReview(
+    Exercise exercise,
+    LessonPlan plan,
+    CurriculumContext ctx,
+  ) {
+    final progress = ctx.progress[exercise.atom.id] ?? const AtomProgress();
+    final known = ctx.isKnown(exercise.atom.id);
+    final optional =
+        !exercise.isRequired ||
+        (known &&
+            (plan.spacedReview.contains(exercise.atom.id) ||
+                (plan.topicId == null && plan.isFocusedReview)));
+    final drawingDone =
+        !exercise.mode.isTracing ||
+        (known &&
+            (progress.weak ||
+                progress.successfulModes.contains(exercise.mode)));
+    return optional &&
+        drawingDone &&
+        !exercise.mode.isPronunciation &&
+        !exercise.mode.isHarakaSequence &&
+        exercise.mode != ExerciseMode.positionToForm &&
+        !exercise.mode.isWordPreparation;
   }
 
   /// Только две сборки старых форм в огласовках. Общая очередь раздела
@@ -263,30 +425,10 @@ class ExerciseGenerator {
     );
     if (!isHarakaPlan || remaining == 0) return exercises;
 
-    bool canReplace(Exercise exercise) {
-      final progress = ctx.progress[exercise.atom.id] ?? const AtomProgress();
-      final known = ctx.isKnown(exercise.atom.id);
-      // В общей очереди и смешанном повторе известные элементы задают
-      // объём практики, а не обязательный новый материал темы.
-      final optional =
-          !exercise.isRequired ||
-          (known &&
-              (plan.spacedReview.contains(exercise.atom.id) ||
-                  (plan.topicId == null && plan.isFocusedReview)));
-      final drawingDone =
-          !exercise.mode.isTracing ||
-          (known &&
-              (progress.weak ||
-                  progress.successfulModes.contains(exercise.mode)));
-      return optional &&
-          drawingDone &&
-          !exercise.mode.isPronunciation &&
-          !exercise.mode.isHarakaSequence &&
-          exercise.mode != ExerciseMode.positionToForm;
-    }
-
     final replaceable =
-        exercises.indexed.where((entry) => canReplace(entry.$2)).toList()
+        exercises.indexed
+            .where((entry) => _canReplaceHarakaReview(entry.$2, plan, ctx))
+            .toList()
           ..shuffle(_random);
     final replacementOrder = replaceable.sortedBy(
       (entry) => entry.$2.isReview ? 0 : 1,

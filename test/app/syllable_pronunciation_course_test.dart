@@ -30,10 +30,8 @@ import '../helpers/text_asset_bundle.dart';
 
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
   late ProgressDatabase database;
@@ -162,14 +160,32 @@ void main() {
       await subscription.cancel();
       expect(controller.loadError.value, isNull);
       if (!prepareVoice) return;
-      if (controller.stage.value == LessonStage.intro) {
-        final introduced = controller.introAtom!;
-        await controller.nextIntro();
-        expect(controller.current!.atom, introduced);
-      } else {
-        final introduced = controller.card.value!;
-        await controller.dismissCard();
-        expect(controller.current!.atom, introduced);
+      // При ограниченном бюджете первый новый слог может не получить
+      // голос. Доходим до выбранного слога через обычные объяснения
+      // и ответы, не засчитывая произношение за остальные.
+      for (var step = 0; step < rules.tasksPerSession * 3; step++) {
+        if (controller.stage.value == LessonStage.exercise &&
+            controller.card.value == null &&
+            controller.current?.mode == ExerciseMode.saySyllable) {
+          break;
+        }
+        if (controller.stage.value == LessonStage.intro) {
+          final introduced = controller.introAtom!;
+          await controller.nextIntro();
+          if (controller.stage.value == LessonStage.exercise &&
+              controller.current?.mode == ExerciseMode.saySyllable) {
+            expect(controller.current!.atom, introduced);
+          }
+        } else if (controller.card.value != null) {
+          final introduced = controller.card.value!;
+          await controller.dismissCard();
+          if (controller.current?.mode == ExerciseMode.saySyllable) {
+            expect(controller.current!.atom, introduced);
+          }
+        } else {
+          expect(controller.stage.value, LessonStage.exercise);
+          await controller.answerCorrectly(advance: true);
+        }
       }
       expect(controller.current!.mode, ExerciseMode.saySyllable);
       expect(controller.card.value, isNull);
@@ -269,7 +285,10 @@ void main() {
   ) async {
     await mount(tester, topicId: 'm.haraka.signs');
     final atom = controller.current!.atom;
-    expect(atom.id, 'haraka.fatha');
+    final signs = curriculum.topics
+        .firstWhere((topic) => topic.id == 'm.haraka.signs')
+        .counterOf;
+    expect(signs, contains(atom.id));
     verdict = 'mismatch';
     await record(tester);
     expect(controller.wasWrong.value, isFalse);
@@ -280,8 +299,13 @@ void main() {
     expect(log.single.atomId, atom.id);
     expect(log.single.isClean, isTrue);
     await press(tester, 'Продолжить');
-    expect(controller.stage.value, LessonStage.intro);
-    expect(controller.introAtom!.id, 'haraka.kasra');
+    final nextSignIndex = signs.indexOf(atom.id) + 1;
+    if (nextSignIndex < signs.length) {
+      expect(controller.stage.value, LessonStage.intro);
+      expect(controller.introAtom!.id, signs[nextSignIndex]);
+    } else {
+      expect(controller.stage.value, LessonStage.exercise);
+    }
     expect(requests, hasLength(1));
     await tester.pumpWidget(const SizedBox.shrink());
   });

@@ -8,6 +8,7 @@ import 'package:arabic_tajweed_app/data/letter_audio.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/domain/connection_build_question.dart';
 import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
+import 'package:arabic_tajweed_app/domain/connected_build_answer.dart';
 import 'package:flutter/material.dart';
 
 import 'connection_build_debug_content.dart';
@@ -33,9 +34,10 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
   int _index = 0;
   int _round = 0;
   String? _error;
-  String? _formId;
-  String? _markId;
-  ConnectionBuildEvaluation? _evaluation;
+  ConnectedBuildAnswer? _answer;
+  String? get _formId => _answer?.formIds.single;
+  String? get _markId => _answer?.markIds.single;
+  ConnectionBuildEvaluation? get _evaluation => _answer?.connectionEvaluation;
 
   ConnectionBuildQuestion? get _question =>
       _questions.isEmpty ? null : _questions[_index];
@@ -51,7 +53,12 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
       final questions =
           widget.questions ?? await loadConnectionBuildDebugQuestions();
       if (questions.isEmpty) throw StateError('Нет примеров');
-      if (mounted) setState(() => _questions = questions);
+      if (mounted) {
+        setState(() {
+          _questions = questions;
+          _answer = ConnectedBuildAnswer.connection(_question!);
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Не удалось загрузить соединения');
     }
@@ -65,7 +72,7 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
       return;
     }
     final enteringMarkStep = _formId == null && _markId == null;
-    setState(() => _formId = id);
+    setState(() => _answer!.selectForm(0, id));
     if (enteringMarkStep) {
       unawaited(_audio.playAsset(question.audioAsset));
       _revealBottom();
@@ -79,21 +86,15 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
         !HarakaSyllables.marks.any((mark) => mark.id == id)) {
       return;
     }
-    setState(() => _markId = id);
+    setState(() => _answer!.selectMark(0, id));
     _check();
   }
 
   void _check() {
     final question = _question;
-    if (question == null ||
-        _formId == null ||
-        _markId == null ||
-        _evaluation != null) {
+    if (question == null || _formId == null || _markId == null) {
       return;
     }
-    setState(
-      () => _evaluation = question.evaluate(formId: _formId!, markId: _markId!),
-    );
     unawaited(_audio.stop());
     _revealBottom();
   }
@@ -101,11 +102,7 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
   void _retry() {
     final result = _evaluation;
     if (result == null || result.correct) return;
-    setState(() {
-      if (!result.formCorrect) _formId = null;
-      if (!result.harakaCorrect) _markId = null;
-      _evaluation = null;
-    });
+    setState(() => _answer!.retry());
     unawaited(_audio.playAsset(_question!.audioAsset));
     if (_scroll.hasClients) _scroll.jumpTo(0);
   }
@@ -116,9 +113,7 @@ class _ConnectionBuildDebugPageState extends State<ConnectionBuildDebugPage> {
     setState(() {
       _index = (_index + 1) % _questions.length;
       _round++;
-      _formId = null;
-      _markId = null;
-      _evaluation = null;
+      _answer = ConnectedBuildAnswer.connection(_question!);
     });
     if (_scroll.hasClients) _scroll.jumpTo(0);
   }

@@ -2,6 +2,15 @@
 
 [← Оглавление ТЗ](../../SPEC.md)
 
+## Подпись Release для TestFlight
+
+Цель `Runner` в конфигурации `Release` использует ручную подпись
+`Apple Distribution` и установленный профиль `Tajweed App Store 34 20260911`.
+Этот же профиль указан в `ios/fastlane/Fastfile` для экспорта IPA.
+Автоматическая development-подпись на этапе `flutter build ios --release`
+не подходит для выпуска без подключённого аккаунта Xcode.
+При плановом обновлении профиля менять его имя в обоих местах.
+
 ## iOS и Rive
 
 В конфигурациях `Profile` и `Release` цели `Runner` параметр Xcode

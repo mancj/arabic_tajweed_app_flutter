@@ -1,12 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../resources/ui_resources.dart';
+import '../../widgets/app_gesture_detector.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/next_button.dart';
 import '../debug/debug_page.dart';
+import '../profile/profile_page.dart';
 import 'course_controller.dart';
 import 'course_dashboard.dart';
 
@@ -21,6 +24,23 @@ class CoursePage extends GetView<CourseController> {
   Widget build(BuildContext context) => AppScaffold(
     showBrand: true,
     showBackButton: false,
+    actions: [
+      Semantics(
+        label: 'Профиль и настройки',
+        button: true,
+        child: AppGestureDetector(
+          onTap: () => Get.toNamed(ProfilePage.routeName),
+          child: SizedBox.square(
+            dimension: 46,
+            child: Icon(
+              CupertinoIcons.person_crop_circle,
+              size: 28,
+              color: UIColors.text,
+            ),
+          ),
+        ),
+      ),
+    ],
     bottomBar: Obx(
       () => NextButton(
         title: 'Начать занятие',

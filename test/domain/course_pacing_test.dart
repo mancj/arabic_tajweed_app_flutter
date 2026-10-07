@@ -13,10 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// без этой проверки огласовки, связки и слова снова шли подряд в один день.
 void main() {
   final curriculum = CurriculumLoader.merge([
-    for (final stage in [1, 2, 3])
-      CurriculumLoader.parse(
-        File('assets/curriculum/stage$stage.json').readAsStringSync(),
-      ),
+    for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
   ]);
   final planner = LessonPlanner(curriculum: curriculum);
 

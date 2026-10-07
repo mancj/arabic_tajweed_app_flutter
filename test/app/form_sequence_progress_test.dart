@@ -181,10 +181,8 @@ void main() {
     'двухформенное повторение в огласовках сохраняет ответ и доступ',
     () async {
       final course = CurriculumLoader.merge([
-        for (final stage in [1, 2, 3])
-          CurriculumLoader.parse(
-            File('assets/curriculum/stage$stage.json').readAsStringSync(),
-          ),
+        for (final asset in CurriculumLoader.defaultAssets)
+      CurriculumLoader.parse(File(asset).readAsStringSync()),
       ]);
       final at = DateTime(2026, 9, 20);
       final oldIds = course.topics

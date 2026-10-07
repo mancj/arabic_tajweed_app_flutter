@@ -60,7 +60,7 @@ class RuleCard extends StatelessWidget {
                 BoxShadow(
                   color: UIColors.shadows,
                   offset: const Offset(0, 4),
-                  blurRadius: 1.5,
+                  blurRadius: 8,
                 ),
               ],
             ),

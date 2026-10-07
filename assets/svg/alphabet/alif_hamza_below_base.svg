@@ -1,4 +1,8 @@
 <svg width="329" height="323" viewBox="0 0 329 323" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path id="1-base" d="M169 108.75V233.75" stroke="#08171D" stroke-width="20" stroke-linecap="round"/>
-<path id="2-hamza" d="M157 270 C155 261 161 254 169 255 C175 256 178 262 174 266 C171 269 165 266 163 271 C162 274 168 277 181 276" stroke="#08171D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="hamza_i_base">
+<g id="Frame 13">
+<path id="1-base" d="M164.5 70.4404V195.44" stroke="#08171D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="2-base" d="M174.287 221.747C166.62 220.58 151.287 216.747 149.787 231.747C148.249 247.126 171.12 245.893 179.287 243.06L149.787 252.06" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
 </svg>

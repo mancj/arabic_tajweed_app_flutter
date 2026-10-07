@@ -47,13 +47,33 @@ Map<String, dynamic> _$CurriculumNodeToJson(CurriculumNode instance) =>
     };
 
 Curriculum _$CurriculumFromJson(Map<String, dynamic> json) => Curriculum(
-  nodes: (json['nodes'] as List<dynamic>)
-      .map((e) => CurriculumNode.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  topics: (json['topics'] as List<dynamic>)
-      .map((e) => Topic.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  nodes:
+      (json['nodes'] as List<dynamic>?)
+          ?.map((e) => CurriculumNode.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  topics:
+      (json['topics'] as List<dynamic>?)
+          ?.map((e) => Topic.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  words:
+      (json['words'] as List<dynamic>?)
+          ?.map((e) => ReadingWord.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  wordSets:
+      (json['wordSets'] as Map<String, dynamic>?)?.map(
+        (k, e) =>
+            MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$CurriculumToJson(Curriculum instance) =>
-    <String, dynamic>{'nodes': instance.nodes, 'topics': instance.topics};
+    <String, dynamic>{
+      'nodes': instance.nodes,
+      'topics': instance.topics,
+      'words': instance.words,
+      'wordSets': instance.wordSets,
+    };

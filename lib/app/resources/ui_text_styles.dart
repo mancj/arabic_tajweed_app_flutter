@@ -136,14 +136,14 @@ class UITextStyles {
       _style(size: 13, family: fontJetBrainsMono, weight: FontWeight.w600);
   static TextStyle get monoSemibold14 =>
       _style(size: 14, family: fontJetBrainsMono, weight: FontWeight.w600);
-  
+
   static TextStyle get monoBold11 => _style(
     size: 11,
     family: fontJetBrainsMono,
     weight: FontWeight.bold,
     letterSpacing: 1,
   );
-  
+
   static TextStyle get monoBold26 => _style(
     size: 26,
     family: fontJetBrainsMono,
@@ -155,8 +155,12 @@ class UITextStyles {
   static TextStyle get serifRegular16 =>
       _style(size: 16, family: fontSerif, height: 1.5);
   static TextStyle get serifRegular17 => _style(size: 17, family: fontSerif);
+  static TextStyle get serifRegular24Compact =>
+      _style(size: 24, family: fontSerif, height: 1.08);
   static TextStyle get serifRegular32Compact =>
       _style(size: 32, family: fontSerif, height: 1);
+  static TextStyle get serifRegular36Compact =>
+      _style(size: 36, family: fontSerif, height: 1.08);
   static TextStyle get serifSemibold18Compact =>
       _style(size: 18, family: fontSerif, weight: FontWeight.w600, height: 1);
 

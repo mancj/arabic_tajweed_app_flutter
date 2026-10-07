@@ -31,10 +31,12 @@ class LearningRules {
     this.alphabetCheckpointLetters = const [7, 15, 21, 28],
     this.connectedFormCleanStreakForKnown = 2,
     this.tasksPerSession = 20,
-    this.syllablePronunciationMaxPercent = 25,
+    this.syllablePronunciationMaxPercent = 15,
     this.harakaSequencesPerSession = 3,
     this.mixedHarakaSequencesPerSession = 2,
     this.letterFormReviewsPerHarakaSession = 2,
+    this.wordPreparationPerHarakaSession = 2,
+    this.wordPreparationFromHarakaLesson = 3,
     this.narrowLetterExercises = 4,
     this.tracingMissesBeforeReveal = 3,
     this.sayNameAttempts = 2,
@@ -132,6 +134,10 @@ class LearningRules {
   /// для всех блоков занятия; старые уроки букв не возвращаются.
   final int letterFormReviewsPerHarakaSession;
 
+  /// Небольшое введение в сборку слов: один пропуск и одна полная сборка.
+  final int wordPreparationPerHarakaSession;
+  final int wordPreparationFromHarakaLesson;
+
   /// Сколько встреч получает каждая буква в узком блоке из двух отдельных
   /// букв: два вида письма, произношение и одно узнавание. Если голос
   /// недоступен, его место может занять второе узнавание.
@@ -225,6 +231,8 @@ class LearningRules {
     harakaSequencesPerSession: harakaSequencesPerSession,
     mixedHarakaSequencesPerSession: mixedHarakaSequencesPerSession,
     letterFormReviewsPerHarakaSession: letterFormReviewsPerHarakaSession,
+    wordPreparationPerHarakaSession: wordPreparationPerHarakaSession,
+    wordPreparationFromHarakaLesson: wordPreparationFromHarakaLesson,
     narrowLetterExercises: narrowLetterExercises,
     tracingMissesBeforeReveal: tracingMissesBeforeReveal,
     sayNameAttempts: sayNameAttempts,

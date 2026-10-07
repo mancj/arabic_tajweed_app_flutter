@@ -34,17 +34,6 @@ GROUPS = [
     [(letter_id, *LETTER_BY_ID[letter_id]) for letter_id in group]
     for group in GROUP_LETTER_IDS
 ]
-WORDS = [
-    ("kataba", "كَتَبَ"),
-    ("darasa", "دَرَسَ"),
-    ("rasama", "رَسَمَ"),
-    ("shariba", "شَرِبَ"),
-    ("samia", "سَمِعَ"),
-    ("amila", "عَمِلَ"),
-    ("fariha", "فَرِحَ"),
-    ("laiba", "لَعِبَ"),
-    ("najaha", "نَجَحَ"),
-]
 
 
 def known(atom_id):
@@ -209,9 +198,12 @@ def build():
         *REQUIRED_HARAKA_IDS,
         *connection_ids,
     ]
-    for index in range(0, len(WORDS), 3):
-        group = WORDS[index : index + 3]
-        ids = [f"word.{word_id}" for word_id, _ in group]
+    bank = json.loads((ROOT / "assets/curriculum/words.json").read_text())
+    by_id = {word["id"]: word for word in bank["words"]}
+    words = [by_id[word_id] for word_id in bank["wordSets"]["wordReading"]]
+    for index in range(0, len(words), 3):
+        group = words[index : index + 3]
+        ids = [word["atomId"] for word in group]
         requirement = all_of(map(completed, previous))
         topics.append(topic(
             f"m.haraka.words{index // 3 + 1}",
@@ -220,11 +212,15 @@ def build():
             ids,
             stage=3,
         ))
-        for word_id, display in group:
-            nodes.append(node(spoken_atom(
-                f"word.{word_id}", "word", display,
-                "Короткое слово",
-            ), requirement))
+        for word in group:
+            atom_id = word["atomId"]
+            nodes.append(node({
+                "id": atom_id,
+                "kind": "word",
+                "wordId": word["id"],
+                "label": "Короткое слово",
+                "explanationAsset": f"assets/explanations/ru/{atom_id}.yaml",
+            }, requirement))
         previous = ids
 
     return {"topics": topics, "nodes": nodes}

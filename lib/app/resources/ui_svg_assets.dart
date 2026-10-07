@@ -1,6 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 
 class UISVGAssets {
+  static final google = _path("google");
+  static final appleLogo = _path("apple_logo");
   static final search = _path("search");
   static final notes = _path("notes-svgrepo-com");
   static final lockAlt = _path("lock-alt-svgrepo-com");

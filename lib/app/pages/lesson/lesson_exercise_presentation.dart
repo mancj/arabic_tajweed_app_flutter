@@ -2,6 +2,8 @@ import '../../../domain/atom.dart';
 import '../../../domain/exercise.dart';
 import '../../../domain/progress_event.dart';
 import '../../../domain/syllable_build_question.dart';
+import '../../../domain/connection_build_question.dart';
+import '../../../domain/word_build_question.dart';
 import '../../../data/rest/syllable_check.dart';
 
 /// Способ взаимодействия с вопросом. Экран выбирает виджет по нему, а не по
@@ -11,6 +13,7 @@ enum LessonInputKind {
   tracing,
   formSequence,
   syllableBuild,
+  connectedBuild,
   pronunciation,
   placeholder,
 }
@@ -64,6 +67,8 @@ class LessonExercisePresentation {
       ExerciseMode.harakaSequence ||
       ExerciseMode.harakaForLetters => LessonInputKind.formSequence,
       ExerciseMode.syllableBuild => LessonInputKind.syllableBuild,
+      ExerciseMode.connectionBuild ||
+      ExerciseMode.wordBuild => LessonInputKind.connectedBuild,
       ExerciseMode.sayName ||
       ExerciseMode.saySyllable => LessonInputKind.pronunciation,
       _ when mode.isTracing => LessonInputKind.tracing,
@@ -128,6 +133,8 @@ class LessonExercisePresentation {
     ExerciseMode.assemble => 'Соберите слог справа налево',
     ExerciseMode.sayName => 'Назовите эту букву вслух',
     ExerciseMode.saySyllable => 'Прочитайте этот слог вслух',
+    ExerciseMode.connectionBuild => 'Достройте соединение',
+    ExerciseMode.wordBuild => 'Соберите слово по шагам',
   };
 
   static String _stubHintOf(ExerciseMode mode) => switch (mode) {
@@ -149,7 +156,22 @@ class LessonExercisePresentation {
     required bool correct,
     SyllableBuildEvaluation? syllableBuildEvaluation,
     SyllableCheck? syllableCheck,
+    ConnectionBuildEvaluation? connectionBuildEvaluation,
+    WordBuildEvaluation? wordBuildEvaluation,
   }) {
+    if (connectionBuildEvaluation case final result?) {
+      return switch ((result.formCorrect, result.harakaCorrect)) {
+        (true, true) => 'Соединение собрано правильно',
+        (true, false) => 'Форма верная, огласовка отличается',
+        (false, true) => 'Огласовка верная, форма отличается',
+        (false, false) => 'Форма и огласовка отличаются',
+      };
+    }
+    if (wordBuildEvaluation != null) {
+      return correct
+          ? 'Слово собрано правильно'
+          : 'Проверьте формы и огласовки';
+    }
     if (syllableCheck != null && syllableCheck.matched == correct) {
       return syllableCheck.feedbackTitle;
     }
@@ -177,7 +199,13 @@ class LessonExercisePresentation {
     SyllableCheck? syllableCheck,
     int formSequenceCorrectCount = 0,
     bool revealFormSequenceAnswer = false,
+    WordBuildEvaluation? wordBuildEvaluation,
   }) {
+    if (input == LessonInputKind.connectedBuild) {
+      if (correct) return 'Формы и огласовки выбраны верно.';
+      return '${wordBuildEvaluation == null ? '' : 'Ошибок в формах: ${wordBuildEvaluation.formMistakes}, в огласовках: ${wordBuildEvaluation.markMistakes}.\n'}'
+          'Верные части останутся на месте для следующей попытки.';
+    }
     if (syllableCheck != null && syllableCheck.matched == correct) {
       return syllableCheck.hint;
     }

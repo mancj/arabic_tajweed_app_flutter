@@ -48,6 +48,12 @@ enum ExerciseMode {
 
   /// Прочитать букву с краткой огласовкой; запись проверяется через /syllable.
   saySyllable,
+
+  /// Достроить одну букву связки: выбрать форму и огласовку.
+  connectionBuild,
+
+  /// Собрать все формы слова, затем его огласовки.
+  wordBuild,
 }
 
 extension ExerciseModeX on ExerciseMode {
@@ -57,6 +63,9 @@ extension ExerciseModeX on ExerciseMode {
   bool get isHarakaSequence =>
       this == ExerciseMode.harakaSequence ||
       this == ExerciseMode.harakaForLetters;
+
+  bool get isWordPreparation =>
+      this == ExerciseMode.connectionBuild || this == ExerciseMode.wordBuild;
 
   /// Активная механика — воспроизведение, а не узнавание. Атом не может
   /// дойти до mastered на одних тапах по вариантам. Назвать букву вслух —

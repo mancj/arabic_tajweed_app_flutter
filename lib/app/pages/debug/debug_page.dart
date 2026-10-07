@@ -146,6 +146,12 @@ class DebugPage extends GetView<DebugController> {
                 onTap: controller.openConnectionBuild,
               ),
               _DebugTile(
+                icon: Icons.join_left_rounded,
+                title: 'Собери слово по шагам',
+                subtitle: 'Форма и огласовка каждой буквы справа налево',
+                onTap: controller.openWordBuild,
+              ),
+              _DebugTile(
                 icon: Icons.record_voice_over_rounded,
                 title: 'Чтение слога вслух',
                 subtitle: 'Запись и проверка буквы с огласовкой',

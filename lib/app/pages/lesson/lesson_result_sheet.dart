@@ -11,6 +11,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_specimen.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/lesson_progress_bar.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
+import 'package:arabic_tajweed_app/domain/progress_event.dart';
 
 import 'lesson_controller.dart';
 import 'lesson_exercise_presentation.dart';
@@ -88,6 +89,9 @@ class _LessonResultSheetState extends State<LessonResultSheet>
           correct: correct,
           syllableBuildEvaluation: controller.syllableBuildEvaluation.value,
           syllableCheck: controller.pronunciation.syllableResult.value,
+          connectionBuildEvaluation:
+              controller.connectedBuildAnswer?.connectionEvaluation,
+          wordBuildEvaluation: controller.connectedBuildAnswer?.wordEvaluation,
         ) ??
         (correct ? 'Верно!' : 'Попробуйте ещё раз');
     final text = presentation?.feedbackText(
@@ -97,6 +101,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
       syllableCheck: controller.pronunciation.syllableResult.value,
       formSequenceCorrectCount: controller.formSequenceCorrectCount,
       revealFormSequenceAnswer: controller.revealFormSequenceAnswer,
+      wordBuildEvaluation: controller.connectedBuildAnswer?.wordEvaluation,
     );
 
     return SafeArea(
@@ -148,7 +153,15 @@ class _LessonResultSheetState extends State<LessonResultSheet>
               ),
               if (exercise != null && !isFormSequence) ...[
                 const Margin.vertical(24),
-                _ResultAnswerCard(atom: exercise.answer),
+                _ResultAnswerCard(
+                  atom: exercise.answer,
+                  display:
+                      exercise.connectionBuildQuestion?.display ??
+                      exercise.wordBuildQuestion?.display,
+                  label: exercise.mode.isWordPreparation
+                      ? 'Собранная запись'
+                      : null,
+                ),
               ],
               if (text != null) ...[
                 const Margin.vertical(16),
@@ -200,6 +213,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
                 title: correct ? 'Продолжить' : 'Попробовать ещё раз',
                 enabled: !_advancing,
                 onTap: _advance,
+                glassProminent: true,
               ),
             ],
           ),
@@ -210,9 +224,11 @@ class _LessonResultSheetState extends State<LessonResultSheet>
 }
 
 class _ResultAnswerCard extends StatelessWidget {
-  const _ResultAnswerCard({required this.atom});
+  const _ResultAnswerCard({required this.atom, this.display, this.label});
 
   final Atom atom;
+  final String? display;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -230,10 +246,10 @@ class _ResultAnswerCard extends StatelessWidget {
         children: [
           if (hasGlyph) ...[
             Semantics(
-              label: 'Буква ${atom.display}',
+              label: 'Правильный ответ: ${display ?? atom.display}',
               child: ExcludeSemantics(
                 child: LetterSpecimenGlyph(
-                  letter: atom.display,
+                  letter: display ?? atom.display,
                   height: 112,
                   fontSize: 88,
                 ),
@@ -249,7 +265,7 @@ class _ResultAnswerCard extends StatelessWidget {
           ),
           const Margin.vertical(8),
           Text(
-            atom.label.isNotEmpty ? atom.label : atom.display,
+            label ?? (atom.label.isNotEmpty ? atom.label : atom.display),
             style: UITextStyles.semibold22,
           ),
         ],

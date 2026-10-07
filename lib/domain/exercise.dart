@@ -1,6 +1,8 @@
 import 'atom.dart';
 import 'progress_event.dart';
 import 'syllable_build_question.dart';
+import 'connection_build_question.dart';
+import 'word_build_question.dart';
 
 /// Уровень сложности дистракторов. Растёт по мере освоения атома:
 /// минимальная пара — это экзамен, а не стартовый режим. Показать её
@@ -36,6 +38,8 @@ class Exercise {
     this.sequenceOrder = const [],
     this.introductionAtoms = const [],
     this.syllableBuildQuestion,
+    this.connectionBuildQuestion,
+    this.wordBuildQuestion,
   });
 
   /// Задание без выбора: обводка, сборка, аудио. Ответ не выбирается
@@ -59,7 +63,9 @@ class Exercise {
        prompt = null,
        sequenceOrder = const [],
        introductionAtoms = const [],
-       syllableBuildQuestion = null;
+       syllableBuildQuestion = null,
+       connectionBuildQuestion = null,
+       wordBuildQuestion = null;
 
   /// Индекс, которым отмечается верный исход задания без выбора.
   static const directAnswer = 0;
@@ -113,6 +119,8 @@ class Exercise {
   /// Два выбора для одного слога. Весь ответ оценивается по [atom],
   /// буквы в палитре не получают событий прогресса.
   final SyllableBuildQuestion? syllableBuildQuestion;
+  final ConnectionBuildQuestion? connectionBuildQuestion;
+  final WordBuildQuestion? wordBuildQuestion;
 
   /// Режим с выбором из вариантов. Обводка и сборка — нет.
   bool get isChoice => options.isNotEmpty;
@@ -121,10 +129,13 @@ class Exercise {
 
   /// Какие элементы действительно проверяет задание. Сборка раскладывает
   /// всю семью форм или слогов, а не только [atom].
-  List<Atom> get resultAtoms => mode == ExerciseMode.harakaForLetters
-      ? List.unmodifiable(sequenceOrder)
-      : mode == ExerciseMode.positionToForm ||
-            mode == ExerciseMode.harakaSequence
-      ? List.unmodifiable(options)
-      : [atom];
+  List<Atom> get resultAtoms =>
+      connectionBuildQuestion?.resultAtoms ??
+      wordBuildQuestion?.resultAtoms ??
+      (mode == ExerciseMode.harakaForLetters
+          ? List.unmodifiable(sequenceOrder)
+          : mode == ExerciseMode.positionToForm ||
+                mode == ExerciseMode.harakaSequence
+          ? List.unmodifiable(options)
+          : [atom]);
 }

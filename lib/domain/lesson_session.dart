@@ -138,7 +138,7 @@ class LessonSession {
   /// конец, а через несколько шагов: так оно попадётся, пока разбор ещё
   /// свежий, и не соберётся в хвост из одинаковых вопросов.
   void _requeue(Exercise exercise) {
-    if (exercise.isFormMaintenance) return;
+    if (exercise.isFormMaintenance || exercise.mode.isWordPreparation) return;
     if (!_requeuedOnce.add(exercise)) return;
 
     // Если такая же проверка этой буквы уже встретится ещё раз, она и будет
