@@ -1,16 +1,22 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+
+import '../../../data/rest/api_exception.dart';
+import '../../../data/rest/auth_rest_client.dart';
 import '../../resources/ui_resources.dart';
-import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/app_text_field.dart';
-import '../../widgets/ui_kit/next_button.dart';
-import '../../widgets/ui_kit/rule_card.dart';
+import 'email_auth_error.dart';
+import 'email_code_page.dart';
 import 'widgets/auth_notice.dart';
+import 'widgets/auth_action.dart';
+import 'widgets/email_auth_form.dart';
 
 class EmailAuthorizationPage extends StatefulWidget {
   static const routeName = '/authorization/email';
-
   const EmailAuthorizationPage({super.key});
 
   @override
@@ -19,15 +25,25 @@ class EmailAuthorizationPage extends StatefulWidget {
 
 class _EmailAuthorizationPageState extends State<EmailAuthorizationPage> {
   final _formKey = GlobalKey<FormState>();
-  final _noticeKey = GlobalKey();
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
-
+  final _cancelToken = CancelToken();
   bool _hasAttemptedSubmit = false;
-  bool _showNotice = false;
+  bool _busy = false;
+  String? _notice;
+  DateTime? _retryAt;
+  Timer? _timer;
+
+  int get _retrySeconds => _retryAt == null
+      ? 0
+      : (_retryAt!.difference(DateTime.now()).inMilliseconds / 1000)
+            .ceil()
+            .clamp(0, 86400);
 
   @override
   void dispose() {
+    _cancelToken.cancel();
+    _timer?.cancel();
     _emailController.dispose();
     _emailFocus.dispose();
     super.dispose();
@@ -42,129 +58,98 @@ class _EmailAuthorizationPageState extends State<EmailAuthorizationPage> {
     return null;
   }
 
-  void _clearNotice(String _) {
-    if (_showNotice) setState(() => _showNotice = false);
-  }
-
-  void _requestCode() {
+  Future<void> _requestCode() async {
+    if (_busy || _retrySeconds > 0) return;
     setState(() {
       _hasAttemptedSubmit = true;
-      _showNotice = false;
+      _notice = null;
     });
     if (!_formKey.currentState!.validate()) {
       _emailFocus.requestFocus();
       return;
     }
+    final email = _emailController.text.trim();
     FocusScope.of(context).unfocus();
-    setState(() => _showNotice = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final noticeContext = _noticeKey.currentContext;
-      if (!mounted || noticeContext == null) return;
-      Scrollable.ensureVisible(
-        noticeContext,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+    setState(() => _busy = true);
+    try {
+      final challenge = await Get.find<AuthRestClient>().requestEmailCode(
+        email,
+        cancelToken: _cancelToken,
       );
-    });
+      if (!mounted) return;
+      final loggedIn = await Navigator.of(context).push<bool>(
+        CupertinoPageRoute(
+          builder: (_) => EmailCodePage(email: email, challenge: challenge),
+        ),
+      );
+      if (loggedIn == true && mounted) Navigator.of(context).pop(true);
+    } on RequestCancelledException {
+      // Уход со страницы отменяет ожидание, а не показывает сетевую ошибку.
+    } catch (error) {
+      if (!mounted) return;
+      if (error is ClientErrorException && error.statusCode == 429) {
+        _retryAt = DateTime.now().add(
+          Duration(seconds: error.retryAfterSeconds ?? 60),
+        );
+        _timer?.cancel();
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (_retrySeconds == 0) timer.cancel();
+          if (mounted) setState(() {});
+        });
+      }
+      setState(() => _notice = emailAuthErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
-  Widget build(BuildContext context) => AppScaffold(
-    title: 'Почта',
-    builder: (context, insets) => SingleChildScrollView(
-      padding: insets,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: RuleCard(
-            title: '',
-            contentPadding: const EdgeInsets.all(24),
-            child: AutofillGroup(
-              onDisposeAction: AutofillContextAction.cancel,
-              child: Form(
-                key: _formKey,
-                autovalidateMode: _hasAttemptedSubmit
-                    ? AutovalidateMode.onUserInteraction
-                    : AutovalidateMode.disabled,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ExcludeSemantics(
-                        child: Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: UIColors.primary10,
-                          ),
-                          child: Icon(
-                            CupertinoIcons.envelope_badge,
-                            size: 36,
-                            color: UIColors.studyAccent,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Margin.vertical(24),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        'Войти с email',
-                        style: UITextStyles.semibold26,
-                      ),
-                    ),
-                    const Margin.vertical(8),
-                    Text(
-                      'Пришлём одноразовый код на вашу почту.\nПароль не нужен.',
-                      style: UITextStyles.regular15.copyWith(
-                        color: UIColors.text.withValues(alpha: .72),
-                      ),
-                    ),
-                    const Margin.vertical(32),
-                    AppTextField(
-                      key: const ValueKey('email_authorization_email'),
-                      label: 'Email',
-                      hintText: 'name@example.com',
-                      controller: _emailController,
-                      focusNode: _emailFocus,
-                      validator: _validateEmail,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.done,
-                      autofillHints: const [AutofillHints.email],
-                      onChanged: _clearNotice,
-                      onSubmitted: (_) => _requestCode(),
-                    ),
-                    const Margin.vertical(24),
-                    Semantics(
-                      button: true,
-                      label: 'Получить код',
-                      excludeSemantics: true,
-                      onTap: _requestCode,
-                      child: NextButton(
-                        title: 'Получить код',
-                        glassProminent: true,
-                        onTap: _requestCode,
-                      ),
-                    ),
-                    if (_showNotice) ...[
-                      const Margin.vertical(24),
-                      AuthNotice(
-                        key: _noticeKey,
-                        message:
-                            'Вход по email скоро появится. Пока код не отправлен.',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+  Widget build(BuildContext context) => EmailAuthForm(
+    title: 'Войти с email',
+    description: 'Пришлём одноразовый код на вашу почту.\nПароль не нужен.',
+    iconAsset: UISVGAssets.mailAtSign,
+    child: AutofillGroup(
+      onDisposeAction: AutofillContextAction.cancel,
+      child: Form(
+        key: _formKey,
+        autovalidateMode: _hasAttemptedSubmit
+            ? AutovalidateMode.onUserInteraction
+            : AutovalidateMode.disabled,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTextField(
+              key: const ValueKey('email_authorization_email'),
+              label: 'Email',
+              hintText: 'name@example.com',
+              controller: _emailController,
+              focusNode: _emailFocus,
+              enabled: !_busy,
+              validator: _validateEmail,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.email],
+              onChanged: (_) {
+                if (_notice != null) setState(() => _notice = null);
+              },
+              onSubmitted: (_) => _requestCode(),
             ),
-          ),
+            const Margin.vertical(24),
+            AuthAction(
+              title: _busy
+                  ? 'Отправляем…'
+                  : _retrySeconds > 0
+                  ? 'Повторить через $_retrySeconds с'
+                  : 'Получить код',
+              enabled: !_busy && _retrySeconds == 0,
+              busy: _busy,
+              onTap: _requestCode,
+            ),
+            if (_notice != null) ...[
+              const Margin.vertical(24),
+              AuthNotice(message: _notice!),
+            ],
+          ],
         ),
       ),
     ),

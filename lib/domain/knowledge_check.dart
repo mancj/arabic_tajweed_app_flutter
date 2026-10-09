@@ -5,6 +5,8 @@ import 'atom.dart';
 import 'curriculum.dart';
 import 'exercise.dart';
 import 'exercise_generator.dart';
+import 'learning_rules.dart';
+import 'topic_board.dart';
 
 /// Проверяем недостающие зависимости выбранной темы. Для далёкой темы
 /// берём короткую выборку: безошибочный результат подтверждает и остальное
@@ -14,24 +16,29 @@ class KnowledgeCheck {
     required this.curriculum,
     required this.topic,
     required this.context,
+    this.rules = const LearningRules(),
     Random? random,
   }) : _random = random ?? Random() {
     _generator = ExerciseGenerator(curriculum: curriculum, random: _random);
     _addPreviousTopics();
     _require(topic.requirement);
     final missing = atoms.where((a) => a.kind != AtomKind.concept).toList();
-    // Формы хамзы здесь не спрашиваем: вопрос о названии её носителя
-    // не соответствует заданию, с которым человек работает в курсе.
-    final questionCandidates = missing.where(_canAskInCheck).toList();
-    isCondensed = questionCandidates.length > maxCheckedAtoms;
-    checkedAtoms = isCondensed
-        ? _sample(questionCandidates)
-        : questionCandidates;
+    isCondensed = missing.length > maxCheckedAtoms;
+    checkedAtoms = isCondensed ? _sample(missing) : missing;
     inferredAtoms = missing.where((a) => !checkedAtoms.contains(a)).toList();
-    questions = [
-      for (final atom in checkedAtoms)
-        for (final reverse in [false, true]) _question(atom, reverse),
-    ];
+    questions = [];
+    for (final reverse in [false, true]) {
+      final round = checkedAtoms.toList()..shuffle(_random);
+      // На стыке двух перемешанных проходов тоже не повторяем элемент.
+      if (round.length > 1 &&
+          questions.isNotEmpty &&
+          round.first.id == questions.last.atom.id) {
+        final first = round[0];
+        round[0] = round[1];
+        round[1] = first;
+      }
+      questions.addAll(round.map((atom) => _question(atom, reverse)));
+    }
   }
 
   /// Двадцать вопросов сопоставимы с обычным занятием и помещаются в один
@@ -41,6 +48,7 @@ class KnowledgeCheck {
   final Curriculum curriculum;
   final Topic topic;
   final CurriculumContext context;
+  final LearningRules rules;
   final Random _random;
   late final ExerciseGenerator _generator;
   final List<Atom> atoms = [];
@@ -55,9 +63,6 @@ class KnowledgeCheck {
   List<Atom> get knowledgeAtoms =>
       atoms.where((a) => a.kind != AtomKind.concept).toList();
 
-  static bool _canAskInCheck(Atom atom) =>
-      atom.kind != AtomKind.sign || atom.letterId != 'hamza';
-
   /// Переход к выбранной теме закрывает весь путь до неё, а не только
   /// минимальные зависимости графа.
   void _addPreviousTopics() {
@@ -65,9 +70,10 @@ class KnowledgeCheck {
     if (targetIndex < 0) {
       throw StateError('Тема ${topic.id} отсутствует в программе курса');
     }
+    final board = TopicBoard(curriculum, rules: rules);
     for (final previous in curriculum.topics.take(targetIndex)) {
       for (final id in previous.counterOf) {
-        if (!context.isKnown(id)) _add(id);
+        if (!board.isDone(id, context)) _add(id);
       }
     }
   }

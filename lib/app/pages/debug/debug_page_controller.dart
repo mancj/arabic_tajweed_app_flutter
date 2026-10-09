@@ -15,6 +15,7 @@ import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.da
 
 import 'connection_build_debug_page.dart';
 import 'word_build_debug_page.dart';
+import 'word_pronunciation_debug_page.dart';
 import 'form_sequence_debug_page.dart';
 import 'glow_wave_debug_page.dart';
 import 'haraka_drawing_debug_page.dart';
@@ -120,6 +121,9 @@ class DebugController extends GetxController {
 
   void openSyllablePronunciation() =>
       Get.toNamed(SyllablePronunciationDebugPage.routeName);
+
+  void openWordPronunciation() =>
+      Get.toNamed(WordPronunciationDebugPage.routeName);
 
   void openHarakaDrawing() => Get.toNamed(HarakaDrawingDebugPage.routeName);
 

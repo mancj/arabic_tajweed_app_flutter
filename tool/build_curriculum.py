@@ -70,22 +70,13 @@ FORMS = [('isolated', 1, ''), ('finalForm', 2, ' в конце'),
          ('initial', 3, ' в начале'), ('medial', 4, ' в середине')]
 
 CONCEPTS = {
- 'concept.letter': 'Ассаляму алейкум!',
+ 'concept.letter': 'Вступление',
  'concept.makhraj': 'Махрадж и сыфат',
  'concept.forms': 'Разные формы одной буквы',
  'concept.nojoin': 'Буквы, которые не соединяются слева',
- 'concept.hamza': 'Хамза',
- 'concept.join': 'Как буквы соединяются',
+ 'concept.join': 'Читаем слова',
  'concept.break': 'Разрыв в слове',
 }
-
-HAMZA = [
- ('hamza.alone','ء','Хамза отдельно','alif'),
- ('hamza.alif','أ','Хамза на алифе','alif'),
- ('hamza.alifBelow','إ','Хамза под алифом','alif'),
- ('hamza.waw','ؤ','Хамза на вав','waw'),
- ('hamza.ya','ئ','Хамза на йа','ya'),
-]
 
 GROUPS = [
  dict(letters=['alif','ba','ta','tha'], tid='m.first', title='Первые буквы: ا ب ت ث',
@@ -230,16 +221,6 @@ def build_stage1():
         previous = group['letters'][-1]
         previous_counter = forms_counter
 
-    nodes.append(concept_node('concept.hamza', intro(f'{previous}.isolated')))
-    for hid, glyph, label, carrier in HAMZA:
-        nodes.append({'atom': {'id': hid, 'kind': 'sign', 'display': glyph,
-                               'letterId': 'hamza', 'label': label,
-                               'explanationAsset': f'assets/explanations/ru/{hid}.yaml'},
-                      'requirement': intro(f'{carrier}.isolated')})
-    topics.append({'id': 'm.hamza', 'stage': 1, 'title': 'Хамза: ء أ إ ؤ ئ',
-                   'requirement': completed(previous_counter),
-                   'counterOf': ['concept.hamza'] + [h[0] for h in HAMZA]})
-
     return {'nodes': nodes, 'topics': topics}
 
 
@@ -273,7 +254,6 @@ def build_stage2():
     ))
     nodes.append(concept_node('concept.join', join_concept_requirement))
 
-    node_requirements = {}
     for index, (sid, glyph, label, parts) in enumerate(SYLLABLES_JOIN):
         base_requirement = connected_requirement(parts)
         requirement = (
@@ -281,7 +261,6 @@ def build_stage2():
             if index < 2
             else all_of(intro('concept.join'), base_requirement)
         )
-        node_requirements[sid] = requirement
         nodes.append({
             'atom': {'id': sid, 'kind': 'syllable', 'display': glyph,
                      'label': label,
@@ -301,7 +280,6 @@ def build_stage2():
             intro('concept.join' if index == 2 else 'concept.break'),
             base_requirement,
         )
-        node_requirements[sid] = requirement
         nodes.append({
             'atom': {'id': sid, 'kind': 'syllable', 'display': glyph,
                      'label': label,
@@ -309,36 +287,8 @@ def build_stage2():
             'requirement': requirement,
         })
 
-    topic_specs = [
-        ('m.join', 'Как буквы соединяются',
-         ['concept.join', 'syl.ba_ta', 'syl.ta_ba'],
-         [join_concept_requirement]),
-        ('m.break', 'Разрыв после алифа',
-         ['concept.break', 'syl.alif_ba'],
-         [break_concept_requirement]),
-        ('m.join.nun', 'Соединение ن ب', ['syl.na_ba'],
-         [node_requirements['syl.na_ba']]),
-        ('m.join.sin', 'Соединение س ب', ['syl.sa_ba'],
-         [node_requirements['syl.sa_ba']]),
-        ('m.join.mim', 'Соединение م ن', ['syl.mi_na'],
-         [node_requirements['syl.mi_na']]),
-        ('m.join.lam', 'Соединение ل ب', ['syl.la_ba'],
-         [node_requirements['syl.la_ba']]),
-        ('m.break.dal', 'Разрыв после د', ['syl.dal_ba'],
-         [node_requirements['syl.dal_ba']]),
-        ('m.break.ra', 'Разрыв после ر', ['syl.ra_ba'],
-         [node_requirements['syl.ra_ba']]),
-        ('m.break.waw', 'Разрыв после و', ['syl.waw_ba'],
-         [node_requirements['syl.waw_ba']]),
-    ]
-    for topic_id, title, counter, requirements in topic_specs:
-        topics.append({
-            'id': topic_id,
-            'stage': 3,
-            'title': title,
-            'requirement': all_of(*requirements),
-            'counterOf': counter,
-        })
+    # Старые связки остаются для истории прогресса и отладки.
+    # Обязательные темы следующего раздела состоят из слов в build_stage3.py.
     return {'nodes': nodes, 'topics': topics}
 
 

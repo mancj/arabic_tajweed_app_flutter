@@ -1,8 +1,10 @@
 import 'package:arabic_tajweed_app/app/shared_state/auth_state.dart';
 import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/google_identity_provider.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/rest/api_client.dart';
+import 'package:arabic_tajweed_app/data/rest/auth_rest_client.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_rest_client.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:get/get.dart';
@@ -16,10 +18,15 @@ class AppBinding extends Bindings {
     final authState = Get.put(AuthState(Get.find()), permanent: true);
     Get.put(createApiClient(authState), permanent: true);
     _setupRestClients();
+    Get.put<GoogleIdentityProvider>(
+      FirebaseGoogleIdentityProvider(),
+      permanent: true,
+    );
   }
 
   /// Клиенты сервера, по одному на область API.
   void _setupRestClients() {
+    Get.put(AuthRestClient(), permanent: true);
     Get.put(PronunciationRestClient(), permanent: true);
   }
 

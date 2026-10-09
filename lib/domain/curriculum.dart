@@ -209,6 +209,11 @@ class Curriculum {
       if (node.atom.kind == AtomKind.letterForm) node.atom.id,
   };
 
+  Set<String> get wordAtomIds => {
+    for (final node in nodes)
+      if (node.atom.kind == AtomKind.word) node.atom.id,
+  };
+
   List<Atom> get baseLetters => nodes
       .map((node) => node.atom)
       .where(

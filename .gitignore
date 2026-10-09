@@ -476,7 +476,6 @@ ios/fastlane/report.xml
 
 # Python tools
 __pycache__/
-
 # FVM Version Cache
 .fvm/
 ж\\ fastlane (iOS): секреты и артефакты

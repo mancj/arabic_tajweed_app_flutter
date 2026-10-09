@@ -9,6 +9,7 @@ class SharedPreferenceManager {
 
   late final isOnboardingShown = BoolSharedPref('isOnboardingShown', _prefs);
   late final authToken = StringSharedPref('authToken', _prefs);
+  late final authEmail = StringSharedPref('authEmail', _prefs);
   late final serverUrl = StringSharedPref(
     'serverUrl',
     _prefs,

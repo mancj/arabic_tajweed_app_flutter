@@ -67,7 +67,7 @@ class ConnectedWordContent {
     ]..shuffle(_random);
   }
 
-  WordBuildQuestion? word(ReadingWord example) {
+  WordBuildQuestion? word(ReadingWord example, {bool showLetterHints = true}) {
     final assembled = _parts(example.syllableIds);
     if (assembled == null ||
         assembled.any(
@@ -81,6 +81,7 @@ class ConnectedWordContent {
     }
     return WordBuildQuestion(
       contentId: example.id,
+      showLetterHints: showLetterHints,
       audioAsset: example.audioAsset,
       steps: [
         for (final part in assembled)

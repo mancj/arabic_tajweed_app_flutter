@@ -15,12 +15,14 @@ class ExplanationAssetCard extends StatefulWidget {
     required this.asset,
     this.badge,
     this.active = true,
+    this.atom,
     super.key,
   });
 
   final String asset;
   final String? badge;
   final bool active;
+  final Atom? atom;
 
   @override
   State<ExplanationAssetCard> createState() => _ExplanationAssetCardState();
@@ -29,12 +31,21 @@ class ExplanationAssetCard extends StatefulWidget {
 class _ExplanationAssetCardState extends State<ExplanationAssetCard> {
   final _loader = ExplanationLoader();
   final _audio = LetterAudio();
-  late Future<ExplanationContent> _content = _loader.load(widget.asset);
+  late Future<ExplanationContent> _content = _loadContent();
+
+  Future<ExplanationContent> _loadContent() {
+    final atom = widget.atom;
+    return _loader
+        .load(widget.asset)
+        .then((content) => atom == null ? content : content.forAtom(atom));
+  }
 
   @override
   void didUpdateWidget(covariant ExplanationAssetCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.asset != widget.asset) _content = _loader.load(widget.asset);
+    if (oldWidget.asset != widget.asset || oldWidget.atom != widget.atom) {
+      _content = _loadContent();
+    }
     if (oldWidget.active && !widget.active) unawaited(_audio.stop());
   }
 

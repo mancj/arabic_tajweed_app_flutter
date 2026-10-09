@@ -7,8 +7,10 @@ import 'package:dio/dio.dart';
 /// Клиенты не пробрасывают `DioException` наружу — только эти классы.
 sealed class ApiException implements Exception {
   final String message;
+  final String? errorCode;
+  final int? retryAfterSeconds;
 
-  const ApiException(this.message);
+  const ApiException(this.message, {this.errorCode, this.retryAfterSeconds});
 
   /// Переводит ошибку Dio в одну из наших.
   factory ApiException.fromDio(DioException e) {
@@ -26,12 +28,29 @@ sealed class ApiException implements Exception {
         final int status when status >= 500 => ServerException(
           status,
           _bodyMessage(e),
+          errorCode: _errorCode(e),
+          retryAfterSeconds: _retryAfter(e),
         ),
-        final int status => ClientErrorException(status, _bodyMessage(e)),
+        final int status => ClientErrorException(
+          status,
+          _bodyMessage(e),
+          errorCode: _errorCode(e),
+          retryAfterSeconds: _retryAfter(e),
+        ),
         null => UnknownApiException(e.message ?? e.toString()),
       },
     };
   }
+
+  static String? _errorCode(DioException e) {
+    final data = e.response?.data;
+    return data is Map && data['error_code'] is String
+        ? data['error_code'] as String
+        : null;
+  }
+
+  static int? _retryAfter(DioException e) =>
+      int.tryParse(e.response?.headers.value('retry-after') ?? '');
 
   /// Достаёт текст ошибки из тела ответа, если сервер его прислал.
   static String _bodyMessage(DioException e) {
@@ -40,6 +59,9 @@ sealed class ApiException implements Exception {
       final text =
           data['message'] ?? data['error'] ?? data['detail'] ?? data['ошибка'];
       if (text is String && text.isNotEmpty) return text;
+      if (text is Map && text['message'] is String) {
+        return text['message'] as String;
+      }
     }
     return e.response?.statusMessage ?? e.message ?? 'Ошибка сервера';
   }
@@ -72,14 +94,24 @@ class NotFoundException extends ApiException {
 class ClientErrorException extends ApiException {
   final int statusCode;
 
-  const ClientErrorException(this.statusCode, super.message);
+  const ClientErrorException(
+    this.statusCode,
+    super.message, {
+    super.errorCode,
+    super.retryAfterSeconds,
+  });
 }
 
 /// 5xx — сервер сломался.
 class ServerException extends ApiException {
   final int statusCode;
 
-  const ServerException(this.statusCode, super.message);
+  const ServerException(
+    this.statusCode,
+    super.message, {
+    super.errorCode,
+    super.retryAfterSeconds,
+  });
 }
 
 /// Всё, что не подошло ни под один случай выше.

@@ -32,6 +32,7 @@ class CourseMaterialPage extends StatelessWidget {
         return atom.explanationAsset != null
             ? ExplanationAssetCard(
                 asset: atom.explanationAsset!,
+                atom: atom,
                 active: active,
               )
             : RuleCard(

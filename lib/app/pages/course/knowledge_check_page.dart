@@ -41,6 +41,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
     curriculum: widget.controller.curriculum,
     topic: widget.topic,
     context: widget.controller.context,
+    rules: widget.controller.rules,
   );
   final _scroll = ScrollController();
   late final LessonAudio _audio = widget.audio ?? LetterAudio();
@@ -264,7 +265,7 @@ class _KnowledgeCheckPageState extends State<KnowledgeCheckPage> {
               title: 'Перед темой «${widget.topic.title}»',
               text:
                   'Проверим только недостающие знания: ${check.questions.length} заданий. '
-                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый проверяемый элемент спрашивается дважды. '}Задания используют знакомые форматы курса. Формы хамзы отдельно не спрашиваются. Уже освоенное повторно сдавать не нужно. '
+                  '${check.isCondensed ? 'Это короткая выборка: безошибочный результат откроет тему, ошибки сохранят только отдельно подтверждённые знания. ' : 'Каждый проверяемый элемент спрашивается дважды. '}Задания используют знакомые форматы курса. Вопросы перемешаны. Уже освоенное повторно сдавать не нужно. '
                   'Можно выйти: подтверждённые знания сохранятся.',
             )
           else if (concept != null)

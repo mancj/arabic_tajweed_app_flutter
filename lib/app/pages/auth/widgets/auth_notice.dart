@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../../resources/ui_resources.dart';
 import '../../../widgets/margin.dart';
 
-/// Общее доступное сообщение для способов входа, пока они не подключены.
+/// Доступное экранному диктору сообщение о состоянии или ошибке входа.
 class AuthNotice extends StatelessWidget {
   const AuthNotice({required this.message, super.key});
 

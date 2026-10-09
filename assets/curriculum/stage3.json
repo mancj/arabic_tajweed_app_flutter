@@ -426,30 +426,6 @@
           {
             "type": "atomKnown",
             "atomId": "ya.medial"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.hamza"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alone"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alif"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alifBelow"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.waw"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.ya"
           }
         ]
       },
@@ -828,9 +804,9 @@
       ]
     },
     {
-      "id": "m.haraka.words1",
+      "id": "m.join",
       "stage": 3,
-      "title": "Читаем короткие слова 1",
+      "title": "Первые короткие слова",
       "requirement": {
         "type": "allOf",
         "parts": [
@@ -1025,100 +1001,57 @@
           {
             "type": "atomKnown",
             "atomId": "vowel.ya.damma"
-          },
+          }
+        ]
+      },
+      "counterOf": [
+        "concept.join",
+        "word.ba_i_kaf_a",
+        "word.ba_i_mim_a",
+        "word.mim_a_ayn_a"
+      ]
+    },
+    {
+      "id": "m.haraka.words1",
+      "stage": 3,
+      "title": "Слова из трёх букв",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
           {
             "type": "atomIntroduced",
             "atomId": "concept.join"
           },
           {
             "type": "atomKnown",
-            "atomId": "syl.ba_ta"
+            "atomId": "word.ba_i_kaf_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "syl.ta_ba"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.break"
+            "atomId": "word.ba_i_mim_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "syl.alif_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.na_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.sa_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.mi_na"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.la_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.dal_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ra_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.waw_ba"
+            "atomId": "word.mim_a_ayn_a"
           }
         ]
       },
       "counterOf": [
         "word.kataba",
-        "word.darasa",
-        "word.rasama"
+        "word.samia",
+        "word.amila"
       ]
     },
     {
       "id": "m.haraka.words2",
       "stage": 3,
-      "title": "Читаем короткие слова 2",
+      "title": "Закрепляем слитное чтение",
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
             "atomId": "word.kataba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "word.darasa"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "word.rasama"
-          }
-        ]
-      },
-      "counterOf": [
-        "word.shariba",
-        "word.samia",
-        "word.amila"
-      ]
-    },
-    {
-      "id": "m.haraka.words3",
-      "stage": 3,
-      "title": "Читаем короткие слова 3",
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "word.shariba"
           },
           {
             "type": "atomKnown",
@@ -1131,9 +1064,95 @@
         ]
       },
       "counterOf": [
-        "word.fariha",
         "word.laiba",
-        "word.najaha"
+        "word.najaha",
+        "word.kaf_a_sin_a_ba_a"
+      ]
+    },
+    {
+      "id": "m.break",
+      "stage": 3,
+      "title": "Разрывы внутри слова",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.laiba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.najaha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_a_sin_a_ba_a"
+          }
+        ]
+      },
+      "counterOf": [
+        "concept.break",
+        "word.darasa",
+        "word.rasama",
+        "word.shariba"
+      ]
+    },
+    {
+      "id": "m.haraka.words3",
+      "stage": 3,
+      "title": "Читаем слова с разрывами",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.darasa"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.rasama"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.shariba"
+          }
+        ]
+      },
+      "counterOf": [
+        "word.fariha",
+        "word.dal_a_kha_a_lam_a",
+        "word.ta_a_ra_a_kaf_a"
+      ]
+    },
+    {
+      "id": "m.words.long",
+      "stage": 3,
+      "title": "Слова из четырёх букв",
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.fariha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dal_a_kha_a_lam_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.ta_a_ra_a_kaf_a"
+          }
+        ]
+      },
+      "counterOf": [
+        "word.kha_a_lam_a_qof_a_ha_u",
+        "word.ta_a_ba_i_ayn_a_kaf_a",
+        "word.qof_a_dal_a_ra_u_ha_u"
       ]
     }
   ],
@@ -1568,30 +1587,6 @@
           {
             "type": "atomKnown",
             "atomId": "ya.medial"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.hamza"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alone"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alif"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.alifBelow"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.waw"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "hamza.ya"
           }
         ]
       }
@@ -3629,788 +3624,648 @@
     },
     {
       "atom": {
+        "id": "word.ba_i_kaf_a",
+        "kind": "word",
+        "wordId": "ba_i_kaf_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ta.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kaf.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.lam.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.shin.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.jim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.hha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.fa.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.nun.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.tha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dhal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zay.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.waw.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ya.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.ba_i_mim_a",
+        "kind": "word",
+        "wordId": "ba_i_mim_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ta.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kaf.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.lam.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.shin.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.jim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.hha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.fa.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.nun.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.tha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dhal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zay.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.waw.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ya.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.mim_a_ayn_a",
+        "kind": "word",
+        "wordId": "mim_a_ayn_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "haraka.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ta.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kaf.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ra.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sin.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.mim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.lam.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.shin.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.jim.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.hha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.fa.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.nun.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.alif.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.tha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.kha.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dhal.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zay.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.sod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.dod.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.to.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.zho.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ghayn.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.fatha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.qof.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ha.damma"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.waw.kasra"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "vowel.ya.damma"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
         "id": "word.kataba",
         "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.kataba.yaml",
-        "wordId": "kaf_a_ta_a_ba_a"
+        "wordId": "kaf_a_ta_a_ba_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ta.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kaf.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sin.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.lam.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.shin.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.jim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.hha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.fa.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.nun.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.tha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dhal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zay.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.waw.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ya.damma"
-          },
           {
             "type": "atomIntroduced",
             "atomId": "concept.join"
           },
           {
             "type": "atomKnown",
-            "atomId": "syl.ba_ta"
+            "atomId": "word.ba_i_kaf_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "syl.ta_ba"
+            "atomId": "word.ba_i_mim_a"
           },
           {
-            "type": "atomIntroduced",
-            "atomId": "concept.break"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.alif_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.na_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.sa_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.mi_na"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.la_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.dal_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ra_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.waw_ba"
-          }
-        ]
-      }
-    },
-    {
-      "atom": {
-        "id": "word.darasa",
-        "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.darasa.yaml",
-        "wordId": "dal_a_ra_a_sin_a"
-      },
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ta.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kaf.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sin.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.lam.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.shin.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.jim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.hha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.fa.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.nun.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.tha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dhal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zay.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.waw.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ya.damma"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.join"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ba_ta"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ta_ba"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.break"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.alif_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.na_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.sa_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.mi_na"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.la_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.dal_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ra_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.waw_ba"
-          }
-        ]
-      }
-    },
-    {
-      "atom": {
-        "id": "word.rasama",
-        "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.rasama.yaml",
-        "wordId": "ra_a_sin_a_mim_a"
-      },
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "haraka.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ta.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kaf.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ra.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sin.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.mim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.lam.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.shin.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.jim.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.hha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.fa.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.nun.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.alif.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.tha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.kha.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dhal.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zay.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.sod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.dod.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.to.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.zho.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ghayn.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.fatha"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.qof.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ha.damma"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.waw.kasra"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "vowel.ya.damma"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.join"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ba_ta"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ta_ba"
-          },
-          {
-            "type": "atomIntroduced",
-            "atomId": "concept.break"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.alif_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.na_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.sa_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.mi_na"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.la_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.dal_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.ra_ba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "syl.waw_ba"
-          }
-        ]
-      }
-    },
-    {
-      "atom": {
-        "id": "word.shariba",
-        "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.shariba.yaml",
-        "wordId": "shin_a_ra_i_ba_a"
-      },
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "word.kataba"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "word.darasa"
-          },
-          {
             "type": "atomKnown",
-            "atomId": "word.rasama"
+            "atomId": "word.mim_a_ayn_a"
           }
         ]
       }
@@ -4419,24 +4274,28 @@
       "atom": {
         "id": "word.samia",
         "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.samia.yaml",
-        "wordId": "sin_a_mim_i_ayn_a"
+        "wordId": "sin_a_mim_i_ayn_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
-            "type": "atomKnown",
-            "atomId": "word.kataba"
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
           },
           {
             "type": "atomKnown",
-            "atomId": "word.darasa"
+            "atomId": "word.ba_i_kaf_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "word.rasama"
+            "atomId": "word.ba_i_mim_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.mim_a_ayn_a"
           }
         ]
       }
@@ -4445,50 +4304,28 @@
       "atom": {
         "id": "word.amila",
         "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.amila.yaml",
-        "wordId": "ayn_a_mim_i_lam_a"
+        "wordId": "ayn_a_mim_i_lam_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
-            "type": "atomKnown",
-            "atomId": "word.kataba"
+            "type": "atomIntroduced",
+            "atomId": "concept.join"
           },
           {
             "type": "atomKnown",
-            "atomId": "word.darasa"
+            "atomId": "word.ba_i_kaf_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "word.rasama"
-          }
-        ]
-      }
-    },
-    {
-      "atom": {
-        "id": "word.fariha",
-        "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.fariha.yaml",
-        "wordId": "fa_a_ra_i_hha_a"
-      },
-      "requirement": {
-        "type": "allOf",
-        "parts": [
-          {
-            "type": "atomKnown",
-            "atomId": "word.shariba"
+            "atomId": "word.ba_i_mim_a"
           },
           {
             "type": "atomKnown",
-            "atomId": "word.samia"
-          },
-          {
-            "type": "atomKnown",
-            "atomId": "word.amila"
+            "atomId": "word.mim_a_ayn_a"
           }
         ]
       }
@@ -4497,16 +4334,16 @@
       "atom": {
         "id": "word.laiba",
         "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.laiba.yaml",
-        "wordId": "lam_a_ayn_i_ba_a"
+        "wordId": "lam_a_ayn_i_ba_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "word.shariba"
+            "atomId": "word.kataba"
           },
           {
             "type": "atomKnown",
@@ -4523,16 +4360,16 @@
       "atom": {
         "id": "word.najaha",
         "kind": "word",
-        "label": "Короткое слово",
-        "explanationAsset": "assets/explanations/ru/word.najaha.yaml",
-        "wordId": "nun_a_jim_a_hha_a"
+        "wordId": "nun_a_jim_a_hha_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
       "requirement": {
         "type": "allOf",
         "parts": [
           {
             "type": "atomKnown",
-            "atomId": "word.shariba"
+            "atomId": "word.kataba"
           },
           {
             "type": "atomKnown",
@@ -4541,6 +4378,278 @@
           {
             "type": "atomKnown",
             "atomId": "word.amila"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.kaf_a_sin_a_ba_a",
+        "kind": "word",
+        "wordId": "kaf_a_sin_a_ba_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.kataba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.samia"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.amila"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.darasa",
+        "kind": "word",
+        "wordId": "dal_a_ra_a_sin_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.laiba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.najaha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_a_sin_a_ba_a"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.rasama",
+        "kind": "word",
+        "wordId": "ra_a_sin_a_mim_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.laiba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.najaha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_a_sin_a_ba_a"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.shariba",
+        "kind": "word",
+        "wordId": "shin_a_ra_i_ba_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.laiba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.najaha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_a_sin_a_ba_a"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.fariha",
+        "kind": "word",
+        "wordId": "fa_a_ra_i_hha_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.darasa"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.rasama"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.shariba"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.dal_a_kha_a_lam_a",
+        "kind": "word",
+        "wordId": "dal_a_kha_a_lam_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.darasa"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.rasama"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.shariba"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.ta_a_ra_a_kaf_a",
+        "kind": "word",
+        "wordId": "ta_a_ra_a_kaf_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.darasa"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.rasama"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.shariba"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.kha_a_lam_a_qof_a_ha_u",
+        "kind": "word",
+        "wordId": "kha_a_lam_a_qof_a_ha_u",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.fariha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dal_a_kha_a_lam_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.ta_a_ra_a_kaf_a"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.ta_a_ba_i_ayn_a_kaf_a",
+        "kind": "word",
+        "wordId": "ta_a_ba_i_ayn_a_kaf_a",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.fariha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dal_a_kha_a_lam_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.ta_a_ra_a_kaf_a"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.qof_a_dal_a_ra_u_ha_u",
+        "kind": "word",
+        "wordId": "qof_a_dal_a_ra_u_ha_u",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.fariha"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dal_a_kha_a_lam_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.ta_a_ra_a_kaf_a"
           }
         ]
       }

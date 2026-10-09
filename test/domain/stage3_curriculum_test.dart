@@ -1,9 +1,10 @@
 // Защищает порядок после алфавита: сначала огласовки на отдельных буквах,
-// затем связки нескольких букв и только после них короткие слова.
+// затем сразу настоящие слова без отдельного этапа неогласованных связок.
 // Выборочные огласовки сбалансированы, особые буквы покрыты полностью.
 // Группы остаются темами, а их части не обходят практику или предел занятия.
 // Ба вводится вместе со знаками; старые слоги ба не должны возвращать
 // отдельный новый урок или блокировать переход к следующим разделам.
+// Программа не возвращает отдельную хамзу или скрытые уроки в зависимостях.
 import 'dart:io';
 import 'dart:math';
 
@@ -42,6 +43,37 @@ void main() {
     formsByLetter: curriculum.formsByLetter,
   );
 
+  test('программа и условия открытия состоят только из тем Моего пути', () {
+    final pathIds = curriculum.topics.expand((t) => t.counterOf).toSet();
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    expect(
+      curriculum.nodes.any((n) => n.atom.id.startsWith('hamza.')),
+      isFalse,
+    );
+    expect(pathIds.map((id) => byId[id]!.kind), isNot(contains(AtomKind.sign)));
+    Iterable<String> dependencies(Requirement r) => switch (r) {
+      AtomKnown(:final atomId) || AtomIntroducedReq(:final atomId) => [atomId],
+      AllOf(:final parts) => parts.expand(dependencies),
+      _ => const [],
+    };
+    for (final topic in curriculum.topics) {
+      expect(
+        dependencies(topic.requirement).every(pathIds.contains),
+        isTrue,
+        reason: topic.id,
+      );
+      for (final node in curriculum.nodes.where(
+        (n) => topic.counterOf.contains(n.atom.id),
+      )) {
+        expect(
+          dependencies(node.requirement).every(pathIds.contains),
+          isTrue,
+          reason: node.atom.id,
+        );
+      }
+    }
+  });
+
   test('огласовки ждут все буквы и их отдельные формы', () {
     final known = stages[0].nodes.map((n) => n.atom.id).toSet();
     final intro = stages[2].topics.first;
@@ -57,7 +89,9 @@ void main() {
       for (final topic in stages[2].topics.where((topic) => topic.stage == 2))
         ...topic.counterOf,
     };
-    final connections = stages[1].topics.first;
+    final connections = stages[2].topics.firstWhere(
+      (topic) => topic.stage == 3,
+    );
     expect(connections.requirement.isMet(contextWith(known)), isTrue);
     expect(known, isNot(contains('vowel.ba.fatha')));
     known.remove('haraka.fatha');
@@ -74,18 +108,25 @@ void main() {
     }
   });
 
-  test('темы идут: огласовки, связки, короткие слова', () {
+  test('после огласовок идут слова, без старых неогласованных связок', () {
     expect(
       curriculum.topics.where((topic) => topic.stage > 1).map((t) => t.id),
       [
         ...stages[2].topics
             .where((topic) => topic.stage == 2)
             .map((topic) => topic.id),
-        ...stages[1].topics.map((topic) => topic.id),
         ...stages[2].topics
             .where((topic) => topic.stage == 3)
             .map((topic) => topic.id),
       ],
+    );
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    expect(
+      curriculum.topics
+          .where((topic) => topic.stage == 3)
+          .expand((topic) => topic.counterOf)
+          .map((id) => byId[id]!.kind),
+      everyElement(isIn([AtomKind.word, AtomKind.concept])),
     );
   });
 
@@ -355,13 +396,11 @@ void main() {
     );
   });
 
-  test('слова открываются после обязательных слогов и связок', () {
+  test('слова открываются после обязательных огласовок без старых связок', () {
     final stage = stages[2];
-    final firstWords = stage.topics.firstWhere(
-      (t) => t.id == 'm.haraka.words1',
-    );
+    final firstWords = stage.topics.firstWhere((t) => t.id == 'm.join');
     final known = {
-      for (final node in stages.take(2).expand((s) => s.nodes)) node.atom.id,
+      for (final node in stages[0].nodes) node.atom.id,
       for (final topic in stage.topics.where((topic) => topic.stage == 2))
         ...topic.counterOf,
     };
@@ -370,9 +409,7 @@ void main() {
     known.remove('haraka.kasra');
     expect(firstWords.requirement.isMet(contextWith(known)), isFalse);
     known.add('haraka.kasra');
-    known.remove('syl.waw_ba');
-    expect(firstWords.requirement.isMet(contextWith(known)), isFalse);
-    known.add('syl.waw_ba');
+    expect(known, isNot(contains('syl.waw_ba')));
     known.remove('vowel.ya.damma');
     expect(firstWords.requirement.isMet(contextWith(known)), isFalse);
     expect(
@@ -385,7 +422,10 @@ void main() {
         .map((n) => n.atom)
         .where((a) => a.kind == AtomKind.word)
         .toList();
-    expect(words, hasLength(9));
+    expect(
+      words.map((atom) => atom.wordId),
+      curriculum.wordSets['wordReading'],
+    );
     for (final atom in words) {
       final word = curriculum.words.singleWhere(
         (word) => word.id == atom.wordId,
@@ -393,7 +433,7 @@ void main() {
       expect(atom.audioAsset, word.audioFile);
     }
     expect(
-      words.every((a) => !a.display.contains(RegExp('[ًٌٍّْاوي]'))),
+      words.every((a) => !a.display.contains(RegExp('[ًٌٍّْةٰ]'))),
       isTrue,
     );
   });
@@ -420,7 +460,12 @@ void main() {
             .where((e) => e.resultAtoms.contains(atom))
             .map((e) => e.mode)
             .toSet();
-        expect(modes, contains(ExerciseMode.letterToSound));
+        expect(
+          modes,
+          kind == AtomKind.word
+              ? isNot(contains(ExerciseMode.letterToSound))
+              : contains(ExerciseMode.letterToSound),
+        );
         expect(
           modes.intersection({
             ExerciseMode.soundToLetter,

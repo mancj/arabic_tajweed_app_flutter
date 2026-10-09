@@ -5,11 +5,11 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/atom.dart';
 import '../../../domain/audio_track.dart';
 import '../../../domain/explanation_document.dart';
+import '../../open_external_link.dart';
 import '../../resources/ui_resources.dart';
 import '../margin.dart';
 import 'haraka_examples_grid.dart';
@@ -80,20 +80,7 @@ class _ExplanationCardState extends State<ExplanationCard> {
         !uri.hasAuthority) {
       return;
     }
-    unawaited(_launchExternalLink(uri));
-  }
-
-  Future<void> _launchExternalLink(Uri uri) async {
-    try {
-      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
-    } on Exception {
-      // Плагин может не найти приложение для открытия ссылки.
-    }
-    if (mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Не удалось открыть ссылку')),
-      );
-    }
+    unawaited(openExternalLink(context, uri));
   }
 
   @override

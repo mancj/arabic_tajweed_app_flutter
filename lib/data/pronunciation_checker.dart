@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -7,9 +6,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 
 import 'rest/api_exception.dart';
-import 'rest/letter_check.dart';
+import 'rest/pronunciation_check.dart';
 import 'rest/pronunciation_rest_client.dart';
-import 'rest/syllable_check.dart';
 import 'pronunciation_preference.dart';
 import 'microphone_permission.dart';
 import 'voice_recorder.dart';
@@ -43,10 +41,8 @@ class PronunciationChecker {
   /// Запись ушла на сервер, ждём вердикт.
   final isChecking = false.obs;
 
-  /// Что сервер услышал в последней записи. Null — записи ещё не было.
-  final result = Rxn<LetterCheck>();
-
-  final syllableResult = Rxn<SyllableCheck>();
+  /// Общий ответ на последнюю запись. Null — проверки ещё не было.
+  final result = Rxn<PronunciationCheck>();
 
   /// Записать или проверить не удалось: текст для экрана.
   final error = RxnString();
@@ -106,32 +102,12 @@ class PronunciationChecker {
     }
   }
 
-  /// Остановить запись и спросить сервер, названа ли
-  /// буква [expected] (сам глиф). Null — записи не вышло или сервер
-  /// не ответил; причина уже в [error].
-  Future<LetterCheck?> stop({required String expected}) => _stop(
-    (client, file, cancelToken) => client.checkLetter(
-      audio: file,
-      expected: expected,
-      cancelToken: cancelToken,
-    ),
-    (check) => result.value = check,
-  );
-
-  Future<SyllableCheck?> stopSyllable({required String expected}) => _stop(
-    (client, file, cancelToken) => client.checkSyllable(
-      audio: file,
-      expected: expected,
-      cancelToken: cancelToken,
-    ),
-    (check) => syllableResult.value = check,
-    checkingSyllable: true,
-  );
-
-  Future<T?> _stop<T>(
-    Future<T> Function(PronunciationRestClient, File, CancelToken) send,
-    void Function(T) save, {
-    bool checkingSyllable = false,
+  /// Остановить запись и проверить целевую учебную единицу.
+  /// Null — записи не вышло или сервер не ответил; причина уже в [error].
+  Future<PronunciationCheck?> stop({
+    required String expected,
+    String type = PronunciationUnitType.letter,
+    String? unitId,
   }) async {
     final generation = _generation;
     final cancelToken = _cancelToken;
@@ -160,9 +136,17 @@ class PronunciationChecker {
       if (kDebugMode) await 200.ms.delay();
       if (_disposed || generation != _generation) return null;
       _client ??= Get.find<PronunciationRestClient>();
-      final check = await send(_client!, file, cancelToken);
+      final check = await _client!.check(
+        audio: file,
+        target: PronunciationTarget(
+          type: type,
+          id: unitId ?? expected,
+          expected: expected,
+        ),
+        cancelToken: cancelToken,
+      );
       if (_disposed || generation != _generation) return null;
-      save(check);
+      result.value = check;
       failure.value = null;
       return check;
     } on ApiException catch (e) {
@@ -173,8 +157,8 @@ class PronunciationChecker {
       }
       error.value = switch (e) {
         NoConnectionException() => 'Сервер проверки недоступен',
-        NotFoundException() when checkingSyllable =>
-          'Проверка слогов пока недоступна на сервере',
+        NotFoundException() =>
+          'Проверка произношения пока недоступна на сервере',
         _ => 'Проверка не удалась: ${e.message}',
       };
       failure.value = PronunciationFailureKind.serviceUnavailable;
@@ -203,7 +187,6 @@ class PronunciationChecker {
     isRecording.value = false;
     isChecking.value = false;
     result.value = null;
-    syllableResult.value = null;
     error.value = null;
     failure.value = null;
     microphoneSettingsRequired.value = false;

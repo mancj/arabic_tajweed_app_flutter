@@ -60,6 +60,14 @@ def validate(bank, source_path=None):
     for name, ids in bank["wordSets"].items():
         require(len(ids) == len(set(ids)), f"Повтор слова в подборке {name}")
         require(all(word_id in by_id for word_id in ids), f"Неизвестное слово в подборке {name}")
+    reading_groups = [ids for name, ids in bank["wordSets"].items()
+                      if name.startswith("wordReading") and name != "wordReading"]
+    require([word_id for group in reading_groups for word_id in group]
+            == bank["wordSets"]["wordReading"], "Подборки уроков не совпадают с wordReading")
+    require(len(bank["wordSets"]["wordReadingShort"]) >= 3,
+            "Для первых заданий на выбор слова нужны минимум три слова")
+    atom_ids = [by_id[word_id].get("atomId") for word_id in bank["wordSets"]["wordReading"]]
+    require(all(atom_ids) and len(set(atom_ids)) == len(atom_ids), "Нет уникального atomId слова курса")
     for word_id in bank["wordSets"]["harakaIntroduction"]:
         ids = by_id[word_id]["syllableIds"]
         require(len(ids) <= 3, f"Вводное слово слишком длинное: {word_id}")

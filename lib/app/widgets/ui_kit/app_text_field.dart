@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../resources/ui_resources.dart';
 import '../margin.dart';
@@ -19,6 +20,9 @@ class AppTextField extends StatelessWidget {
     this.suffix,
     this.onChanged,
     this.onSubmitted,
+    this.enabled = true,
+    this.autofocus = false,
+    this.inputFormatters,
     super.key,
   });
 
@@ -34,6 +38,9 @@ class AppTextField extends StatelessWidget {
   final Widget? suffix;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final bool enabled;
+  final bool autofocus;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +58,9 @@ class AppTextField extends StatelessWidget {
           label: label,
           child: TextFormField(
             controller: controller,
+            enabled: enabled,
+            autofocus: autofocus,
+            inputFormatters: inputFormatters,
             focusNode: focusNode,
             validator: validator,
             keyboardType: keyboardType,
@@ -83,7 +93,9 @@ class AppTextField extends StatelessWidget {
                 horizontal: 16,
                 vertical: 16,
               ),
+              border: border(UIColors.transparent),
               enabledBorder: border(UIColors.transparent),
+              disabledBorder: border(UIColors.transparent),
               focusedBorder: border(UIColors.primary),
               errorBorder: border(UIColors.error),
               focusedErrorBorder: border(UIColors.error),

@@ -114,10 +114,14 @@ void main() {
     expect(result.newAtoms, isNotEmpty);
   });
 
-  test('темп действует и перед хамзой, а не только перед буквами', () {
+  test('темп действует и перед последним блоком форм', () {
     final result = plan(
-      afterTopics(22),
-      const PacingSnapshot(enabled: true, hasNewMaterialToday: true),
+      afterTopics(21),
+      const PacingSnapshot(
+        enabled: true,
+        hasNewMaterialToday: true,
+        completedAlphabetCheckpoints: {21},
+      ),
     );
 
     expect(result.purpose, LessonPurpose.mixedReview);
@@ -186,12 +190,15 @@ void main() {
   });
 
   test('старый прогресс не ставит четыре рубежа подряд', () {
-    final before = plan(afterTopics(23), const PacingSnapshot(enabled: true));
+    final before = plan(
+      afterTopics(curriculum.topics.length),
+      const PacingSnapshot(enabled: true),
+    );
     expect(before.purpose, LessonPurpose.alphabetCheckpoint);
     expect(before.checkpointLetters, 28);
 
     final after = plan(
-      afterTopics(23),
+      afterTopics(curriculum.topics.length),
       const PacingSnapshot(enabled: true, completedAlphabetCheckpoints: {28}),
     );
     expect(after.purpose, isNot(LessonPurpose.alphabetCheckpoint));

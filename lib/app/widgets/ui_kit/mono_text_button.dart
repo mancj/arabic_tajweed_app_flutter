@@ -12,12 +12,14 @@ class MonoTextButton extends StatelessWidget {
     this.icon,
     this.color,
     super.key,
+    this.padding,
   });
 
   final String title;
   final VoidCallback? onPressed;
   final IconData? icon;
   final Color? color;
+  final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +30,7 @@ class MonoTextButton extends StatelessWidget {
       button: true,
       enabled: onPressed != null,
       label: title,
+      onTap: onPressed,
       excludeSemantics: true,
       child: IgnorePointer(
         ignoring: onPressed == null,
@@ -36,8 +39,10 @@ class MonoTextButton extends StatelessWidget {
           child: AppGestureDetector(
             onTap: onPressed,
             pressedOpacity: .96,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding:
+                  padding ??
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,

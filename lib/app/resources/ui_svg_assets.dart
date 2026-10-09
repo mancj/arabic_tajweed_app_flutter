@@ -3,6 +3,8 @@
 class UISVGAssets {
   static final google = _path("google");
   static final appleLogo = _path("apple_logo");
+  static final shieldFillCheck = _path("bi--shield-fill-check");
+  static final mailAtSign = _path("hugeicons--mail-at-sign-01");
   static final search = _path("search");
   static final notes = _path("notes-svgrepo-com");
   static final lockAlt = _path("lock-alt-svgrepo-com");

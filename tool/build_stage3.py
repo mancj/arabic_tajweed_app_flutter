@@ -189,25 +189,26 @@ def build():
             harakat_asset(letter_id, vowel), f"harakat/{vowel}",
         ), all_of(map(known, signs))))
 
-    stage2 = json.loads((ROOT / "assets/curriculum/stage2.json").read_text())
-    connection_ids = [
-        atom_id for topic_data in stage2["topics"]
-        for atom_id in topic_data["counterOf"]
-    ]
-    previous = [
-        *REQUIRED_HARAKA_IDS,
-        *connection_ids,
-    ]
+    previous = REQUIRED_HARAKA_IDS
     bank = json.loads((ROOT / "assets/curriculum/words.json").read_text())
     by_id = {word["id"]: word for word in bank["words"]}
-    words = [by_id[word_id] for word_id in bank["wordSets"]["wordReading"]]
-    for index in range(0, len(words), 3):
-        group = words[index : index + 3]
-        ids = [word["atomId"] for word in group]
+    # Здесь только темы и ссылки на редакционные подборки: сами слова,
+    # их состав, ID прогресса и записи живут исключительно в words.json.
+    lessons = [
+        ("m.join", "Первые короткие слова", "wordReadingShort", "concept.join"),
+        ("m.haraka.words1", "Слова из трёх букв", "wordReadingConnected1", None),
+        ("m.haraka.words2", "Закрепляем слитное чтение", "wordReadingConnected2", None),
+        ("m.break", "Разрывы внутри слова", "wordReadingBreaks1", "concept.break"),
+        ("m.haraka.words3", "Читаем слова с разрывами", "wordReadingBreaks2", None),
+        ("m.words.long", "Слова из четырёх букв", "wordReadingLong", None),
+    ]
+    for topic_id, title, word_set, concept in lessons:
+        group = [by_id[word_id] for word_id in bank["wordSets"][word_set]]
+        ids = ([concept] if concept else []) + [word["atomId"] for word in group]
         requirement = all_of(map(completed, previous))
         topics.append(topic(
-            f"m.haraka.words{index // 3 + 1}",
-            f"Читаем короткие слова {index // 3 + 1}",
+            topic_id,
+            title,
             requirement,
             ids,
             stage=3,
@@ -218,8 +219,8 @@ def build():
                 "id": atom_id,
                 "kind": "word",
                 "wordId": word["id"],
-                "label": "Короткое слово",
-                "explanationAsset": f"assets/explanations/ru/{atom_id}.yaml",
+                "label": "Читаем слово",
+                "explanationAsset": "assets/explanations/ru/word-reading.yaml",
             }, requirement))
         previous = ids
 

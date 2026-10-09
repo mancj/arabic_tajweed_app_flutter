@@ -13,6 +13,7 @@ class WordBuildQuestion {
   WordBuildQuestion({
     required List<WordBuildStep> steps,
     this.contentId,
+    this.showLetterHints = true,
     String? audioAsset,
   }) : assert(steps.isNotEmpty),
        steps = List.unmodifiable(steps),
@@ -20,6 +21,7 @@ class WordBuildQuestion {
 
   final List<WordBuildStep> steps;
   final String? contentId;
+  final bool showLetterHints;
   final String? _audioAsset;
 
   String get display => steps.map((step) => step.part.syllable.display).join();

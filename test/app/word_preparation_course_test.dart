@@ -13,6 +13,7 @@ import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
+import 'package:arabic_tajweed_app/domain/explanation_document.dart';
 import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/domain/word_build_question.dart';
@@ -54,14 +55,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700));
   }
 
-  Future<void> mount(WidgetTester tester, ExerciseMode mode) async {
+  Future<void> mount(
+    WidgetTester tester,
+    ExerciseMode mode, {
+    String topicId = 'm.haraka.group1',
+  }) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.runAsync(() async {
       final now = DateTime(2026, 10, 6);
       await database.appendAll([
         for (final topic in curriculum.topics.takeWhile(
-          (topic) => topic.id != 'm.haraka.group1',
+          (topic) => topic.id != topicId,
         ))
           for (final id in topic.counterOf)
             if (byId[id]!.kind == AtomKind.concept)
@@ -73,7 +78,7 @@ void main() {
         rules: const LearningRules(requirePronunciation: false),
         database: database,
         curriculum: curriculum,
-        topicId: 'm.haraka.group1',
+        topicId: topicId,
         audio: audio,
         explanationBundle: TextAssetBundle.forCurriculum(curriculum),
         shapeLoader: (asset) async => TracingShapeSvg.parse(
@@ -88,6 +93,9 @@ void main() {
       );
       Get.put(controller);
       await ready.timeout(const Duration(seconds: 5));
+      // GetX закрывает firstWhere после события; даём подписке закрыться
+      // до быстрого перехода от единственной вводной карточки к заданиям.
+      await Future<void>.delayed(Duration.zero);
       expect(controller.loadError.value, isNull);
       for (var step = 0; step < 60; step++) {
         if (controller.stage.value == LessonStage.intro) {
@@ -121,6 +129,95 @@ void main() {
     await tester.ensureVisible(button);
     await tester.tap(button);
     await settle(tester);
+  }
+
+  // В разделе слов обе сборки должны вести собственный прогресс слова,
+  // сохраняя прежний результат букв и слогов даже при ошибке и исправлении.
+  for (final mode in [ExerciseMode.connectionBuild, ExerciseMode.wordBuild]) {
+    testWidgets('$mode в словах оценивает слово и сохраняет верные части', (
+      tester,
+    ) async {
+      await mount(tester, mode, topicId: 'm.join');
+      final exercise = controller.current!;
+      expect(exercise.atom.kind, AtomKind.word);
+      final logBefore = (await tester.runAsync(database.readAll))!.length;
+      final answer = controller.connectedBuildAnswer!;
+      expect(audio.played.last, exercise.atom.audioAsset);
+      final card = controller.explanationFor(exercise.atom)!;
+      final glyph = card.document.blocks.whereType<ExplanationLetter>().single;
+      expect(glyph.letter.glyph, exercise.atom.display);
+      expect(glyph.letter.audio, exercise.atom.audioAsset);
+
+      String expectedForm() =>
+          answer.connection?.expectedFormId ??
+          answer.word!.steps[answer.activeIndex].expectedFormId;
+      String expectedMark() =>
+          answer.connection?.expectedMarkId ??
+          answer.word!.steps[answer.activeIndex].expectedMarkId;
+      final options =
+          answer.connection?.formOptions ??
+          answer.word!.steps.first.formOptions;
+      final wrongForm = options
+          .firstWhere((form) => form.id != expectedForm())
+          .id;
+      while (answer.phase == WordBuildPhase.forms && !answer.isComplete) {
+        await tester.runAsync(() async {
+          controller.selectConnectedForm(
+            exercise,
+            answer.revision,
+            answer.activeIndex,
+            answer.activeIndex == 0 ? wrongForm : expectedForm(),
+          );
+        });
+        await settle(tester);
+      }
+      while (!answer.isComplete) {
+        await tester.runAsync(() async {
+          controller.selectConnectedMark(
+            exercise,
+            answer.revision,
+            answer.activeIndex,
+            expectedMark(),
+          );
+          if (answer.isComplete) {
+            await controller.wasWrong.stream.firstWhere((wrong) => wrong);
+          }
+        });
+        await settle(tester);
+      }
+      expect(controller.wasWrong.value, isTrue);
+      final failed = (await tester.runAsync(
+        database.readAll,
+      ))!.skip(logBefore).whereType<ProgressEvent>().toList();
+      expect(failed, hasLength(1));
+      expect(failed.single.atomId, exercise.atom.id);
+      expect(failed.single.correct, isFalse);
+
+      await retry(tester);
+      expect(answer.formIds.first, isNull);
+      expect(answer.markIds, everyElement(isNotNull));
+      await tester.runAsync(() async {
+        controller.selectConnectedForm(
+          exercise,
+          answer.revision,
+          answer.activeIndex,
+          expectedForm(),
+        );
+        await controller.wasCorrect.stream.firstWhere((correct) => correct);
+      });
+      await settle(tester);
+      expect(controller.wasCorrect.value, isTrue);
+      final corrected = (await tester.runAsync(
+        database.readAll,
+      ))!.skip(logBefore).whereType<ProgressEvent>().toList();
+      expect(corrected, hasLength(2));
+      expect(corrected.last.atomId, exercise.atom.id);
+      expect(corrected.last.correct, isTrue);
+      expect(corrected.last.attempt, 2);
+      expect(corrected.last.isClean, isFalse);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
   }
 
   testWidgets('пропуск оценивает форму отдельно и исправляет только её', (

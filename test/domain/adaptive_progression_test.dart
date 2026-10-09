@@ -320,8 +320,12 @@ void main() {
     expect(planner.activeStage(context(preview)), 2);
     for (final correct in [true, false]) {
       final practiced = fold.foldOnto(preview, [
-        introduce('syl.ba_ta'),
-        answer('syl.ba_ta', ExerciseMode.nameToForm, correct: correct),
+        introduce(course.wordsForSet('wordReadingShort').first.atomId!),
+        answer(
+          course.wordsForSet('wordReadingShort').first.atomId!,
+          ExerciseMode.connectionBuild,
+          correct: correct,
+        ),
       ]);
       expect(planner.activeStage(context(practiced)), 3);
       expect(plan(practiced).topicId, 'm.join');

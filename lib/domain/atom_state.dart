@@ -151,12 +151,14 @@ class ProgressFold {
   const ProgressFold({
     required this.letterFormIds,
     this.baseLetterIds = const {},
+    this.wordAtomIds = const {},
     this.rules = const LearningRules(),
   });
 
   final LearningRules rules;
   final Set<String> letterFormIds;
   final Set<String> baseLetterIds;
+  final Set<String> wordAtomIds;
 
   Map<String, AtomProgress> fold(Iterable<LogEntry> log) =>
       foldOnto(const {}, log);
@@ -184,9 +186,10 @@ class ProgressFold {
       lastSeenSession: entry.sessionId,
     ),
     ProgressEvent() => _applyAnswer(p, entry),
+    // Экзамен закрывает пропущенную практику и у уже известного атома.
     KnowledgeConfirmed() =>
       p.state.index >= AtomState.known.index
-          ? p
+          ? p.copyWith(weak: true, clearDeferred: true)
           : p.copyWith(
               state: AtomState.known,
               knownAt: entry.at,
@@ -204,7 +207,12 @@ class ProgressFold {
     if (!e.correct) return _applyError(p, e, isLetterForm: isLetterForm);
 
     p = p.copyWith(successfulModes: {...p.successfulModes, e.mode});
-    final active = p.hadActiveSuccess || e.mode.isActive;
+    // Полная сборка воспроизводит слово. В огласовках эта же сцена
+    // проверяет старые формы и знаки, не подменяя их письмо.
+    final active =
+        p.hadActiveSuccess ||
+        e.mode.isActive ||
+        (e.mode == ExerciseMode.wordBuild && wordAtomIds.contains(e.atomId));
 
     // Во всех состояниях прогресс даёт правильный ответ с первой попытки.
     if (e.attempt != 1) {

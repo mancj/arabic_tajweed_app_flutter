@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import 'atom.dart' show LetterForm;
+import 'atom.dart';
 
 part 'explanation_document.g.dart';
 
@@ -327,6 +327,25 @@ class ExplanationContent {
   }
 
   final ExplanationDocument document;
+
+  /// Общее объяснение слова получает написание и запись из банка.
+  ExplanationContent forAtom(Atom atom) {
+    if (atom.kind != AtomKind.word ||
+        document.blocks.any((block) => block is ExplanationLetter)) {
+      return this;
+    }
+    return ExplanationContent(
+      document: ExplanationDocument(
+        title: document.title,
+        blocks: [
+          ExplanationLetter(
+            ExplanationGlyph(glyph: atom.display, audio: atom.audioAsset),
+          ),
+          ...document.blocks,
+        ],
+      ),
+    );
+  }
 
   static void _validateGlyph(ExplanationGlyph value) {
     if (value.glyph.trim().isEmpty) {

@@ -87,9 +87,13 @@ class WordBuildExercise extends StatelessWidget {
         const Margin.vertical(24),
         if (result == null) ...[
           Text(
-            choosingForms
-                ? 'Выберите форму буквы «${step.letter.label}»'
-                : 'Огласовка буквы «${step.letter.label}» по звуку',
+            question.showLetterHints
+                ? choosingForms
+                      ? 'Выберите форму буквы «${step.letter.label}»'
+                      : 'Огласовка буквы «${step.letter.label}» по звуку'
+                : choosingForms
+                ? 'Выберите форму для места ${activeIndex + 1}'
+                : 'Выберите огласовку по звуку',
             style: UITextStyles.semibold17,
           ),
           const Margin.vertical(12),

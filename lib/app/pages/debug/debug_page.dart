@@ -8,9 +8,9 @@ import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:arabic_tajweed_app/data/rest/api_config.dart';
 
 import 'debug_page_controller.dart';
+import 'server_url_dialog.dart';
 
 export 'debug_page_binding.dart';
 export 'debug_page_controller.dart';
@@ -157,6 +157,12 @@ class DebugPage extends GetView<DebugController> {
                 subtitle: 'Запись и проверка буквы с огласовкой',
                 onTap: controller.openSyllablePronunciation,
               ),
+              _DebugTile(
+                icon: Icons.record_voice_over_rounded,
+                title: 'Чтение слова вслух',
+                subtitle: 'Проверка произношения из блока «Читаем слова»',
+                onTap: controller.openWordPronunciation,
+              ),
             ],
           ),
           const Margin.vertical(32),
@@ -272,53 +278,10 @@ class DebugPage extends GetView<DebugController> {
   }
 
   Future<void> _editServerUrl(BuildContext context) async {
-    final textController = TextEditingController(
-      text: controller.serverUrl.value,
-    );
-    final formKey = GlobalKey<FormState>();
-
     final value = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Адрес сервера'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: textController,
-            autofocus: true,
-            keyboardType: TextInputType.url,
-            decoration: const InputDecoration(
-              labelText: 'IP-адрес и порт',
-              hintText: '192.168.1.10:8765',
-            ),
-            validator: (value) {
-              try {
-                ApiConfig.normalizeBaseUrl(value ?? '');
-                return null;
-              } on FormatException catch (error) {
-                return error.message.toString();
-              }
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop(textController.text);
-              }
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
-      ),
+      builder: (_) => ServerUrlDialog(initialUrl: controller.serverUrl.value),
     );
-    textController.dispose();
-
     if (value != null) await controller.saveServerUrl(value);
   }
 }

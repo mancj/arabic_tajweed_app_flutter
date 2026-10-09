@@ -119,13 +119,12 @@ void main() {
       'm.mim.forms',
       'm.ha',
       'm.ha.forms',
-      'm.hamza',
     ];
     const checkpointAfter = {
       'm.jim.forms': 7,
       'm.sod.forms': 15,
       'm.fa.forms': 21,
-      'm.hamza': 28,
+      'm.ha.forms': 28,
     };
 
     var lessonNumber = 0;
@@ -156,7 +155,7 @@ void main() {
     }
   });
 
-  test('при одном занятии в день соблюдается таблица из 27 дней', () async {
+  test('при одном занятии в день соблюдается таблица из 26 дней', () async {
     const expected = <ExpectedLesson>[
       (topicId: 'm.first', purpose: LessonPurpose.standard, checkpoint: null),
       (topicId: 'm.forms', purpose: LessonPurpose.standard, checkpoint: null),
@@ -231,7 +230,6 @@ void main() {
         purpose: LessonPurpose.standard,
         checkpoint: null,
       ),
-      (topicId: 'm.hamza', purpose: LessonPurpose.standard, checkpoint: null),
       (
         topicId: null,
         purpose: LessonPurpose.alphabetCheckpoint,

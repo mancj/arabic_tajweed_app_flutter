@@ -57,7 +57,7 @@ class PronunciationController extends GetxController {
   Future<void> stopRecording() async {
     final expected = atom?.display;
     if (expected == null) return;
-    await checker.stop(expected: expected);
+    await checker.stop(expected: expected, unitId: atom!.id);
   }
 
   @override

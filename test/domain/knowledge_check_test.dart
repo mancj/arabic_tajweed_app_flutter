@@ -12,36 +12,43 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Новые темы не должны добавлять в проверку будущие буквы или вопросы,
 /// которые нельзя собрать из материала уже пройденного пути. Вопросы по
-/// буквам и хамзе не должны возвращаться в чужих для них режимах.
+/// буквам не должны возвращаться в чужих для них режимах.
 void main() {
-  test('только недостающие формы хамзы не создают чужие упражнения', () {
+  // Смена порядка генератора не должна снова ставить две проверки
+  // одного элемента рядом; обе встречи и прежние форматы сохраняются.
+  test('вопросы перемешаны, повтор одного элемента не идёт подряд', () {
     final curriculum = CurriculumLoader.merge([
       for (final asset in CurriculumLoader.defaultAssets)
-      CurriculumLoader.parse(File(asset).readAsStringSync()),
+        CurriculumLoader.parse(File(asset).readAsStringSync()),
     ]);
-    final context = CurriculumContext(
-      progress: {
-        for (final node in curriculum.nodes)
-          if (node.atom.letterId != 'hamza' || node.atom.kind != AtomKind.sign)
-            node.atom.id: const AtomProgress(state: AtomState.known),
-      },
-      formsByLetter: curriculum.formsByLetter,
-    );
-    final check = KnowledgeCheck(
-      curriculum: curriculum,
-      topic: curriculum.topics.firstWhere((t) => t.id == 'm.haraka.intro'),
-      context: context,
-      random: Random(0),
-    );
-    expect(check.questions, isEmpty);
-    expect(check.inferredAtoms, hasLength(5));
-    expect(check.isCondensed, isFalse);
+    for (final topic in curriculum.topics.skip(1)) {
+      for (var seed = 0; seed < 10; seed++) {
+        final check = KnowledgeCheck(
+          curriculum: curriculum,
+          topic: topic,
+          context: CurriculumContext(
+            progress: const {},
+            formsByLetter: curriculum.formsByLetter,
+          ),
+          random: Random(seed),
+        );
+        final ids = check.questions.map((q) => q.atom.id).toList();
+        for (final atom in check.checkedAtoms) {
+          expect(ids.where((id) => id == atom.id), hasLength(2));
+        }
+        if (check.checkedAtoms.length > 1) {
+          for (var i = 1; i < ids.length; i++) {
+            expect(ids[i], isNot(ids[i - 1]), reason: '${topic.id}, $seed');
+          }
+        }
+      }
+    }
   });
 
   test('каждый перескок использует доступные варианты знакомых заданий', () {
     final curriculum = CurriculumLoader.merge([
       for (final asset in CurriculumLoader.defaultAssets)
-      CurriculumLoader.parse(File(asset).readAsStringSync()),
+        CurriculumLoader.parse(File(asset).readAsStringSync()),
     ]);
     final context = CurriculumContext(
       progress: const {},
@@ -92,17 +99,6 @@ void main() {
             reason: topic.id,
           );
         }
-      }
-      if (topic.id == 'm.haraka.intro') {
-        expect(
-          check.inferredAtoms
-              .where(
-                (atom) =>
-                    atom.kind == AtomKind.sign && atom.letterId == 'hamza',
-              )
-              .length,
-          5,
-        );
       }
       final afterCheck = CurriculumContext(
         progress: {

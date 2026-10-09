@@ -1,13 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import '../../../data/rest/api_exception.dart';
+import '../../../data/rest/auth_rest_client.dart';
 
 import '../../resources/ui_resources.dart';
+import '../../shared_state/auth_state.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/next_button.dart';
 import '../../widgets/ui_kit/rule_card.dart';
 import '../auth/authorization_page.dart';
+import '../auth/email_auth_error.dart';
+import '../auth/widgets/auth_notice.dart';
+import '../auth/widgets/auth_action.dart';
 
 class ProfilePage extends StatelessWidget {
   static const routeName = '/profile';
@@ -19,7 +25,11 @@ class ProfilePage extends StatelessWidget {
     title: 'Профиль',
     builder: (context, insets) => SingleChildScrollView(
       padding: insets,
-      child: const _AuthorizationCard(),
+      child: Obx(
+        () => Get.find<AuthState>().isAuthorized
+            ? const _SessionCard()
+            : const _AuthorizationCard(),
+      ),
     ),
   );
 }
@@ -101,7 +111,8 @@ class _ProfileHeading extends StatelessWidget {
 }
 
 class _ProfileArtwork extends StatelessWidget {
-  const _ProfileArtwork();
+  const _ProfileArtwork({this.label = 'Гость'});
+  final String label;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -151,7 +162,7 @@ class _ProfileArtwork extends StatelessWidget {
                     ),
                     const Margin.horizontal(8),
                     Text(
-                      'Гость',
+                      label,
                       style: UITextStyles.semibold12.copyWith(
                         color: UIColors.onInk,
                       ),
@@ -201,4 +212,76 @@ class _IdentityIllustration extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SessionCard extends StatefulWidget {
+  const _SessionCard();
+  @override
+  State<_SessionCard> createState() => _SessionCardState();
+}
+
+class _SessionCardState extends State<_SessionCard> {
+  bool _busy = false;
+  String? _notice;
+
+  Future<void> _logout() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _notice = null;
+    });
+    try {
+      try {
+        await Get.find<AuthRestClient>().logout();
+      } on UnauthorizedException {
+        // Уже отозванный на сервере токен также удаляется с устройства.
+      }
+      await Get.find<AuthState>().setAuthToken(null);
+    } catch (error) {
+      if (mounted) setState(() => _notice = emailAuthErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => RuleCard(
+    title: '',
+    contentPadding: EdgeInsets.zero,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _ProfileArtwork(label: 'Аккаунт'),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                header: true,
+                child: Text('Вы вошли', style: UITextStyles.semibold26),
+              ),
+              const Margin.vertical(12),
+              Text(
+                Get.find<AuthState>().email ?? 'Вход выполнен',
+                style: UITextStyles.regular15,
+              ),
+              const Margin.vertical(24),
+              AuthAction(
+                title: _busy ? 'Выходим…' : 'Выйти из аккаунта',
+                enabled: !_busy,
+                busy: _busy,
+                neutralBackground: true,
+                onTap: _logout,
+              ),
+              if (_notice != null) ...[
+                const Margin.vertical(16),
+                AuthNotice(message: _notice!),
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

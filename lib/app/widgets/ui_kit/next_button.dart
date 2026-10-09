@@ -60,6 +60,13 @@ class NextButton extends StatelessWidget {
         lightIntensity: .2,
         rimLight: 2,
       );
+
+      final glassQuality = glassProminent
+          ? UIColors.isDarkTheme
+                ? GlassQuality.premium
+                : GlassQuality.standard
+          : GlassQuality.premium;
+
       final reduceMotion =
           (glassProminent || neutralBackground) &&
           GlassAccessibilityData.of(context).reduceMotion;
@@ -70,7 +77,7 @@ class NextButton extends StatelessWidget {
         // Половина высоты даёт круглые торцы и прямые верх и низ.
         shape: const LiquidRoundedRectangle(borderRadius: 52),
         // Standard сохраняет насыщенность Primary на светлом и тёмном фоне.
-        quality: glassProminent ? GlassQuality.standard : GlassQuality.premium,
+        quality: glassQuality,
         useOwnLayer: true,
         // prominent ограничивает альфа-канал оттенка до .9; filled его сохраняет.
         style: GlassButtonStyle.filled,

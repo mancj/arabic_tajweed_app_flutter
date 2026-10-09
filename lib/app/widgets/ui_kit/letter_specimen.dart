@@ -50,101 +50,119 @@ class LetterSpecimen extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final heading = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (badge != null) ...[
-                      Text(
-                        badge!.toUpperCase(),
-                        style: UITextStyles.monoSemibold11.copyWith(
-                          color: UIColors.studyAccent,
-                        ),
-                      ),
-                      const Margin.vertical(12),
-                    ],
-                    if (title != null)
-                      Semantics(
-                        header: true,
-                        child: Text(title!, style: UITextStyles.semibold29),
-                      ),
-                  ],
-                );
-                final glyph = TweenAnimationBuilder<double>(
-                  key: ValueKey(letter),
-                  tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
-                  duration: Duration(milliseconds: reduceMotion ? 0 : 480),
-                  curve: const Cubic(.16, .8, .24, 1),
-                  builder: (context, value, child) => Transform.translate(
-                    offset: Offset(0, (1 - value) * 12),
-                    child: Opacity(opacity: .4 + .6 * value, child: child),
-                  ),
-                  child: _withTrack(
-                    (audio) => LetterSpecimenGlyph(
-                      letter: letter,
-                      audio: audio,
-                      showRings: true,
-                    ),
-                  ),
-                );
-                // Черты соединения (ـ) удлиняют рисунок одной буквы, но не
-                // делают его словом: «ــتــ» остаётся компактным образцом.
-                // Реальную ширину глифа подгоняет FittedBox выше.
-                final glyphLength = letter
-                    .replaceAll('\u0640', '')
-                    .runes
-                    .length;
-                final stacked =
-                    title == null ||
-                    constraints.maxWidth < 260 ||
-                    MediaQuery.textScalerOf(context).scale(16) > 21 ||
-                    glyphLength > 4;
-                if (stacked) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [heading, const Margin.vertical(8), glyph],
-                  );
-                }
-                return Row(
-                  children: [
-                    Expanded(flex: 3, child: heading),
-                    const Margin.horizontal(16),
-                    Expanded(flex: 2, child: glyph),
-                  ],
-                );
-              },
-            ),
-            if (caption != null) ...[
-              const Margin.vertical(8),
-              Text(
-                caption!,
-                textAlign: TextAlign.center,
-                style: UITextStyles.regular15,
-              ),
-            ],
-            if (onPlay != null) ...[
-              const Margin.vertical(16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: PlayControl(
-                  letter: letter,
-                  onTap: onPlay!,
-                  onAutoPlay: onAutoPlay,
-                  autoPlay: autoPlay,
-                  track: track,
-                  label: 'Слушать',
-                  size: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Фон всей карточки рисуется раньше заголовка, направляющих и глифа.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: OverflowBox(
+                minHeight: _shapeSize,
+                maxHeight: _shapeSize,
+                minWidth: _shapeSize,
+                maxWidth: _shapeSize,
+                child: OrbitalRingsWidget(
+                  color: UIColors.backgroundShapes2,
+                  thickness: 1.1,
+                  dashThickness: 1.5,
                 ),
               ),
-            ],
-          ],
-        ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final heading = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (badge != null) ...[
+                          Text(
+                            badge!.toUpperCase(),
+                            style: UITextStyles.monoSemibold11.copyWith(
+                              color: UIColors.studyAccent,
+                            ),
+                          ),
+                          const Margin.vertical(12),
+                        ],
+                        if (title != null)
+                          Semantics(
+                            header: true,
+                            child: Text(title!, style: UITextStyles.semibold29),
+                          ),
+                      ],
+                    );
+                    final glyph = TweenAnimationBuilder<double>(
+                      key: ValueKey(letter),
+                      tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
+                      duration: Duration(milliseconds: reduceMotion ? 0 : 480),
+                      curve: const Cubic(.16, .8, .24, 1),
+                      builder: (context, value, child) => Transform.translate(
+                        offset: Offset(0, (1 - value) * 12),
+                        child: Opacity(opacity: .4 + .6 * value, child: child),
+                      ),
+                      child: _withTrack(
+                        (audio) =>
+                            LetterSpecimenGlyph(letter: letter, audio: audio),
+                      ),
+                    );
+                    // Черты соединения (ـ) удлиняют рисунок одной буквы, но не
+                    // делают его словом: «ــتــ» остаётся компактным образцом.
+                    // Реальную ширину глифа подгоняет FittedBox выше.
+                    final glyphLength = letter
+                        .replaceAll('\u0640', '')
+                        .runes
+                        .length;
+                    final stacked =
+                        title == null ||
+                        constraints.maxWidth < 260 ||
+                        MediaQuery.textScalerOf(context).scale(16) > 21 ||
+                        glyphLength > 4;
+                    if (stacked) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [heading, const Margin.vertical(8), glyph],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(flex: 3, child: heading),
+                        const Margin.horizontal(16),
+                        Expanded(flex: 2, child: glyph),
+                      ],
+                    );
+                  },
+                ),
+                if (caption != null) ...[
+                  const Margin.vertical(8),
+                  Text(
+                    caption!,
+                    textAlign: TextAlign.center,
+                    style: UITextStyles.regular15,
+                  ),
+                ],
+                if (onPlay != null) ...[
+                  const Margin.vertical(16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: PlayControl(
+                      letter: letter,
+                      onTap: onPlay!,
+                      onAutoPlay: onAutoPlay,
+                      autoPlay: autoPlay,
+                      track: track,
+                      label: 'Слушать',
+                      size: 48,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -166,7 +184,6 @@ class LetterSpecimenGlyph extends StatelessWidget {
     this.height = 128,
     this.fontSize = 96,
     this.audio = AudioTrack.silent,
-    this.showRings = false,
     super.key,
   });
 
@@ -174,7 +191,6 @@ class LetterSpecimenGlyph extends StatelessWidget {
   final double height;
   final double fontSize;
   final AudioTrack audio;
-  final bool showRings;
 
   @override
   Widget build(BuildContext context) => CustomPaint(
@@ -184,41 +200,22 @@ class LetterSpecimenGlyph extends StatelessWidget {
       progress: audio.progress,
       playing: audio.isPlaying,
     ),
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        if (showRings)
-          Positioned.fill(
-            child: OverflowBox(
-              minHeight: LetterSpecimen._shapeSize,
-              maxHeight: LetterSpecimen._shapeSize,
-              minWidth: LetterSpecimen._shapeSize,
-              maxWidth: LetterSpecimen._shapeSize,
-              child: OrbitalRingsWidget(
-                color: UIColors.backgroundShapes2,
-                thickness: 1.1,
-                dashThickness: 1.5,
-              ),
-            ),
-          ),
-        SizedBox(
-          width: double.infinity,
-          height: height,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  letter,
-                  textDirection: TextDirection.rtl,
-                  style: UITextStyles.arabicRegular(fontSize, height: 1.25),
-                ),
-              ),
+    child: SizedBox(
+      width: double.infinity,
+      height: height,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              letter,
+              textDirection: TextDirection.rtl,
+              style: UITextStyles.arabicRegular(fontSize, height: 1.25),
             ),
           ),
         ),
-      ],
+      ),
     ),
   );
 }

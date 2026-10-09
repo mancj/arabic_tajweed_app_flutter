@@ -32,6 +32,7 @@ class LearningRules {
     this.connectedFormCleanStreakForKnown = 2,
     this.tasksPerSession = 20,
     this.syllablePronunciationMaxPercent = 15,
+    this.wordPronunciationMaxPercent = 15,
     this.harakaSequencesPerSession = 3,
     this.mixedHarakaSequencesPerSession = 2,
     this.letterFormReviewsPerHarakaSession = 2,
@@ -122,6 +123,9 @@ class LearningRules {
   /// практика имеют приоритет. Произношение отдельных букв не ограничивает.
   final int syllablePronunciationMaxPercent;
 
+  /// Произношение целых слов: общий предел на все блоки одного занятия.
+  final int wordPronunciationMaxPercent;
+
   /// Сборки на разных буквах внутри занятия с огласовками. При нехватке
   /// знакомых букв их меньше; короткий добор получает соразмерную долю.
   final int harakaSequencesPerSession;
@@ -148,6 +152,7 @@ class LearningRules {
   /// Понятия проходят только через объяснение.
   int minimumExercises(Atom atom) => switch (atom) {
     Atom(kind: AtomKind.concept) => 0,
+    Atom(kind: AtomKind.word, wordId: String()) => requirePronunciation ? 2 : 1,
     Atom(kind: AtomKind.haraka, tracing: String()) => 4,
     Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => 3,
     Atom(letterId: String(), form: LetterForm.isolated) => 3,
@@ -157,6 +162,10 @@ class LearningRules {
   /// Узнавание не заменяет письмо: до закрытия темы базовая буква проходит
   /// голос и два вида письма, а каждый звучащий слог — дорисовывание и голос.
   Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
+    Atom(kind: AtomKind.word, wordId: String()) => {
+      ExerciseMode.wordBuild,
+      if (requirePronunciation) ExerciseMode.sayWord,
+    },
     Atom(kind: AtomKind.haraka, tracing: String()) => {
       ExerciseMode.trace,
       ExerciseMode.traceFromMemory,
@@ -228,6 +237,7 @@ class LearningRules {
     connectedFormCleanStreakForKnown: connectedFormCleanStreakForKnown,
     tasksPerSession: tasksPerSession,
     syllablePronunciationMaxPercent: syllablePronunciationMaxPercent,
+    wordPronunciationMaxPercent: wordPronunciationMaxPercent,
     harakaSequencesPerSession: harakaSequencesPerSession,
     mixedHarakaSequencesPerSession: mixedHarakaSequencesPerSession,
     letterFormReviewsPerHarakaSession: letterFormReviewsPerHarakaSession,

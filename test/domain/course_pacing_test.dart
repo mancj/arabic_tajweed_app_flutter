@@ -162,7 +162,7 @@ void main() {
 
   for (final (topicId, previousAtomId) in const [
     ('m.haraka.group1', 'haraka.fatha'),
-    ('m.break', 'syl.ba_ta'),
+    ('m.break', 'word.kataba'),
     ('m.haraka.words2', 'word.kataba'),
   ]) {
     test('перед $topicId в тот же день идут два повтора', () {

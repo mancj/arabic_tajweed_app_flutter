@@ -58,7 +58,15 @@ void main() {
         curriculum: course,
         topic: course.topics[1],
         context: ctx({
-          'ba.isolated': AtomProgress(state: AtomState.known, knownAt: now),
+          'ba.isolated': AtomProgress(
+            state: AtomState.known,
+            knownAt: now,
+            successfulModes: {
+              ExerciseMode.trace,
+              ExerciseMode.traceFromMemory,
+              ExerciseMode.sayName,
+            },
+          ),
         }),
         random: Random(1),
       );

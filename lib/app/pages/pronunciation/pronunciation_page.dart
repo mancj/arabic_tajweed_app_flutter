@@ -5,7 +5,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
-import 'package:arabic_tajweed_app/data/rest/letter_check.dart';
+import 'package:arabic_tajweed_app/data/rest/pronunciation_check.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -17,8 +17,7 @@ export 'pronunciation_controller.dart';
 
 /// Экран тренировки произношения: как экран обводки, только с голосом.
 /// Карточка буквы с эталонным звучанием, полоса выбора буквы, под ними
-/// ответ сервера целиком — с оценкой и ближайшими кандидатами, чтобы
-/// видеть, как модель слышит каждую букву.
+/// общий ответ сервера и качество записи, если оно оценивалось.
 class PronunciationPage extends GetView<PronunciationController> {
   static const routeName = '/pronunciation';
 
@@ -129,22 +128,20 @@ class _Feedback extends GetView<PronunciationController> {
 
       return RuleCard(
         badge: check.matched ? 'Верно' : 'Не то',
-        title: 'Услышано: ${check.heard} — ${check.hint}',
+        title: check.feedbackTitle,
         text: _details(check),
       );
     });
   }
 
-  String _details(LetterCheck check) {
-    final nearest = check.nearest
-        .map((g) => '${g.letter} ${(g.similarity * 100).round()}%')
-        .join(', ');
+  String _details(PronunciationCheck check) {
     final rec = check.recording;
     return [
-      'Оценка ${check.score} из 100. Похожие: $nearest.',
-      'Запись: речь с ${rec.speechFrom} с, громкость ${rec.loudnessDb} дБ, '
-          'чистота ${rec.clarityDb} дБ'
-          '${rec.warning == null ? '' : ', ${rec.warning}'}.',
+      check.hint,
+      if (check.canEvaluate && check.heard != null) 'Услышано: ${check.heard}.',
+      if (rec != null)
+        'Запись: речь с ${rec.speechFrom} с, громкость ${rec.loudnessDb} дБ, '
+            'чистота ${rec.clarityDb} дБ${rec.warning == null ? '' : ', ${rec.warning}'}.',
     ].join('\n');
   }
 }

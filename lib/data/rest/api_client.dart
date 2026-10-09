@@ -23,10 +23,24 @@ Dio createApiClient(AuthState authState) {
 
   if (kDebugMode) {
     dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        logPrint: (line) => debugPrint('[api] $line'),
+      // В журнал попадают только путь и статус: OTP, email и токены не печатаем.
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          debugPrint('[api] ${options.method} ${options.uri.path}');
+          handler.next(options);
+        },
+        onResponse: (response, handler) {
+          debugPrint(
+            '[api] ${response.statusCode} ${response.requestOptions.uri.path}',
+          );
+          handler.next(response);
+        },
+        onError: (error, handler) {
+          debugPrint(
+            '[api] ${error.response?.statusCode ?? error.type.name} ${error.requestOptions.uri.path}',
+          );
+          handler.next(error);
+        },
       ),
     );
   }

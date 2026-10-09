@@ -5,9 +5,12 @@ import 'package:arabic_tajweed_app/app/pages/course/course_controller.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_material_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_path_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/explanation_card.dart';
+import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/curriculum.dart';
+import 'package:arabic_tajweed_app/domain/explanation_document.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +19,65 @@ import 'package:get/get.dart';
 import '../helpers/plugin_mocks.dart';
 
 void main() {
+  // Все слова используют один YAML: переключение должно менять
+  // написание и запись, а не показывать пустую или прошлую карточку.
+  testWidgets('просмотр слов подставляет слово и его запись из банка', (
+    tester,
+  ) async {
+    mockPlatformPlugins();
+    addTearDown(Get.reset);
+    final curriculum = (await tester.runAsync(
+      () => const CurriculumLoader().load(),
+    ))!;
+    final atoms = curriculum.nodes
+        .map((node) => node.atom)
+        .where((atom) => atom.kind == AtomKind.word)
+        .take(2)
+        .toList();
+    Future<void> settleCards() async {
+      // Орбитальные кольца играют постоянно: здесь ждём загрузку карточек,
+      // а не остановку всех анимаций экрана.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      for (var frame = 0; frame < 5; frame++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
+    }
+
+    await tester.pumpWidget(
+      GetMaterialApp(home: CourseMaterialPage(atoms: atoms, initialIndex: 0)),
+    );
+    await settleCards();
+    void expectCard(Atom word, int index) {
+      expect(
+        tester.widget<PageView>(find.byType(PageView)).controller!.page,
+        index,
+      );
+      final card = tester.widget<ExplanationCard>(
+        find.descendant(
+          of: find.byKey(PageStorageKey('note-scroll-${word.id}')),
+          matching: find.byType(ExplanationCard),
+        ),
+      );
+      final glyph = card.content.document.blocks
+          .whereType<ExplanationLetter>()
+          .single
+          .letter;
+      expect(glyph.glyph, word.display);
+      expect(glyph.audio, word.audioAsset);
+    }
+
+    expectCard(atoms.first, 0);
+    await tester.tap(find.byKey(ValueKey('topic-note-${atoms.last.id}')));
+    await settleCards();
+    expectCard(atoms.last, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('выбранная статья и свайпы сохраняют порядок темы', (
     tester,
   ) async {

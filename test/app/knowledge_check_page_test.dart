@@ -7,6 +7,8 @@ import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
+import 'package:arabic_tajweed_app/domain/atom_state.dart';
+import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
 import 'package:arabic_tajweed_app/domain/knowledge_check.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_audio_source.dart';
@@ -73,9 +75,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(audio.played, contains(source.forAtom(check.questions.first.atom)));
 
-    await tester.tap(
-      find.byType(AnswerOption).at(check.questions.first.answerIndex),
-    );
+    final choice = find
+        .byType(AnswerOption)
+        .at(check.questions.first.answerIndex);
+    await Scrollable.ensureVisible(tester.element(choice), alignment: .5);
+    await tester.pump();
+    await tester.tap(choice);
     await tester.pump();
     await tester.tap(find.text('Ответить'));
     await settle(tester);
@@ -93,6 +98,97 @@ void main() {
     expect(audio.played.last, source.forAtom(check.questions[1].atom));
     expect(find.text('Прослушать ещё раз'), findsNothing);
   });
+
+  // Переход должен закрывать прежний путь даже после обычного занятия:
+  // known без голоса раньше исключался из экзамена и возвращал курс назад.
+  // Проверяем и соседнюю тему, и первый урок другого большого раздела,
+  // включая повторный запуск контроллера и дневной темп.
+  for (final topicId in ['m.forms', 'm.join']) {
+    testWidgets('переход после начатого курса закрывает путь до $topicId', (
+      tester,
+    ) async {
+      final fullCourse = CurriculumLoader.merge([
+        for (final asset in CurriculumLoader.defaultAssets)
+          CurriculumLoader.parse(File(asset).readAsStringSync()),
+      ]);
+      final c = Get.put(CourseController(database: db, curriculum: fullCourse));
+      await tester.runAsync(() async {
+        while (c.loading.value) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        await c.repository.recordAll([
+          AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: c.today),
+          for (final mode in [
+            ExerciseMode.trace,
+            ExerciseMode.traceFromMemory,
+            ExerciseMode.soundToLetter,
+          ])
+            ProgressEvent(
+              atomId: 'ba.isolated',
+              sessionId: 1,
+              at: c.today,
+              mode: mode,
+              correct: true,
+              attempt: 1,
+              fastEnough: true,
+            ),
+        ]);
+        await c.repository.finishSession(
+          sessionId: 1,
+          purpose: LessonPurpose.standard,
+          exerciseCount: 20,
+          firstTryCorrect: 20,
+          at: c.today,
+        );
+        await c.refreshBoard();
+      });
+      expect(c.context.stateOf('ba.isolated'), AtomState.known);
+      expect(c.statuses.first.isDone, isFalse);
+      final topic = fullCourse.topics.firstWhere((t) => t.id == topicId);
+      await tester.pumpWidget(
+        GetMaterialApp(
+          home: KnowledgeCheckPage(
+            controller: c,
+            topic: topic,
+            audio: _RecordingAudio(),
+          ),
+        ),
+      );
+      await settle(tester);
+      await tester.tap(find.text('Начать проверку'));
+      await settle(tester);
+      while (find.text('Понятно').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Понятно'));
+        await settle(tester);
+      }
+      final check =
+          (tester.state(find.byType(KnowledgeCheckPage)) as dynamic).check
+              as KnowledgeCheck;
+      for (final question in check.questions) {
+        final choice = find.byType(AnswerOption).at(question.answerIndex);
+        await Scrollable.ensureVisible(tester.element(choice), alignment: .5);
+        await tester.pump();
+        await tester.tap(choice);
+        await tester.pump();
+        await tester.tap(find.text('Ответить'));
+        await settle(tester);
+      }
+      expect(find.text('Тема открыта'), findsOneWidget);
+      await tester.tap(find.text('Не сейчас'));
+      await settle(tester);
+      final restarted = CourseController(database: db, curriculum: fullCourse);
+      await tester.runAsync(restarted.refreshBoard);
+      final targetIndex = fullCourse.topics.indexOf(topic);
+      expect(
+        restarted.statuses.take(targetIndex).every((s) => s.isDone),
+        isTrue,
+      );
+      expect(restarted.nextPlan.value?.topicId, topicId);
+      expect(restarted.currentStage, topic.stage);
+      expect(restarted.nextPlan.value?.purpose, LessonPurpose.standard);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final missOne in [false, true]) {
     testWidgets('проверка сохраняет результат: ошибка=$missOne', (
@@ -138,12 +234,18 @@ void main() {
         await tester.pump();
         await tester.tap(find.text('Ответить'));
         await settle(tester);
-        if (i == 1) {
-          expect(
-            (await db.readAll()).whereType<KnowledgeConfirmed>().length,
-            missOne ? 0 : 1,
-          );
-        }
+        final answered = check.questions.take(i + 1).toList();
+        final expectedConfirmed = check.checkedAtoms
+            .where(
+              (atom) =>
+                  answered.where((q) => q.atom.id == atom.id).length == 2 &&
+                  (!missOne || atom.id != check.questions.first.atom.id),
+            )
+            .length;
+        expect(
+          (await db.readAll()).whereType<KnowledgeConfirmed>().length,
+          expectedConfirmed,
+        );
       }
       final log = await db.readAll();
       expect(log.whereType<KnowledgeConfirmed>().length, missOne ? 3 : 4);
@@ -170,7 +272,7 @@ void main() {
     ) async {
       final fullCourse = CurriculumLoader.merge([
         for (final asset in CurriculumLoader.defaultAssets)
-      CurriculumLoader.parse(File(asset).readAsStringSync()),
+          CurriculumLoader.parse(File(asset).readAsStringSync()),
       ]);
       final topic = fullCourse.topics.firstWhere(
         (t) => t.id == 'm.haraka.intro',

@@ -28,9 +28,6 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- Сервер проверки произношения пока живёт на машине разработчика
-	     в домашнем Wi-Fi: нужен http без TLS внутри локальной сети и право
-	     в неё ходить. Убрать вместе с боевым сервером. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -81,6 +78,21 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>GIDClientID</key>
+	<string>200780549749-a71ouovboo9ph9jd0mbrt19m93l8llb9.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>200780549749-bjp6vm6hjirhusri2cj90nlt6m66jo1n.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.200780549749-a71ouovboo9ph9jd0mbrt19m93l8llb9</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

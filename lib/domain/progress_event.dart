@@ -46,7 +46,7 @@ enum ExerciseMode {
   /// только у отдельной. См. SPEC.md §4, режим 10.
   sayName,
 
-  /// Прочитать букву с краткой огласовкой; запись проверяется через /syllable.
+  /// Прочитать букву с краткой огласовкой.
   saySyllable,
 
   /// Достроить одну букву связки: выбрать форму и огласовку.
@@ -54,11 +54,16 @@ enum ExerciseMode {
 
   /// Собрать все формы слова, затем его огласовки.
   wordBuild,
+
+  /// Прочитать целое короткое слово без предварительного образца.
+  sayWord,
 }
 
 extension ExerciseModeX on ExerciseMode {
   bool get isPronunciation =>
-      this == ExerciseMode.sayName || this == ExerciseMode.saySyllable;
+      this == ExerciseMode.sayName ||
+      this == ExerciseMode.saySyllable ||
+      this == ExerciseMode.sayWord;
 
   bool get isHarakaSequence =>
       this == ExerciseMode.harakaSequence ||

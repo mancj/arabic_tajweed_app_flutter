@@ -55,6 +55,8 @@ class AtomProgressController extends GetxController {
       database: Get.find<ProgressDatabase>(),
       rules: rules,
       letterFormIds: curriculum.letterFormIds,
+      baseLetterIds: curriculum.baseLetterIds,
+      wordAtomIds: curriculum.wordAtomIds,
     );
     final progress = await _progress.progress();
     nextSession.value = await _progress.nextSessionId();

@@ -16,6 +16,7 @@ class ProgressRepository {
     required ProgressDatabase database,
     required Set<String> letterFormIds,
     this.baseLetterIds = const {},
+    Set<String> wordAtomIds = const {},
     LearningRules rules = const LearningRules(),
     DateTime Function()? now,
   }) : _db = database,
@@ -25,6 +26,7 @@ class ProgressRepository {
          rules: rules,
          letterFormIds: letterFormIds,
          baseLetterIds: baseLetterIds,
+         wordAtomIds: wordAtomIds,
        );
 
   final ProgressDatabase _db;
@@ -101,8 +103,19 @@ class ProgressRepository {
     final todaySummaries = _sessionSummaries
         .where((summary) => _localDay(summary.at) == today)
         .toList();
+    // Успешный переход заканчивает прежний дневной цикл. Объяснения
+    // в экзамене сами по себе не начинают новый учебный цикл.
+    final latestPlacement = todaySummaries
+        .where((summary) => _purposeOf(summary) == LessonPurpose.placementCheck)
+        .map((summary) => summary.sessionId)
+        .maxOrNull;
     final latestNewSession = todaySummaries
-        .where((summary) => _sessionsWithNew.contains(summary.sessionId))
+        .where(
+          (summary) =>
+              _purposeOf(summary) != LessonPurpose.placementCheck &&
+              summary.sessionId > (latestPlacement ?? 0) &&
+              _sessionsWithNew.contains(summary.sessionId),
+        )
         .map((summary) => summary.sessionId)
         .maxOrNull;
     final successfulReviews = latestNewSession == null

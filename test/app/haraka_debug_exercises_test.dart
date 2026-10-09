@@ -1,21 +1,26 @@
 // Повторные тапы должны менять весь набор выбора, а проверка — фиксировать
 // ответ. При ожидании разрешения микрофона и HTTP нельзя подменить ожидаемый
-// слог переключателем; unclear не должен выглядеть как учебная ошибка.
+// слог или слово переключателем; unclear не должен выглядеть как учебная ошибка.
+// Слова отладки используют подборку курса и отправляют ID атома с типом short_word.
+// Исходный ответ сервера виден и при успехе с лишней ه, и при unclear.
 import 'dart:async';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_match_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/syllable_pronunciation_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/word_pronunciation_debug_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_match_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_tabs.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/next_button.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/mono_text_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/segmented_tabs.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_pronunciation_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_exercise.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
+import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_checker.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_rest_client.dart';
-import 'package:arabic_tajweed_app/data/rest/syllable_check.dart';
+import 'package:arabic_tajweed_app/data/rest/pronunciation_check.dart';
 import 'package:arabic_tajweed_app/data/voice_recorder.dart';
 import 'package:arabic_tajweed_app/domain/audio_track.dart';
 import 'package:dio/dio.dart';
@@ -109,6 +114,152 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('слова курса: запись фиксирует цель, смена очищает результат', (
+    tester,
+  ) async {
+    final curriculum = await tester.runAsync(
+      () => const CurriculumLoader().load(),
+    );
+    final words = curriculum!.wordsForSet('wordReading');
+    final recorder = _DelayedRecorder();
+    final dio = Dio();
+    addTearDown(() => dio.close(force: true));
+    final client = _Client(dio);
+    final checker = PronunciationChecker(recorder: recorder, client: client);
+    final audio = _Audio();
+    await mount(
+      tester,
+      WordPronunciationDebugPage(checker: checker, audio: audio, words: words),
+    );
+    String glyph() => tester
+        .widget<PronunciationExercise>(find.byType(PronunciationExercise))
+        .glyph;
+    MonoTextButton button(String title) => tester.widget<MonoTextButton>(
+      find.byWidgetPredicate(
+        (widget) => widget is MonoTextButton && widget.title == title,
+      ),
+    );
+    expect(glyph(), words.first.display);
+    expect(find.text('Прочитайте это слово вслух'), findsOneWidget);
+    expect(audio.played, isEmpty);
+    expect(find.text('Послушать образец'), findsNothing);
+    expect(button('Предыдущее слово').onPressed, isNull);
+    button('Следующее слово').onPressed!();
+    await tester.pump();
+    expect(glyph(), words[1].display);
+    final changeWord = button('Следующее слово').onPressed!;
+    await tester.tap(find.byKey(const ValueKey('recorder-action')));
+    await tester.pump();
+    changeWord();
+    await tester.pump();
+    expect(glyph(), words[1].display);
+    expect(button('Следующее слово').onPressed, isNull);
+    recorder.ready.complete(true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    changeWord();
+    await tester.tap(find.byKey(const ValueKey('recorder-action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(client.target?.type, PronunciationUnitType.word);
+    expect(client.target?.id, words[1].atomId);
+    expect(client.target?.expected, words[1].display);
+    changeWord();
+    await tester.pump();
+    expect(glyph(), words[1].display);
+    client.answer.complete(
+      PronunciationCheck(
+        version: 1,
+        target: client.target!,
+        status: PronunciationStatus.matched,
+        heard: null,
+        hint: 'Настоящая оценка появится позже.',
+        checks: const [],
+        recording: null,
+        isStub: true,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Запись принята'), findsOneWidget);
+    expect(find.text('Нет распознанного текста'), findsOneWidget);
+    button('Послушать образец').onPressed!();
+    expect(audio.toggled, [words[1].audioAsset]);
+    final stops = audio.stops;
+    button('Предыдущее слово').onPressed!();
+    await tester.pump();
+    expect(glyph(), words.first.display);
+    expect(checker.result.value, isNull);
+    expect(find.text('Послушать образец'), findsNothing);
+    expect(audio.stops, stops + 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('отладка показывает исходное чтение при любом вердикте', (
+    tester,
+  ) async {
+    final curriculum = await tester.runAsync(
+      () => const CurriculumLoader().load(),
+    );
+    final words = curriculum!.wordsForSet('wordReading');
+    final checker = PronunciationChecker();
+    await mount(
+      tester,
+      WordPronunciationDebugPage(
+        checker: checker,
+        audio: _Audio(),
+        words: words,
+      ),
+    );
+    final word = words.first;
+    for (final (status, heard, rawHeard) in [
+      (PronunciationStatus.matched, word.display, '${word.display}ه'),
+      (PronunciationStatus.mismatch, 'كُتَبَ', 'كُتَبَ'),
+      (PronunciationStatus.unclear, '${word.display}هۦ', '${word.display}هۦ'),
+    ]) {
+      checker.result.value = PronunciationCheck(
+        version: 1,
+        target: PronunciationTarget(
+          type: PronunciationUnitType.word,
+          id: word.id,
+          expected: word.display,
+        ),
+        status: status,
+        heard: heard,
+        rawHeard: rawHeard,
+        hint: 'Результат проверки.',
+        checks: const [],
+        recording: null,
+        isStub: false,
+      );
+      await tester.pump();
+      expect(find.text('Сервер услышал'), findsOneWidget);
+      expect(find.text(rawHeard), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+    checker.result.value = PronunciationCheck(
+      version: 1,
+      target: PronunciationTarget(
+        type: PronunciationUnitType.word,
+        id: word.id,
+        expected: word.display,
+      ),
+      status: PronunciationStatus.unclear,
+      heard: 'كَتَبَهه',
+      hint: 'Повторите запись.',
+      checks: const [],
+      recording: null,
+      isStub: false,
+    );
+    await tester.pump();
+    expect(find.text('كَتَبَهه'), findsOneWidget);
+    checker.result.value = null;
+    await tester.pump();
+    expect(find.text('Сервер услышал'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('слог фиксируется ещё до разрешения на микрофон', (tester) async {
     final recorder = _DelayedRecorder();
     final dio = Dio();
@@ -125,9 +276,7 @@ void main() {
       ),
     );
     String glyph() => tester
-        .widget<SyllablePronunciationExercise>(
-          find.byType(SyllablePronunciationExercise),
-        )
+        .widget<PronunciationExercise>(find.byType(PronunciationExercise))
         .glyph;
     SegmentedTabs marks() => tester.widget<SegmentedTabs>(
       find.byWidgetPredicate(
@@ -158,12 +307,18 @@ void main() {
     await tester.pump();
     expect(glyph(), 'بَ');
     client.answer.complete(
-      const SyllableCheck(
-        expected: 'بَ',
+      const PronunciationCheck(
+        version: 1,
+        target: PronunciationTarget(
+          type: PronunciationUnitType.syllable,
+          id: 'بَ',
+          expected: 'بَ',
+        ),
+        checks: [],
+        recording: null,
+        isStub: false,
         heard: null,
-        status: SyllableCheckStatus.unclear,
-        letterMatched: null,
-        harakaMatched: null,
+        status: PronunciationStatus.unclear,
         hint: 'Повторите запись.',
       ),
     );
@@ -177,7 +332,7 @@ void main() {
     marks().onChanged(1);
     await tester.pump();
     expect(glyph(), 'بِ');
-    expect(checker.syllableResult.value, isNull);
+    expect(checker.result.value, isNull);
     expect(find.text('Послушать образец'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -189,12 +344,13 @@ class _Audio implements LessonAudio {
   final ValueNotifier<AudioTrack> track = ValueNotifier(AudioTrack.silent);
   final played = <String?>[];
   final toggled = <String?>[];
+  int stops = 0;
   @override
   Future<void> playAsset(String? asset) async => played.add(asset);
   @override
   Future<void> toggleAsset(String? asset) async => toggled.add(asset);
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async => stops++;
   @override
   Future<void> dispose() async => track.dispose();
 }
@@ -210,15 +366,17 @@ class _DelayedRecorder extends VoiceRecorder {
 
 class _Client extends PronunciationRestClient {
   _Client(Dio dio) : super(dio: dio);
-  final answer = Completer<SyllableCheck>();
+  final answer = Completer<PronunciationCheck>();
   String? expected;
+  PronunciationTarget? target;
   @override
-  Future<SyllableCheck> checkSyllable({
+  Future<PronunciationCheck> check({
     required File audio,
-    required String expected,
+    required PronunciationTarget target,
     CancelToken? cancelToken,
   }) {
-    this.expected = expected;
+    this.target = target;
+    expected = target.expected;
     return answer.future;
   }
 }

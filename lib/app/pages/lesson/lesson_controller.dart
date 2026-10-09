@@ -13,6 +13,7 @@ import '../../../data/progress_repository.dart';
 import '../../../data/pronunciation_checker.dart';
 import '../../../data/pronunciation_preference.dart';
 import '../../../data/rest/pronunciation_rest_client.dart';
+import '../../../data/rest/pronunciation_check.dart';
 import '../../../data/shared_preference_manager.dart';
 import '../../../data/voice_recorder.dart';
 import '../../../domain/atom.dart';
@@ -111,10 +112,18 @@ class LessonController extends GetxController {
   final AppClock _clock;
   final AssetBundle? _explanationBundle;
   final _explanationCards = <String, ExplanationContent>{};
+  final _wordExplanationCards = <String, ExplanationContent>{};
 
-  ExplanationContent? explanationFor(Atom atom) =>
-      _explanationCards[atom.explanationAsset] ??
-      HarakaSyllables.explanationFor(atom);
+  ExplanationContent? explanationFor(Atom atom) {
+    final content =
+        _explanationCards[atom.explanationAsset] ??
+        HarakaSyllables.explanationFor(atom);
+    if (content == null || atom.kind != AtomKind.word) return content;
+    return _wordExplanationCards.putIfAbsent(
+      atom.id,
+      () => content.forAtom(atom),
+    );
+  }
 
   ExplanationContent? formsExplanationFor(String? letterId) {
     if (letterId == null) return null;
@@ -350,24 +359,20 @@ class LessonController extends GetxController {
   Future<void> stopRecording() async {
     final exercise = _session?.current;
     if (exercise == null || !exercise.mode.isPronunciation) return;
-    if (exercise.mode == ExerciseMode.saySyllable) {
-      final result = await pronunciation.stopSyllable(
-        expected: exercise.atom.display,
-      );
-      if (result == null || _session?.current != exercise) return;
-      await _judgePronunciation(
-        matched: result.matched,
-        hasWarning: !result.canEvaluate,
-      );
-    } else {
-      final result = await pronunciation.stop(expected: exercise.atom.display);
-      // Ответ пришёл на другое задание — например, после пропуска.
-      if (result == null || _session?.current != exercise) return;
-      await _judgePronunciation(
-        matched: result.matched,
-        hasWarning: result.recording.warning != null,
-      );
-    }
+    final result = await pronunciation.stop(
+      expected: exercise.atom.display,
+      unitId: exercise.atom.id,
+      type: switch (exercise.mode) {
+        ExerciseMode.saySyllable => PronunciationUnitType.syllable,
+        ExerciseMode.sayWord => PronunciationUnitType.word,
+        _ => PronunciationUnitType.letter,
+      },
+    );
+    if (result == null || _session?.current != exercise) return;
+    await _judgePronunciation(
+      matched: result.matched,
+      hasWarning: !result.canEvaluate,
+    );
   }
 
   /// Совпало — ответ верный. Не совпало: плохая запись (тихо, шумно)
@@ -552,6 +557,7 @@ class LessonController extends GetxController {
       rules: rules,
       letterFormIds: _curriculum.letterFormIds,
       baseLetterIds: _curriculum.baseLetterIds,
+      wordAtomIds: _curriculum.wordAtomIds,
       now: () => _clock.now,
     );
     _announcedLetterIds.addAll(await _progress.learnedLetterIds());
@@ -674,6 +680,7 @@ class LessonController extends GetxController {
     final pronounceNow =
         _pronunciationAvailable &&
         atom != null &&
+        atom.kind != AtomKind.word &&
         rules.requiredPracticeModes(atom).any((mode) => mode.isPronunciation) &&
         _plan!.newAtoms.any((a) => a.id == atom.id);
     if (pronounceNow) {
@@ -827,6 +834,7 @@ class LessonController extends GetxController {
           unavailableModes: {
             if (!_pronunciationAvailable) ExerciseMode.sayName,
             if (!_pronunciationAvailable) ExerciseMode.saySyllable,
+            if (!_pronunciationAvailable) ExerciseMode.sayWord,
           },
         );
     final newAtomIds = {
@@ -1185,8 +1193,11 @@ class LessonController extends GetxController {
         _pronunciationRequired = false;
         _pronunciationAvailable = false;
         await _pronunciationPreference?.disable();
-        session.discardPendingMode(ExerciseMode.sayName);
-        session.discardPendingMode(ExerciseMode.saySyllable);
+        for (final mode in ExerciseMode.values.where(
+          (mode) => mode.isPronunciation,
+        )) {
+          session.discardPendingMode(mode);
+        }
       }
       if (mode == ExerciseMode.positionToForm) {
         final letterId = exercise.atom.letterId;
@@ -1297,7 +1308,9 @@ class LessonController extends GetxController {
       if (!answer.isComplete || _connectedBuildSubmitted) return;
       _connectedBuildSubmitted = true;
       outcomeCorrect = answer.correct;
-      atomResults = answer.atomResults;
+      atomResults = exercise.atom.kind == AtomKind.word
+          ? {exercise.atom.id: answer.correct}
+          : answer.atomResults;
       _wordPreparationModes.add(exercise.mode);
     }
     if (exercise.syllableBuildQuestion case final question?) {

@@ -16,6 +16,7 @@ import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.da
 import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/connection_build_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/word_build_debug_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/word_pronunciation_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/form_sequence_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/glow_wave_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/haraka_drawing_debug_page.dart';
@@ -175,6 +176,10 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: SyllablePronunciationDebugPage.routeName,
           page: () => const SyllablePronunciationDebugPage(),
+        ),
+        GetPage(
+          name: WordPronunciationDebugPage.routeName,
+          page: () => const WordPronunciationDebugPage(),
         ),
         GetPage(
           name: SyllableBuildDebugPage.routeName,

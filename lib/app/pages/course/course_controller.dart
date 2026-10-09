@@ -85,6 +85,7 @@ class CourseController extends GetxController {
           rules: rules,
           letterFormIds: curriculum.letterFormIds,
           baseLetterIds: curriculum.baseLetterIds,
+          wordAtomIds: curriculum.wordAtomIds,
           now: () => _clock.now,
         );
         _ready = true;
@@ -366,7 +367,7 @@ class CourseController extends GetxController {
   static String stageTitle(int stage) => switch (stage) {
     1 => 'Буквы и их формы',
     2 => 'Огласовки',
-    3 => 'Связки букв и слова',
+    3 => 'Читаем слова',
     4 => 'Знаки чтения',
     5 => 'Чтение слов',
     _ => 'Правила письма',

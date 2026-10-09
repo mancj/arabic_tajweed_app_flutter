@@ -52,13 +52,19 @@ void main() {
   }
 
   test('первые две темы и соседние разделы не получают вводные сборки', () {
-    for (final id in ['m.haraka.intro', 'm.haraka.signs', 'm.haraka.words1']) {
+    for (final id in ['m.haraka.intro', 'm.haraka.signs']) {
       expect(
         buildTopic(id, 1).where((exercise) => exercise.mode.isWordPreparation),
         isEmpty,
         reason: id,
       );
     }
+    expect(
+      buildTopic('m.haraka.words1', 1)
+          .where((exercise) => exercise.mode.isWordPreparation)
+          .map((exercise) => exercise.atom.kind),
+      everyElement(AtomKind.word),
+    );
     final alphabet = curriculum.topics.firstWhere(
       (topic) =>
           topic.stage == 1 &&

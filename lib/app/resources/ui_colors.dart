@@ -126,15 +126,19 @@ class UIColors {
     onInk: Color(0xFFFFF9F1),
   );
 
+  static bool get isDarkTheme => switch (selection.value) {
+    AppColorScheme.light => false,
+    AppColorScheme.dark || AppColorScheme.dark2 => true,
+    AppColorScheme.system =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark,
+  };
+
   static UIColorPalette get _active => switch (selection.value) {
     AppColorScheme.light => light,
     AppColorScheme.dark => dark,
     AppColorScheme.dark2 => dark2,
-    AppColorScheme.system =>
-      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-              Brightness.dark
-          ? dark
-          : light,
+    AppColorScheme.system => isDarkTheme ? dark : light,
   };
 
   static Color get pageBackground => _active.pageBackground;

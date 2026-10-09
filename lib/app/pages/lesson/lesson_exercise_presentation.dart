@@ -4,7 +4,7 @@ import '../../../domain/progress_event.dart';
 import '../../../domain/syllable_build_question.dart';
 import '../../../domain/connection_build_question.dart';
 import '../../../domain/word_build_question.dart';
-import '../../../data/rest/syllable_check.dart';
+import '../../../data/rest/pronunciation_check.dart';
 
 /// Способ взаимодействия с вопросом. Экран выбирает виджет по нему, а не по
 /// тому, буква перед ним, огласовка или слово.
@@ -47,6 +47,7 @@ class LessonExercisePresentation {
     required this.isHarakaDrawing,
     this.placeholderHint,
     this.isSyllablePronunciation = false,
+    this.isWordPronunciation = false,
     this.sequenceLength = 4,
   });
 
@@ -58,6 +59,7 @@ class LessonExercisePresentation {
   final bool isHarakaDrawing;
   final String? placeholderHint;
   final bool isSyllablePronunciation;
+  final bool isWordPronunciation;
   final int sequenceLength;
 
   factory LessonExercisePresentation.from(Exercise exercise) {
@@ -70,7 +72,8 @@ class LessonExercisePresentation {
       ExerciseMode.connectionBuild ||
       ExerciseMode.wordBuild => LessonInputKind.connectedBuild,
       ExerciseMode.sayName ||
-      ExerciseMode.saySyllable => LessonInputKind.pronunciation,
+      ExerciseMode.saySyllable ||
+      ExerciseMode.sayWord => LessonInputKind.pronunciation,
       _ when mode.isTracing => LessonInputKind.tracing,
       _ when exercise.isChoice => LessonInputKind.choices,
       _ => LessonInputKind.placeholder,
@@ -104,6 +107,7 @@ class LessonExercisePresentation {
           (mode.isTracing && exercise.atom.kind == AtomKind.haraka),
       placeholderHint: _stubHintOf(mode),
       isSyllablePronunciation: mode == ExerciseMode.saySyllable,
+      isWordPronunciation: mode == ExerciseMode.sayWord,
       sequenceLength: exercise.resultAtoms.length,
     );
   }
@@ -133,6 +137,7 @@ class LessonExercisePresentation {
     ExerciseMode.assemble => 'Соберите слог справа налево',
     ExerciseMode.sayName => 'Назовите эту букву вслух',
     ExerciseMode.saySyllable => 'Прочитайте этот слог вслух',
+    ExerciseMode.sayWord => 'Прочитайте это слово вслух',
     ExerciseMode.connectionBuild => 'Достройте соединение',
     ExerciseMode.wordBuild => 'Соберите слово по шагам',
   };
@@ -155,7 +160,7 @@ class LessonExercisePresentation {
   String feedbackTitle({
     required bool correct,
     SyllableBuildEvaluation? syllableBuildEvaluation,
-    SyllableCheck? syllableCheck,
+    PronunciationCheck? pronunciationCheck,
     ConnectionBuildEvaluation? connectionBuildEvaluation,
     WordBuildEvaluation? wordBuildEvaluation,
   }) {
@@ -172,8 +177,8 @@ class LessonExercisePresentation {
           ? 'Слово собрано правильно'
           : 'Проверьте формы и огласовки';
     }
-    if (syllableCheck != null && syllableCheck.matched == correct) {
-      return syllableCheck.feedbackTitle;
+    if (pronunciationCheck != null && pronunciationCheck.matched == correct) {
+      return pronunciationCheck.feedbackTitle;
     }
     final result = syllableBuildEvaluation;
     if (input == LessonInputKind.syllableBuild && result != null) {
@@ -185,6 +190,7 @@ class LessonExercisePresentation {
       };
     }
     if (correct && isSyllablePronunciation) return 'Слог прочитан правильно';
+    if (correct && isWordPronunciation) return 'Слово прочитано правильно';
     return correct
         ? input == LessonInputKind.pronunciation
               ? 'Правильно произнесено'
@@ -196,7 +202,7 @@ class LessonExercisePresentation {
     required bool correct,
     required String answerLabel,
     String? heard,
-    SyllableCheck? syllableCheck,
+    PronunciationCheck? pronunciationCheck,
     int formSequenceCorrectCount = 0,
     bool revealFormSequenceAnswer = false,
     WordBuildEvaluation? wordBuildEvaluation,
@@ -206,8 +212,8 @@ class LessonExercisePresentation {
       return '${wordBuildEvaluation == null ? '' : 'Ошибок в формах: ${wordBuildEvaluation.formMistakes}, в огласовках: ${wordBuildEvaluation.markMistakes}.\n'}'
           'Верные части останутся на месте для следующей попытки.';
     }
-    if (syllableCheck != null && syllableCheck.matched == correct) {
-      return syllableCheck.hint;
+    if (pronunciationCheck != null && pronunciationCheck.matched == correct) {
+      return pronunciationCheck.hint;
     }
     if (correct) {
       return switch (input) {

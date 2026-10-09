@@ -2,11 +2,12 @@
 // должен открыть путь в настройки, иначе голосовое задание остаётся тупиком.
 // Выход без произношения и закрытие экрана прерывают HTTP-проверку, запись
 // и подготовку файла; позднее разрешение не оставляет микрофон включённым.
-// Неполный ответ /syllable и отсутствие метода остаются ошибками сервиса.
+// Неполный общий ответ и отсутствие метода остаются ошибками сервиса.
 import 'dart:async';
 import 'dart:io';
 
 import 'package:arabic_tajweed_app/data/pronunciation_checker.dart';
+import 'package:arabic_tajweed_app/data/rest/pronunciation_check.dart';
 import 'package:arabic_tajweed_app/data/microphone_permission.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/voice_recorder.dart';
@@ -15,10 +16,14 @@ import 'package:dio/dio.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_rest_client.dart';
 
 void main() {
-  for (final syllable in [false, true]) {
+  for (final type in [
+    PronunciationUnitType.letter,
+    PronunciationUnitType.syllable,
+    PronunciationUnitType.word,
+  ]) {
     for (final reset in [false, true]) {
       test(
-        '${reset ? 'пропуск' : 'закрытие'} прерывает запрос ${syllable ? 'слога' : 'буквы'} без ошибки и результата',
+        '${reset ? 'пропуск' : 'закрытие'} прерывает запрос $type без ошибки и результата',
         () async {
           final directory = await Directory.systemTemp.createTemp(
             'checker_test',
@@ -44,9 +49,14 @@ void main() {
           );
           addTearDown(checker.dispose);
           await checker.start();
-          final checking = syllable
-              ? checker.stopSyllable(expected: 'بِ')
-              : checker.stop(expected: 'ا');
+          final checking = checker.stop(
+            expected: switch (type) {
+              PronunciationUnitType.syllable => 'بِ',
+              PronunciationUnitType.word => 'بِكَ',
+              _ => 'ب',
+            },
+            type: type,
+          );
           final token = await sent.future;
           if (reset) {
             checker.reset();
@@ -58,7 +68,6 @@ void main() {
           expect(checker.error.value, isNull);
           expect(checker.failure.value, isNull);
           expect(checker.result.value, isNull);
-          expect(checker.syllableResult.value, isNull);
         },
       );
     }
@@ -157,7 +166,7 @@ void main() {
 
   for (final (status, message) in [
     (200, 'Не удалось прочитать ответ сервера'),
-    (404, 'Проверка слогов пока недоступна на сервере'),
+    (404, 'Проверка произношения пока недоступна на сервере'),
   ]) {
     test(
       'ответ $status без результата слога остаётся техническим сбоем',
@@ -199,8 +208,14 @@ void main() {
         );
         addTearDown(checker.dispose);
         await checker.start();
-        expect(await checker.stopSyllable(expected: 'بِ'), isNull);
-        expect(checker.syllableResult.value, isNull);
+        expect(
+          await checker.stop(
+            expected: 'بِ',
+            type: PronunciationUnitType.syllable,
+          ),
+          isNull,
+        );
+        expect(checker.result.value, isNull);
         expect(checker.error.value, message);
         expect(
           checker.failure.value,

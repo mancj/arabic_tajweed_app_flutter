@@ -128,14 +128,15 @@ class Exercise {
   Atom get answer => isChoice ? options[answerIndex] : atom;
 
   /// Какие элементы действительно проверяет задание. Сборка раскладывает
-  /// всю семью форм или слогов, а не только [atom].
-  List<Atom> get resultAtoms =>
-      connectionBuildQuestion?.resultAtoms ??
-      wordBuildQuestion?.resultAtoms ??
-      (mode == ExerciseMode.harakaForLetters
-          ? List.unmodifiable(sequenceOrder)
-          : mode == ExerciseMode.positionToForm ||
-                mode == ExerciseMode.harakaSequence
-          ? List.unmodifiable(options)
-          : [atom]);
+  /// всю семью форм или слогов. В разделе слов проверяется целое слово.
+  List<Atom> get resultAtoms => atom.kind == AtomKind.word
+      ? [atom]
+      : connectionBuildQuestion?.resultAtoms ??
+            wordBuildQuestion?.resultAtoms ??
+            (mode == ExerciseMode.harakaForLetters
+                ? List.unmodifiable(sequenceOrder)
+                : mode == ExerciseMode.positionToForm ||
+                      mode == ExerciseMode.harakaSequence
+                ? List.unmodifiable(options)
+                : [atom]);
 }

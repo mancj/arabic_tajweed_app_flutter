@@ -1,14 +1,15 @@
 // Проверяет настоящую цепочку урока, записи и HTTP-клиента: слог нельзя
-// отправить в /letter или потерять его огласовку. Неразборчивая запись не
+// отправить с типом буквы или потерять его огласовку. Неразборчивая запись не
 // тратит попытку, две ошибки дают разбор, исправление сохраняет номер попытки.
 // Технический пропуск не создаёт успех и убирает голос до конца занятия.
 // Исчерпанный голосовой бюджет не должен прерывать объяснения новых знаков.
 import 'dart:io';
+import 'dart:convert';
 import 'dart:async';
 
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
 import 'package:arabic_tajweed_app/app/widgets/drawing/tracing_shape_svg.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_pronunciation_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/lesson_audio.dart';
@@ -42,6 +43,7 @@ void main() {
   late List<RequestOptions> requests;
   var verdict = 'matched';
   var httpStatus = 200;
+  var stub = false;
 
   setUp(() async {
     mockPlatformPlugins();
@@ -51,20 +53,27 @@ void main() {
     requests = [];
     verdict = 'matched';
     httpStatus = 200;
+    stub = false;
     dio = Dio(BaseOptions(baseUrl: 'http://localhost'));
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           requests.add(options);
-          final expected = options.queryParameters['expected'] as String;
+          final target =
+              jsonDecode((options.data as FormData).fields.single.value)
+                  as Map<String, dynamic>;
+          final expected = target['expected'] as String;
           final mismatch = verdict == 'mismatch';
           final unclear = verdict == 'unclear';
           final response = Response(
             requestOptions: options,
             statusCode: httpStatus,
             data: {
-              'ожидалось': expected,
-              'услышано': unclear
+              'version': 1,
+              'target': target,
+              'recording': null,
+              'isStub': stub,
+              'heard': stub || unclear
                   ? null
                   : mismatch
                   ? expected.replaceAll(
@@ -72,10 +81,14 @@ void main() {
                       expected.contains('َ') ? 'ِ' : 'َ',
                     )
                   : expected,
-              'статус': verdict,
-              'буква_совпала': unclear ? null : true,
-              'огласовка_совпала': unclear ? null : !mismatch,
-              'подсказка': unclear
+              'status': verdict,
+              'checks': stub
+                  ? []
+                  : [
+                      {'code': 'letter', 'matched': unclear ? null : true},
+                      {'code': 'haraka', 'matched': unclear ? null : !mismatch},
+                    ],
+              'hint': unclear
                   ? 'Повторите запись ближе к микрофону.'
                   : mismatch
                   ? 'Обратите внимание на огласовку.'
@@ -120,6 +133,7 @@ void main() {
     String topicId = 'm.haraka.group1',
     LearningRules rules = const LearningRules(),
     bool prepareVoice = true,
+    ExerciseMode voiceMode = ExerciseMode.saySyllable,
   }) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -166,36 +180,47 @@ void main() {
       for (var step = 0; step < rules.tasksPerSession * 3; step++) {
         if (controller.stage.value == LessonStage.exercise &&
             controller.card.value == null &&
-            controller.current?.mode == ExerciseMode.saySyllable) {
+            controller.current?.mode == voiceMode) {
           break;
         }
         if (controller.stage.value == LessonStage.intro) {
           final introduced = controller.introAtom!;
           await controller.nextIntro();
           if (controller.stage.value == LessonStage.exercise &&
-              controller.current?.mode == ExerciseMode.saySyllable) {
-            expect(controller.current!.atom, introduced);
+              controller.current?.mode == voiceMode) {
+            if (voiceMode == ExerciseMode.saySyllable) {
+              expect(controller.current!.atom, introduced);
+            }
           }
         } else if (controller.card.value != null) {
           final introduced = controller.card.value!;
           await controller.dismissCard();
-          if (controller.current?.mode == ExerciseMode.saySyllable) {
-            expect(controller.current!.atom, introduced);
+          if (controller.current?.mode == voiceMode) {
+            if (voiceMode == ExerciseMode.saySyllable) {
+              expect(controller.current!.atom, introduced);
+            }
           }
         } else {
           expect(controller.stage.value, LessonStage.exercise);
           await controller.answerCorrectly(advance: true);
         }
       }
-      expect(controller.current!.mode, ExerciseMode.saySyllable);
+      expect(controller.current!.mode, voiceMode);
       expect(controller.card.value, isNull);
     });
     audio.played.clear();
     await tester.pumpWidget(const GetMaterialApp(home: LessonPage()));
     await settle(tester);
     if (!prepareVoice) return;
-    expect(find.byType(SyllablePronunciationExercise), findsOneWidget);
-    expect(find.text('Прочитайте этот слог вслух'), findsOneWidget);
+    expect(find.byType(PronunciationExercise), findsOneWidget);
+    expect(
+      find.text(
+        voiceMode == ExerciseMode.sayWord
+            ? 'Прочитайте это слово вслух'
+            : 'Прочитайте этот слог вслух',
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(PlayControl), findsNothing);
     expect(audio.played, isEmpty);
     expect(controller.canSubmit, isFalse);
@@ -250,12 +275,16 @@ void main() {
     expect(log.last.isClean, isFalse);
     expect(requests, hasLength(4));
     for (final request in requests) {
-      expect(request.path, '/syllable');
-      expect(request.queryParameters, {'expected': exercise.atom.display});
+      expect(request.path, '/pronunciation/check');
+      expect(jsonDecode((request.data as FormData).fields.single.value), {
+        'type': 'vocalized_syllable',
+        'id': exercise.atom.id,
+        'expected': exercise.atom.display,
+      });
       expect((request.data as FormData).files.single.key, 'audio');
     }
     await press(tester, 'Продолжить');
-    expect(controller.pronunciation.syllableResult.value, isNull);
+    expect(controller.pronunciation.result.value, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -267,7 +296,7 @@ void main() {
     httpStatus = 404;
     await record(tester);
     expect(
-      find.text('Проверка слогов пока недоступна на сервере'),
+      find.text('Проверка произношения пока недоступна на сервере'),
       findsOneWidget,
     );
     expect(await events(tester), isEmpty);
@@ -309,6 +338,41 @@ void main() {
     expect(requests, hasLength(1));
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final isStub in [false, true]) {
+    testWidgets(
+      'слово отправляется целиком, успех записывается только слову; заглушка=$isStub',
+      (tester) async {
+        await mount(tester, topicId: 'm.join', voiceMode: ExerciseMode.sayWord);
+        stub = isStub;
+        final exercise = controller.current!;
+        await record(tester);
+        expect(
+          find.text(isStub ? 'Запись принята' : 'Слово прочитано правильно'),
+          findsOneWidget,
+        );
+        final target = jsonDecode(
+          (requests.single.data as FormData).fields.single.value,
+        );
+        expect(target, {
+          'type': 'short_word',
+          'id': exercise.atom.id,
+          'expected': exercise.atom.display,
+        });
+        final log = (await tester.runAsync(database.readAll))!
+            .whereType<ProgressEvent>()
+            .where((event) => event.mode == ExerciseMode.sayWord)
+            .toList();
+        expect(log.single.atomId, exercise.atom.id);
+        expect(log.single.correct, isTrue);
+        expect(log.single.isClean, isTrue);
+        await press(tester, 'Продолжить');
+        expect(controller.pronunciation.result.value, isNull);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 
   testWidgets('предел голоса не обрывает объяснения нового материала', (
     tester,

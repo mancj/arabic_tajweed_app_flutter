@@ -40,7 +40,7 @@ void main() {
       final card = ExplanationLoader.parse(
         await rootBundle.loadString(atom.explanationAsset!),
         sourceName: atom.explanationAsset!,
-      );
+      ).forAtom(atom);
       final glyph = card.document.blocks
           .whereType<ExplanationLetter>()
           .single

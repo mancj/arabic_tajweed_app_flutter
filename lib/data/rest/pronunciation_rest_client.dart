@@ -1,74 +1,38 @@
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:arabic_tajweed_app/data/rest/letter_check.dart';
-import 'package:arabic_tajweed_app/data/rest/rest_client.dart';
 import 'package:dio/dio.dart';
+import 'pronunciation_check.dart';
+import 'rest_client.dart';
 
-import 'syllable_check.dart';
-
-/// Проверка произношения на сервере.
+/// Общий контракт проверки произношения для любого учебного материала.
 class PronunciationRestClient extends RestClient {
   PronunciationRestClient({super.dio});
-
-  /// Проверка записи не должна ждать дольше пятнадцати секунд.
   static const checkTimeout = Duration(seconds: 15);
 
-  /// Названа ли в записи буква [expected]. Ожидается сам глиф («ت»),
-  /// а не имя. Сервер принимает wav и m4a.
-  Future<LetterCheck> checkLetter({
+  Future<PronunciationCheck> check({
     required File audio,
-    required String expected,
-    CancelToken? cancelToken,
-  }) => _checkAudio(
-    '/letter',
-    LetterCheck.fromJson,
-    audio,
-    expected,
-    cancelToken,
-  );
-
-  /// Ожидается прочитанный слог с краткой огласовкой: «بِ», а не имя буквы.
-  /// Это настоящий запрос; отсутствие метода на сервере остаётся ошибкой API.
-  Future<SyllableCheck> checkSyllable({
-    required File audio,
-    required String expected,
+    required PronunciationTarget target,
     CancelToken? cancelToken,
   }) async {
-    final check = await _checkAudio(
-      '/syllable',
-      SyllableCheck.fromJson,
-      audio,
-      expected,
-      cancelToken,
-    );
-    check.validateFor(expected);
-    return check;
-  }
-
-  Future<T> _checkAudio<T>(
-    String path,
-    T Function(Map<String, dynamic>) fromJson,
-    File audio,
-    String expected,
-    CancelToken? cancelToken,
-  ) async {
     final form = FormData.fromMap({
+      'target': jsonEncode(target.toJson()),
       'audio': await MultipartFile.fromFile(
         audio.path,
         filename: audio.uri.pathSegments.last,
       ),
     });
-    return postObject(
-      path,
-      fromJson,
+    final result = await postObject(
+      '/pronunciation/check',
+      PronunciationCheck.fromJson,
       data: form,
       cancelToken: cancelToken,
-      query: {'expected': expected},
       options: Options(
         connectTimeout: checkTimeout,
         sendTimeout: checkTimeout,
         receiveTimeout: checkTimeout,
       ),
     );
+    result.validateFor(target);
+    return result;
   }
 }

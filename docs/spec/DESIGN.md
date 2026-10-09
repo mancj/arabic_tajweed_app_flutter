@@ -77,6 +77,11 @@ Apple рекомендует отделять элементы управлен�
 [Google Identity — Branding](https://developers.google.com/identity/branding-guidelines),
 [Apple HIG — Sign in with Apple](https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple).
 
+## Декоративный фон
+
+Декоративная Rive-анимация учебных карточек располагается над заливкой фона,
+под всем содержимым: заголовком, глифом, направляющими и кнопками.
+
 ## Производительность в браузере
 
 В Web декоративные узоры карточек неподвижны, параллакс отключён.

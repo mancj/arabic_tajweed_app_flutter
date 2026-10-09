@@ -88,7 +88,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
         presentation?.feedbackTitle(
           correct: correct,
           syllableBuildEvaluation: controller.syllableBuildEvaluation.value,
-          syllableCheck: controller.pronunciation.syllableResult.value,
+          pronunciationCheck: check,
           connectionBuildEvaluation:
               controller.connectedBuildAnswer?.connectionEvaluation,
           wordBuildEvaluation: controller.connectedBuildAnswer?.wordEvaluation,
@@ -98,7 +98,7 @@ class _LessonResultSheetState extends State<LessonResultSheet>
       correct: correct,
       answerLabel: label,
       heard: check?.heard,
-      syllableCheck: controller.pronunciation.syllableResult.value,
+      pronunciationCheck: check,
       formSequenceCorrectCount: controller.formSequenceCorrectCount,
       revealFormSequenceAnswer: controller.revealFormSequenceAnswer,
       wordBuildEvaluation: controller.connectedBuildAnswer?.wordEvaluation,

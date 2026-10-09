@@ -23,7 +23,7 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_examples_grid.dart'
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_build_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/connection_build_exercise.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/word_build_exercise.dart';
-import 'package:arabic_tajweed_app/app/widgets/ui_kit/syllable_pronunciation_exercise.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_exercise.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/exercise.dart';
 import 'package:arabic_tajweed_app/domain/haraka_syllables.dart';
@@ -40,52 +40,6 @@ class LessonLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const _Centered(child: _Loader());
-}
-
-class _SayNameFeedback extends GetView<LessonController> {
-  const _SayNameFeedback({required this.exercise});
-
-  final Exercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final error = controller.pronunciation.error.value;
-      if (error != null) {
-        return RuleCard(
-          badge: 'Не вышло',
-          title: error,
-          text: 'Попробуйте ещё раз или продолжите занятие без произношения.',
-        );
-      }
-
-      final check = controller.pronunciation.result.value;
-      if (check == null || check.matched) return const SizedBox.shrink();
-
-      final heard = 'Услышано: ${check.heard} — ${check.hint}';
-      final label = exercise.atom.label;
-
-      if (check.recording.warning case final warning?) {
-        return RuleCard(
-          badge: 'Не разобрать',
-          title: 'Запись: $warning',
-          text: 'Попытка не считается. Скажите ближе к микрофону, в тишине.',
-        );
-      }
-      if (controller.wasWrong.value) {
-        return RuleCard(
-          badge: 'Ошибка',
-          title: heard,
-          text: 'Это буква $label. Нажмите «Ясно» и назовите её ещё раз.',
-        );
-      }
-      return RuleCard(
-        badge: 'Не то',
-        title: heard,
-        text: 'Ещё одна попытка: это буква $label.',
-      );
-    });
-  }
 }
 
 /// Задание на письмо: общая карточка [TracingCard]. Здесь она получает
@@ -494,16 +448,17 @@ class LessonExerciseBlock extends GetView<LessonController> {
         );
       }
 
-      if (exercise.mode == ExerciseMode.saySyllable) {
+      if (exercise.mode.isPronunciation) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _LessonProgress(),
             const Margin.vertical(16),
-            SyllablePronunciationExercise(
+            PronunciationExercise(
               key: ObjectKey(exercise),
               glyph: exercise.atom.display,
-              result: controller.pronunciation.syllableResult.value,
+              prompt: presentation.prompt,
+              result: controller.pronunciation.result.value,
               error:
                   controller.pronunciation.failure.value ==
                       PronunciationFailureKind.microphoneDenied
@@ -560,28 +515,8 @@ class LessonExerciseBlock extends GetView<LessonController> {
           const _LessonProgress(),
           const Margin.vertical(16),
           _QuestionFor(exercise: exercise, presentation: presentation),
-          if (presentation.input == LessonInputKind.pronunciation) ...[
-            const Margin.vertical(12),
-            Text(
-              'Нажмите и удерживайте\nкнопку ниже, чтобы начать запись',
-              textAlign: TextAlign.center,
-              style: UITextStyles.monoRegular12.copyWith(
-                color: UIColors.secondary2,
-              ),
-            ),
-            const Margin.vertical(4),
-            Text(
-              'Специально обученная нейросеть оценит ваше произношение.',
-              textAlign: TextAlign.center,
-              style: UITextStyles.monoRegular12.copyWith(
-                color: UIColors.secondary2,
-              ),
-            ),
-          ],
           const Margin.vertical(16),
-          if (presentation.input == LessonInputKind.pronunciation)
-            _SayNameFeedback(exercise: exercise)
-          else if (presentation.input == LessonInputKind.formSequence)
+          if (presentation.input == LessonInputKind.formSequence)
             FormSequenceExercise(
               key: ValueKey(
                 'form-sequence.${_visibleExerciseIndex(controller)}.'
