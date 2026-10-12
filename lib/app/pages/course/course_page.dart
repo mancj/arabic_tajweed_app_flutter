@@ -76,14 +76,7 @@ class CoursePage extends GetView<CourseController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              controller.allDone
-                  ? 'Сохраним знания\nв практике'
-                  : controller.hasStarted
-                  ? 'Продолжим знакомство с буквами'
-                  : 'Познакомимся\nс первыми буквами',
-              style: UITextStyles.semibold29,
-            ),
+            Text(controller.welcomeTitle, style: UITextStyles.semibold29),
             const Margin.vertical(16),
             CourseActivityWeek(
               days: controller.activityDays.toSet(),

@@ -71,7 +71,9 @@ class LessonPlan {
       for (final atom in own.values)
         atom.id:
             reviewCounts[atom.id] ??
-            (narrowLetters && atom.kind != AtomKind.concept
+            (narrowLetters &&
+                    atom.practiceProfile.isStandard &&
+                    atom.kind != AtomKind.concept
                 ? max(rules.minimumExercises(atom), rules.narrowLetterExercises)
                 : rules.minimumExercises(atom)),
     };
@@ -80,6 +82,7 @@ class LessonPlan {
       final freshConnected = newAtoms
           .where(
             (atom) =>
+                atom.practiceProfile.isStandard &&
                 atom.kind == AtomKind.letterForm &&
                 atom.form != null &&
                 atom.form != LetterForm.isolated &&
@@ -134,6 +137,17 @@ class LessonPlan {
   }
 
   void validate(Curriculum curriculum, LearningRules rules, {int? taskLimit}) {
+    final configured = _ownAtoms(curriculum).values
+        .where((atom) => !atom.practiceProfile.isStandard)
+        .groupListsBy((atom) => atom.practiceProfileId);
+    for (final entry in configured.entries) {
+      if (entry.value.length >
+          entry.value.first.practiceProfile.maxAtomsPerSession) {
+        throw StateError(
+          'Слишком большой набор для профиля ${entry.key}; разделите тему',
+        );
+      }
+    }
     final minimum = minimumTaskCount(curriculum, rules);
     final limit = taskLimit ?? rules.tasksPerSession;
     final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
@@ -198,11 +212,15 @@ class LessonPlanner {
     final stage = activeStage(ctx, topicIds: topicIds);
     final stageAtomIds = stage == null ? null : _atomIdsForStage(stage);
     final deferred = _deferred(ctx, sessionId, atomIds: stageAtomIds);
-    final review = _reviewQueue(
-      ctx,
-      sessionId,
-      atomIds: stageAtomIds,
-    ).where((id) => (previousCounts[id] ?? 0) < _maxDrillsPerAtom).toList();
+    final review = _reviewQueue(ctx, sessionId, atomIds: stageAtomIds)
+        .where(
+          (id) =>
+              (previousCounts[id] ?? 0) <
+              _practiceLimit(
+                curriculum.nodes.firstWhere((node) => node.atom.id == id).atom,
+              ),
+        )
+        .toList();
 
     // 1. Потолок отложенных. Предохранитель на предохранитель: иначе
     //    человек формально не застревает, а фактически ничего не учит.
@@ -301,17 +319,27 @@ class LessonPlanner {
                   false),
         )
         .map((node) => node.atom.id);
-    final candidates = {
-      ...due,
-      ...familiar,
-    }.where((id) => (previousCounts[id] ?? 0) < _maxDrillsPerAtom);
+    final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
+    final candidates = curriculum
+        .limitPracticeAtoms(
+          {...due, ...familiar}
+              .map((id) => byId[id]!)
+              .where(
+                (atom) => (previousCounts[atom.id] ?? 0) < _practiceLimit(atom),
+              ),
+          selected: previousCounts.keys.map((id) => byId[id]).nonNulls,
+        )
+        .map((atom) => atom.id)
+        .toList();
     final counts = <String, int>{};
     var remaining = taskLimit;
     while (remaining > 0) {
       var added = false;
       for (final id in candidates) {
         final available =
-            _maxDrillsPerAtom - (previousCounts[id] ?? 0) - (counts[id] ?? 0);
+            _practiceLimit(byId[id]!) -
+            (previousCounts[id] ?? 0) -
+            (counts[id] ?? 0);
         if (available <= 0) continue;
         counts.update(id, (count) => count + 1, ifAbsent: () => 1);
         remaining--;
@@ -464,7 +492,7 @@ class LessonPlanner {
           (n) =>
               n.atom.kind != AtomKind.concept &&
               ctx.stateOf(n.atom.id) != AtomState.fresh &&
-              (previousCounts[n.atom.id] ?? 0) < _maxDrillsPerAtom &&
+              (previousCounts[n.atom.id] ?? 0) < _practiceLimit(n.atom) &&
               !(ctx.progress[n.atom.id]?.isDeferredAt(sessionId, rules) ??
                   false) &&
               scope.contains(n.atom.id),
@@ -527,18 +555,31 @@ class LessonPlanner {
     Set<String>? atomIds,
     int? checkpointLetters,
   }) {
-    final candidates = curriculum.nodes
-        .where((node) => atomIds == null || atomIds.contains(node.atom.id))
-        .map((node) => node.atom)
-        .where(
-          (atom) =>
-              atom.kind != AtomKind.concept &&
-              ctx.stateOf(atom.id) != AtomState.fresh &&
-              !(ctx.progress[atom.id]?.isDeferredAt(sessionId, rules) ??
-                  false) &&
-              (previousCounts[atom.id] ?? 0) < _maxDrillsPerAtom,
+    final candidates = curriculum
+        .limitPracticeAtoms(
+          curriculum.nodes
+              .where(
+                (node) => atomIds == null || atomIds.contains(node.atom.id),
+              )
+              .map((node) => node.atom)
+              .where(
+                (atom) =>
+                    atom.kind != AtomKind.concept &&
+                    ctx.stateOf(atom.id) != AtomState.fresh &&
+                    !(ctx.progress[atom.id]?.isDeferredAt(sessionId, rules) ??
+                        false) &&
+                    (previousCounts[atom.id] ?? 0) < _practiceLimit(atom),
+              )
+              .sorted((a, b) => _reviewPriority(a, b, ctx, sessionId)),
+          selected: previousCounts.keys
+              .map(
+                (id) => curriculum.nodes
+                    .firstWhereOrNull((node) => node.atom.id == id)
+                    ?.atom,
+              )
+              .nonNulls,
         )
-        .sorted((a, b) => _reviewPriority(a, b, ctx, sessionId));
+        .toList();
     if (candidates.isEmpty) {
       return _buildPlan(
         template: LessonTemplate.review,
@@ -667,7 +708,7 @@ class LessonPlanner {
       for (final atom in atoms) {
         if (!needsMore()) break;
         final used = (previousCounts[atom.id] ?? 0) + (counts[atom.id] ?? 0);
-        if (used >= _maxDrillsPerAtom) continue;
+        if (used >= _practiceLimit(atom)) continue;
         counts.update(atom.id, (count) => count + 1, ifAbsent: () => 1);
         added = true;
       }
@@ -711,7 +752,7 @@ class LessonPlanner {
       );
       final available = min(
         remaining,
-        _maxDrillsPerAtom - (previousCounts[id] ?? 0),
+        _practiceLimit(atom) - (previousCounts[id] ?? 0),
       );
       final scheduled = min(count, available);
       if (scheduled <= 0) continue;
@@ -744,9 +785,12 @@ class LessonPlanner {
     var remaining = limit - newAtoms.map(rules.minimumExercises).sum;
     final selected = <String>[];
     final byId = {for (final node in curriculum.nodes) node.atom.id: node.atom};
-    for (final id in reviewAtoms.toSet()) {
-      final atom = byId[id];
-      if (atom == null || newAtoms.any((a) => a.id == id)) continue;
+    for (final atom in curriculum.limitPracticeAtoms(
+      reviewAtoms.toSet().map((id) => byId[id]).nonNulls,
+      selected: newAtoms,
+    )) {
+      final id = atom.id;
+      if (newAtoms.any((a) => a.id == id)) continue;
       final minimum = rules.minimumExercises(atom);
       if (minimum > remaining) continue;
       selected.add(id);
@@ -807,6 +851,10 @@ class LessonPlanner {
 
   /// Держится в паре с потолком повторов у генератора.
   static const _maxDrillsPerAtom = 5;
+
+  int _practiceLimit(Atom atom) => atom.practiceProfile.isStandard
+      ? _maxDrillsPerAtom
+      : atom.practiceProfile.plannedExercises;
 
   LessonTemplate _templateFor(Atom atom) => switch (atom.kind) {
     AtomKind.concept => LessonTemplate.concept,

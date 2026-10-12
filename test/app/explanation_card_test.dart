@@ -6,7 +6,9 @@ import 'package:arabic_tajweed_app/app/widgets/ui_kit/explanation_card.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/haraka_examples_grid.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/highlighted_word.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_forms_overview.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_specimen.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_widget.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/orbital_rings_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/play_control.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/rule_card.dart';
 import 'package:arabic_tajweed_app/data/explanation_loader.dart';
@@ -267,12 +269,15 @@ void main() {
 
   // У средней формы четыре черты соединения: подсчёт всех символов
   // ошибочно отправлял одну букву в широкий режим, как длинное слово.
+  // Кольца остаются за глифом при смене компоновки: перенос фона в общий
+  // слой карточки не должен снова привязать их к центру всей карточки.
   testWidgets(
     'соединённые формы компактны, узкий экран и крупный текст безопасны',
     (tester) async {
       final track = ValueNotifier(AudioTrack.silent);
       addTearDown(track.dispose);
       for (final (asset, width, scale, compact) in [
+        ('ba.finalForm', 361.0, 1.0, true),
         ('ta.initial', 361.0, 1.0, true),
         ('ta.medial', 361.0, 1.0, true),
         ('ta.finalForm', 361.0, 1.0, true),
@@ -322,6 +327,10 @@ void main() {
             reason: asset,
           );
         }
+        final ringsCenter = tester.getCenter(find.byType(OrbitalRingsWidget));
+        final glyphCenter = tester.getCenter(find.byType(LetterSpecimenGlyph));
+        expect(ringsCenter.dx, closeTo(glyphCenter.dx, 0.01), reason: asset);
+        expect(ringsCenter.dy, closeTo(glyphCenter.dy, 0.01), reason: asset);
         expect(tester.takeException(), isNull, reason: asset);
       }
     },

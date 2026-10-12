@@ -137,17 +137,7 @@ class _OrbitalRingsWidgetState extends State<OrbitalRingsWidget> {
             ),
           ),
         ),
-        rive.RiveFailed() => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Не удалось загрузить анимацию.\n'
-              'Подробности — в журнале ошибок.',
-              textAlign: TextAlign.center,
-              style: UITextStyles.regular15,
-            ),
-          ),
-        ),
+        rive.RiveFailed() => const SizedBox.shrink(),
       },
     ),
   );

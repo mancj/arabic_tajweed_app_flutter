@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../domain/atom.dart';
 import '../domain/curriculum.dart';
+import '../domain/practice_profile.dart';
+import '../domain/reading_word.dart';
 
 /// Загружает учебный контент из ассетов. Граф, темы и тексты лежат
 /// JSON-файлами в репозитории: версионируются через git, работают офлайн.
@@ -13,11 +16,14 @@ class CurriculumLoader {
   const CurriculumLoader({this.assets = defaultAssets});
 
   static const wordBankAsset = 'assets/curriculum/words.json';
+  static const practiceProfilesAsset =
+      'assets/curriculum/practice_profiles.json';
   static const defaultAssets = [
     'assets/curriculum/stage1.json',
     'assets/curriculum/stage2.json',
     'assets/curriculum/stage3.json',
     wordBankAsset,
+    practiceProfilesAsset,
   ];
 
   final List<String> assets;
@@ -39,6 +45,19 @@ class CurriculumLoader {
   /// сортируются по этапу, поэтому файл хранения не диктует программу курса.
   static Curriculum merge(Iterable<Curriculum> stages) {
     final stageList = stages.toList();
+    final profileEntries = stageList.expand(
+      (stage) => stage.practiceProfiles.entries,
+    );
+    final profiles = Map<String, PracticeProfile>.fromEntries(profileEntries);
+    if (profiles.length != profileEntries.length) {
+      throw StateError('Повтор ID профиля практики');
+    }
+    for (final entry in profiles.entries) {
+      entry.value.validate(entry.key);
+    }
+    if (profiles['standard']?.isStandard == false) {
+      throw StateError('Стандартный профиль должен сохранять прежние правила');
+    }
     final words = [for (final stage in stageList) ...stage.words];
     final byId = {for (final word in words) word.id: word};
     if (byId.length != words.length) {
@@ -56,24 +75,42 @@ class CurriculumLoader {
       nodes: [
         for (final stage in stageList)
           for (final node in stage.nodes)
-            if (node.atom.wordId case final id?)
-              CurriculumNode(
-                atom: node.atom.copyWith(
-                  display:
-                      (byId[id] ?? (throw StateError('Не найдено слово $id')))
-                          .display,
-                  audioAsset: byId[id]!.audioAsset,
-                ),
-                requirement: node.requirement,
-              )
-            else
-              node,
+            CurriculumNode(
+              atom: _resolveAtom(node.atom, byId, profiles),
+              requirement: node.requirement,
+            ),
       ],
       topics: [
         for (final stage in stageList) ...stage.topics,
       ].sortedBy((topic) => topic.stage),
       words: words,
       wordSets: sets,
+      practiceProfiles: profiles,
     );
+  }
+
+  static Atom _resolveAtom(
+    Atom source,
+    Map<String, ReadingWord> words,
+    Map<String, PracticeProfile> profiles,
+  ) {
+    final profile =
+        profiles[source.practiceProfileId] ??
+        (source.practiceProfileId == 'standard'
+            ? const PracticeProfile.standard()
+            : throw StateError(
+                'Неизвестный профиль ${source.practiceProfileId} у ${source.id}',
+              ));
+    final word = source.wordId == null
+        ? null
+        : words[source.wordId] ??
+              (throw StateError('Не найдено слово ${source.wordId}'));
+    final atom = source.copyWith(
+      display: word?.display,
+      audioAsset: word?.audioAsset,
+      practiceProfile: profile,
+    );
+    profile.validateFor(atom);
+    return atom;
   }
 }

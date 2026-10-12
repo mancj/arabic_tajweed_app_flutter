@@ -5,6 +5,7 @@ import 'package:arabic_tajweed_app/app/widgets/app_scaffold.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/letter_learned_popup.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
+import 'package:arabic_tajweed_app/app/pages/streak/weekly_streak_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -96,6 +97,12 @@ class DebugPage extends GetView<DebugController> {
                 title: 'Урок',
                 subtitle: 'Точка входа в курс',
                 onTap: controller.openLesson,
+              ),
+              _DebugTile(
+                icon: Icons.local_fire_department_outlined,
+                title: 'Недельный стрик',
+                subtitle: 'Поздравление с семью днями занятий',
+                onTap: () => Get.toNamed(WeeklyStreakPage.routeName),
               ),
               _DebugTile(
                 icon: Icons.menu_book_outlined,

@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
-import 'package:get/get.dart';
 
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
@@ -24,9 +23,14 @@ Duration _delay(Duration delay) => 100.ms + delay;
 
 /// Итог урока или повторения со своей шапкой и действием закрытия.
 class LessonFinishScreen extends StatelessWidget {
-  const LessonFinishScreen({required this.controller, super.key});
+  const LessonFinishScreen({
+    required this.controller,
+    required this.onClose,
+    super.key,
+  });
 
   final LessonController controller;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +41,15 @@ class LessonFinishScreen extends StatelessWidget {
     return AppScaffold(
       key: kDebugMode ? UniqueKey() : null,
       title: isReview ? 'Повторение' : 'Урок',
-      bottomBar: NextButton(title: 'Закрыть', onTap: Get.back).animate().fadeIn(
-        duration: 200.ms,
-        delay: _delay(1000.ms),
-        curve: Curves.easeInOut,
-      ),
+      bottomBar:
+          NextButton(
+            title: controller.weeklyStreak.value == null ? 'Закрыть' : 'Дальше',
+            onTap: onClose,
+          ).animate().fadeIn(
+            duration: 200.ms,
+            delay: _delay(1000.ms),
+            curve: Curves.easeInOut,
+          ),
       builder: (context, insets) => Stack(
         fit: StackFit.expand,
         children: [
@@ -551,7 +559,10 @@ class _LearnedTile extends StatelessWidget {
                     UISVGAssets.bookOutline,
                     width: 24,
                     height: 24,
-                    colorFilter: ColorFilter.mode(UIColors.primary, BlendMode.srcIn),
+                    colorFilter: ColorFilter.mode(
+                      UIColors.primary,
+                      BlendMode.srcIn,
+                    ),
                   )
                 : Text(
                     atom.display,

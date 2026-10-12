@@ -68,6 +68,12 @@ Curriculum _$CurriculumFromJson(Map<String, dynamic> json) => Curriculum(
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       ) ??
       const {},
+  practiceProfiles:
+      (json['practiceProfiles'] as Map<String, dynamic>?)?.map(
+        (k, e) =>
+            MapEntry(k, PracticeProfile.fromJson(e as Map<String, dynamic>)),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$CurriculumToJson(Curriculum instance) =>
@@ -76,4 +82,5 @@ Map<String, dynamic> _$CurriculumToJson(Curriculum instance) =>
       'topics': instance.topics,
       'words': instance.words,
       'wordSets': instance.wordSets,
+      'practiceProfiles': instance.practiceProfiles,
     };

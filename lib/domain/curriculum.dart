@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'atom.dart';
 import 'atom_state.dart';
 import 'reading_word.dart';
+import 'practice_profile.dart';
 
 part 'curriculum.g.dart';
 
@@ -169,6 +170,7 @@ class Curriculum {
     this.topics = const [],
     this.words = const [],
     this.wordSets = const {},
+    this.practiceProfiles = const {},
   });
 
   factory Curriculum.fromJson(Map<String, dynamic> json) =>
@@ -178,6 +180,36 @@ class Curriculum {
   final List<Topic> topics;
   final List<ReadingWord> words;
   final Map<String, List<String>> wordSets;
+  final Map<String, PracticeProfile> practiceProfiles;
+
+  Map<String, PracticeProfile> get practiceProfilesByAtom => {
+    for (final node in nodes)
+      if (!node.atom.practiceProfile.isStandard)
+        node.atom.id: node.atom.practiceProfile,
+  };
+
+  Iterable<Atom> limitPracticeAtoms(
+    Iterable<Atom> candidates, {
+    Iterable<Atom> selected = const [],
+  }) sync* {
+    final idsByProfile = <String, Set<String>>{};
+    for (final atom in selected) {
+      if (!atom.practiceProfile.isStandard) {
+        idsByProfile.putIfAbsent(atom.practiceProfileId, () => {}).add(atom.id);
+      }
+    }
+    for (final atom in candidates) {
+      if (!atom.practiceProfile.isStandard) {
+        final ids = idsByProfile.putIfAbsent(atom.practiceProfileId, () => {});
+        if (!ids.contains(atom.id) &&
+            ids.length >= atom.practiceProfile.maxAtomsPerSession) {
+          continue;
+        }
+        ids.add(atom.id);
+      }
+      yield atom;
+    }
+  }
 
   List<ReadingWord> wordsForSet(String id) {
     final byId = {for (final word in words) word.id: word};

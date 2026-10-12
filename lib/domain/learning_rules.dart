@@ -150,40 +150,58 @@ class LearningRules {
   /// Каждую форму темы спрашиваем; отдельную букву ещё пишем в двух
   /// режимах и называем вслух; слог читаем, пишем и произносим.
   /// Понятия проходят только через объяснение.
-  int minimumExercises(Atom atom) => switch (atom) {
-    Atom(kind: AtomKind.concept) => 0,
-    Atom(kind: AtomKind.word, wordId: String()) => requirePronunciation ? 2 : 1,
-    Atom(kind: AtomKind.haraka, tracing: String()) => 4,
-    Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => 3,
-    Atom(letterId: String(), form: LetterForm.isolated) => 3,
-    _ => 1,
-  };
+  int minimumExercises(Atom atom) => !atom.practiceProfile.isStandard
+      ? atom.practiceProfile.plannedExercises
+      : switch (atom) {
+          Atom(kind: AtomKind.concept) => 0,
+          Atom(kind: AtomKind.word, wordId: String()) =>
+            requirePronunciation ? 2 : 1,
+          Atom(kind: AtomKind.haraka, tracing: String()) => 4,
+          Atom(
+            kind: AtomKind.syllable,
+            tracing: String(),
+            audioAsset: String(),
+          ) =>
+            3,
+          Atom(letterId: String(), form: LetterForm.isolated) => 3,
+          _ => 1,
+        };
 
   /// Узнавание не заменяет письмо: до закрытия темы базовая буква проходит
   /// голос и два вида письма, а каждый звучащий слог — дорисовывание и голос.
-  Set<ExerciseMode> requiredPracticeModes(Atom atom) => switch (atom) {
-    Atom(kind: AtomKind.word, wordId: String()) => {
-      ExerciseMode.wordBuild,
-      if (requirePronunciation) ExerciseMode.sayWord,
-    },
-    Atom(kind: AtomKind.haraka, tracing: String()) => {
-      ExerciseMode.trace,
-      ExerciseMode.traceFromMemory,
-      if (requirePronunciation) ExerciseMode.saySyllable,
-    },
-    Atom(kind: AtomKind.syllable, tracing: String(), audioAsset: String()) => {
-      ExerciseMode.drawHarakaForSound,
-      if (requirePronunciation) ExerciseMode.saySyllable,
-    },
-    Atom(letterId: String(), form: LetterForm.isolated) => {
-      if (atom.tracing != null) ...{
-        ExerciseMode.trace,
-        ExerciseMode.traceFromMemory,
-      },
-      if (requirePronunciation) ExerciseMode.sayName,
-    },
-    _ => const {},
-  };
+  Set<ExerciseMode> requiredPracticeModes(Atom atom) =>
+      !atom.practiceProfile.isStandard
+      ? atom.practiceProfile.requiredModes
+            .where((mode) => requirePronunciation || !mode.isPronunciation)
+            .toSet()
+      : switch (atom) {
+          Atom(kind: AtomKind.word, wordId: String()) => {
+            ExerciseMode.wordBuild,
+            if (requirePronunciation) ExerciseMode.sayWord,
+          },
+          Atom(kind: AtomKind.haraka, tracing: String()) => {
+            ExerciseMode.trace,
+            ExerciseMode.traceFromMemory,
+            if (requirePronunciation) ExerciseMode.saySyllable,
+          },
+          Atom(
+            kind: AtomKind.syllable,
+            tracing: String(),
+            audioAsset: String(),
+          ) =>
+            {
+              ExerciseMode.drawHarakaForSound,
+              if (requirePronunciation) ExerciseMode.saySyllable,
+            },
+          Atom(letterId: String(), form: LetterForm.isolated) => {
+            if (atom.tracing != null) ...{
+              ExerciseMode.trace,
+              ExerciseMode.traceFromMemory,
+            },
+            if (requirePronunciation) ExerciseMode.sayName,
+          },
+          _ => const {},
+        };
 
   /// После скольких промахов подряд по одной части буквы холст показывает,
   /// как она пишется: открывает контур и показ. Это подсказка, а не ошибка:

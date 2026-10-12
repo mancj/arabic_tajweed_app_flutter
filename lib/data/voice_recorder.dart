@@ -25,7 +25,8 @@ class VoiceRecorder {
   final ValueNotifier<double> _level = ValueNotifier(0);
   MicrophonePermissionResult? lastPermissionResult;
 
-  /// Текущий нормированный уровень микрофона для живой дорожки записи.
+  /// Линейная пиковая амплитуда 0–1 для живой дорожки записи.
+  /// Виджет сам переводит её в логарифмическую шкалу, файл не усиливается.
   ValueListenable<double> get level => _level;
 
   RecorderController get _recorder => _controller ??= RecorderController()

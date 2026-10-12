@@ -16,6 +16,10 @@ class SharedPreferenceManager {
     defaultValue: ApiConfig.baseUrl,
   );
   late final colorScheme = StringSharedPref('debugColorScheme', _prefs);
+  late final weeklyStreakCelebratedStart = DateTimeSharedPref(
+    'weeklyStreakCelebratedStart',
+    _prefs,
+  );
   // Создаётся один раз при запуске приложения. Сбой голоса и выбор пропуска
   // действуют до завершения этого запуска, а не сохраняются на устройстве.
   bool pronunciationDisabledForRun = false;

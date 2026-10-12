@@ -1,5 +1,5 @@
-// Слова должны тренироваться теми же сборками, что введены в огласовках,
-// но иметь собственный прогресс, обязательную полную сборку и интервалы.
+// Слова получают короткую практику без многократной полной сборки,
+// сохраняют собственный прогресс, обязательную полную сборку и интервалы.
 // Проверяем настоящий банк: разрывы, длинные слова, записи и снятие подсказок.
 // Выбор звучания по написанному слову не возвращается в повторах и доборе.
 import 'dart:io';
@@ -65,14 +65,14 @@ void main() {
         (atom) => atom.kind == AtomKind.word,
       )) {
         final ownTasks = tasks.where((task) => task.atom == word).toList();
-        expect(ownTasks.length, lessThanOrEqualTo(5));
+        expect(ownTasks.length, lessThanOrEqualTo(3));
         expect(
           ownTasks.map((task) => task.mode),
           isNot(contains(ExerciseMode.letterToSound)),
         );
         expect(
           ownTasks.map((task) => task.mode),
-          containsAll([ExerciseMode.connectionBuild, ExerciseMode.wordBuild]),
+          containsAll([ExerciseMode.soundToLetter, ExerciseMode.wordBuild]),
         );
         final length = curriculum.words
             .singleWhere((example) => example.id == word.wordId)
@@ -168,7 +168,6 @@ void main() {
           previousTaskCount: first.length,
         );
         expect(first, isNotEmpty);
-        expect(extra, isNotEmpty);
         expect(
           [...first, ...extra].map((task) => task.mode),
           isNot(contains(ExerciseMode.letterToSound)),

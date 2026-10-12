@@ -41,12 +41,14 @@
       "lam_a_ayn_i_ba_a",
       "nun_a_jim_a_hha_a",
       "kaf_a_sin_a_ba_a",
+      "kaf_u_ta_i_ba_a",
       "dal_a_ra_a_sin_a",
       "ra_a_sin_a_mim_a",
       "shin_a_ra_i_ba_a",
       "fa_a_ra_i_hha_a",
       "dal_a_kha_a_lam_a",
       "ta_a_ra_a_kaf_a",
+      "dhal_a_ha_a_ba_a",
       "kha_a_lam_a_qof_a_ha_u",
       "ta_a_ba_i_ayn_a_kaf_a",
       "qof_a_dal_a_ra_u_ha_u"
@@ -76,7 +78,8 @@
     "wordReadingConnected2": [
       "lam_a_ayn_i_ba_a",
       "nun_a_jim_a_hha_a",
-      "kaf_a_sin_a_ba_a"
+      "kaf_a_sin_a_ba_a",
+      "kaf_u_ta_i_ba_a"
     ],
     "wordReadingBreaks1": [
       "dal_a_ra_a_sin_a",
@@ -86,7 +89,8 @@
     "wordReadingBreaks2": [
       "fa_a_ra_i_hha_a",
       "dal_a_kha_a_lam_a",
-      "ta_a_ra_a_kaf_a"
+      "ta_a_ra_a_kaf_a",
+      "dhal_a_ha_a_ba_a"
     ],
     "wordReadingLong": [
       "kha_a_lam_a_qof_a_ha_u",
@@ -130,7 +134,8 @@
         "ayn.fatha"
       ],
       "recorded": true,
-      "atomId": "word.mim_a_ayn_a"
+      "atomId": "word.mim_a_ayn_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "ba_i_kaf_a",
@@ -149,7 +154,8 @@
         "kaf.fatha"
       ],
       "recorded": true,
-      "atomId": "word.ba_i_kaf_a"
+      "atomId": "word.ba_i_kaf_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "lam_a_kaf_i",
@@ -241,7 +247,8 @@
         "ba.fatha"
       ],
       "atomId": "word.kataba",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "kaf_a_sin_a_ba_a",
@@ -261,7 +268,8 @@
         "ba.fatha"
       ],
       "recorded": true,
-      "atomId": "word.kaf_a_sin_a_ba_a"
+      "atomId": "word.kaf_a_sin_a_ba_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "ta_a_ra_a_kaf_a",
@@ -281,7 +289,8 @@
         "kaf.fatha"
       ],
       "recorded": true,
-      "atomId": "word.ta_a_ra_a_kaf_a"
+      "atomId": "word.ta_a_ra_a_kaf_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "kha_a_lam_a_qof_a",
@@ -320,7 +329,8 @@
         "lam.fatha"
       ],
       "recorded": true,
-      "atomId": "word.dal_a_kha_a_lam_a"
+      "atomId": "word.dal_a_kha_a_lam_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "dhal_a_ha_a_ba_a",
@@ -339,7 +349,9 @@
         "ha.fatha",
         "ba.fatha"
       ],
-      "recorded": true
+      "recorded": true,
+      "atomId": "word.dhal_a_ha_a_ba_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "sin_a_mim_i_ayn_a",
@@ -359,7 +371,8 @@
         "ayn.fatha"
       ],
       "atomId": "word.samia",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "shin_a_ra_i_ba_a",
@@ -379,7 +392,8 @@
         "ba.fatha"
       ],
       "atomId": "word.shariba",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "ayn_a_lam_i_mim_a",
@@ -474,7 +488,9 @@
         "ta.kasra",
         "ba.fatha"
       ],
-      "recorded": true
+      "recorded": true,
+      "atomId": "word.kaf_u_ta_i_ba_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "jim_u_ayn_i_lam_a",
@@ -799,7 +815,8 @@
         "ha.damma"
       ],
       "recorded": true,
-      "atomId": "word.kha_a_lam_a_qof_a_ha_u"
+      "atomId": "word.kha_a_lam_a_qof_a_ha_u",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "dhal_u_kaf_i_ra_a",
@@ -1337,7 +1354,8 @@
         "ha.damma"
       ],
       "recorded": true,
-      "atomId": "word.qof_a_dal_a_ra_u_ha_u"
+      "atomId": "word.qof_a_dal_a_ra_u_ha_u",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "lam_i_ya_a_dhal_a_ra_a",
@@ -2309,7 +2327,8 @@
         "kaf.fatha"
       ],
       "recorded": true,
-      "atomId": "word.ta_a_ba_i_ayn_a_kaf_a"
+      "atomId": "word.ta_a_ba_i_ayn_a_kaf_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "waw_a_to_u_ba_i_ayn_a",
@@ -2560,7 +2579,8 @@
         "note": "[Словарь Qabas, «بِمَ»](https://sina.birzeit.edu/qabas/lemma/202004332)"
       },
       "recorded": true,
-      "atomId": "word.ba_i_mim_a"
+      "atomId": "word.ba_i_mim_a",
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "kaf_a_ba_u_ra_a",
@@ -2645,7 +2665,8 @@
         "url": "assets/explanations/ru/word.darasa.yaml"
       },
       "atomId": "word.darasa",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "ra_a_sin_a_mim_a",
@@ -2662,7 +2683,8 @@
         "url": "assets/explanations/ru/word.rasama.yaml"
       },
       "atomId": "word.rasama",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "ayn_a_mim_i_lam_a",
@@ -2679,7 +2701,8 @@
         "url": "assets/explanations/ru/word.amila.yaml"
       },
       "atomId": "word.amila",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "fa_a_ra_i_hha_a",
@@ -2696,7 +2719,8 @@
         "url": "assets/explanations/ru/word.fariha.yaml"
       },
       "atomId": "word.fariha",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "lam_a_ayn_i_ba_a",
@@ -2713,7 +2737,8 @@
         "url": "assets/explanations/ru/word.laiba.yaml"
       },
       "atomId": "word.laiba",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     },
     {
       "id": "nun_a_jim_a_hha_a",
@@ -2730,7 +2755,8 @@
         "url": "assets/explanations/ru/word.najaha.yaml"
       },
       "atomId": "word.najaha",
-      "recorded": true
+      "recorded": true,
+      "practiceProfileId": "compactReading"
     }
   ]
 }

@@ -136,15 +136,20 @@ class ExerciseGenerator {
     final fresh = plan.newAtoms.where(_drillable).toList();
 
     final spaced = _prepareSpacedReview(
-      plan.spacedReview
-          .map(_atomById)
-          .nonNulls
+      _limitProfileAtoms(plan.spacedReview.map(_atomById).nonNulls, [
+            ...fresh,
+            ...review,
+          ], previousCounts)
           .where(_drillable)
-          .where((atom) => (previousCounts[atom.id] ?? 0) < _maxPerAtom)
+          .where(
+            (atom) => (previousCounts[atom.id] ?? 0) < _practiceLimit(atom),
+          )
           .toList(),
       ctx,
       pool,
       previousFormSequences,
+      previousCounts,
+      previousPronunciations,
     );
 
     final schedule = _schedule(
@@ -155,6 +160,7 @@ class ExerciseGenerator {
       plan.minimumExerciseCounts(curriculum, rules),
       limit,
       previousCounts,
+      previousPronunciations: previousPronunciations,
       narrowBaseLetters: plan.isNarrowBaseLetterBlock(curriculum),
     );
     final syllablePronunciationAtoms = _limitedPronunciationAtoms(
@@ -205,7 +211,18 @@ class ExerciseGenerator {
         ctx,
         pool.toList(),
         sessionId,
-        slot: _Slot(index: index, count: slots[atom]!),
+        slot: _Slot(
+          index:
+              index +
+              (atom.practiceProfile.isStandard
+                  ? 0
+                  : max(
+                      0,
+                      (previousCounts[atom.id] ?? 0) -
+                          (previousPronunciations.contains(atom.id) ? 1 : 0),
+                    )),
+          count: slots[atom]!,
+        ),
         traced: traced,
         spoken: spoken,
         sequenced: sequenced,
@@ -251,12 +268,140 @@ class ExerciseGenerator {
       previousTaskCount,
       previousWordPreparations,
     );
-    return _includeSyllableBuilds(
+    final withSyllableBuilds = _includeSyllableBuilds(
       withWordPreparations,
       pool,
       ctx,
       previousSyllableChoices,
     );
+    return _includeProfilePronunciations(
+      withSyllableBuilds,
+      plan,
+      ctx,
+      previousCounts,
+      previousPronunciations,
+      previousTaskCount,
+      plan.isFocusedReview &&
+              !plan.purpose.isMixedReview &&
+              plan.minimumTaskCount(curriculum, rules) <=
+                  rules.focusedReviewTasks
+          ? min(limit, rules.focusedReviewTasks)
+          : limit,
+      unavailableModes,
+    );
+  }
+
+  int _practiceLimit(Atom atom) => atom.practiceProfile.isStandard
+      ? _maxPerAtom
+      : atom.practiceProfile.maxExercisesPerSession;
+
+  /// Ограничиваем только назначенный профиль. Стандартный материал
+  /// сохраняет прежний подбор и порядок кандидатов.
+  Iterable<Atom> _limitProfileAtoms(
+    Iterable<Atom> candidates,
+    Iterable<Atom> own,
+    Map<String, int> previousCounts,
+  ) => curriculum.limitPracticeAtoms(
+    candidates,
+    selected: [...own, ...previousCounts.keys.map(_atomById).nonNulls],
+  );
+
+  /// Голос добавляется после двух обычных проверок, не заменяя сборку
+  /// или чтение. Квота и предел атома общие для всех блоков сессии.
+  List<Exercise> _includeProfilePronunciations(
+    List<Exercise> exercises,
+    LessonPlan plan,
+    CurriculumContext ctx,
+    Map<String, int> previousCounts,
+    Set<String> previousPronunciations,
+    int previousTaskCount,
+    int limit,
+    Set<ExerciseMode> unavailableModes,
+  ) {
+    if (!rules.requirePronunciation ||
+        unavailableModes.any((mode) => mode.isPronunciation)) {
+      return exercises;
+    }
+    final candidates =
+        _limitProfileAtoms(
+              [
+                ...exercises.map((e) => e.atom),
+                ...plan.newAtoms,
+                ...plan.reviewAtoms.map(_atomById).nonNulls,
+              ],
+              exercises.map((e) => e.atom),
+              previousCounts,
+            )
+            .toSet()
+            .where(
+              (atom) =>
+                  !atom.practiceProfile.isStandard &&
+                  atom.practiceProfile.pronunciationMode != null &&
+                  !previousPronunciations.contains(atom.id) &&
+                  (previousCounts[atom.id] ?? 0) +
+                          exercises.where((e) => e.atom == atom).length <
+                      _practiceLimit(atom),
+            )
+            .toList();
+    if (candidates.isEmpty) return exercises;
+    candidates.shuffle(_random);
+    final freshIds = plan.newAtoms.map((atom) => atom.id).toSet();
+    int priority(Atom atom) => freshIds.contains(atom.id)
+        ? 0
+        : !(ctx.progress[atom.id]?.successfulModes.contains(
+                atom.practiceProfile.pronunciationMode,
+              ) ??
+              false)
+        ? 1
+        : 2;
+    final groups = candidates
+        .sortedBy(priority)
+        .groupListsBy((atom) => atom.practiceProfile.pronunciationMode!);
+    final result = [...exercises];
+    for (final entry in groups.entries) {
+      final percent = entry.value
+          .map((atom) => atom.practiceProfile.pronunciationMaxPercent)
+          .min;
+      if (percent == 0) continue;
+      final alreadySpoken =
+          previousPronunciations
+              .map(_atomById)
+              .nonNulls
+              .where(
+                (atom) =>
+                    rules.requiredPracticeModes(atom).contains(entry.key) ||
+                    atom.practiceProfile.pronunciationMode == entry.key,
+              )
+              .length +
+          result.where((e) => e.mode == entry.key).length;
+      var count = min(entry.value.length, limit - result.length);
+      while (count > 0 &&
+          alreadySpoken + count >
+              max(
+                1,
+                min(
+                      rules.tasksPerSession,
+                      previousTaskCount + result.length + count,
+                    ) *
+                    percent ~/
+                    100,
+              )) {
+        count--;
+      }
+      for (final atom in entry.value.take(count)) {
+        final at = result.lastIndexWhere((exercise) => exercise.atom == atom);
+        result.insert(
+          at < 0 ? result.length : at + 1,
+          Exercise.direct(
+            atom: atom,
+            mode: entry.key,
+            isReview: !freshIds.contains(atom.id),
+            isRequired: true,
+          ),
+        );
+      }
+    }
+    return result;
   }
 
   /// С третьей темы огласовок два добавочных теста заменяются вводными
@@ -544,6 +689,7 @@ class ExerciseGenerator {
       return const {};
     }
     bool needsMode(Atom atom) =>
+        atom.practiceProfile.isStandard &&
         rules.requiredPracticeModes(atom).contains(mode);
     final alreadySpoken = previousPronunciations
         .map(_atomById)
@@ -838,6 +984,7 @@ class ExerciseGenerator {
     int taskLimit,
     Map<String, int> previousCounts, {
     required bool narrowBaseLetters,
+    required Set<String> previousPronunciations,
   }) {
     // Слоты под возврат старого резервируются первыми: иначе тема съедает
     // весь урок и буквы прошлых уроков не всплывают. Если тема сама
@@ -852,7 +999,17 @@ class ExerciseGenerator {
       for (final atom in {...fresh, ...review})
         atom: min(
           minimumCounts[atom.id] ?? rules.minimumExercises(atom),
-          max(0, perAtomLimit - (previousCounts[atom.id] ?? 0)),
+          max(
+            0,
+            (atom.practiceProfile.isStandard
+                    ? perAtomLimit
+                    : atom.practiceProfile.plannedExercises) -
+                (previousCounts[atom.id] ?? 0) +
+                (!atom.practiceProfile.isStandard &&
+                        previousPronunciations.contains(atom.id)
+                    ? 1
+                    : 0),
+          ),
         ),
     };
     final required = {...remaining};
@@ -882,8 +1039,16 @@ class ExerciseGenerator {
       for (final atom in remaining.keys)
         atom: max(
           required[atom]!,
-          (narrowBaseLetters ? rules.narrowLetterExercises : _maxPerAtom) -
-              (previousCounts[atom.id] ?? 0),
+          (atom.practiceProfile.isStandard
+                  ? (narrowBaseLetters
+                        ? rules.narrowLetterExercises
+                        : _maxPerAtom)
+                  : atom.practiceProfile.plannedExercises) -
+              (previousCounts[atom.id] ?? 0) +
+              (!atom.practiceProfile.isStandard &&
+                      previousPronunciations.contains(atom.id)
+                  ? 1
+                  : 0),
         ),
     };
     final cap = remaining.isEmpty
@@ -1020,6 +1185,8 @@ class ExerciseGenerator {
     CurriculumContext ctx,
     Set<Atom> pool,
     Set<String> previousFormSequences,
+    Map<String, int> previousCounts,
+    Set<String> previousPronunciations,
   ) {
     final introducedByLetter = _introducedAtoms(ctx)
         .where((atom) => atom.kind == AtomKind.letterForm)
@@ -1036,6 +1203,16 @@ class ExerciseGenerator {
     final items = <_SpacedReviewItem>[];
 
     for (final atom in candidates) {
+      if (!atom.practiceProfile.isStandard) {
+        final count = max(
+          0,
+          atom.practiceProfile.plannedExercises -
+              (previousCounts[atom.id] ?? 0) +
+              (previousPronunciations.contains(atom.id) ? 1 : 0),
+        );
+        if (count > 0) items.add(_SpacedReviewItem(atom, practiceCount: count));
+        continue;
+      }
       final letterId = atom.letterId;
       final canSequence =
           atom.kind == AtomKind.letterForm &&
@@ -1076,6 +1253,66 @@ class ExerciseGenerator {
           .length >=
       _distractorCount;
 
+  Exercise _profileQuestion(
+    Atom atom,
+    List<Atom> pool,
+    _Slot slot,
+    CurriculumContext ctx, {
+    required bool isReview,
+    required bool isRequired,
+    required bool focused,
+  }) {
+    final profile = atom.practiceProfile;
+    final missing = profile.initialModes
+        .where(
+          (mode) =>
+              rules.requiredPracticeModes(atom).contains(mode) &&
+              !(ctx.progress[atom.id]?.successfulModes.contains(mode) ?? false),
+        )
+        .toList();
+    final modes = !isReview || missing.isNotEmpty
+        ? profile.initialModes
+        : profile.reviewModes;
+    final mode = missing.isNotEmpty && slot.index == 0
+        ? missing.first
+        : modes[slot.index % modes.length];
+    if (mode.isWordPreparation) {
+      return _wordQuestion(
+            atom,
+            pool,
+            slot,
+            ctx,
+            isReview: isReview,
+            isRequired: isRequired,
+            focused: focused,
+            spoken: {},
+            allowPronunciation: false,
+            forcedMode: mode,
+          ) ??
+          (throw StateError(
+            'Не удалось построить ${mode.name} для ${atom.id}',
+          ));
+    }
+    if (mode.isTracing) {
+      return Exercise.direct(
+        atom: atom,
+        mode: mode,
+        isReview: isReview,
+        isRequired: isRequired,
+        question: mode == ExerciseMode.drawHarakaForSound
+            ? 'Послушайте и дорисуйте огласовку'
+            : null,
+      );
+    }
+    return choiceFor(
+      atom: atom,
+      pool: pool,
+      mode: mode,
+      isReview: isReview,
+      isRequired: isRequired,
+    );
+  }
+
   static bool _drillable(Atom atom) => atom.kind != AtomKind.concept;
 
   static bool _isConnectedForm(Atom atom) =>
@@ -1084,8 +1321,9 @@ class ExerciseGenerator {
   static bool _isBaseLetter(Atom atom) =>
       atom.letterId != null && atom.form == LetterForm.isolated;
 
-  static int _drillsFor(Atom atom) =>
-      atom.kind == AtomKind.haraka && atom.tracing != null
+  static int _drillsFor(Atom atom) => !atom.practiceProfile.isStandard
+      ? atom.practiceProfile.plannedExercises
+      : atom.kind == AtomKind.haraka && atom.tracing != null
       ? 4
       : _drillsPerNewAtom;
 
@@ -1107,6 +1345,17 @@ class ExerciseGenerator {
     required bool allowPronunciation,
   }) {
     final level = _levelFor(atom, ctx, sessionId);
+    if (!atom.practiceProfile.isStandard) {
+      return _profileQuestion(
+        atom,
+        pool,
+        slot,
+        ctx,
+        isReview: isReview,
+        isRequired: isRequired,
+        focused: focused,
+      );
+    }
     if (atom.kind == AtomKind.haraka && atom.tracing != null) {
       return _harakaQuestion(
         atom,
@@ -1632,12 +1881,21 @@ class ExerciseGenerator {
     required bool focused,
     required Set<String> spoken,
     required bool allowPronunciation,
+    ExerciseMode? forcedMode,
   }) {
     final example = _wordsById[atom.wordId];
     if (example == null) return null;
     final progress = ctx.progress[atom.id] ?? const AtomProgress();
+    final atoms = curriculum.nodes.map((node) => node.atom).toList();
     final content = ConnectedWordContent(
-      curriculum.nodes.map((node) => node.atom).toList(),
+      [
+        ...atoms,
+        // В слове проверяется само слово, поэтому знакомые знаки можно
+        // перенести на любую знакомую букву без новых атомов прогресса.
+        if (!atom.practiceProfile.isStandard)
+          for (final letter in atoms.where(_isBaseLetter))
+            ...HarakaSyllables.completeFamily(letter, atoms),
+      ],
       words: [example],
       random: _random,
     );
@@ -1661,7 +1919,7 @@ class ExerciseGenerator {
         allowPronunciation &&
         !spoken.contains(atom.id) &&
         (!needsAssembly || slot.count > 1);
-    if (voicePlanned && slot.isLast) {
+    if (forcedMode == null && voicePlanned && slot.isLast) {
       spoken.add(atom.id);
       return Exercise.direct(
         atom: atom,
@@ -1671,9 +1929,10 @@ class ExerciseGenerator {
       );
     }
     final mode =
-        needsAssembly && slot.index == (focused || slot.count == 1 ? 0 : 1)
-        ? ExerciseMode.wordBuild
-        : modes[(slot.index + progress.cleanStreak) % modes.length];
+        forcedMode ??
+        (needsAssembly && slot.index == (focused || slot.count == 1 ? 0 : 1)
+            ? ExerciseMode.wordBuild
+            : modes[(slot.index + progress.cleanStreak) % modes.length]);
     if (mode == ExerciseMode.soundToLetter) {
       return _vocalizedChoice(
         atom,
@@ -1721,6 +1980,22 @@ class ExerciseGenerator {
     final alternatives = candidates
         .sorted((a, b) {
           if (wordLength != null) {
+            if (atom.practiceProfile.preferSameLetters) {
+              List<String> letters(Atom candidate) =>
+                  _wordsById[candidate.wordId]?.syllableIds
+                      .map((id) => id.split('.').first)
+                      .toList() ??
+                  [];
+              int similarity(Atom candidate) =>
+                  const ListEquality<String>().equals(
+                    letters(candidate),
+                    letters(atom),
+                  )
+                  ? 0
+                  : 1;
+              final similar = similarity(a).compareTo(similarity(b));
+              if (similar != 0) return similar;
+            }
             int difference(Atom candidate) =>
                 ((_wordsById[candidate.wordId]?.syllableIds.length ??
                             wordLength) -
@@ -1941,13 +2216,15 @@ class _SpacedReview {
           ),
         );
       }
-      scheduled.add(
-        _ScheduledAtom(
-          item.atom,
-          isRequired: true,
-          forceFormSequence: item.forceFormSequence,
-        ),
-      );
+      for (var i = 0; i < item.practiceCount; i++) {
+        scheduled.add(
+          _ScheduledAtom(
+            item.atom,
+            isRequired: true,
+            forceFormSequence: item.forceFormSequence,
+          ),
+        );
+      }
     }
     return scheduled;
   }
@@ -1958,13 +2235,15 @@ class _SpacedReviewItem {
     this.atom, {
     this.recognitionAtom,
     this.forceFormSequence = false,
+    this.practiceCount = 1,
   });
 
   final Atom atom;
   final Atom? recognitionAtom;
   final bool forceFormSequence;
+  final int practiceCount;
 
-  int get slotCount => recognitionAtom == null ? 1 : 2;
+  int get slotCount => practiceCount + (recognitionAtom == null ? 0 : 1);
 }
 
 class _Picked {

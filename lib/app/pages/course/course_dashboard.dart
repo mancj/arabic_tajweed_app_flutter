@@ -2,6 +2,7 @@ import 'package:arabic_tajweed_app/app/widgets/app_gesture_detector.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/orbital_rings_widget.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
@@ -305,9 +306,9 @@ class _CourseLessonTransformation extends StatelessWidget {
   }
 }
 
-/// Понедельник–воскресенье по местному календарю. Отметка означает работу
-/// в этот день, а не завершение урока или обещанную серию без пропусков.
-class CourseActivityWeek extends StatelessWidget {
+/// Текущая неделя и последние 30 местных календарных дней. Отметка означает
+/// работу с материалом, включая незаконченные занятия.
+class CourseActivityWeek extends StatefulWidget {
   const CourseActivityWeek({
     required this.days,
     required this.today,
@@ -319,111 +320,268 @@ class CourseActivityWeek extends StatelessWidget {
   final ValueChanged<DateTime>? onDateTap;
 
   @override
+  State<CourseActivityWeek> createState() => _CourseActivityWeekState();
+}
+
+class _CourseActivityWeekState extends State<CourseActivityWeek> {
+  late final _historyDelays = List.generate(
+    30,
+    (rank) => Duration(milliseconds: rank * 25),
+  )..shuffle();
+  bool _skipAnimation = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _skipAnimation |= MediaQuery.disableAnimationsOf(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final monday = DateTime(
-      today.year,
-      today.month,
-      today.day - today.weekday + 1,
+      widget.today.year,
+      widget.today.month,
+      widget.today.day - widget.today.weekday + 1,
     );
-    const labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     return _CourseSurface(
       radius: 24,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final history = _CourseActivityHistory(
+              days: widget.days,
+              today: widget.today,
+              delays: _historyDelays,
+              skipAnimation: _skipAnimation,
+            );
+            final week = _week(monday);
+            if (constraints.maxWidth < 252 ||
+                MediaQuery.textScalerOf(context).scale(12) > 18) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  week,
+                  const Margin.vertical(16),
+                  Align(alignment: Alignment.centerRight, child: history),
+                ],
+              );
+            }
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.calendar_month_outlined,
-                  size: 18,
-                  color: UIColors.primary,
-                ),
-                const Margin.horizontal(8),
-                Text('Эта неделя', style: UITextStyles.monoSemibold14),
-                const Spacer(),
-                Text(
-                  'Ваш ритм',
-                  style: UITextStyles.monoRegular12.copyWith(
-                    color: UIColors.secondary2,
-                  ),
-                ),
+                Expanded(child: week),
+                const Margin.horizontal(16),
+                history,
               ],
-            ),
-            const Margin.vertical(16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: labels.mapIndexed((index, label) {
-                final date = DateTime(
-                  monday.year,
-                  monday.month,
-                  monday.day + index,
-                );
-                final active = days.contains(date);
-                final current = DateUtils.isSameDay(date, today);
-                final day = Semantics(
-                  button: onDateTap != null,
-                  label:
-                      '$label, ${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
-                  child: ExcludeSemantics(
-                    child: Column(
-                      children: [
-                        Text(
-                          label,
-                          style: UITextStyles.regular11.copyWith(
-                            color: current
-                                ? UIColors.text
-                                : UIColors.secondary2,
-                          ),
-                        ),
-                        const Margin.vertical(4),
-                        Container(
-                          width: 32,
-                          height: 32,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: current
-                                ? UIColors.primary
-                                : active
-                                ? UIColors.primary20
-                                : UIColors.backgroundShapes1,
-                          ),
-                          child: active
-                              ? Icon(
-                                  Icons.check_rounded,
-                                  size: 20,
-                                  color: current
-                                      ? UIColors.badgeText1
-                                      : UIColors.primary,
-                                )
-                              : Text(
-                                  '${date.day}',
-                                  style: UITextStyles.semibold12.copyWith(
-                                    color: current
-                                        ? UIColors.primaryButtonText
-                                        : UIColors.secondary2,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-                if (onDateTap == null) return day;
-                return AppGestureDetector(
-                  onTap: () => onDateTap!(date),
-                  child: day,
-                );
-              }).toList(),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
+
+  Widget _week(DateTime monday) {
+    const labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.calendar_month_outlined,
+              size: 18,
+              color: UIColors.primary,
+            ),
+            const Margin.horizontal(8),
+            Expanded(
+              child: Text('Эта неделя', style: UITextStyles.monoSemibold14),
+            ),
+          ],
+        ),
+        const Margin.vertical(16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final diameter = ((constraints.maxWidth - 6 * 4) / 7).clamp(
+              20.0,
+              28.0,
+            );
+            return SizedBox(
+              width: constraints.maxWidth,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                runSpacing: 8,
+                children: labels.mapIndexed((index, label) {
+                  final date = DateTime(
+                    monday.year,
+                    monday.month,
+                    monday.day + index,
+                  );
+                  final active = widget.days.contains(date);
+                  final current = DateUtils.isSameDay(date, widget.today);
+                  final day = Semantics(
+                    button: widget.onDateTap != null,
+                    label:
+                        '$label, ${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
+                    child: _CourseActivityFade(
+                      delay: Duration(milliseconds: index * 70),
+                      skipAnimation: _skipAnimation,
+                      child: ExcludeSemantics(
+                        child: Column(
+                        children: [
+                          Text(
+                            label,
+                            style: UITextStyles.regular11.copyWith(
+                              color: current
+                                  ? UIColors.text
+                                  : UIColors.secondary2,
+                            ),
+                          ),
+                          const Margin.vertical(4),
+                          Container(
+                            width: diameter,
+                            height: diameter,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: current
+                                  ? UIColors.primary
+                                  : active
+                                  ? UIColors.primary20
+                                  : UIColors.backgroundShapes1,
+                            ),
+                            child: active
+                                ? Icon(
+                                    Icons.check_rounded,
+                                    size: 20,
+                                    color: current
+                                        ? UIColors.badgeText1
+                                        : UIColors.primary,
+                                  )
+                                : Text(
+                                    '${date.day}',
+                                    style: UITextStyles.semibold12.copyWith(
+                                      color: current
+                                          ? UIColors.primaryButtonText
+                                          : UIColors.secondary2,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                        ),
+                      ),
+                    ),
+                  );
+                  if (widget.onDateTap == null) return day;
+                  return AppGestureDetector(
+                    onTap: () => widget.onDateTap!(date),
+                    child: day,
+                  );
+                }).toList(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _CourseActivityHistory extends StatelessWidget {
+  const _CourseActivityHistory({
+    required this.days,
+    required this.today,
+    required this.delays,
+    required this.skipAnimation,
+  });
+
+  final Set<DateTime> days;
+  final DateTime today;
+  final List<Duration> delays;
+  final bool skipAnimation;
+
+  @override
+  Widget build(BuildContext context) {
+    final dates = List.generate(
+      30,
+      (index) => DateTime(today.year, today.month, today.day - 29 + index),
+    );
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label:
+          'Последние 30 дней, с ${dates.first.day}.${dates.first.month} по ${dates.last.day}.${dates.last.month}',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          ExcludeSemantics(
+            child: Text(
+              '30 дней',
+              style: UITextStyles.monoRegular11.copyWith(
+                color: UIColors.text.withValues(alpha: .65),
+              ),
+            ),
+          ),
+          const Margin.vertical(16),
+          SizedBox(
+            width: 68,
+            child: RepaintBoundary(
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: dates.mapIndexed((index, date) {
+                  final active = days.contains(date);
+                  final current = DateUtils.isSameDay(date, today);
+                  return Semantics(
+                    label:
+                        '${date.day}.${date.month}${current ? ', сегодня' : ''}, ${active ? 'занимались' : 'без отметки'}',
+                    child: _CourseActivityFade(
+                      delay: delays[index],
+                      skipAnimation: skipAnimation,
+                      child: SizedBox(
+                        width: 6,
+                        height: 6,
+                        child: Center(
+                          child: Container(
+                            width: active ? 6 : 4,
+                            height: active ? 6 : 4,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: active
+                                  ? UIColors.primary
+                                  : UIColors.activityInactive,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CourseActivityFade extends StatelessWidget {
+  const _CourseActivityFade({
+    required this.child,
+    required this.delay,
+    required this.skipAnimation,
+  });
+
+  final Widget child;
+  final Duration delay;
+  final bool skipAnimation;
+
+  @override
+  Widget build(BuildContext context) => child
+      .animate(autoPlay: !skipAnimation, value: skipAnimation ? 1 : null)
+      .fadeIn(delay: delay, duration: 450.ms, curve: Curves.easeOutCubic);
 }
 
 class CourseOverview extends StatelessWidget {
@@ -648,7 +806,7 @@ class _CourseSurface extends StatelessWidget {
     child: Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: gradient == null ? UIColors.cardBackground : null,
+        color: gradient == null ? UIColors.cardBackground.withValues(alpha: .8) : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: UIColors.borders),

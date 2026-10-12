@@ -4,6 +4,7 @@ import 'package:arabic_tajweed_app/domain/atom_state.dart';
 import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
 import 'package:arabic_tajweed_app/domain/learning_rules.dart';
 import 'package:arabic_tajweed_app/domain/progress_event.dart';
+import 'package:arabic_tajweed_app/domain/practice_profile.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -195,6 +196,78 @@ void main() {
     );
     await repo.clear();
     expect(await repo.activityDays(), isEmpty);
+  });
+
+  // Короткий профиль не должен навсегда закрывать следующий урок порогом
+  // стандартного занятия. Смешанное занятие сохраняет более строгий порог,
+  // а повторный запуск восстанавливает выбор профиля из журнала ответов.
+  test('короткие повторы засчитываются по профилю отвеченных атомов', () async {
+    const profile = PracticeProfile(
+      initialModes: [ExerciseMode.soundToLetter],
+      reviewModes: [ExerciseMode.soundToLetter],
+      reviewLessonMinExercises: 6,
+    );
+    final profiles = {'reading': profile};
+    final compact = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+      baseLetterIds: const {'ba.isolated'},
+      practiceProfilesByAtom: profiles,
+    );
+    final day = DateTime(2026, 10, 11, 10);
+    await compact.record(
+      AtomIntroduced(atomId: 'reading', sessionId: 1, at: day),
+    );
+    await compact.finishSession(
+      sessionId: 1,
+      purpose: LessonPurpose.standard,
+      exerciseCount: 6,
+      firstTryCorrect: 6,
+      at: day,
+    );
+    for (final session in [2, 3, 4, 5]) {
+      final count = session == 2 ? 5 : 6;
+      await compact.recordAll([
+        for (var i = 0; i < count; i++)
+          ProgressEvent(
+            atomId: session == 4 && i == 0 ? 'ba.isolated' : 'reading',
+            sessionId: session,
+            at: day,
+            mode: ExerciseMode.soundToLetter,
+            correct: true,
+            attempt: 1,
+            fastEnough: true,
+          ),
+      ]);
+      await compact.finishSession(
+        sessionId: session,
+        purpose: LessonPurpose.mixedReview,
+        exerciseCount: count,
+        firstTryCorrect: count,
+        at: day,
+      );
+      final pacing = await compact.pacing(now: day);
+      expect(
+        pacing.successfulReviewsSinceLatestNew,
+        session == 5
+            ? 2
+            : session == 2
+            ? 0
+            : 1,
+      );
+    }
+    final restarted = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+      baseLetterIds: const {'ba.isolated'},
+      practiceProfilesByAtom: profiles,
+    );
+    expect(
+      (await restarted.pacing(
+        now: day,
+      )).canIntroduceNewMaterial(const LearningRules()),
+      isTrue,
+    );
   });
 
   // Брошенный или плохо выполненный повтор не открывает новый материал;

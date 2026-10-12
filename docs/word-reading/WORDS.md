@@ -36,13 +36,13 @@
 | 22 | تَرَكَ | تَ رَ كَ | [Коран 2:180](https://tanzil.net/#2:180) | `ta_a_ra_a_kaf_a.mp3` | `wordReading`, `wordBuildDebug`, `wordReadingBreaks2` |
 | 23 | خَلَقَ | خَ لَ قَ | [Коран 2:29](https://tanzil.net/#2:29) | `kha_a_lam_a_qof_a.mp3` |  |
 | 24 | دَخَلَ | دَ خَ لَ | [Коран 3:37](https://tanzil.net/#3:37) | `dal_a_kha_a_lam_a.mp3` | `wordReading`, `wordBuildDebug`, `wordReadingBreaks2` |
-| 25 | ذَهَبَ | ذَ هَ بَ | [Коран 2:17](https://tanzil.net/#2:17) | `dhal_a_ha_a_ba_a.mp3` |  |
+| 25 | ذَهَبَ | ذَ هَ بَ | [Коран 2:17](https://tanzil.net/#2:17) | `dhal_a_ha_a_ba_a.mp3` | `wordReading`, `wordReadingBreaks2` |
 | 26 | سَمِعَ | سَ مِ عَ | [Коран 3:181](https://tanzil.net/#3:181) | `sin_a_mim_i_ayn_a.mp3` | `wordReading`, `wordBuildDebug`, `wordReadingConnected1` |
 | 27 | شَرِبَ | شَ رِ بَ | [Коран 2:249](https://tanzil.net/#2:249) | `shin_a_ra_i_ba_a.mp3` | `wordReading`, `wordReadingBreaks1` |
 | 28 | عَلِمَ | عَ لِ مَ | [Коран 2:60](https://tanzil.net/#2:60) | `ayn_a_lam_i_mim_a.mp3` |  |
 | 29 | لَبِثَ | لَ بِ ثَ | [Коран 11:69](https://tanzil.net/#11:69) | `lam_a_ba_i_tha_a.mp3` |  |
 | 30 | سَخِطَ | سَ خِ طَ | [Коран 5:80](https://tanzil.net/#5:80) | `sin_a_kha_i_to_a.mp3` |  |
-| 31 | كُتِبَ | كُ تِ بَ | [Коран 2:178](https://tanzil.net/#2:178) | `kaf_u_ta_i_ba_a.mp3` | `wordBuildDebug` |
+| 31 | كُتِبَ | كُ تِ بَ | [Коран 2:178](https://tanzil.net/#2:178) | `kaf_u_ta_i_ba_a.mp3` | `wordReading`, `wordBuildDebug`, `wordReadingConnected2` |
 | 32 | جُعِلَ | جُ عِ لَ | [Коран 16:124](https://tanzil.net/#16:124) | `jim_u_ayn_i_lam_a.mp3` |  |
 | 33 | ضُرِبَ | ضُ رِ بَ | [Коран 22:73](https://tanzil.net/#22:73) | `dod_u_ra_i_ba_a.mp3` |  |
 | 34 | وُضِعَ | وُ ضِ عَ | [Коран 3:96](https://tanzil.net/#3:96) | `waw_u_dod_i_ayn_a.mp3` | `wordBuildDebug` |

@@ -8,7 +8,10 @@ import 'package:flutter_tilt/flutter_tilt.dart';
 
 /// Фоновые фигуры карточек: тихое вращение, появление и параллакс.
 class AnimatedBackgroundShapes extends StatefulWidget {
-  const AnimatedBackgroundShapes({super.key});
+  final Color? color;
+  final bool showCap;
+
+  const AnimatedBackgroundShapes({super.key, this.color, this.showCap = true});
 
   @override
   State<AnimatedBackgroundShapes> createState() =>
@@ -36,7 +39,7 @@ class _AnimatedBackgroundShapesState extends State<AnimatedBackgroundShapes> {
       final image = Image.asset(
         asset,
         fit: BoxFit.cover,
-        color: UIColors.backgroundShapes2,
+        color: widget.color ?? UIColors.backgroundShapes2,
       );
       if (still) return image;
       return DriftingRotation(
@@ -69,23 +72,24 @@ class _AnimatedBackgroundShapesState extends State<AnimatedBackgroundShapes> {
           scale: scaleFactor,
           child: parallax(parallaxOffset2, layer(_shape.$1, false)),
         ),
-        parallax(
-          parallaxOffset3,
-          Container(
-            width: scaleFactor * 100,
-            height: scaleFactor * 100,
-            alignment: Alignment.center,
-            decoration: ShapeDecoration(
-              shape: CircleBorder(
-                side: BorderSide(
-                  color: UIColors.text.withValues(alpha: .1),
-                  width: 1,
+        if (widget.showCap)
+          parallax(
+            parallaxOffset3,
+            Container(
+              width: scaleFactor * 100,
+              height: scaleFactor * 100,
+              alignment: Alignment.center,
+              decoration: ShapeDecoration(
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: UIColors.text.withValues(alpha: .1),
+                    width: 1,
+                  ),
                 ),
+                color: UIColors.cardBackground,
               ),
-              color: UIColors.cardBackground,
             ),
           ),
-        ),
       ],
     );
   }

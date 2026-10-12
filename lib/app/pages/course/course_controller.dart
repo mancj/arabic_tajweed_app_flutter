@@ -86,6 +86,7 @@ class CourseController extends GetxController {
           letterFormIds: curriculum.letterFormIds,
           baseLetterIds: curriculum.baseLetterIds,
           wordAtomIds: curriculum.wordAtomIds,
+          practiceProfilesByAtom: curriculum.practiceProfilesByAtom,
           now: () => _clock.now,
         );
         _ready = true;
@@ -129,6 +130,20 @@ class CourseController extends GetxController {
       statuses.firstWhereOrNull((s) => s.topic.id == nextPlan.value?.topicId);
   bool get allDone => statuses.isNotEmpty && statuses.every((s) => s.isDone);
   bool get hasStarted => activityDays.isNotEmpty;
+  String get welcomeTitle {
+    if (allDone) return 'Сохраним знания\nв практике';
+    return switch (currentStage) {
+      1 =>
+        hasStarted
+            ? 'Продолжим знакомство с буквами'
+            : 'Познакомимся\nс первыми буквами',
+      2 => 'Продолжим знакомство\nс огласовками',
+      3 || 5 => 'Продолжим\nчитать слова',
+      4 => 'Разберём\nзнаки чтения',
+      _ => 'Продолжим\nобучение',
+    };
+  }
+
   DateTime get today => _clock.now;
 
   Future<void> setDebugToday(DateTime date) async {

@@ -27,6 +27,7 @@ class UIColors {
     backgroundShapes2: Color.fromARGB(255, 231, 231, 231),
     backgroundShapes1: Color.fromARGB(255, 231, 231, 231),
     ornamentStroke: Color(0xFFBBC2CA),
+    activityInactive: Color(0xFFBDBDBD),
     text: Color(0xFF0C233E),
     cardBackground: Color(0xFFF7F7F7),
     coursePreviewGradientStart: Color(0xFFF7F7F7),
@@ -65,6 +66,7 @@ class UIColors {
     backgroundShapes2: Color(0xFF1C3553),
     backgroundShapes1: Color(0xFF223B5B),
     ornamentStroke: Color(0xFF43546A),
+    activityInactive: Color(0xFF454545),
     text: Color(0xFFFFFFFF),
     cardBackground: Color(0xFF132235),
     coursePreviewGradientStart: Color(0xFF102038),
@@ -105,6 +107,7 @@ class UIColors {
     backgroundShapes2: Color(0xFF2C2C2C),
     backgroundShapes1: Color(0xFF292929),
     ornamentStroke: Color.fromARGB(255, 101, 103, 106),
+    activityInactive: Color(0xFF454545),
     text: Color(0xFFFFFFFF),
     cardBackground: Color(0xFF131313),
     coursePreviewGradientStart: Color(0xFF131313),
@@ -160,6 +163,7 @@ class UIColors {
   static Color get backgroundShapes2 => _active.backgroundShapes2;
   static Color get backgroundShapes1 => _active.backgroundShapes1;
   static Color get ornamentStroke => _active.ornamentStroke;
+  static Color get activityInactive => _active.activityInactive;
   static Color get text => _active.text;
   static Color get cardBackground => _active.cardBackground;
   static Color get coursePreviewGradientStart =>
@@ -214,6 +218,7 @@ class UIColorPalette {
   final Color backgroundShapes2;
   final Color backgroundShapes1;
   final Color ornamentStroke;
+  final Color activityInactive;
   final Color text;
   final Color cardBackground;
   final Color coursePreviewGradientStart;
@@ -263,6 +268,7 @@ class UIColorPalette {
     required this.backgroundShapes2,
     required this.backgroundShapes1,
     required this.ornamentStroke,
+    required this.activityInactive,
     required this.text,
     required this.cardBackground,
     required this.coursePreviewGradientStart,

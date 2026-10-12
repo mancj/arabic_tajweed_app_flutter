@@ -112,6 +112,8 @@ class UITextStyles {
     letterSpacing: -.8,
   );
   static TextStyle get semibold32 => _style(size: 32, weight: FontWeight.w600);
+  static TextStyle get semibold144Compact =>
+      _style(size: 144, weight: FontWeight.w600, height: 1, letterSpacing: -4);
 
   static TextStyle get bold17 => _style(size: 17, weight: FontWeight.w700);
 

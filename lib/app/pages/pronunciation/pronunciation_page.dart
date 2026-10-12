@@ -140,7 +140,7 @@ class _Feedback extends GetView<PronunciationController> {
       check.hint,
       if (check.canEvaluate && check.heard != null) 'Услышано: ${check.heard}.',
       if (rec != null)
-        'Запись: речь с ${rec.speechFrom} с, громкость ${rec.loudnessDb} дБ, '
+        'Запись: речь с ${rec.speechFrom} с, пик ${rec.loudnessDb} dBFS, '
             'чистота ${rec.clarityDb} дБ${rec.warning == null ? '' : ', ${rec.warning}'}.',
     ].join('\n');
   }

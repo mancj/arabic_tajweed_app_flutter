@@ -219,6 +219,7 @@ def build():
                 "id": atom_id,
                 "kind": "word",
                 "wordId": word["id"],
+                "practiceProfileId": word.get("practiceProfileId", "standard"),
                 "label": "Читаем слово",
                 "explanationAsset": "assets/explanations/ru/word-reading.yaml",
             }, requirement))

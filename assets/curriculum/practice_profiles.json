@@ -1,0 +1,20 @@
+{
+  "practiceProfiles": {
+    "standard": {
+      "approach": "standard"
+    },
+    "compactReading": {
+      "approach": "configured",
+      "plannedExercises": 2,
+      "maxExercisesPerSession": 3,
+      "maxAtomsPerSession": 8,
+      "reviewLessonMinExercises": 6,
+      "initialModes": ["wordBuild", "soundToLetter"],
+      "reviewModes": ["soundToLetter", "connectionBuild"],
+      "requiredModes": ["wordBuild", "sayWord"],
+      "pronunciationMode": "sayWord",
+      "pronunciationMaxPercent": 15,
+      "preferSameLetters": true
+    }
+  }
+}

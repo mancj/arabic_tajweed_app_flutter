@@ -33,6 +33,9 @@ void main() {
     CurriculumLoader.parse(
       File(CurriculumLoader.wordBankAsset).readAsStringSync(),
     ),
+    CurriculumLoader.parse(
+      File(CurriculumLoader.practiceProfilesAsset).readAsStringSync(),
+    ),
   ]);
   final curriculum = CurriculumLoader.merge(stages);
 

@@ -2,7 +2,7 @@ name: arabic_tajweed_app
 description: "Your app description here"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+89
+version: 1.0.0+93
 
 environment:
   sdk: '^3.8.0'
@@ -16,6 +16,7 @@ dependencies:
   flutter_svg: ^2.0.9
   figma_squircle: ^0.6.3
   flutter_animate: ^4.5.0
+  bokeh_lava_gradient: ^1.0.9
   shared_preferences: ^2.2.2
   cupertino_icons: ^1.0.2
   liquid_glass_widgets: 1.8.1

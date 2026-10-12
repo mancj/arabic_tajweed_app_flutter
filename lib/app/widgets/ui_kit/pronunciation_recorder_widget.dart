@@ -16,7 +16,8 @@ import 'mono_text_button.dart';
 enum PronunciationRecorderState { idle, recording, checking }
 
 /// Внешний код управляет записью и проверкой; карточка показывает их состояние.
-/// [level] — нормированная громкость микрофона от 0 до 1. Если её нет,
+/// [level] — линейная пиковая амплитуда микрофона от 0 до 1. Для отображения
+/// используется логарифмическая шкала. Если уровня нет,
 /// дорожка остаётся ровной: виджет не выдаёт придуманную волну за живой звук.
 class PronunciationRecorderWidget extends StatefulWidget {
   const PronunciationRecorderWidget({
@@ -564,6 +565,23 @@ class _RecordingWavePainter extends CustomPainter {
   final Color quietColor;
 
   static const _growDuration = 240;
+  static const _floorDb = -40.0;
+  static const _fullHeightDb = -10.0;
+
+  // Линейная амплитуда обычной речи мала: −17 dBFS — это всего 0.14.
+  // Кривая с плавным подъёмом оставляет комнатный фон короткими палочками,
+  // а речь — заметной. Полная высота достигается до цифрового максимума.
+  // Фиксированные границы не раздувают тихую запись по её собственному пику.
+  // Меняется только рисунок, а не звук, отправляемый на сервер.
+  double _displayLevel(double peak) {
+    if (!peak.isFinite || peak <= 0) return 0;
+    final db = 20 * math.log(peak) / math.ln10;
+    final position = ((db - _floorDb) / (_fullHeightDb - _floorDb)).clamp(
+      0.0,
+      1.0,
+    );
+    return position * position;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -625,7 +643,8 @@ class _RecordingWavePainter extends CustomPainter {
         ? ((now - sample.enteredAt) / _growDuration).clamp(0.0, 1.0)
         : 1.0;
     final growth = Curves.easeOutCubic.transform(age);
-    final height = 2 + math.min(1, sample.level) * (size.height - 12) * growth;
+    final height =
+        2 + _displayLevel(sample.level) * (size.height - 12) * growth;
     final step = size.width / samples.length;
     final paint = Paint()
       ..color = UIColors.text

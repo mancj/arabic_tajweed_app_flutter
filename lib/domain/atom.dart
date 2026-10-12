@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'practice_profile.dart';
+
 part 'atom.g.dart';
 
 /// Единица обучения. Не буква, а сочетание буквы и формы — либо знак,
@@ -66,6 +68,8 @@ class Atom {
     this.example,
     this.audioAsset,
     this.wordId,
+    this.practiceProfileId = 'standard',
+    this.practiceProfile = const PracticeProfile.standard(),
   });
 
   factory Atom.fromJson(Map<String, dynamic> json) => _$AtomFromJson(json);
@@ -117,7 +121,19 @@ class Atom {
   @JsonKey(includeIfNull: false)
   final String? wordId;
 
-  Atom copyWith({String? display, String? audioAsset}) => Atom(
+  /// Ссылка на общие правила практики в данных курса.
+  final String practiceProfileId;
+
+  /// Загрузчик разрешает ссылку один раз, как написание и аудио слова.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final PracticeProfile practiceProfile;
+
+  Atom copyWith({
+    String? display,
+    String? audioAsset,
+    String? practiceProfileId,
+    PracticeProfile? practiceProfile,
+  }) => Atom(
     id: id,
     kind: kind,
     display: display ?? this.display,
@@ -132,6 +148,8 @@ class Atom {
     example: example,
     audioAsset: audioAsset ?? this.audioAsset,
     wordId: wordId,
+    practiceProfileId: practiceProfileId ?? this.practiceProfileId,
+    practiceProfile: practiceProfile ?? this.practiceProfile,
   );
 
   Map<String, dynamic> toJson() => _$AtomToJson(this);

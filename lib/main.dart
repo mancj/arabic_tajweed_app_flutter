@@ -32,6 +32,7 @@ import 'package:arabic_tajweed_app/app/pages/auth/authorization_page.dart';
 import 'package:arabic_tajweed_app/app/pages/auth/email_authorization_page.dart';
 import 'package:arabic_tajweed_app/app/pages/tracing/tracing_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_page.dart';
+import 'package:arabic_tajweed_app/app/pages/streak/weekly_streak_page.dart';
 import 'package:arabic_tajweed_app/app/pages/pronunciation/pronunciation_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/pronunciation_exercise_debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/debug/pronunciation_recorder_debug_page.dart';
@@ -146,6 +147,10 @@ class MyApp extends StatelessWidget {
           name: LessonPage.routeName,
           page: () => const LessonPage(),
           binding: LessonBinding(),
+        ),
+        GetPage(
+          name: WeeklyStreakPage.routeName,
+          page: () => const WeeklyStreakPage(),
         ),
         GetPage(
           name: SplashScreenPage.routeName,

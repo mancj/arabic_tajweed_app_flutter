@@ -3,6 +3,10 @@
 // Удержание начинает запись сразу; при перестройке карточки отпускание нельзя терять.
 // Полоса волн должна плавно закрываться, иначе она исчезает раньше карточки.
 // Системный запрос может отменить жест: запись и ссылка на настройки остаются доступны.
+// Обычная речь на −17 dBFS должна быть видимой, а комнатный фон — коротким:
+// линейная амплитуда прячет голос, слишком чувствительная шкала раздувает фон.
+import 'dart:math' as math;
+
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/glow_wave_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
@@ -11,6 +15,63 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('волна показывает речь и оставляет комнатный фон коротким', (
+    tester,
+  ) async {
+    for (final (peak, minHeight, maxHeight) in [
+      (0.0, 2.0, 2.01),
+      (.001, 2.0, 2.01), // −60 dBFS: слабый фон.
+      (.01, 2.0, 2.01), // −40 dBFS: порог отображения.
+      (math.pow(10, -35 / 20).toDouble(), 2.0, 5.0),
+      (math.pow(10, -30 / 20).toDouble(), 2.0, 5.0),
+      (math.pow(10, -17 / 20).toDouble(), 12.0, 24.0),
+      (1.0, 12.0, 24.0),
+    ]) {
+      final level = ValueNotifier(peak);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: Scaffold(
+              body: SizedBox(
+                width: 340,
+                child: PronunciationRecorderWidget(
+                  key: UniqueKey(),
+                  state: PronunciationRecorderState.recording,
+                  level: level,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // Таймер виджета считывает настоящий Stopwatch, а не часы pump.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 150)),
+      );
+      await tester.pump(const Duration(milliseconds: 160));
+
+      final wave = find.byKey(const ValueKey('recording-waveform'));
+      final size = tester.getSize(wave);
+      final canvas = TestRecordingCanvas();
+      tester.widget<CustomPaint>(wave).painter!.paint(canvas, size);
+      // Первая линия — основа дорожки, последняя — вертикальный курсор.
+      final bars = canvas.invocations
+          .where((call) => call.invocation.memberName == #drawLine)
+          .toList();
+      final heights = bars.skip(1).take(bars.length - 2).map((call) {
+        final points = call.invocation.positionalArguments;
+        return ((points[1] as Offset).dy - (points[0] as Offset).dy).abs();
+      }).toList();
+      expect(heights, isNotEmpty);
+      expect(heights, everyElement(inInclusiveRange(2, size.height)));
+      expect(heights, everyElement(lessThanOrEqualTo(maxHeight)));
+      expect(heights, contains(greaterThanOrEqualTo(minHeight)));
+      await tester.pumpWidget(const SizedBox.shrink());
+      level.dispose();
+    }
+  });
+
   testWidgets('запись, таймер и проверка переключаются по нажатию', (
     tester,
   ) async {

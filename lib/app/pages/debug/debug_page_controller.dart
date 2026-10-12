@@ -83,6 +83,7 @@ class DebugController extends GetxController {
   /// заново не показываются.
   Future<void> resetProgress() async {
     await Get.find<ProgressDatabase>().clear();
+    await _preferences.weeklyStreakCelebratedStart.set(null);
     Get.snackbar(
       'Прогресс сброшен',
       'Курс начнётся с первого урока',

@@ -36,6 +36,7 @@ import '../../../domain/planner.dart';
 import '../../../domain/pronunciation_attempts.dart';
 import '../../../domain/progress_event.dart';
 import '../../../domain/syllable_build_question.dart';
+import '../../../domain/study_streak.dart';
 import '../../../domain/word_build_question.dart';
 import '../../shared_state/app_clock.dart';
 import '../../widgets/drawing/drawing_canvas.dart';
@@ -145,6 +146,7 @@ class LessonController extends GetxController {
   final TracingTaskState _tracing;
 
   final stage = LessonStage.loading.obs;
+  final weeklyStreak = Rxn<StudyStreak>();
   final learnedLetters = <Atom>[].obs;
   final loadError = RxnString();
   final _refresh = 0.obs;
@@ -558,6 +560,7 @@ class LessonController extends GetxController {
       letterFormIds: _curriculum.letterFormIds,
       baseLetterIds: _curriculum.baseLetterIds,
       wordAtomIds: _curriculum.wordAtomIds,
+      practiceProfilesByAtom: _curriculum.practiceProfilesByAtom,
       now: () => _clock.now,
     );
     _announcedLetterIds.addAll(await _progress.learnedLetterIds());
@@ -1429,7 +1432,30 @@ class LessonController extends GetxController {
     if (topicId != null && _previewPlan == null && !continuePlanning) {
       await _progress.completeTopic(topicId, sessionId: _sessionId);
     }
+    final streak = StudyStreak.fromActivityDays(
+      await _progress.activityDays(),
+      today: _clock.now,
+    );
+    final celebratedStart = Get.isRegistered<SharedPreferenceManager>()
+        ? Get.find<SharedPreferenceManager>().weeklyStreakCelebratedStart.get()
+        : null;
+    weeklyStreak.value =
+        streak.needsWeeklyCelebration(celebratedStart: celebratedStart)
+        ? streak
+        : null;
     stage.value = LessonStage.finished;
+  }
+
+  /// Достижение считается показанным только после появления его экрана.
+  Future<void> markWeeklyStreakPresented() async {
+    final streak = weeklyStreak.value;
+    if (streak == null) return;
+    if (Get.isRegistered<SharedPreferenceManager>()) {
+      await Get.find<SharedPreferenceManager>().weeklyStreakCelebratedStart.set(
+        streak.startedOn,
+      );
+    }
+    weeklyStreak.value = null;
   }
 
   /// Итог урока: какие атомы поднялись до известных.

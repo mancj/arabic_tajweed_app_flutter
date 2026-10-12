@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -12,6 +14,7 @@ import 'lesson_content_view.dart';
 import 'lesson_finish_screen.dart';
 import 'lesson_notes_page.dart';
 import 'lesson_result_sheet.dart';
+import '../streak/weekly_streak_page.dart';
 
 export 'lesson_binding.dart';
 export 'lesson_controller.dart';
@@ -47,6 +50,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   bool _sheetOpen = false;
   bool _popupOpen = false;
   bool _notesOpen = false;
+  bool _closing = false;
 
   LessonController get controller => widget.controller;
 
@@ -115,6 +119,27 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
     }
   }
 
+  Future<void> _closeFinishedLesson() async {
+    if (_closing) return;
+    _closing = true;
+    final streak = controller.weeklyStreak.value;
+    if (streak != null) {
+      final presentation = Get.to<void>(
+        () => WeeklyStreakPage(achievedOn: streak.weeklyAchievementOn),
+        routeName: WeeklyStreakPage.routeName,
+      );
+      if (presentation != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Get.currentRoute == WeeklyStreakPage.routeName) {
+            unawaited(controller.markWeeklyStreakPresented());
+          }
+        });
+        await presentation;
+      }
+    }
+    if (mounted) Get.back<void>();
+  }
+
   @override
   void dispose() {
     _correctWorker.dispose();
@@ -126,7 +151,10 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (controller.stage.value == LessonStage.finished) {
-        return LessonFinishScreen(controller: controller);
+        return LessonFinishScreen(
+          controller: controller,
+          onClose: _closeFinishedLesson,
+        );
       }
       return AppScaffold(
         title: controller.isReviewOnly ? 'Повторение' : 'Урок',

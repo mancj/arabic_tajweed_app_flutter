@@ -4,6 +4,7 @@ import '../domain/atom_state.dart';
 import '../domain/lesson_pacing.dart';
 import '../domain/learning_rules.dart';
 import '../domain/progress_event.dart';
+import '../domain/practice_profile.dart';
 import 'progress_database.dart';
 
 /// Доступ к прогрессу. Пишет в лог, отдаёт свёрнутое состояние.
@@ -17,10 +18,12 @@ class ProgressRepository {
     required Set<String> letterFormIds,
     this.baseLetterIds = const {},
     Set<String> wordAtomIds = const {},
+    Map<String, PracticeProfile> practiceProfilesByAtom = const {},
     LearningRules rules = const LearningRules(),
     DateTime Function()? now,
   }) : _db = database,
        _rules = rules,
+       _practiceProfilesByAtom = practiceProfilesByAtom,
        _now = now ?? DateTime.now,
        _fold = ProgressFold(
          rules: rules,
@@ -31,6 +34,7 @@ class ProgressRepository {
 
   final ProgressDatabase _db;
   final LearningRules _rules;
+  final Map<String, PracticeProfile> _practiceProfilesByAtom;
   final DateTime Function() _now;
   final ProgressFold _fold;
   final Set<String> baseLetterIds;
@@ -38,6 +42,7 @@ class ProgressRepository {
   Map<String, AtomProgress> _cache = const {};
   List<TopicCompletion> _completions = const [];
   List<SessionSummary> _sessionSummaries = const [];
+  final _reviewMinimumsBySession = <int, int>{};
   bool _loaded = false;
 
   /// Номера сессий, встреченные в логе, и те из них, где хотя бы один атом
@@ -150,9 +155,25 @@ class ProgressRepository {
       LessonPurpose.standard;
 
   bool _isSuccessfulReview(SessionSummary summary) =>
-      summary.exerciseCount >= _rules.reviewLessonMinExercises &&
+      summary.exerciseCount >=
+          (_reviewMinimumsBySession[summary.sessionId] ??
+              _rules.reviewLessonMinExercises) &&
       summary.firstTryCorrect * 100 >=
           summary.exerciseCount * _rules.reviewLessonSuccessPercent;
+
+  void _updateReviewMinimums(Iterable<LogEntry> entries) {
+    for (final entry in entries.whereType<ProgressEvent>()) {
+      final profile = _practiceProfilesByAtom[entry.atomId];
+      final minimum = profile == null || profile.isStandard
+          ? _rules.reviewLessonMinExercises
+          : profile.reviewLessonMinExercises ?? _rules.reviewLessonMinExercises;
+      _reviewMinimumsBySession.update(
+        entry.sessionId,
+        (previous) => previous > minimum ? previous : minimum,
+        ifAbsent: () => minimum,
+      );
+    }
+  }
 
   Future<void> record(LogEntry entry) async {
     await _db.append(entry);
@@ -233,6 +254,8 @@ class ProgressRepository {
   /// новые правила применяются ко всей истории, а не только к будущему.
   Future<void> recompute() async {
     final log = await _db.readAll();
+    _reviewMinimumsBySession.clear();
+    _updateReviewMinimums(log);
     _cache = _fold.fold(log);
     _completions = await _db.readCompletions();
     _sessionSummaries = await _db.readSessionSummaries();
@@ -270,6 +293,7 @@ class ProgressRepository {
       return;
     }
     final progressEntries = entries.where((e) => e is! LetterLearned).toList();
+    _updateReviewMinimums(progressEntries);
     final touched = progressEntries.map((e) => e.atomId).toSet();
     final base = {
       for (final id in touched) id: _cache[id] ?? const AtomProgress(),

@@ -73,6 +73,24 @@ void main() {
               AtomIntroduced(atomId: id, sessionId: 1, at: now)
             else
               KnowledgeConfirmed(atomId: id, sessionId: 1, at: now),
+        // В словах короткая сборка появляется при повторении, после
+        // первого знакомства с полной сборкой и чтением.
+        if (topicId == 'm.join' && mode == ExerciseMode.connectionBuild)
+          for (final id
+              in curriculum.topics
+                  .firstWhere((topic) => topic.id == topicId)
+                  .counterOf) ...[
+            KnowledgeConfirmed(atomId: id, sessionId: 1, at: now),
+            ProgressEvent(
+              atomId: id,
+              sessionId: 1,
+              at: now,
+              mode: ExerciseMode.wordBuild,
+              correct: true,
+              attempt: 1,
+              fastEnough: true,
+            ),
+          ],
       ]);
       controller = LessonController(
         rules: const LearningRules(requirePronunciation: false),

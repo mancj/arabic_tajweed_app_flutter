@@ -27,6 +27,7 @@ Atom _$AtomFromJson(Map<String, dynamic> json) => Atom(
       : WordExample.fromJson(json['example'] as Map<String, dynamic>),
   audioAsset: json['audioAsset'] as String?,
   wordId: json['wordId'] as String?,
+  practiceProfileId: json['practiceProfileId'] as String? ?? 'standard',
 );
 
 Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
@@ -44,6 +45,7 @@ Map<String, dynamic> _$AtomToJson(Atom instance) => <String, dynamic>{
   'example': instance.example,
   'audioAsset': instance.audioAsset,
   'wordId': ?instance.wordId,
+  'practiceProfileId': instance.practiceProfileId,
 };
 
 const _$AtomKindEnumMap = {

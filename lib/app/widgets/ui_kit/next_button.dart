@@ -108,10 +108,7 @@ class NextButton extends StatelessWidget {
 
     return AppGestureDetector(
       onTap: enabled ? onTap : null,
-      pressedOpacity:
-          neutralBackground && MediaQuery.disableAnimationsOf(context)
-          ? 1
-          : .98,
+      pressedOpacity: MediaQuery.disableAnimationsOf(context) ? 1 : .98,
       child: Opacity(
         opacity: enabled ? 1 : .5,
         child: Container(
@@ -153,7 +150,7 @@ class NextButton extends StatelessWidget {
         ? UIColors.text
         : UIColors.primaryButtonText;
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: leading == null ? 0 : 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -171,6 +168,7 @@ class NextButton extends StatelessWidget {
               Flexible(
                 child: Text(
                   title,
+                  textAlign: TextAlign.center,
                   style: UITextStyles.semibold16Compact.copyWith(
                     color: foreground,
                   ),

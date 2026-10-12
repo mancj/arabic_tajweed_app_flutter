@@ -1066,7 +1066,8 @@
       "counterOf": [
         "word.laiba",
         "word.najaha",
-        "word.kaf_a_sin_a_ba_a"
+        "word.kaf_a_sin_a_ba_a",
+        "word.kaf_u_ta_i_ba_a"
       ]
     },
     {
@@ -1087,6 +1088,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.kaf_a_sin_a_ba_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_u_ta_i_ba_a"
           }
         ]
       },
@@ -1125,7 +1130,8 @@
       "counterOf": [
         "word.fariha",
         "word.dal_a_kha_a_lam_a",
-        "word.ta_a_ra_a_kaf_a"
+        "word.ta_a_ra_a_kaf_a",
+        "word.dhal_a_ha_a_ba_a"
       ]
     },
     {
@@ -1146,6 +1152,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.ta_a_ra_a_kaf_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dhal_a_ha_a_ba_a"
           }
         ]
       },
@@ -3627,6 +3637,7 @@
         "id": "word.ba_i_kaf_a",
         "kind": "word",
         "wordId": "ba_i_kaf_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -3833,6 +3844,7 @@
         "id": "word.ba_i_mim_a",
         "kind": "word",
         "wordId": "ba_i_mim_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4039,6 +4051,7 @@
         "id": "word.mim_a_ayn_a",
         "kind": "word",
         "wordId": "mim_a_ayn_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4245,6 +4258,7 @@
         "id": "word.kataba",
         "kind": "word",
         "wordId": "kaf_a_ta_a_ba_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4275,6 +4289,7 @@
         "id": "word.samia",
         "kind": "word",
         "wordId": "sin_a_mim_i_ayn_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4305,6 +4320,7 @@
         "id": "word.amila",
         "kind": "word",
         "wordId": "ayn_a_mim_i_lam_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4335,6 +4351,7 @@
         "id": "word.laiba",
         "kind": "word",
         "wordId": "lam_a_ayn_i_ba_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4361,6 +4378,7 @@
         "id": "word.najaha",
         "kind": "word",
         "wordId": "nun_a_jim_a_hha_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4387,6 +4405,34 @@
         "id": "word.kaf_a_sin_a_ba_a",
         "kind": "word",
         "wordId": "kaf_a_sin_a_ba_a",
+        "practiceProfileId": "compactReading",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomKnown",
+            "atomId": "word.kataba"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.samia"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.amila"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.kaf_u_ta_i_ba_a",
+        "kind": "word",
+        "wordId": "kaf_u_ta_i_ba_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4413,6 +4459,7 @@
         "id": "word.darasa",
         "kind": "word",
         "wordId": "dal_a_ra_a_sin_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4430,6 +4477,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.kaf_a_sin_a_ba_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_u_ta_i_ba_a"
           }
         ]
       }
@@ -4439,6 +4490,7 @@
         "id": "word.rasama",
         "kind": "word",
         "wordId": "ra_a_sin_a_mim_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4456,6 +4508,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.kaf_a_sin_a_ba_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_u_ta_i_ba_a"
           }
         ]
       }
@@ -4465,6 +4521,7 @@
         "id": "word.shariba",
         "kind": "word",
         "wordId": "shin_a_ra_i_ba_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4482,6 +4539,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.kaf_a_sin_a_ba_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.kaf_u_ta_i_ba_a"
           }
         ]
       }
@@ -4491,6 +4552,7 @@
         "id": "word.fariha",
         "kind": "word",
         "wordId": "fa_a_ra_i_hha_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4521,6 +4583,7 @@
         "id": "word.dal_a_kha_a_lam_a",
         "kind": "word",
         "wordId": "dal_a_kha_a_lam_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4551,6 +4614,38 @@
         "id": "word.ta_a_ra_a_kaf_a",
         "kind": "word",
         "wordId": "ta_a_ra_a_kaf_a",
+        "practiceProfileId": "compactReading",
+        "label": "Читаем слово",
+        "explanationAsset": "assets/explanations/ru/word-reading.yaml"
+      },
+      "requirement": {
+        "type": "allOf",
+        "parts": [
+          {
+            "type": "atomIntroduced",
+            "atomId": "concept.break"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.darasa"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.rasama"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.shariba"
+          }
+        ]
+      }
+    },
+    {
+      "atom": {
+        "id": "word.dhal_a_ha_a_ba_a",
+        "kind": "word",
+        "wordId": "dhal_a_ha_a_ba_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4581,6 +4676,7 @@
         "id": "word.kha_a_lam_a_qof_a_ha_u",
         "kind": "word",
         "wordId": "kha_a_lam_a_qof_a_ha_u",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4598,6 +4694,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.ta_a_ra_a_kaf_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dhal_a_ha_a_ba_a"
           }
         ]
       }
@@ -4607,6 +4707,7 @@
         "id": "word.ta_a_ba_i_ayn_a_kaf_a",
         "kind": "word",
         "wordId": "ta_a_ba_i_ayn_a_kaf_a",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4624,6 +4725,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.ta_a_ra_a_kaf_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dhal_a_ha_a_ba_a"
           }
         ]
       }
@@ -4633,6 +4738,7 @@
         "id": "word.qof_a_dal_a_ra_u_ha_u",
         "kind": "word",
         "wordId": "qof_a_dal_a_ra_u_ha_u",
+        "practiceProfileId": "compactReading",
         "label": "Читаем слово",
         "explanationAsset": "assets/explanations/ru/word-reading.yaml"
       },
@@ -4650,6 +4756,10 @@
           {
             "type": "atomKnown",
             "atomId": "word.ta_a_ra_a_kaf_a"
+          },
+          {
+            "type": "atomKnown",
+            "atomId": "word.dhal_a_ha_a_ba_a"
           }
         ]
       }

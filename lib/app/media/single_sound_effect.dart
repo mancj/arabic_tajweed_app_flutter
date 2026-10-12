@@ -3,10 +3,17 @@ import 'package:flutter/foundation.dart';
 
 /// Воспроизводит один короткий звуковой эффект без привязки к контроллеру.
 class SingleSoundEffect {
-  SingleSoundEffect({required this.assetPath, this.volume = 0.4});
+  SingleSoundEffect({
+    required this.assetPath,
+    this.volume = 0.4,
+    this.respectSilentMode = false,
+  });
 
   final String assetPath;
   final double volume;
+
+  /// Декоративные звуки на iOS следуют беззвучному режиму устройства.
+  final bool respectSilentMode;
   AudioPlayer? _player;
   bool _disposed = false;
   bool _initialized = false;
@@ -21,6 +28,11 @@ class SingleSoundEffect {
       player.audioCache = AudioCache.instance;
       await player.setAudioContext(
         AudioContext(
+          iOS: AudioContextIOS(
+            category: respectSilentMode
+                ? AVAudioSessionCategory.ambient
+                : AVAudioSessionCategory.playback,
+          ),
           android: const AudioContextAndroid(
             usageType: AndroidUsageType.game,
             contentType: AndroidContentType.sonification,

@@ -9,7 +9,7 @@ import 'play_control.dart';
 
 /// Учебный образец для LetterWidgetCard: название, глиф на строках и звук.
 /// Направляющая под буквой заполняется по настоящей позиции записи.
-class LetterSpecimen extends StatelessWidget {
+class LetterSpecimen extends StatefulWidget {
   const LetterSpecimen({
     required this.letter,
     this.title,
@@ -31,7 +31,13 @@ class LetterSpecimen extends StatelessWidget {
   final bool autoPlay;
   final ValueListenable<AudioTrack>? track;
 
-  static const _shapeSize = 320.0;
+  @override
+  State<LetterSpecimen> createState() => _LetterSpecimenState();
+}
+
+class _LetterSpecimenState extends State<LetterSpecimen> {
+  final _glyphKey = GlobalKey();
+  final _backgroundKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -56,16 +62,19 @@ class LetterSpecimen extends StatelessWidget {
           // Фон всей карточки рисуется раньше заголовка, направляющих и глифа.
           Positioned.fill(
             child: IgnorePointer(
-              child: OverflowBox(
-                minHeight: _shapeSize,
-                maxHeight: _shapeSize,
-                minWidth: _shapeSize,
-                maxWidth: _shapeSize,
-                child: OrbitalRingsWidget(
-                  color: UIColors.backgroundShapes2,
-                  thickness: 1.1,
-                  dashThickness: 1.5,
+              child: Flow(
+                key: _backgroundKey,
+                delegate: _GlyphBackgroundDelegate(
+                  glyphKey: _glyphKey,
+                  backgroundKey: _backgroundKey,
                 ),
+                children: [
+                  OrbitalRingsWidget(
+                    color: UIColors.backgroundShapes2,
+                    thickness: 1.1,
+                    dashThickness: 1.5,
+                  ),
+                ],
               ),
             ),
           ),
@@ -79,45 +88,58 @@ class LetterSpecimen extends StatelessWidget {
                     final heading = Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (badge != null) ...[
+                        if (widget.badge != null) ...[
                           Text(
-                            badge!.toUpperCase(),
+                            widget.badge!.toUpperCase(),
                             style: UITextStyles.monoSemibold11.copyWith(
                               color: UIColors.studyAccent,
                             ),
                           ),
                           const Margin.vertical(12),
                         ],
-                        if (title != null)
+                        if (widget.title != null)
                           Semantics(
                             header: true,
-                            child: Text(title!, style: UITextStyles.semibold29),
+                            child: Text(
+                              widget.title!,
+                              style: UITextStyles.semibold29,
+                            ),
                           ),
                       ],
                     );
-                    final glyph = TweenAnimationBuilder<double>(
-                      key: ValueKey(letter),
-                      tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
-                      duration: Duration(milliseconds: reduceMotion ? 0 : 480),
-                      curve: const Cubic(.16, .8, .24, 1),
-                      builder: (context, value, child) => Transform.translate(
-                        offset: Offset(0, (1 - value) * 12),
-                        child: Opacity(opacity: .4 + .6 * value, child: child),
-                      ),
-                      child: _withTrack(
-                        (audio) =>
-                            LetterSpecimenGlyph(letter: letter, audio: audio),
+                    final glyph = SizedBox(
+                      key: _glyphKey,
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey(widget.letter),
+                        tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
+                        duration: Duration(
+                          milliseconds: reduceMotion ? 0 : 480,
+                        ),
+                        curve: const Cubic(.16, .8, .24, 1),
+                        builder: (context, value, child) => Transform.translate(
+                          offset: Offset(0, (1 - value) * 12),
+                          child: Opacity(
+                            opacity: .4 + .6 * value,
+                            child: child,
+                          ),
+                        ),
+                        child: _withTrack(
+                          (audio) => LetterSpecimenGlyph(
+                            letter: widget.letter,
+                            audio: audio,
+                          ),
+                        ),
                       ),
                     );
                     // Черты соединения (ـ) удлиняют рисунок одной буквы, но не
                     // делают его словом: «ــتــ» остаётся компактным образцом.
                     // Реальную ширину глифа подгоняет FittedBox выше.
-                    final glyphLength = letter
+                    final glyphLength = widget.letter
                         .replaceAll('\u0640', '')
                         .runes
                         .length;
                     final stacked =
-                        title == null ||
+                        widget.title == null ||
                         constraints.maxWidth < 260 ||
                         MediaQuery.textScalerOf(context).scale(16) > 21 ||
                         glyphLength > 4;
@@ -136,24 +158,24 @@ class LetterSpecimen extends StatelessWidget {
                     );
                   },
                 ),
-                if (caption != null) ...[
+                if (widget.caption != null) ...[
                   const Margin.vertical(8),
                   Text(
-                    caption!,
+                    widget.caption!,
                     textAlign: TextAlign.center,
                     style: UITextStyles.regular15,
                   ),
                 ],
-                if (onPlay != null) ...[
+                if (widget.onPlay != null) ...[
                   const Margin.vertical(16),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: PlayControl(
-                      letter: letter,
-                      onTap: onPlay!,
-                      onAutoPlay: onAutoPlay,
-                      autoPlay: autoPlay,
-                      track: track,
+                      letter: widget.letter,
+                      onTap: widget.onPlay!,
+                      onAutoPlay: widget.onAutoPlay,
+                      autoPlay: widget.autoPlay,
+                      track: widget.track,
                       label: 'Слушать',
                       size: 48,
                     ),
@@ -168,13 +190,50 @@ class LetterSpecimen extends StatelessWidget {
   }
 
   Widget _withTrack(Widget Function(AudioTrack) builder) {
-    final listenable = track;
+    final listenable = widget.track;
     if (listenable == null) return builder(AudioTrack.silent);
     return ValueListenableBuilder<AudioTrack>(
       valueListenable: listenable,
       builder: (_, audio, _) => builder(audio),
     );
   }
+}
+
+// Положение берём после размещения содержимого: заголовок может переноситься,
+// а глиф — переходить под него. Flow рисует кольца в нижнем слое сразу,
+// без измерения после кадра и без влияния на высоту карточки.
+class _GlyphBackgroundDelegate extends FlowDelegate {
+  const _GlyphBackgroundDelegate({
+    required this.glyphKey,
+    required this.backgroundKey,
+  });
+
+  final GlobalKey glyphKey;
+  final GlobalKey backgroundKey;
+
+  @override
+  BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) =>
+      const BoxConstraints.tightFor(width: 320, height: 320);
+
+  @override
+  void paintChildren(FlowPaintingContext context) {
+    final glyph = glyphKey.currentContext?.findRenderObject() as RenderBox?;
+    final background =
+        backgroundKey.currentContext?.findRenderObject() as RenderBox?;
+    if (glyph == null || background == null) return;
+    final center = background.globalToLocal(
+      glyph.localToGlobal(glyph.size.center(Offset.zero)),
+    );
+    final offset = center - context.getChildSize(0)!.center(Offset.zero);
+    context.paintChild(
+      0,
+      transform: Matrix4.translationValues(offset.dx, offset.dy, 0),
+    );
+  }
+
+  @override
+  // Положение зависит также от нового заголовка и компоновки содержимого.
+  bool shouldRepaint(_GlyphBackgroundDelegate oldDelegate) => true;
 }
 
 /// Белый образец буквы между направляющими для конспекта и результата задания.
