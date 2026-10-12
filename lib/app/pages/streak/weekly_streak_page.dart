@@ -6,6 +6,7 @@ import 'package:bokeh_lava_gradient/bokeh_lava_gradient.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 
 import '../../resources/ui_resources.dart';
@@ -13,6 +14,7 @@ import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
 import '../../widgets/ui_kit/animated_counter.dart';
 import '../../widgets/ui_kit/next_button.dart';
+import '../../widgets/ui_kit/ring_sparks.dart';
 
 /// Недельный рубеж: дата относится к достигнутой неделе, а не к просмотру.
 class WeeklyStreakPage extends StatefulWidget {
@@ -49,7 +51,7 @@ class _WeeklyStreakPageState extends State<WeeklyStreakPage>
     super.didChangeDependencies();
     if (_scheduled) return;
     _scheduled = true;
-    // Поздравление приходит в спокойное состояние и больше не просит кадры.
+    // Bokeh-фон останавливается независимо от парящих искр.
     _ambientTimer = Timer(4.seconds, () {
       if (mounted) setState(() => _ambientPlaying = false);
     });
@@ -223,50 +225,88 @@ class _WeeklyStreakPageState extends State<WeeklyStreakPage>
   }
 }
 
-class _WeekBadge extends StatelessWidget {
+class _WeekBadge extends StatefulWidget {
   const _WeekBadge({required this.size, required this.reducedMotion});
 
+  final double size;
+  final bool reducedMotion;
+
+  @override
+  State<_WeekBadge> createState() => _WeekBadgeState();
+}
+
+class _WeekBadgeState extends State<_WeekBadge> {
   static const _fillDelay = Duration(milliseconds: 150);
   static const _fillDuration = Duration(milliseconds: 1500);
   static const _countDuration = Duration(milliseconds: 1000);
   static const _fillCurve = Curves.easeInOutCubic;
   static const _impactDuration = Duration(milliseconds: 840);
 
-  final double size;
-  final bool reducedMotion;
+  static const _geometry = SegmentedRingGeometry(gap: 0.03);
+  final _progress = ValueNotifier<double>(0);
+
+  @override
+  void dispose() {
+    _progress.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final child = Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Число — часть фиксированной эмблемы. Обычные подписи экрана
-          // сохраняют системный размер текста; эмблема масштабируется целиком.
-          AnimatedCounter(
-            value: 7,
-            initialValue: 0,
-            enableHaptics: true,
-            duration: _countDuration * 2,
-            delay: _fillDelay,
-            curve: _fillCurve,
-            textScaler: TextScaler.noScaling,
-            style: UITextStyles.scaled(
-              UITextStyles.semibold144Compact,
-              size / 264,
-            ).copyWith(color: UIColors.text),
+    final size = widget.size;
+    final reducedMotion = widget.reducedMotion;
+    if (reducedMotion) _progress.value = 1;
+    final child = Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Число — часть фиксированной эмблемы. Обычные подписи экрана
+              // сохраняют системный размер текста; эмблема масштабируется целиком.
+              AnimatedCounter(
+                value: 7,
+                initialValue: 0,
+                enableHaptics: true,
+                duration: _countDuration * 2,
+                delay: _fillDelay,
+                curve: _fillCurve,
+                textScaler: TextScaler.noScaling,
+                style: UITextStyles.scaled(
+                  UITextStyles.semibold144Compact,
+                  size / 264,
+                ).copyWith(color: UIColors.text),
+              ),
+              const Margin.vertical(4),
+              Text(
+                'дней подряд',
+                textScaler: TextScaler.noScaling,
+                style: UITextStyles.monoSemibold14,
+              ),
+            ],
           ),
-          const Margin.vertical(4),
-          Text(
-            'дней подряд',
-            textScaler: TextScaler.noScaling,
-            style: UITextStyles.monoSemibold14,
-          ),
-        ],
-      ),
+        ),
+        RingSparks(
+          progress: _progress,
+          activeEmissionRate: 12,
+          floatingEmissionRate: 4,
+          maxParticles: 32,
+          minRadius: 1,
+          maxRadius: 1.5,
+          geometry: _geometry,
+          color: UIColors.primary,
+        ),
+      ],
     );
     Widget badge = CustomPaint(
-      painter: _WeekRing(progress: 1, color: UIColors.primary),
+      painter: _WeekRing(
+        progress: 1,
+
+        color: UIColors.primary,
+        geometry: _geometry,
+      ),
       child: child,
     );
     if (!reducedMotion) {
@@ -276,10 +316,17 @@ class _WeekBadge extends StatelessWidget {
             delay: _fillDelay,
             duration: _fillDuration,
             curve: _fillCurve,
-            builder: (context, value, child) => CustomPaint(
-              painter: _WeekRing(progress: value, color: UIColors.primary),
-              child: child,
-            ),
+            builder: (context, value, child) {
+              _progress.value = value;
+              return CustomPaint(
+                painter: _WeekRing(
+                  progress: value,
+                  color: UIColors.primary,
+                  geometry: _geometry,
+                ),
+                child: child,
+              );
+            },
           )
           .custom(
             delay: _fillDelay + _fillDuration,
@@ -354,16 +401,21 @@ class _WeekImpact extends CustomPainter {
 }
 
 class _WeekRing extends CustomPainter {
-  const _WeekRing({required this.progress, required this.color});
+  const _WeekRing({
+    required this.progress,
+    required this.color,
+    required this.geometry,
+  });
 
   final double progress;
   final Color color;
+  final SegmentedRingGeometry geometry;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2 - 4;
-    final rect = Rect.fromCircle(center: center, radius: radius);
+    final radius = geometry.radiusFor(size);
+    final rect = geometry.rectFor(size);
     canvas.drawCircle(
       center,
       radius - 8,
@@ -373,22 +425,22 @@ class _WeekRing extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
-    const step = math.pi * 2 / 7;
-    const gap = .07;
-    for (var index = 0; index < 7; index++) {
-      final angle = -math.pi / 2 + index * step + gap;
+    for (var index = 0; index < geometry.count; index++) {
+      final angle = geometry.segmentStart(index);
       paint.color = color.withValues(alpha: .12);
-      canvas.drawArc(rect, angle, step - gap * 2, false, paint);
-      final part = (progress * 7 - index).clamp(0.0, 1.0);
+      canvas.drawArc(rect, angle, geometry.sweep, false, paint);
+      final part = (progress * geometry.count - index).clamp(0.0, 1.0);
       if (part == 0) continue;
       paint.color = color;
-      canvas.drawArc(rect, angle, (step - gap * 2) * part, false, paint);
+      canvas.drawArc(rect, angle, geometry.sweep * part, false, paint);
     }
   }
 
   @override
   bool shouldRepaint(_WeekRing oldDelegate) =>
-      progress != oldDelegate.progress || color != oldDelegate.color;
+      progress != oldDelegate.progress ||
+      color != oldDelegate.color ||
+      geometry != oldDelegate.geometry;
 }
 
 class _CompletedWeek extends StatelessWidget {
@@ -431,11 +483,19 @@ class _CompletedWeek extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: last ? UIColors.primary : UIColors.primary20,
                 ),
-                child: Icon(
-                  Icons.check_rounded,
-                  size: 24,
-                  color: last ? UIColors.primaryButtonText : UIColors.primary,
-                ),
+                child:
+                    SvgPicture.asset(
+                      UISVGAssets.fire,
+                      width: 16,
+                      height: 16,
+                      colorFilter: ColorFilter.mode(
+                        last ? UIColors.primaryButtonText : UIColors.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ).animate().fadeIn(
+                      duration: 200.ms,
+                      delay: (1100 + index * 200).ms,
+                    ).scaleXY(begin: .5),
               ),
             ],
           );
@@ -444,10 +504,12 @@ class _CompletedWeek extends StatelessWidget {
                 .animate()
                 .fadeIn(
                   curve: Curves.easeOutBack,
-                  delay: (450 + index * 100).ms,
+                  delay: (1000 + index * 100).ms,
                   duration: 450.ms,
                 )
-                .scaleXY(begin: .6);
+                .scaleXY(begin: 1.2, end: .9, duration: 200.ms)
+                .then(delay: 100.ms)
+                .scaleXY(begin: 1, end: 1.2, duration: 500.ms);
           }
           return Semantics(
             label: '${day.day}.${day.month}.${day.year}: занятие выполнено',

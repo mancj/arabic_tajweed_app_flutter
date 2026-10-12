@@ -6,7 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../resources/ui_text_styles.dart';
 import '../app_haptics.dart';
 
-/// Целые числа листаются вверх, уменьшаясь при удалении от центра окна.
+/// Целые числа листаются вверх, уменьшаясь и затухая вдали от центра окна.
 /// Один общий проход идёт от начального числа к [value].
 /// [initialValue] задаёт начало только при первом показе. Без него первое
 /// значение показывается сразу; следующие изменения плавно прокручиваются.
@@ -232,24 +232,30 @@ class _AnimatedCounterState extends State<AnimatedCounter>
       0.0,
       1.0,
     );
-    Widget number(int value, double offset) => Positioned.fill(
-      child: Transform.translate(
-        offset: Offset(0, offset * size.height),
-        child: Center(
-          child: Transform.scale(
-            scale: 1 - .65 * Curves.easeInOut.transform(offset.abs()),
-            child: Text(
-              '$value',
-              style: style,
-              textScaler: textScaler,
-              textDirection: TextDirection.ltr,
-              maxLines: 1,
-              softWrap: false,
+    Widget number(int value, double offset) {
+      final distance = Curves.easeInOut.transform(offset.abs());
+      return Positioned.fill(
+        child: Transform.translate(
+          offset: Offset(0, offset * size.height),
+          child: Center(
+            child: Opacity(
+              opacity: 1 - distance,
+              child: Transform.scale(
+                scale: 1 - .9 * distance,
+                child: Text(
+                  '$value',
+                  style: style,
+                  textScaler: textScaler,
+                  textDirection: TextDirection.ltr,
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
 
     return Stack(
       clipBehavior: Clip.none,

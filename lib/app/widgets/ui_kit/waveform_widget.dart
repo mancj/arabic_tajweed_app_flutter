@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import 'particle_motion.dart';
+
 /// Декоративная «волна» — несколько полупрозрачных контуров холмов,
 /// наложенных друг на друга, и тонкая линия-основание, растворяющаяся у краёв.
 ///
@@ -547,21 +549,22 @@ class _WaveformPainter extends CustomPainter {
       final progress = (frame.clock / particle.duration + particle.phase) % 1;
       // Появление короткое, а перемещение быстрое уже в первом кадре: точка
       // не задерживается статично у основания. В конце она растворяется.
-      final fadeIn = (progress * particle.duration / fadeInDuration).clamp(
-        0.0,
-        1.0,
-      );
-      final fadeOut = ((1 - progress) / 0.28).clamp(0.0, 1.0);
-      final opacity = fadeIn * fadeOut * frame.particleLevel;
+      final opacity =
+          ParticleMotion.opacity(
+            progress: progress,
+            duration: particle.duration,
+            fadeInDuration: fadeInDuration,
+          ) *
+          frame.particleLevel;
       if (opacity <= 0.01) continue;
 
       final x =
           size.width *
-          (particle.anchor + particle.drift * math.sin(math.pi * progress))
+          (particle.anchor + particle.drift * ParticleMotion.drift(progress))
               .clamp(0.02, 0.98);
       // Точка приходит из нижней границы и больше к ней не возвращается.
       final startY = baseline;
-      final rise = 1 - math.pow(1 - progress, 3);
+      final rise = ParticleMotion.rise(progress);
       final y = startY - size.height * particle.rise * rise;
       paint.color = color.withValues(alpha: color.a * opacity);
       canvas.drawCircle(Offset(x, y), particle.radius, paint);
