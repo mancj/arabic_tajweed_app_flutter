@@ -458,6 +458,19 @@ class LessonExerciseBlock extends GetView<LessonController> {
               key: ObjectKey(exercise),
               glyph: exercise.atom.display,
               prompt: presentation.prompt,
+              showExampleInitially: controller.firstPronunciationExample,
+              onPresented: () =>
+                  controller.markPronunciationPresented(exercise),
+              autoPlayExample: controller.autoPlayPronunciationExample,
+              exampleEnabled: controller.canPlayPronunciationExample,
+              onPlayExample: controller.hasExerciseVoice(exercise)
+                  ? () => controller.playPronunciationExample(exercise)
+                  : null,
+              onAutoPlayExample: () => controller.playPronunciationExample(
+                exercise,
+                automatically: true,
+              ),
+              track: controller.voiceTrack,
               result: controller.pronunciation.result.value,
               error:
                   controller.pronunciation.failure.value ==

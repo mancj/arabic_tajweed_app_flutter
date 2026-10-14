@@ -1,6 +1,8 @@
 // Календарь появляется один раз: обновления данных и темы не должны снова
 // скрывать дни. Отключение движения сразу завершает появление, а даты доступны
 // экранному диктору даже до первого видимого кадра.
+// Семь дней заканчиваются сегодняшним: понедельник, смена месяца и года
+// не обрезают серию и не подставляют будущие даты.
 
 import 'package:arabic_tajweed_app/app/pages/course/course_dashboard.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,7 @@ void main() {
     bool disableAnimations = false,
     Set<DateTime> days = const {},
     Brightness brightness = Brightness.light,
+    DateTime? endingOn,
   }) => tester.pumpWidget(
     Directionality(
       textDirection: TextDirection.ltr,
@@ -24,7 +27,7 @@ void main() {
           child: Center(
             child: SizedBox(
               width: 400,
-              child: CourseActivityWeek(days: days, today: today),
+              child: CourseActivityWeek(days: days, today: endingOn ?? today),
             ),
           ),
         ),
@@ -69,6 +72,34 @@ void main() {
       )
       .map((fade) => fade.opacity.value)
       .toList();
+
+  testWidgets('последние семь дней проходят через неделю, месяц и год', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      endingOn: DateTime(2027, 1, 6),
+      disableAnimations: true,
+      days: {DateTime(2026, 12, 31), DateTime(2027, 1, 5)},
+    );
+    await tester.pumpAndSettle();
+    final labels = tester
+        .widgetList<Semantics>(find.byType(Semantics))
+        .map((widget) => widget.properties.label)
+        .whereType<String>()
+        .where((label) => RegExp(r'^(Пн|Вт|Ср|Чт|Пт|Сб|Вс),').hasMatch(label));
+    expect(find.text('Последние 7 дней'), findsOneWidget);
+    expect(labels, [
+      'Чт, 31.12, занимались',
+      'Пт, 1.1, без отметки',
+      'Сб, 2.1, без отметки',
+      'Вс, 3.1, без отметки',
+      'Пн, 4.1, без отметки',
+      'Вт, 5.1, занимались',
+      'Ср, 6.1, сегодня, без отметки',
+    ]);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('дни доступны диктору с начала появления', (tester) async {
     final semantics = tester.ensureSemantics();

@@ -138,7 +138,7 @@ void main() {
       await settle(tester);
       expect(controller.current!.atom.id, id);
       expect(controller.current!.mode, ExerciseMode.sayName);
-      expect(find.text('Назовите эту букву вслух'), findsOneWidget);
+      expect(find.text('Послушайте и повторите'), findsOneWidget);
       expect(find.text('№ ${index + 1} из 20'), findsOneWidget);
       await tester.runAsync(() => controller.submit(directOutcome: true));
       await settle(tester);

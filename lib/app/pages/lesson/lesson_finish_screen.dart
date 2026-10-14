@@ -41,15 +41,11 @@ class LessonFinishScreen extends StatelessWidget {
     return AppScaffold(
       key: kDebugMode ? UniqueKey() : null,
       title: isReview ? 'Повторение' : 'Урок',
-      bottomBar:
-          NextButton(
-            title: controller.weeklyStreak.value == null ? 'Закрыть' : 'Дальше',
-            onTap: onClose,
-          ).animate().fadeIn(
-            duration: 200.ms,
-            delay: _delay(1000.ms),
-            curve: Curves.easeInOut,
-          ),
+      bottomBar: NextButton(title: 'Закрыть', onTap: onClose).animate().fadeIn(
+        duration: 200.ms,
+        delay: _delay(1000.ms),
+        curve: Curves.easeInOut,
+      ),
       builder: (context, insets) => Stack(
         fit: StackFit.expand,
         children: [

@@ -64,6 +64,7 @@ class LetterWidgetCard extends StatelessWidget {
   /// про букву, и озвучка была бы подсказкой — там кнопку прячут вместе
   /// с автоматическим звучанием.
   final bool showPlay;
+  final bool playEnabled;
   final bool specimen;
 
   const LetterWidgetCard({
@@ -80,6 +81,7 @@ class LetterWidgetCard extends StatelessWidget {
     this.track,
     this.autoPlay = true,
     this.showPlay = true,
+    this.playEnabled = true,
     this.specimen = false,
   });
 
@@ -234,6 +236,7 @@ class LetterWidgetCard extends StatelessWidget {
                           onAutoPlay: onAutoPlay,
                           track: track,
                           autoPlay: autoPlay,
+                          enabled: playEnabled,
                         ),
                       ] else
                         const Margin.vertical(32),

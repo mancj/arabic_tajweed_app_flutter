@@ -53,6 +53,7 @@ class ProgressRepository {
   Set<int> _sessionsWithNew = const {};
   Set<String> _introducedAtomIds = const {};
   Set<String> _learnedLetterIds = const {};
+  Set<String> _pronunciationPracticedIds = const {};
   Set<DateTime> _activityDays = const {};
 
   /// Дни реальной работы по местному времени, включая незаконченные занятия.
@@ -77,6 +78,13 @@ class ProgressRepository {
   Future<Set<String>> learnedLetterIds() async {
     if (!_loaded) await recompute();
     return Set.unmodifiable(_learnedLetterIds);
+  }
+
+  /// Старые ответы, включая ошибки, уже были встречами с произношением.
+  /// После обновления приложения они не становятся первым заданием снова.
+  Future<Set<String>> pronunciationPracticedIds() async {
+    if (!_loaded) await recompute();
+    return Set.unmodifiable(_pronunciationPracticedIds);
   }
 
   /// Номер для урока, который начинается сейчас: следующий за последним
@@ -281,6 +289,11 @@ class ProgressRepository {
         .whereType<LetterLearned>()
         .map((e) => e.atomId)
         .toSet();
+    _pronunciationPracticedIds = log
+        .whereType<ProgressEvent>()
+        .where((e) => e.mode.isPronunciation)
+        .map((e) => e.atomId)
+        .toSet();
     _sessionsWithNew = sessionsWithNew;
     _loaded = true;
   }
@@ -312,6 +325,13 @@ class ProgressRepository {
     _learnedLetterIds = {
       ..._learnedLetterIds,
       ...entries.whereType<LetterLearned>().map((e) => e.atomId),
+    };
+    _pronunciationPracticedIds = {
+      ..._pronunciationPracticedIds,
+      ...entries
+          .whereType<ProgressEvent>()
+          .where((e) => e.mode.isPronunciation)
+          .map((e) => e.atomId),
     };
     _sessionsWithNew = sessionsWithNew;
   }

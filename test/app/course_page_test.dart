@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:arabic_tajweed_app/app/pages/course/course_dashboard.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_page.dart';
 import 'package:arabic_tajweed_app/app/pages/course/course_path_page.dart';
+import 'package:arabic_tajweed_app/app/pages/debug/debug_page.dart';
 import 'package:arabic_tajweed_app/app/pages/lesson/lesson_binding.dart';
 import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/data/curriculum_loader.dart';
 import 'package:arabic_tajweed_app/data/progress_database.dart';
+import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:arabic_tajweed_app/domain/atom.dart';
 import 'package:arabic_tajweed_app/domain/lesson_pacing.dart';
 import 'package:arabic_tajweed_app/domain/planner.dart';
@@ -55,6 +57,11 @@ void main() {
         home: const CoursePage(),
         getPages: [
           GetPage(
+            name: DebugPage.routeName,
+            page: () => const DebugPage(),
+            binding: DebugPageBinding(),
+          ),
+          GetPage(
             name: '/lesson',
             page: () => const Scaffold(body: Text('Занятие')),
           ),
@@ -65,25 +72,31 @@ void main() {
     return c;
   }
 
-  // Выбранный в debug день должен переживать перезапуск общих часов, иначе
-  // календарь после нового запуска вернётся к реальному числу.
-  testWidgets('нажатие на дату сохраняет сегодняшний день приложения', (
+  // Выбранный день переживает перезапуск, а сброс из меню возвращает
+  // календарь к времени устройства навсегда, сохраняя историю занятий.
+  // Проверка защищает от сброса только в памяти или фиксации реального дня.
+  testWidgets('выбранная дата сохраняется и сбрасывается из меню отладки', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
-    DateTime systemNow() => DateTime(2026, 9, 14, 10, 30);
-    final clock = AppClock(systemNow: systemNow, preferences: preferences);
+    Get.put(SharedPreferenceManager(preferences), permanent: true);
+    var actualNow = DateTime(2026, 9, 14, 10, 30);
+    DateTime systemNow() => actualNow;
+    final clock = Get.put(
+      AppClock(systemNow: systemNow, preferences: preferences),
+      permanent: true,
+    );
     final c = await open(tester, clock: clock);
-    final nextDay = find.descendant(
+    final selectedDay = find.descendant(
       of: find.byType(CourseActivityWeek),
-      matching: find.text('15'),
+      matching: find.text('12'),
     );
 
-    await tester.tap(nextDay);
+    await tester.tap(selectedDay);
     await settle(tester);
 
-    expect(DateUtils.isSameDay(c.today, DateTime(2026, 9, 15)), isTrue);
+    expect(DateUtils.isSameDay(c.today, DateTime(2026, 9, 12)), isTrue);
     await tester.runAsync(
       () => c.repository.finishSession(
         sessionId: 1,
@@ -96,6 +109,43 @@ void main() {
     expect(DateUtils.isSameDay(summaries.single.at, c.today), isTrue);
     final restarted = AppClock(systemNow: systemNow, preferences: preferences);
     expect(DateUtils.isSameDay(restarted.now, c.today), isTrue);
+
+    await tester.ensureVisible(find.text('Меню отладки'));
+    await tester.tap(find.text('Меню отладки'));
+    await settle(tester);
+    await tester.scrollUntilVisible(
+      find.text('Сброс'),
+      500,
+      scrollable: find.descendant(
+        of: find.byType(DebugPage),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await settle(tester);
+    await tester.tap(find.text('Сброс'));
+    await settle(tester);
+    await tester.tap(find.text('Сбросить дату'));
+    await settle(tester);
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+
+    expect(clock.now, actualNow);
+    expect(preferences.containsKey('debugToday'), isFalse);
+    final afterReset = AppClock(systemNow: systemNow, preferences: preferences);
+    expect(afterReset.now, actualNow);
+    actualNow = DateTime(2026, 9, 15, 8, 45);
+    expect(clock.now, actualNow);
+    expect(afterReset.now, actualNow);
+
+    Get.back();
+    await settle(tester);
+    Get.back();
+    await settle(tester);
+    expect(
+      tester.widget<CourseActivityWeek>(find.byType(CourseActivityWeek)).today,
+      actualNow,
+    );
+    expect((await db.readSessionSummaries()).single.at, summaries.single.at);
   });
 
   testWidgets('главная показывает одно занятие и отдельный путь', (

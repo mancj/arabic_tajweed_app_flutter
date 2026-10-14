@@ -71,6 +71,22 @@ void main() {
     expect(entry.fastEnough, isTrue);
   });
 
+  // Ошибка произношения тоже означает встречу с заданием: обновление или
+  // перезапуск не должны снова включать первый образец. Сброс начинает заново.
+  test('история произношения восстанавливается независимо от успеха', () async {
+    expect(await repo.pronunciationPracticedIds(), isEmpty);
+    await repo.record(answer(mode: ExerciseMode.sayName, correct: false));
+    await repo.record(answer(mode: ExerciseMode.trace));
+    expect(await repo.pronunciationPracticedIds(), {'ba.isolated'});
+    final restarted = ProgressRepository(
+      database: db,
+      letterFormIds: const {'ba.isolated'},
+    );
+    expect(await restarted.pronunciationPracticedIds(), {'ba.isolated'});
+    await restarted.clear();
+    expect(await restarted.pronunciationPracticedIds(), isEmpty);
+  });
+
   test('оба подтипа записи различаются при чтении', () async {
     await repo.recordAll([
       AtomIntroduced(atomId: 'ba.isolated', sessionId: 1, at: t0),

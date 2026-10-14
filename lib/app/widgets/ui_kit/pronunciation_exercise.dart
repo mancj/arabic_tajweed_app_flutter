@@ -1,13 +1,16 @@
 import 'package:arabic_tajweed_app/app/resources/ui_resources.dart';
 import 'package:arabic_tajweed_app/app/widgets/margin.dart';
 import 'package:arabic_tajweed_app/data/rest/pronunciation_check.dart';
+import 'package:arabic_tajweed_app/domain/audio_track.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'letter_widget.dart';
+import 'mono_text_button.dart';
 import 'rule_card.dart';
 
-/// Карточка чтения: образец звучания не предъявляется до ответа ученика.
-class PronunciationExercise extends StatelessWidget {
+/// Первая встреча даёт образец; при повторении он раскрывается по просьбе.
+class PronunciationExercise extends StatefulWidget {
   const PronunciationExercise({
     required this.glyph,
     this.result,
@@ -15,6 +18,13 @@ class PronunciationExercise extends StatelessWidget {
     this.error,
     this.showFeedback = true,
     this.showRawHeard = false,
+    this.showExampleInitially = false,
+    this.autoPlayExample = false,
+    this.exampleEnabled = true,
+    this.onPlayExample,
+    this.onAutoPlayExample,
+    this.onPresented,
+    this.track,
     super.key,
   });
 
@@ -24,25 +34,81 @@ class PronunciationExercise extends StatelessWidget {
   final String? error;
   final bool showFeedback;
   final bool showRawHeard;
+  final bool showExampleInitially;
+  final bool autoPlayExample;
+  final bool exampleEnabled;
+  final VoidCallback? onPlayExample;
+  final VoidCallback? onAutoPlayExample;
+  final VoidCallback? onPresented;
+  final ValueListenable<AudioTrack>? track;
+
+  @override
+  State<PronunciationExercise> createState() => _PronunciationExerciseState();
+}
+
+class _PronunciationExerciseState extends State<PronunciationExercise> {
+  late bool _exampleRevealed = widget.showExampleInitially;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onPresented?.call();
+    });
+  }
+
+  @override
+  void didUpdateWidget(PronunciationExercise oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.glyph != widget.glyph) {
+      _exampleRevealed = widget.showExampleInitially;
+    }
+  }
+
+  void _revealExample() {
+    if (!widget.exampleEnabled) return;
+    setState(() => _exampleRevealed = true);
+    widget.onPlayExample?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final check = result;
-    final heard = showRawHeard ? check?.rawHeard ?? check?.heard : check?.heard;
+    final check = widget.result;
+    final heard = widget.showRawHeard
+        ? check?.rawHeard ?? check?.heard
+        : check?.heard;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LetterWidgetCard(
-          letter: glyph,
+          letter: widget.glyph,
           isArabic: true,
           labelText: 'Произношение',
-          question: prompt,
-          showPlay: false,
+          question: widget.showExampleInitially
+              ? 'Послушайте и повторите'
+              : widget.prompt,
+          showPlay: _exampleRevealed,
+          onPlay: widget.onPlayExample,
+          onAutoPlay: widget.onAutoPlayExample,
+          autoPlay: widget.autoPlayExample,
+          playEnabled: widget.exampleEnabled,
+          track: widget.track,
         ),
-        if (error != null) ...[
+        if (!_exampleRevealed && widget.onPlayExample != null) ...[
+          const Margin.vertical(8),
+          Center(
+            child: MonoTextButton(
+              title: 'Послушать пример',
+              icon: Icons.volume_up_rounded,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              onPressed: widget.exampleEnabled ? _revealExample : null,
+            ),
+          ),
+        ],
+        if (widget.error != null) ...[
           const Margin.vertical(24),
-          RuleCard(badge: 'Проверка недоступна', title: error!),
-        ] else if (showFeedback && check != null) ...[
+          RuleCard(badge: 'Проверка недоступна', title: widget.error!),
+        ] else if (widget.showFeedback && check != null) ...[
           const Margin.vertical(24),
           RuleCard(
             badge: switch (check.status) {
@@ -57,7 +123,7 @@ class PronunciationExercise extends StatelessWidget {
               PronunciationStatus.mismatch => UIColors.error,
               PronunciationStatus.unclear => UIColors.secondary2,
             },
-            child: showRawHeard
+            child: widget.showRawHeard
                 ? Column(
                     children: [
                       Text('Сервер услышал', style: UITextStyles.regular15),

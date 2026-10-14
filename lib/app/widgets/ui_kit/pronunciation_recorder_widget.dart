@@ -12,6 +12,7 @@ import '../../resources/ui_resources.dart';
 import '../margin.dart';
 import 'glow_wave_widget.dart';
 import 'mono_text_button.dart';
+import 'ring_sparks.dart';
 
 enum PronunciationRecorderState { idle, recording, checking }
 
@@ -28,8 +29,22 @@ class PronunciationRecorderWidget extends StatefulWidget {
     this.microphonePermissionDenied = false,
     this.microphoneSettingsRequired = false,
     this.onOpenSettings,
+    this.particleMinRadius = .5,
+    this.particleMaxRadius = 1.3,
+    this.particleEmissionRate = 12,
+    this.particleMaxCount = 12,
+    this.particleSpeed = 3,
+    this.particleColor,
+    this.particleSeed = 170,
     super.key,
-  });
+  }) : assert(particleMinRadius >= 0),
+       assert(particleMaxRadius >= particleMinRadius),
+       assert(particleMaxRadius < double.infinity),
+       assert(
+         particleEmissionRate >= 0 && particleEmissionRate < double.infinity,
+       ),
+       assert(particleMaxCount >= 0),
+       assert(particleSpeed >= 0 && particleSpeed < double.infinity);
 
   final PronunciationRecorderState state;
   final ValueListenable<double>? level;
@@ -38,6 +53,27 @@ class PronunciationRecorderWidget extends StatefulWidget {
   final bool microphonePermissionDenied;
   final bool microphoneSettingsRequired;
   final VoidCallback? onOpenSettings;
+
+  /// Диапазон радиусов новых частиц в логических пикселях, не диаметров.
+  /// Уже летящие частицы сохраняют размер при изменении этих полей.
+  final double particleMinRadius;
+  final double particleMaxRadius;
+
+  /// Новых частиц в секунду во время записи; 0 отключает их появление.
+  final double particleEmissionRate;
+
+  /// Максимум одновременно живых частиц; 0 полностью отключает эффект.
+  final int particleMaxCount;
+
+  /// Множитель скорости полёта и затухания: 1 — обычная, 0.5 — вдвое медленнее,
+  /// 2 — вдвое быстрее. Частота вылета не меняется; 0 приостанавливает частицы.
+  final double particleSpeed;
+
+  /// Цвет частиц; по умолчанию цвет нижней, тёмной части градиента кнопки.
+  final Color? particleColor;
+
+  /// Начальное значение генератора случайности для повторяемого разброса.
+  final int particleSeed;
 
   @override
   State<PronunciationRecorderWidget> createState() =>
@@ -132,6 +168,11 @@ class _PronunciationRecorderWidgetState
     final recording = widget.state == PronunciationRecorderState.recording;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     MediaQuery.platformBrightnessOf(context);
+    final buttonGradient = LinearGradient(
+      colors: [Colors.red[700]!, Colors.red[700]!],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -204,6 +245,25 @@ class _PronunciationRecorderWidgetState
                   recording: recording,
                   onRecordPressed: widget.onRecordPressed,
                   onStopPressed: widget.onStopPressed,
+                  gradient: buttonGradient,
+                  particles: RingSparks(
+                    key: const ValueKey('recorder-particles'),
+                    progress: const AlwaysStoppedAnimation<double>(1),
+                    geometry: const SegmentedRingGeometry(
+                      count: 1,
+                      gap: 0,
+                      inset: 0,
+                    ),
+                    enabled: recording,
+                    color: widget.particleColor ?? buttonGradient.colors.last,
+                    minRadius: widget.particleMinRadius,
+                    maxRadius: widget.particleMaxRadius,
+                    activeEmissionRate: 0,
+                    floatingEmissionRate: widget.particleEmissionRate,
+                    maxParticles: widget.particleMaxCount,
+                    speed: widget.particleSpeed,
+                    seed: widget.particleSeed,
+                  ),
                 ),
               ],
             ],
@@ -414,12 +474,16 @@ class _RecorderActionButton extends StatefulWidget {
     required this.recording,
     required this.onRecordPressed,
     required this.onStopPressed,
+    required this.particles,
+    required this.gradient,
     super.key,
   });
 
   final bool recording;
   final VoidCallback? onRecordPressed;
   final VoidCallback? onStopPressed;
+  final Widget particles;
+  final Gradient gradient;
 
   @override
   State<_RecorderActionButton> createState() => _RecorderActionButtonState();
@@ -508,29 +572,31 @@ class _RecorderActionButtonState extends State<_RecorderActionButton> {
         onPointerDown: _pointerDown,
         onPointerUp: _pointerUp,
         onPointerCancel: _pointerCancel,
-        child: CircleButton(
-          hapticOnTap: false,
-          borderColor: Colors.red[400]!,
-          gradient: LinearGradient(
-            colors: [Colors.red[700]!, Colors.red[700]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red[500]!.withValues(alpha: 0.2),
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CircleButton(
+              hapticOnTap: false,
+              borderColor: Colors.red[400]!,
+              gradient: widget.gradient,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red[500]!.withValues(alpha: 0.2),
+                  spreadRadius: 1,
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              size: 68,
+              child: SizedBox(
+                width: 68,
+                height: 68,
+                child: Icon(icon, size: 28, color: UIColors.primaryButtonText),
+              ),
+            ).animate().shimmer(duration: 500.ms, delay: 500.ms),
+            Positioned.fill(child: widget.particles),
           ],
-          size: 52,
-          child: SizedBox(
-            width: 52,
-            height: 52,
-            child: Icon(icon, size: 28, color: UIColors.primaryButtonText),
-          ),
-        ).animate().shimmer(duration: 500.ms, delay: 500.ms),
+        ),
       ),
     );
   }

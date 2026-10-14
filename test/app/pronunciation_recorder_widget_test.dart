@@ -5,16 +5,146 @@
 // Системный запрос может отменить жест: запись и ссылка на настройки остаются доступны.
 // Обычная речь на −17 dBFS должна быть видимой, а комнатный фон — коротким:
 // линейная амплитуда прячет голос, слишком чувствительная шкала раздувает фон.
+// Частицы появляются только при записи и не перехватывают остановку кнопкой.
+// Публичные настройки управляют рисунком, а нулевой лимит и отключение анимаций
+// убирают частицы, чтобы эффект можно было отключить без изменения записи.
+// Скорость меняет полёт уже летящих частиц и позволяет поставить его на паузу.
+// Их исходный цвет совпадает с тёмной частью градиента кнопки.
 import 'dart:math' as math;
 
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/glow_wave_widget.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/circle_button.dart';
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/pronunciation_recorder_widget.dart';
+import 'package:arabic_tajweed_app/app/widgets/ui_kit/ring_sparks.dart';
 import 'package:arabic_tajweed_app/app/widgets/app_haptics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('частицы видны только при записи и не мешают остановке', (
+    tester,
+  ) async {
+    final state = ValueNotifier(PronunciationRecorderState.idle);
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 340,
+              child: ValueListenableBuilder<PronunciationRecorderState>(
+                valueListenable: state,
+                builder: (context, value, _) => PronunciationRecorderWidget(
+                  state: value,
+                  onRecordPressed: () =>
+                      state.value = PronunciationRecorderState.recording,
+                  onStopPressed: () =>
+                      state.value = PronunciationRecorderState.checking,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(_particles(tester), isEmpty);
+
+    final action = find.byKey(const ValueKey('recorder-action'));
+    await tester.tap(action);
+    await tester.pump();
+    for (var frame = 0; frame < 100; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final particles = _particles(tester);
+    expect(particles, isNotEmpty);
+    final buttonGradient =
+        tester.widget<CircleButton>(find.byType(CircleButton)).gradient!
+            as LinearGradient;
+    expect(
+      particles.map((particle) => particle.color.toARGB32() & 0x00ffffff),
+      everyElement(buttonGradient.colors.last.toARGB32() & 0x00ffffff),
+    );
+
+    await tester.tap(action);
+    await tester.pump();
+    expect(state.value, PronunciationRecorderState.checking);
+    expect(_particles(tester), isEmpty);
+    state.value = PronunciationRecorderState.idle;
+    await tester.pumpAndSettle();
+    expect(_particles(tester), isEmpty);
+  });
+
+  testWidgets('настройки частиц применяются во время записи', (tester) async {
+    Future<void> pumpRecorder({
+      double emissionRate = 24,
+      int maxCount = 6,
+      double speed = 1,
+      bool reducedMotion = false,
+    }) => tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: reducedMotion),
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 340,
+                child: PronunciationRecorderWidget(
+                  state: PronunciationRecorderState.recording,
+                  particleMinRadius: 3,
+                  particleMaxRadius: 4,
+                  particleEmissionRate: emissionRate,
+                  particleMaxCount: maxCount,
+                  particleSpeed: speed,
+                  particleColor: Colors.pink,
+                  particleSeed: 71,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Future<void> fly(int frames) async {
+      for (var frame = 0; frame < frames; frame++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+    }
+
+    await pumpRecorder();
+    await fly(100);
+    final particles = _particles(tester);
+    expect(particles, isNotEmpty);
+    expect(particles.length, lessThanOrEqualTo(6));
+    expect(
+      particles.map((particle) => particle.radius),
+      everyElement(inInclusiveRange(3, 4)),
+    );
+    expect(
+      particles.map((particle) => particle.color.toARGB32() & 0x00ffffff),
+      everyElement(Colors.pink.toARGB32() & 0x00ffffff),
+    );
+
+    await pumpRecorder(speed: 0);
+    final pausedParticles = _particles(tester);
+    await fly(100);
+    expect(_particles(tester), pausedParticles);
+    await pumpRecorder(emissionRate: 0, speed: 2);
+    await fly(100);
+    expect(_particles(tester), isEmpty);
+    await pumpRecorder();
+    await fly(100);
+    expect(_particles(tester), isNotEmpty);
+    await pumpRecorder(maxCount: 0);
+    await fly(20);
+    expect(_particles(tester), isEmpty);
+    await pumpRecorder(reducedMotion: true);
+    await fly(100);
+    expect(_particles(tester), isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('волна показывает речь и оставляет комнатный фон коротким', (
     tester,
   ) async {
@@ -342,4 +472,30 @@ void main() {
     ]);
     await tester.pump(const Duration(milliseconds: 120));
   });
+}
+
+List<({Offset point, double radius, Color color})> _particles(
+  WidgetTester tester,
+) {
+  final paint = find.descendant(
+    of: find.byType(RingSparks),
+    matching: find.byType(CustomPaint),
+  );
+  if (paint.evaluate().isEmpty) return const [];
+  final canvas = TestRecordingCanvas();
+  tester
+      .widget<CustomPaint>(paint)
+      .painter!
+      .paint(canvas, tester.getSize(paint));
+  return canvas.invocations
+      .where((call) => call.invocation.memberName == #drawCircle)
+      .map((call) {
+        final arguments = call.invocation.positionalArguments;
+        return (
+          point: arguments[0] as Offset,
+          radius: arguments[1] as double,
+          color: (arguments[2] as Paint).color,
+        );
+      })
+      .toList();
 }

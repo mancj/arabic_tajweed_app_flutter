@@ -5,6 +5,7 @@ import 'package:arabic_tajweed_app/data/progress_database.dart';
 import 'package:arabic_tajweed_app/data/pronunciation_preference.dart';
 import 'package:arabic_tajweed_app/data/shared_preference_manager.dart';
 import 'package:arabic_tajweed_app/app/resources/ui_colors.dart';
+import 'package:arabic_tajweed_app/app/shared_state/app_clock.dart';
 import 'package:arabic_tajweed_app/app/pages/alphabet_letter/alphabet_letter_page.dart';
 import 'package:arabic_tajweed_app/app/pages/atom_progress/atom_progress_page.dart';
 import 'package:arabic_tajweed_app/app/pages/app_widgets/app_widgets_page.dart';
@@ -78,11 +79,17 @@ class DebugController extends GetxController {
     }
   }
 
+  Future<void> resetDebugToday() async {
+    await Get.find<AppClock>().resetDebugToday();
+    Get.snackbar('Дата сброшена', 'Используется текущая дата устройства');
+  }
+
   /// Сбросить прогресс: лог стирается, курс начинается с первого урока.
   /// Нужно, чтобы проверять правки в контенте — иначе пройденные уроки
   /// заново не показываются.
   Future<void> resetProgress() async {
     await Get.find<ProgressDatabase>().clear();
+    await _preferences.pronunciationExamplesShown.set(null);
     await _preferences.weeklyStreakCelebratedStart.set(null);
     Get.snackbar(
       'Прогресс сброшен',

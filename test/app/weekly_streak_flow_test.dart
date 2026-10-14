@@ -1,5 +1,6 @@
-// Недельное поздравление открывается только после действия на итоге занятия.
-// Оставленный итог не расходует достижение; показ сохраняется между запусками,
+// Недельное поздравление открывается автоматически после занятия на седьмой
+// день, в том числе когда серия началась в середине недели. Непоказанный экран
+// не расходует достижение; показ сохраняется между запусками,
 // а закрытие поздравления возвращает к экрану, с которого началось занятие.
 // Удар эмблемы и остановка фона не запускают счётчик заново.
 // На странице вибрацию ведёт счётчик: тики при смене чисел и один тяжёлый
@@ -31,7 +32,7 @@ import '../helpers/text_asset_bundle.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final today = DateTime(2026, 10, 11, 12);
+  final today = DateTime(2026, 10, 14, 12);
   final curriculum = CurriculumLoader.parse(
     File('assets/curriculum/stage1.json').readAsStringSync(),
   );
@@ -44,9 +45,9 @@ void main() {
     preferences = await SharedPreferences.getInstance();
     Get.put(SharedPreferenceManager(preferences), permanent: true);
     database = ProgressDatabase(NativeDatabase.memory());
-    for (var day = 5; day <= 10; day++) {
+    for (var day = 8; day <= 13; day++) {
       await database.finishSession(
-        sessionId: day - 4,
+        sessionId: day - 7,
         at: DateTime(2026, 10, day, 12),
         purpose: LessonPurpose.standard,
         exerciseCount: 8,
@@ -159,7 +160,6 @@ void main() {
       tester,
     ) async {
       final controller = await tester.runAsync(start);
-      await tester.runAsync(() => finish(controller!));
       await tester.pumpWidget(
         GetMaterialApp(
           home: const Scaffold(body: Text('Главная')),
@@ -171,21 +171,22 @@ void main() {
       );
       Get.to<void>(() => const LessonPage(), routeName: LessonPage.routeName);
       await tester.pump();
-      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.byType(WeeklyStreakPage), findsNothing);
-      expect(find.text('Дальше'), findsOneWidget);
       expect(
         SharedPreferenceManager(preferences).weeklyStreakCelebratedStart.get(),
         isNull,
       );
 
-      await tester.tap(find.text('Дальше'));
+      await tester.runAsync(() => finish(controller!));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byType(WeeklyStreakPage), findsOneWidget);
       expect(
         SharedPreferenceManager(preferences).weeklyStreakCelebratedStart.get(),
-        DateTime(2026, 10, 5),
+        DateTime(2026, 10, 8),
       );
       if (closeWithBack) {
         Get.back<void>();
@@ -210,6 +211,78 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets('после пропуска дня поздравление не заменяет итог занятия', (
+    tester,
+  ) async {
+    await database.clear();
+    for (final day in [7, 8, 9, 11, 12, 13]) {
+      await database.finishSession(
+        sessionId: day,
+        at: DateTime(2026, 10, day, 12),
+        purpose: LessonPurpose.standard,
+        exerciseCount: 8,
+        firstTryCorrect: 8,
+      );
+    }
+    final controller = await tester.runAsync(start);
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: const Scaffold(body: Text('Главная')),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+      ),
+    );
+    Get.to<void>(() => const LessonPage(), routeName: LessonPage.routeName);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.runAsync(() => finish(controller!));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.byType(WeeklyStreakPage), findsNothing);
+    expect(find.text('Закрыть'), findsOneWidget);
+    expect(controller!.weeklyStreak.value, isNull);
+    expect(
+      SharedPreferenceManager(preferences).weeklyStreakCelebratedStart.get(),
+      isNull,
+    );
+    await tester.tap(find.text('Закрыть'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text('Главная'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('календарь поздравления показывает семь дней достигнутой серии', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WeeklyStreakPage(achievedOn: DateTime(2027, 1, 6)),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final labels = tester
+        .widgetList<Semantics>(find.byType(Semantics))
+        .map((widget) => widget.properties.label)
+        .whereType<String>()
+        .where((label) => label.endsWith(': занятие выполнено'));
+    expect(labels, [
+      '31.12.2026: занятие выполнено',
+      for (var day = 1; day <= 6; day++) '$day.1.2027: занятие выполнено',
+    ]);
+    expect(
+      tester.getCenter(find.text('Чт')).dx,
+      lessThan(tester.getCenter(find.text('Ср')).dx),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('предпросмотр не расходует настоящее достижение', (tester) async {
     await tester.pumpWidget(

@@ -71,6 +71,7 @@ class RingSparks extends StatefulWidget {
     this.activeEmissionRate = 18,
     this.floatingEmissionRate = 3,
     this.maxParticles = 48,
+    this.speed = 1,
     this.geometry = const SegmentedRingGeometry(),
     this.enabled = true,
     this.seed = 17,
@@ -82,7 +83,8 @@ class RingSparks extends StatefulWidget {
        assert(
          floatingEmissionRate >= 0 && floatingEmissionRate < double.infinity,
        ),
-       assert(maxParticles >= 0);
+       assert(maxParticles >= 0),
+       assert(speed >= 0 && speed < double.infinity);
 
   /// Заполнение кольца от 0 до 1; определяет точку рождения и режим полёта.
   final ValueListenable<double> progress;
@@ -107,6 +109,11 @@ class RingSparks extends StatefulWidget {
 
   /// Максимум одновременно живых искр. 0 очищает их и останавливает эффект.
   final int maxParticles;
+
+  /// Множитель скорости полёта и затухания: 1 — обычная, 2 — вдвое быстрее.
+  /// Не меняет частоту появления новых искр. 0 приостанавливает весь эффект
+  /// без очистки уже выпущенных искр; смена скорости не сдвигает их мгновенно.
+  final double speed;
 
   /// Геометрия кольца, по которой источник искр совпадает с краем дуги.
   final SegmentedRingGeometry geometry;
@@ -224,7 +231,8 @@ class _RingSparksState extends State<RingSparks>
   }
 
   void _syncTicker() {
-    final available = widget.enabled && _visible && _resumed;
+    final available =
+        widget.enabled && widget.speed > 0 && _visible && _resumed;
     final mayEmit =
         (widget.activeEmissionRate > 0 && _floating < 1) ||
         (widget.floatingEmissionRate > 0 && (_floating > 0 || _progress >= 1));
@@ -251,7 +259,7 @@ class _RingSparksState extends State<RingSparks>
     // После паузы не выпускаем накопившиеся точки одним залпом.
     if (previous == null) return;
     final dt = ((elapsed - previous).inMicroseconds / 1e6).clamp(0.0, .05);
-    _clock += dt;
+    _clock += dt * widget.speed;
     if (_progress >= 1) {
       _floating = math.min(1, _floating + dt / .8);
     }

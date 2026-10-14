@@ -22,6 +22,16 @@ class StudyStreak {
   final int days;
   final DateTime? startedOn;
 
+  /// Семь местных календарных дней до выбранной даты включительно.
+  /// Окно серии не привязано к понедельнику и не содержит будущих дней.
+  static List<DateTime> weekEndingOn(DateTime at) {
+    final end = _localDay(at);
+    return List.generate(
+      7,
+      (index) => DateTime(end.year, end.month, end.day - 6 + index),
+    );
+  }
+
   DateTime? get weeklyAchievementOn {
     final start = startedOn;
     return days >= 7 && start != null

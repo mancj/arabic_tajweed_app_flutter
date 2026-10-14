@@ -213,16 +213,9 @@ void main() {
     await settle(tester);
     if (!prepareVoice) return;
     expect(find.byType(PronunciationExercise), findsOneWidget);
-    expect(
-      find.text(
-        voiceMode == ExerciseMode.sayWord
-            ? 'Прочитайте это слово вслух'
-            : 'Прочитайте этот слог вслух',
-      ),
-      findsOneWidget,
-    );
-    expect(find.byType(PlayControl), findsNothing);
-    expect(audio.played, isEmpty);
+    expect(find.text('Послушайте и повторите'), findsOneWidget);
+    expect(find.byType(PlayControl), findsOneWidget);
+    expect(audio.played, [controller.current!.atom.audioAsset]);
     expect(controller.canSubmit, isFalse);
   }
 

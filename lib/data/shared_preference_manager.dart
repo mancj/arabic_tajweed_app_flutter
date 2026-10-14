@@ -16,6 +16,10 @@ class SharedPreferenceManager {
     defaultValue: ApiConfig.baseUrl,
   );
   late final colorScheme = StringSharedPref('debugColorScheme', _prefs);
+  late final pronunciationExamplesShown = StringListSharedPref(
+    'pronunciationExamplesShown',
+    _prefs,
+  );
   late final weeklyStreakCelebratedStart = DateTimeSharedPref(
     'weeklyStreakCelebratedStart',
     _prefs,

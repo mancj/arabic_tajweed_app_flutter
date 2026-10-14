@@ -3,12 +3,14 @@ import 'dart:math' as math;
 
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/animated_background_shapes.dart';
 import 'package:bokeh_lava_gradient/bokeh_lava_gradient.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 
+import '../../../domain/study_streak.dart';
 import '../../resources/ui_resources.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/margin.dart';
@@ -18,12 +20,21 @@ import '../../widgets/ui_kit/ring_sparks.dart';
 
 /// Недельный рубеж: дата относится к достигнутой неделе, а не к просмотру.
 class WeeklyStreakPage extends StatefulWidget {
-  const WeeklyStreakPage({this.achievedOn, this.onContinue, super.key});
+  const WeeklyStreakPage({
+    this.achievedOn,
+    this.onContinue,
+    this.onPresented,
+    super.key,
+  });
 
   static const routeName = '/weekly-streak';
 
   final DateTime? achievedOn;
   final VoidCallback? onContinue;
+
+  /// Сообщает о первом кадре видимого поздравления; предпросмотр не задаёт
+  /// этот отклик и потому не расходует настоящее достижение.
+  final VoidCallback? onPresented;
 
   @override
   State<WeeklyStreakPage> createState() => _WeeklyStreakPageState();
@@ -44,6 +55,11 @@ class _WeeklyStreakPageState extends State<WeeklyStreakPage>
     final date = (widget.achievedOn ?? DateTime.now()).toLocal();
     _achievedOn = DateTime(date.year, date.month, date.day);
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && (ModalRoute.isCurrentOf(context) ?? true)) {
+        widget.onPresented?.call();
+      }
+    });
   }
 
   @override
@@ -129,10 +145,6 @@ class _WeeklyStreakPageState extends State<WeeklyStreakPage>
           ? SystemUiOverlayStyle.light
           : SystemUiOverlayStyle.dark,
       child: AppScaffold(
-        title: MediaQuery.textScalerOf(context).scale(22) <= 32
-            ? 'Стрик'
-            : null,
-        onBack: _continue,
         bottomBar: _action(),
         builder: (context, insets) => Stack(
           fit: StackFit.expand,
@@ -458,12 +470,7 @@ class _CompletedWeek extends StatelessWidget {
         alignment: WrapAlignment.spaceBetween,
         runSpacing: 16,
         spacing: 12,
-        children: List.generate(7, (index) {
-          final day = DateTime(
-            achievedOn.year,
-            achievedOn.month,
-            achievedOn.day - 6 + index,
-          );
+        children: StudyStreak.weekEndingOn(achievedOn).mapIndexed((index, day) {
           final last = index == 6;
           Widget marker = Column(
             mainAxisSize: MainAxisSize.min,
@@ -485,17 +492,22 @@ class _CompletedWeek extends StatelessWidget {
                 ),
                 child:
                     SvgPicture.asset(
-                      UISVGAssets.fire,
-                      width: 16,
-                      height: 16,
-                      colorFilter: ColorFilter.mode(
-                        last ? UIColors.primaryButtonText : UIColors.primary,
-                        BlendMode.srcIn,
-                      ),
-                    ).animate().fadeIn(
-                      duration: 200.ms,
-                      delay: (1100 + index * 200).ms,
-                    ).scaleXY(begin: .5),
+                          UISVGAssets.fire,
+                          width: 16,
+                          height: 16,
+                          colorFilter: ColorFilter.mode(
+                            last
+                                ? UIColors.primaryButtonText
+                                : UIColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(
+                          duration: 200.ms,
+                          delay: (1100 + index * 200).ms,
+                        )
+                        .scaleXY(begin: .5),
               ),
             ],
           );
@@ -516,7 +528,7 @@ class _CompletedWeek extends StatelessWidget {
             excludeSemantics: true,
             child: marker,
           );
-        }),
+        }).toList(),
       );
     },
   );

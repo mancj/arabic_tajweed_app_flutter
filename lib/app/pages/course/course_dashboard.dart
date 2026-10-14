@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 
 import '../../../domain/atom.dart';
+import '../../../domain/study_streak.dart';
 import '../../resources/ui_resources.dart';
 import '../../widgets/margin.dart';
 import 'course_controller.dart';
@@ -306,7 +307,7 @@ class _CourseLessonTransformation extends StatelessWidget {
   }
 }
 
-/// Текущая неделя и последние 30 местных календарных дней. Отметка означает
+/// Последние 7 и 30 местных календарных дней. Отметка означает
 /// работу с материалом, включая незаконченные занятия.
 class CourseActivityWeek extends StatefulWidget {
   const CourseActivityWeek({
@@ -338,11 +339,7 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
 
   @override
   Widget build(BuildContext context) {
-    final monday = DateTime(
-      widget.today.year,
-      widget.today.month,
-      widget.today.day - widget.today.weekday + 1,
-    );
+    final dates = StudyStreak.weekEndingOn(widget.today);
     return _CourseSurface(
       radius: 24,
       child: Padding(
@@ -355,7 +352,7 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
               delays: _historyDelays,
               skipAnimation: _skipAnimation,
             );
-            final week = _week(monday);
+            final week = _week(dates);
             if (constraints.maxWidth < 252 ||
                 MediaQuery.textScalerOf(context).scale(12) > 18) {
               return Column(
@@ -381,7 +378,7 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
     );
   }
 
-  Widget _week(DateTime monday) {
+  Widget _week(List<DateTime> dates) {
     const labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +392,10 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
             ),
             const Margin.horizontal(8),
             Expanded(
-              child: Text('Эта неделя', style: UITextStyles.monoSemibold14),
+              child: Text(
+                'Последние 7 дней',
+                style: UITextStyles.monoSemibold14,
+              ),
             ),
           ],
         ),
@@ -411,12 +411,8 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
               child: Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 runSpacing: 8,
-                children: labels.mapIndexed((index, label) {
-                  final date = DateTime(
-                    monday.year,
-                    monday.month,
-                    monday.day + index,
-                  );
+                children: dates.mapIndexed((index, date) {
+                  final label = labels[date.weekday - 1];
                   final active = widget.days.contains(date);
                   final current = DateUtils.isSameDay(date, widget.today);
                   final day = Semantics(
@@ -428,46 +424,51 @@ class _CourseActivityWeekState extends State<CourseActivityWeek> {
                       skipAnimation: _skipAnimation,
                       child: ExcludeSemantics(
                         child: Column(
-                        children: [
-                          Text(
-                            label,
-                            style: UITextStyles.regular11.copyWith(
-                              color: current
-                                  ? UIColors.text
-                                  : UIColors.secondary2,
+                          children: [
+                            Text(
+                              label,
+                              style: UITextStyles.regular11.copyWith(
+                                color: current
+                                    ? UIColors.text
+                                    : UIColors.secondary2,
+                              ),
                             ),
-                          ),
-                          const Margin.vertical(4),
-                          Container(
-                            width: diameter,
-                            height: diameter,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: current
-                                  ? UIColors.primary
-                                  : active
-                                  ? UIColors.primary20
-                                  : UIColors.backgroundShapes1,
-                            ),
-                            child: active
-                                ? Icon(
-                                    Icons.check_rounded,
-                                    size: 20,
-                                    color: current
-                                        ? UIColors.badgeText1
-                                        : UIColors.primary,
-                                  )
-                                : Text(
-                                    '${date.day}',
-                                    style: UITextStyles.semibold12.copyWith(
-                                      color: current
-                                          ? UIColors.primaryButtonText
-                                          : UIColors.secondary2,
+                            const Margin.vertical(4),
+                            Container(
+                              width: diameter,
+                              height: diameter,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: active
+                                    ? current
+                                          ? UIColors.primary
+                                          : UIColors.primary20
+                                    : current
+                                    ? UIColors.primary
+                                    : UIColors.backgroundShapes1,
+                              ),
+                              child: active || current
+                                  ? SvgPicture.asset(
+                                      UISVGAssets.fire,
+                                      height: 16,
+                                      colorFilter: ColorFilter.mode(
+                                        current
+                                            ? UIColors.text
+                                            : UIColors.primary,
+                                        BlendMode.srcIn,
+                                      ),
+                                    )
+                                  : Text(
+                                      '${date.day}',
+                                      style: UITextStyles.semibold12.copyWith(
+                                        color: current
+                                            ? UIColors.text
+                                            : UIColors.secondary2,
+                                      ),
                                     ),
-                                  ),
-                          ),
-                        ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -806,7 +807,9 @@ class _CourseSurface extends StatelessWidget {
     child: Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: gradient == null ? UIColors.cardBackground.withValues(alpha: .8) : null,
+        color: gradient == null
+            ? UIColors.cardBackground.withValues(alpha: .8)
+            : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: UIColors.borders),

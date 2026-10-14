@@ -24,6 +24,7 @@ class PlayControl extends StatefulWidget {
     this.size = 46,
     this.showHint = true,
     this.label,
+    this.enabled = true,
     super.key,
   });
 
@@ -33,6 +34,7 @@ class PlayControl extends StatefulWidget {
   final ValueListenable<AudioTrack>? track;
   final bool autoPlay;
   final double size;
+  final bool enabled;
   final bool showHint;
 
   /// Подписанная кнопка для объяснений; круглая — для упражнений.
@@ -58,7 +60,7 @@ class _PlayControlState extends State<PlayControl> {
   @override
   void didUpdateWidget(covariant PlayControl oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.autoPlay && !widget.autoPlay) _autoPlay?.cancel();
+    if (!widget.autoPlay || !widget.enabled) _autoPlay?.cancel();
     // В уроке карточка нередко остаётся на месте, а меняется только глиф —
     // для звука это такое же появление буквы, как и новая карточка.
     if (oldWidget.letter != widget.letter) _scheduleAutoPlay();
@@ -66,9 +68,9 @@ class _PlayControlState extends State<PlayControl> {
 
   void _scheduleAutoPlay() {
     _autoPlay?.cancel();
-    if (!widget.autoPlay) return;
+    if (!widget.autoPlay || !widget.enabled) return;
     _autoPlay = Timer(_autoPlayDelay, () {
-      if (mounted) (widget.onAutoPlay ?? widget.onTap)();
+      if (mounted && widget.enabled) (widget.onAutoPlay ?? widget.onTap)();
     });
   }
 
@@ -81,13 +83,24 @@ class _PlayControlState extends State<PlayControl> {
   @override
   Widget build(BuildContext context) {
     final listenable = widget.track;
-    if (listenable == null) return _button(false);
+    if (listenable == null) return _enabledButton(false);
 
     return ValueListenableBuilder<AudioTrack>(
       valueListenable: listenable,
-      builder: (_, value, _) => _button(value.isPlaying),
+      builder: (_, value, _) => _enabledButton(value.isPlaying),
     );
   }
+
+  Widget _enabledButton(bool isPlaying) => Semantics(
+    enabled: widget.enabled,
+    child: IgnorePointer(
+      ignoring: !widget.enabled,
+      child: Opacity(
+        opacity: widget.enabled ? 1 : .5,
+        child: _button(isPlaying),
+      ),
+    ),
+  );
 
   Widget _button(bool isPlaying) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);

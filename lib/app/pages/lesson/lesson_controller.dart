@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, debugPrint;
 import 'package:flutter/services.dart' show AssetBundle;
 import 'package:get/get.dart';
 
@@ -337,6 +337,80 @@ class LessonController extends GetxController {
   final PronunciationChecker pronunciation;
 
   final _pronunciationAttempts = PronunciationAttempts();
+  final _pronunciationExamplesShown = <String>{};
+  SharedPreferenceManager? _examplePreferences;
+  Exercise? _pronunciationExampleExercise;
+  bool _firstPronunciationExample = false;
+  bool _pronunciationExamplePlayed = false;
+  final _preparingRecording = false.obs;
+  Future<void>? _startingRecording;
+  Future<void>? _examplePlayback;
+  int _pronunciationGeneration = 0;
+
+  bool get firstPronunciationExample {
+    _refresh.value;
+    return _firstPronunciationExample;
+  }
+
+  bool get canPlayPronunciationExample =>
+      !isClosed &&
+      !_preparingRecording.value &&
+      _examplePlayback == null &&
+      !pronunciation.isRecording.value &&
+      !pronunciation.isChecking.value &&
+      !wasWrong.value &&
+      !wasCorrect.value &&
+      !_skippingExercise &&
+      card.value == null &&
+      isSayNameTask;
+
+  bool get autoPlayPronunciationExample =>
+      firstPronunciationExample &&
+      !_pronunciationExamplePlayed &&
+      canPlayPronunciationExample;
+
+  Future<void> _rememberPronunciationExample(Exercise exercise) async {
+    if (!_pronunciationExamplesShown.add(exercise.atom.id)) return;
+    final preference = _examplePreferences?.pronunciationExamplesShown;
+    if (preference == null) return;
+    try {
+      await preference.set({...preference.get(), exercise.atom.id}.toList());
+    } catch (error) {
+      // Настройка показа не должна мешать записи или учебному ответу.
+      debugPrint('Не удалось сохранить историю примеров: $error');
+    }
+  }
+
+  /// Показ задания тоже помнится, даже если выйти до запуска звука.
+  Future<void> markPronunciationPresented(Exercise exercise) async {
+    if (isClosed || _session?.current != exercise || card.value != null) return;
+    await _rememberPronunciationExample(exercise);
+  }
+
+  /// Одна кнопка раскрывает образец и начинает звук. Отложенный автозвук
+  /// уже не может включиться после нажатия микрофона или смены задания.
+  Future<void> playPronunciationExample(
+    Exercise exercise, {
+    bool automatically = false,
+  }) async {
+    if (_session?.current != exercise || !canPlayPronunciationExample) return;
+    if (automatically && !autoPlayPronunciationExample) return;
+    _pronunciationExamplePlayed = true;
+    final remembered = _rememberPronunciationExample(exercise);
+    final playback = automatically
+        ? _audio.playAsset(_audioSource.forExercise(exercise))
+        : _audio.toggleAsset(_audioSource.forExercise(exercise));
+    _examplePlayback = playback;
+    _refresh.value++;
+    try {
+      await Future.wait([remembered, playback]);
+    } finally {
+      if (identical(_examplePlayback, playback)) {
+        _examplePlayback = null;
+        if (!isClosed) _refresh.value++;
+      }
+    }
+  }
 
   bool get isSayNameTask {
     _refresh.value;
@@ -353,14 +427,48 @@ class LessonController extends GetxController {
         card.value != null) {
       return;
     }
-    unawaited(_audio.stop());
-    await pronunciation.start();
+    if (_startingRecording case final starting?) {
+      await starting;
+      return;
+    }
+    final starting = _startRecording(current!, _pronunciationGeneration);
+    _startingRecording = starting;
+    try {
+      await starting;
+    } finally {
+      if (identical(_startingRecording, starting)) _startingRecording = null;
+    }
+  }
+
+  Future<void> _startRecording(Exercise exercise, int generation) async {
+    _preparingRecording.value = true;
+    _pronunciationExamplePlayed = true;
+    try {
+      await _rememberPronunciationExample(exercise);
+      // Запуск звука может ещё подготавливать плеер. Останавливаем его
+      // после подготовки, чтобы он не включился уже поверх микрофона.
+      await _examplePlayback;
+      await _audio.stop();
+      if (isClosed ||
+          generation != _pronunciationGeneration ||
+          _session?.current != exercise ||
+          _skippingExercise) {
+        return;
+      }
+      await pronunciation.start();
+    } finally {
+      if (generation == _pronunciationGeneration) {
+        _preparingRecording.value = false;
+      }
+    }
   }
 
   /// Палец поднят: остановить запись, спросить сервер и рассудить ответ.
   Future<void> stopRecording() async {
     final exercise = _session?.current;
     if (exercise == null || !exercise.mode.isPronunciation) return;
+    await _startingRecording;
+    if (isClosed || _session?.current != exercise || _skippingExercise) return;
     final result = await pronunciation.stop(
       expected: exercise.atom.display,
       unitId: exercise.atom.id,
@@ -400,8 +508,21 @@ class LessonController extends GetxController {
 
   /// Новое задание — прошлые записи и подсказки к делу не относятся.
   void _syncPronunciation() {
+    _pronunciationGeneration++;
+    _startingRecording = null;
+    _preparingRecording.value = false;
     pronunciation.reset();
     _pronunciationAttempts.reset();
+    final exercise = current;
+    if (_pronunciationExampleExercise != exercise) {
+      _pronunciationExampleExercise = exercise;
+      _firstPronunciationExample =
+          exercise != null &&
+          exercise.mode.isPronunciation &&
+          hasExerciseVoice(exercise) &&
+          !_pronunciationExamplesShown.contains(exercise.atom.id);
+      _pronunciationExamplePlayed = false;
+    }
   }
 
   late final Curriculum _curriculum;
@@ -530,6 +651,12 @@ class LessonController extends GetxController {
   }
 
   Future<void> _start() async {
+    _examplePreferences = Get.isRegistered<SharedPreferenceManager>()
+        ? Get.find<SharedPreferenceManager>()
+        : null;
+    _pronunciationExamplesShown.addAll(
+      _examplePreferences?.pronunciationExamplesShown.get() ?? const [],
+    );
     _pronunciationPreference =
         _injectedPronunciationPreference ??
         (Get.isRegistered<SharedPreferenceManager>()
@@ -564,6 +691,9 @@ class LessonController extends GetxController {
       now: () => _clock.now,
     );
     _announcedLetterIds.addAll(await _progress.learnedLetterIds());
+    _pronunciationExamplesShown.addAll(
+      await _progress.pronunciationPracticedIds(),
+    );
 
     final ctx = await _context();
     _sessionId = await _progress.nextSessionId();
@@ -1337,7 +1467,10 @@ class LessonController extends GetxController {
     _answeredExercise = exercise;
     final logLength = session.log.length;
     final outcome = session.answer(exercise, choice, atomResults: atomResults);
-    if (exercise.mode.isPronunciation) _pronouncedAtoms.add(exercise.atom.id);
+    if (exercise.mode.isPronunciation) {
+      _pronouncedAtoms.add(exercise.atom.id);
+      _pronunciationExamplesShown.add(exercise.atom.id);
+    }
     _countSyllableChoice(exercise);
     _syncShortSessionTarget();
 
@@ -1474,6 +1607,7 @@ class LessonController extends GetxController {
 
   @override
   void onClose() {
+    _pronunciationGeneration++;
     _audio.track.removeListener(_onSequenceTrackChanged);
     _tracing.dispose();
     pronunciation.dispose();

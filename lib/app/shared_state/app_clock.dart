@@ -41,4 +41,10 @@ class AppClock extends GetxService {
     _debugToday.value = today;
     await _debugTodayPreference?.set(today);
   }
+
+  Future<void> resetDebugToday() async {
+    if (!kDebugMode) return;
+    _debugToday.value = null;
+    await _debugTodayPreference?.set(null);
+  }
 }

@@ -5,6 +5,8 @@
 // общий подъём вверх увёл бы нижние частицы внутрь кольца.
 // Нулевые частоты и предел количества останавливают ненужные кадры,
 // в том числе при обновлении.
+// Множитель скорости меняет полёт, а частоту вылета задают отдельно.
+// Нулевая скорость сохраняет рисунок и останавливает запросы кадров.
 import 'dart:ui' as ui;
 
 import 'package:arabic_tajweed_app/app/widgets/ui_kit/ring_sparks.dart';
@@ -23,6 +25,7 @@ void main() {
     int maxParticles = 48,
     double minRadius = .5,
     double maxRadius = 1,
+    double speed = 1,
   }) => tester.pumpWidget(
     MaterialApp(
       home: MediaQuery(
@@ -40,6 +43,7 @@ void main() {
                 maxParticles: maxParticles,
                 minRadius: minRadius,
                 maxRadius: maxRadius,
+                speed: speed,
               ),
             ),
           ),
@@ -47,6 +51,64 @@ void main() {
       ),
     ),
   );
+
+  testWidgets('скорость меняет полёт без изменения частоты, ноль даёт паузу', (
+    tester,
+  ) async {
+    final progress = ValueNotifier(1.0);
+    addTearDown(progress.dispose);
+    List<Offset> positions() {
+      final paint = find.descendant(
+        of: find.byType(RingSparks),
+        matching: find.byType(CustomPaint),
+      );
+      final size = tester.getSize(paint);
+      final canvas = TestRecordingCanvas();
+      tester.widget<CustomPaint>(paint).painter!.paint(canvas, size);
+      return canvas.invocations
+          .where((call) => call.invocation.memberName == #drawCircle)
+          .map(
+            (call) =>
+                (call.invocation.positionalArguments[0] as Offset) -
+                size.center(Offset.zero),
+          )
+          .toList();
+    }
+
+    Future<List<Offset>> fly(double speed) async {
+      await pumpSparks(
+        tester,
+        progress,
+        floatingEmissionRate: 20,
+        speed: speed,
+      );
+      await tester.pump();
+      for (var frame = 0; frame < 10; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      return positions();
+    }
+
+    final normal = await fly(1);
+    await tester.pumpWidget(const SizedBox.shrink());
+    final fast = await fly(2);
+    expect(normal, isNotEmpty);
+    expect(fast.length, normal.length);
+    expect(fast.first.distance, greaterThan(normal.first.distance));
+
+    await pumpSparks(tester, progress, floatingEmissionRate: 20, speed: 0);
+    await tester.pumpAndSettle();
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    await tester.pump(const Duration(seconds: 10));
+    expect(positions(), fast);
+    await pumpSparks(tester, progress, floatingEmissionRate: 20, speed: 2);
+    await tester.pump();
+    expect(tester.binding.hasScheduledFrame, isTrue);
+    expect(positions(), fast);
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(positions().first.distance, greaterThan(fast.first.distance));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('парящие искры расходятся наружу со всех сторон кольца', (
     tester,

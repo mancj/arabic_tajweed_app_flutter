@@ -51,6 +51,7 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   bool _popupOpen = false;
   bool _notesOpen = false;
   bool _closing = false;
+  bool _streakScheduled = false;
 
   LessonController get controller => widget.controller;
 
@@ -125,19 +126,35 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
     final streak = controller.weeklyStreak.value;
     if (streak != null) {
       final presentation = Get.to<void>(
-        () => WeeklyStreakPage(achievedOn: streak.weeklyAchievementOn),
+        () => WeeklyStreakPage(
+          achievedOn: streak.weeklyAchievementOn,
+          onPresented: () {
+            if (mounted) unawaited(controller.markWeeklyStreakPresented());
+          },
+        ),
         routeName: WeeklyStreakPage.routeName,
       );
       if (presentation != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && Get.currentRoute == WeeklyStreakPage.routeName) {
-            unawaited(controller.markWeeklyStreakPresented());
-          }
-        });
         await presentation;
       }
     }
     if (mounted) Get.back<void>();
+  }
+
+  void _scheduleWeeklyStreak() {
+    if (_closing || _streakScheduled) return;
+    _streakScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _streakScheduled = false;
+      if (!mounted ||
+          _closing ||
+          controller.stage.value != LessonStage.finished ||
+          controller.weeklyStreak.value == null ||
+          !(ModalRoute.isCurrentOf(context) ?? true)) {
+        return;
+      }
+      unawaited(_closeFinishedLesson());
+    });
   }
 
   @override
@@ -151,6 +168,13 @@ class _ResultSheetHostState extends State<_ResultSheetHost> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (controller.stage.value == LessonStage.finished) {
+        if (controller.weeklyStreak.value != null) {
+          _scheduleWeeklyStreak();
+          return const SizedBox.shrink();
+        }
+        // Пока поздравление открыто, итог под ним не запускает свои анимации
+        // и вибрации. Закрытие поздравления сразу завершает маршрут урока.
+        if (_closing) return const SizedBox.shrink();
         return LessonFinishScreen(
           controller: controller,
           onClose: _closeFinishedLesson,
